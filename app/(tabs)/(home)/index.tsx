@@ -9,6 +9,7 @@ import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } fr
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AdherenceCard from '@/components/AdherenceCard';
 import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
+import AppLogo from '@/components/AppLogo';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -126,6 +127,10 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
         <View style={styles.header}>
           <Text style={styles.title}>Today&apos;s Portions</Text>
           <Text style={styles.subtitle}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
@@ -165,6 +170,10 @@ const styles = StyleSheet.create({
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
   },
   header: {
     paddingHorizontal: 16,

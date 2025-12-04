@@ -5,6 +5,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { saveReminderEnabled, loadReminderEnabled } from '@/utils/storage';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
+import AppLogo from '@/components/AppLogo';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -95,6 +96,10 @@ export default function SettingsScreen() {
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
           <Text style={styles.subtitle}>Manage your preferences</Text>
@@ -146,6 +151,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 48,
     paddingBottom: 120,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
   },
   header: {
     paddingHorizontal: 16,

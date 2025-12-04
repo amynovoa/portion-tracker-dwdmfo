@@ -6,6 +6,7 @@ import { Sex, Goal, UserProfile, PortionTargets } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile, loadProfile } from '@/utils/storage';
 import { useRouter } from 'expo-router';
+import AppLogo from '@/components/AppLogo';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -98,6 +99,10 @@ export default function ProfileScreen() {
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
         <View style={styles.header}>
           <Text style={styles.title}>{hasProfile ? 'Update Profile' : 'Create Profile'}</Text>
           <Text style={styles.subtitle}>Set up your daily portion targets</Text>
@@ -226,6 +231,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 48,
     paddingBottom: 120,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
   },
   header: {
     paddingHorizontal: 16,

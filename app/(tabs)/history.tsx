@@ -6,6 +6,7 @@ import { getAllDailyPortions, loadProfile } from '@/utils/storage';
 import { DailyPortions, UserProfile, FOOD_GROUPS } from '@/types';
 import { formatDisplayDate } from '@/utils/dateUtils';
 import { calculateDailyAdherence } from '@/utils/adherenceCalculator';
+import AppLogo from '@/components/AppLogo';
 
 export default function HistoryScreen() {
   const [records, setRecords] = useState<DailyPortions[]>([]);
@@ -39,6 +40,10 @@ export default function HistoryScreen() {
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
         <View style={styles.header}>
           <Text style={styles.title}>History</Text>
           <Text style={styles.subtitle}>Your tracking history</Text>
@@ -108,6 +113,10 @@ const styles = StyleSheet.create({
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
   },
   header: {
     paddingHorizontal: 16,
