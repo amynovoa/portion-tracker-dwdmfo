@@ -5,10 +5,11 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, UserProfile, PortionTargets } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile, loadProfile } from '@/utils/storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [sex, setSex] = useState<Sex>('female');
   const [currentWeight, setCurrentWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
@@ -20,6 +21,21 @@ export default function ProfileScreen() {
   useEffect(() => {
     loadExistingProfile();
   }, []);
+
+  // Listen for custom targets returned from setup-targets screen
+  useEffect(() => {
+    if (params.customTargets) {
+      try {
+        const parsedTargets = JSON.parse(params.customTargets as string);
+        setTargets(parsedTargets);
+        setIsEditing(true);
+        // Clear the param to avoid re-triggering
+        router.setParams({ customTargets: undefined });
+      } catch (error) {
+        console.error('Error parsing custom targets:', error);
+      }
+    }
+  }, [params.customTargets]);
 
   const loadExistingProfile = async () => {
     const profile = await loadProfile();
@@ -44,6 +60,18 @@ export default function ProfileScreen() {
     const recommended = calculateRecommendedTargets(sex, weight, goal);
     setTargets(recommended);
     setIsEditing(true);
+  };
+
+  const handleSetupCustomTargets = () => {
+    const weight = parseFloat(currentWeight);
+
+    if (isNaN(weight) || weight <= 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid current weight before setting up custom targets.');
+      return;
+    }
+
+    // Navigate to the custom targets setup screen
+    router.push('/setup-targets');
   };
 
   const handleSaveProfile = async () => {
@@ -176,9 +204,21 @@ export default function ProfileScreen() {
         </View>
 
         {!targets && (
-          <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={calculateTargets}>
-            <Text style={commonStyles.buttonText}>Calculate Targets</Text>
-          </TouchableOpacity>
+          <>
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>Choose how to set your targets</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={calculateTargets}>
+              <Text style={commonStyles.buttonText}>Calculate Recommended Targets</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[buttonStyles.outline, styles.button]} onPress={handleSetupCustomTargets}>
+              <Text style={commonStyles.buttonTextOutline}>Set Up My Own Portion Targets</Text>
+            </TouchableOpacity>
+          </>
         )}
 
         {targets && (
@@ -211,7 +251,7 @@ export default function ProfileScreen() {
                 setIsEditing(false);
               }}
             >
-              <Text style={commonStyles.buttonTextOutline}>Recalculate</Text>
+              <Text style={commonStyles.buttonTextOutline}>Start Over</Text>
             </TouchableOpacity>
           </>
         )}
@@ -275,6 +315,23 @@ const styles = StyleSheet.create({
   },
   optionTextActive: {
     color: colors.primary,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginVertical: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   button: {
     marginHorizontal: 16,
