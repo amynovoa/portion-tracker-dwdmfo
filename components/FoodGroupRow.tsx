@@ -21,6 +21,10 @@ export default function FoodGroupRow({
   completed,
   onToggle,
 }: FoodGroupRowProps) {
+  // Calculate how many extra slots to show beyond target
+  const extraSlots = 3; // Always show 3 extra slots beyond target
+  const totalSlots = target + extraSlots;
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -31,10 +35,11 @@ export default function FoodGroupRow({
         </Text>
       </View>
       <View style={styles.slots}>
-        {Array.from({ length: target }).map((_, index) => (
+        {Array.from({ length: totalSlots }).map((_, index) => (
           <PortionSlot
             key={index}
             completed={index < completed}
+            isExtra={index >= target}
             onPress={() => onToggle(index)}
           />
         ))}

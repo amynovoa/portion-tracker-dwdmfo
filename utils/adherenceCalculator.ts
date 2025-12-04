@@ -1,18 +1,24 @@
 
-import { DailyPortions, PortionTargets } from '../types';
-import { getTodayString, getWeekStart, getMonthStart, formatDate } from './dateUtils';
+import { PortionTargets, DailyPortions } from '../types';
+import { getTodayString, getWeekStartDate, getMonthStartDate } from './dateUtils';
 
 export function calculateDailyAdherence(
   completed: PortionTargets,
   targets: PortionTargets
 ): number {
-  let totalCompleted = 0;
   let totalTarget = 0;
+  let totalCompleted = 0;
 
+  // Calculate adherence based on target portions
+  // If user completes more than target, count it as 100% for that food group
   Object.keys(targets).forEach((key) => {
     const foodGroup = key as keyof PortionTargets;
-    totalCompleted += completed[foodGroup];
-    totalTarget += targets[foodGroup];
+    const target = targets[foodGroup];
+    const done = completed[foodGroup];
+
+    totalTarget += target;
+    // Cap completed at target for adherence calculation
+    totalCompleted += Math.min(done, target);
   });
 
   if (totalTarget === 0) return 0;
@@ -20,27 +26,26 @@ export function calculateDailyAdherence(
 }
 
 export function calculateWeeklyAdherence(
-  dailyRecords: DailyPortions[],
+  allRecords: DailyPortions[],
   targets: PortionTargets
 ): number {
-  const today = new Date();
-  const weekStart = getWeekStart(today);
-  const weekStartStr = formatDate(weekStart);
-
-  const weekRecords = dailyRecords.filter(
-    (record) => record.date >= weekStartStr
-  );
+  const weekStart = getWeekStartDate();
+  const weekRecords = allRecords.filter((record) => record.date >= weekStart);
 
   if (weekRecords.length === 0) return 0;
 
-  let totalCompleted = 0;
   let totalTarget = 0;
+  let totalCompleted = 0;
 
   weekRecords.forEach((record) => {
     Object.keys(targets).forEach((key) => {
       const foodGroup = key as keyof PortionTargets;
-      totalCompleted += record.portions[foodGroup];
-      totalTarget += targets[foodGroup];
+      const target = targets[foodGroup];
+      const done = record.portions[foodGroup];
+
+      totalTarget += target;
+      // Cap completed at target for adherence calculation
+      totalCompleted += Math.min(done, target);
     });
   });
 
@@ -49,27 +54,26 @@ export function calculateWeeklyAdherence(
 }
 
 export function calculateMonthlyAdherence(
-  dailyRecords: DailyPortions[],
+  allRecords: DailyPortions[],
   targets: PortionTargets
 ): number {
-  const today = new Date();
-  const monthStart = getMonthStart(today);
-  const monthStartStr = formatDate(monthStart);
-
-  const monthRecords = dailyRecords.filter(
-    (record) => record.date >= monthStartStr
-  );
+  const monthStart = getMonthStartDate();
+  const monthRecords = allRecords.filter((record) => record.date >= monthStart);
 
   if (monthRecords.length === 0) return 0;
 
-  let totalCompleted = 0;
   let totalTarget = 0;
+  let totalCompleted = 0;
 
   monthRecords.forEach((record) => {
     Object.keys(targets).forEach((key) => {
       const foodGroup = key as keyof PortionTargets;
-      totalCompleted += record.portions[foodGroup];
-      totalTarget += targets[foodGroup];
+      const target = targets[foodGroup];
+      const done = record.portions[foodGroup];
+
+      totalTarget += target;
+      // Cap completed at target for adherence calculation
+      totalCompleted += Math.min(done, target);
     });
   });
 
