@@ -13,7 +13,6 @@ export default function ProfileScreen() {
   const [currentWeight, setCurrentWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
-  const [alcoholGoal, setAlcoholGoal] = useState('0');
   const [targets, setTargets] = useState<PortionTargets | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
@@ -29,7 +28,6 @@ export default function ProfileScreen() {
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
-      setAlcoholGoal(profile.alcoholGoal.toString());
       setTargets(profile.targets);
       setHasProfile(true);
     }
@@ -37,14 +35,13 @@ export default function ProfileScreen() {
 
   const calculateTargets = () => {
     const weight = parseFloat(currentWeight);
-    const alcohol = parseInt(alcoholGoal) || 0;
 
     if (isNaN(weight) || weight <= 0) {
       Alert.alert('Invalid Input', 'Please enter a valid current weight.');
       return;
     }
 
-    const recommended = calculateRecommendedTargets(sex, weight, goal, alcohol);
+    const recommended = calculateRecommendedTargets(sex, weight, goal);
     setTargets(recommended);
     setIsEditing(true);
   };
@@ -73,7 +70,6 @@ export default function ProfileScreen() {
       currentWeight: weight,
       goalWeight: goalWt,
       goal,
-      alcoholGoal: parseInt(alcoholGoal) || 0,
       targets,
     };
 
@@ -177,18 +173,6 @@ export default function ProfileScreen() {
               <Text style={[styles.optionText, goal === 'build' && styles.optionTextActive]}>Build Muscle</Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Daily Alcohol Goal</Text>
-          <TextInput
-            style={commonStyles.input}
-            value={alcoholGoal}
-            onChangeText={setAlcoholGoal}
-            keyboardType="numeric"
-            placeholder="0"
-            placeholderTextColor={colors.textSecondary}
-          />
         </View>
 
         {!targets && (

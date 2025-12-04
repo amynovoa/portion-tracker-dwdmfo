@@ -8,7 +8,6 @@ export interface UserProfile {
   currentWeight: number;
   goalWeight: number;
   goal: Goal;
-  alcoholGoal: number;
   targets: PortionTargets;
 }
 

@@ -25,7 +25,7 @@ export function getBaseTargets(size: SizeCategory): PortionTargets {
       nutsSeeds: 1,
       fats: 1,
       water: 7,
-      alcohol: 2,
+      alcohol: 0,
     },
     medium: {
       protein: 3,
@@ -36,7 +36,7 @@ export function getBaseTargets(size: SizeCategory): PortionTargets {
       nutsSeeds: 2,
       fats: 2,
       water: 8,
-      alcohol: 2,
+      alcohol: 0,
     },
     large: {
       protein: 4,
@@ -47,7 +47,7 @@ export function getBaseTargets(size: SizeCategory): PortionTargets {
       nutsSeeds: 2,
       fats: 3,
       water: 10,
-      alcohol: 2,
+      alcohol: 0,
     },
   };
 
@@ -87,15 +87,12 @@ export function applyGoalModifiers(
 export function calculateRecommendedTargets(
   sex: Sex,
   weight: number,
-  goal: Goal,
-  alcoholGoal: number
+  goal: Goal
 ): PortionTargets {
   const size = calculateSizeCategory(sex, weight);
   const baseTargets = getBaseTargets(size);
   const targets = applyGoalModifiers(baseTargets, goal);
   
-  // Apply user's alcohol goal (no maximum limit)
-  targets.alcohol = alcoholGoal;
-
+  // Alcohol defaults to 0, users can adjust it in the targets section if they want
   return targets;
 }
