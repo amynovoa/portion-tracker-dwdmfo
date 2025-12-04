@@ -37,7 +37,7 @@ export default function ProfileScreen() {
 
   const calculateTargets = () => {
     const weight = parseFloat(currentWeight);
-    const alcohol = Math.min(2, parseInt(alcoholGoal) || 0);
+    const alcohol = parseInt(alcoholGoal) || 0;
 
     if (isNaN(weight) || weight <= 0) {
       Alert.alert('Invalid Input', 'Please enter a valid current weight.');
@@ -73,7 +73,7 @@ export default function ProfileScreen() {
       currentWeight: weight,
       goalWeight: goalWt,
       goal,
-      alcoholGoal: Math.min(2, parseInt(alcoholGoal) || 0),
+      alcoholGoal: parseInt(alcoholGoal) || 0,
       targets,
     };
 
@@ -180,14 +180,11 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Daily Alcohol Goal (max 2)</Text>
+          <Text style={styles.label}>Daily Alcohol Goal</Text>
           <TextInput
             style={commonStyles.input}
             value={alcoholGoal}
-            onChangeText={(text) => {
-              const num = parseInt(text) || 0;
-              setAlcoholGoal(Math.min(2, num).toString());
-            }}
+            onChangeText={setAlcoholGoal}
             keyboardType="numeric"
             placeholder="0"
             placeholderTextColor={colors.textSecondary}

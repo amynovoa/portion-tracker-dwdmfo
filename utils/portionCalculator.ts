@@ -94,8 +94,8 @@ export function calculateRecommendedTargets(
   const baseTargets = getBaseTargets(size);
   const targets = applyGoalModifiers(baseTargets, goal);
   
-  // Apply user's alcohol goal (max 2)
-  targets.alcohol = Math.min(2, alcoholGoal);
+  // Apply user's alcohol goal (no maximum limit)
+  targets.alcohol = alcoholGoal;
 
   return targets;
 }
