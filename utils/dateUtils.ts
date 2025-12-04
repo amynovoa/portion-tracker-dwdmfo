@@ -26,6 +26,18 @@ export function getMonthStart(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
+export function getWeekStartDate(): string {
+  const today = new Date();
+  const weekStart = getWeekStart(today);
+  return formatDate(weekStart);
+}
+
+export function getMonthStartDate(): string {
+  const today = new Date();
+  const monthStart = getMonthStart(today);
+  return formatDate(monthStart);
+}
+
 export function formatDisplayDate(dateString: string): string {
   const date = parseDate(dateString);
   const today = new Date();
