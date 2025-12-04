@@ -28,6 +28,12 @@ export interface DailyPortions {
   portions: PortionTargets;
 }
 
+export interface WeightEntry {
+  date: string; // YYYY-MM-DD format
+  weight: number; // in pounds
+  timestamp: number; // Unix timestamp
+}
+
 export type FoodGroup = keyof PortionTargets;
 
 export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [

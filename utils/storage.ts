@@ -1,10 +1,11 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, DailyPortions } from '../types';
+import { UserProfile, DailyPortions, WeightEntry } from '../types';
 
 const PROFILE_KEY = '@portion_tracker_profile';
 const DAILY_PORTIONS_KEY = '@portion_tracker_daily_';
 const REMINDER_KEY = '@portion_tracker_reminder';
+const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
 
 export async function saveProfile(profile: UserProfile): Promise<void> {
   try {
@@ -91,5 +92,56 @@ export async function loadReminderEnabled(): Promise<boolean> {
   } catch (error) {
     console.error('Error loading reminder setting:', error);
     return false;
+  }
+}
+
+// Weight tracking functions
+export async function saveWeightEntry(entry: WeightEntry): Promise<void> {
+  try {
+    const entries = await loadWeightEntries();
+    // Check if entry for this date already exists
+    const existingIndex = entries.findIndex(e => e.date === entry.date);
+    
+    if (existingIndex >= 0) {
+      // Update existing entry
+      entries[existingIndex] = entry;
+    } else {
+      // Add new entry
+      entries.push(entry);
+    }
+    
+    // Sort by date descending
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+    
+    await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(entries));
+    console.log('Weight entry saved successfully');
+  } catch (error) {
+    console.error('Error saving weight entry:', error);
+    throw error;
+  }
+}
+
+export async function loadWeightEntries(): Promise<WeightEntry[]> {
+  try {
+    const data = await AsyncStorage.getItem(WEIGHT_ENTRIES_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+    return [];
+  } catch (error) {
+    console.error('Error loading weight entries:', error);
+    return [];
+  }
+}
+
+export async function deleteWeightEntry(date: string): Promise<void> {
+  try {
+    const entries = await loadWeightEntries();
+    const filtered = entries.filter(e => e.date !== date);
+    await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(filtered));
+    console.log('Weight entry deleted successfully');
+  } catch (error) {
+    console.error('Error deleting weight entry:', error);
+    throw error;
   }
 }

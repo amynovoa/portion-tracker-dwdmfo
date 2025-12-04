@@ -35,6 +35,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="weight"
+        options={{
+          title: 'Weight',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol ios_icon_name="scalemass.fill" android_material_icon_name="monitor_weight" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

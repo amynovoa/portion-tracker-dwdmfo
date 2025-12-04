@@ -18,6 +18,12 @@ export default function TabLayout() {
       label: 'History',
     },
     {
+      name: 'weight',
+      route: '/(tabs)/weight',
+      icon: 'scale',
+      label: 'Weight',
+    },
+    {
       name: 'profile',
       route: '/(tabs)/profile',
       icon: 'person',
@@ -41,6 +47,7 @@ export default function TabLayout() {
       >
         <Stack.Screen key="home" name="(home)" />
         <Stack.Screen key="history" name="history" />
+        <Stack.Screen key="weight" name="weight" />
         <Stack.Screen key="profile" name="profile" />
         <Stack.Screen key="settings" name="settings" />
       </Stack>
