@@ -1,97 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, Switch, TouchableOpacity, Alert, Platform } from 'react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { saveReminderEnabled, loadReminderEnabled } from '@/utils/storage';
-import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [permissionGranted, setPermissionGranted] = useState(false);
-
-  useEffect(() => {
-    loadSettings();
-    checkPermissions();
-  }, []);
-
-  const loadSettings = async () => {
-    const enabled = await loadReminderEnabled();
-    setReminderEnabled(enabled);
-  };
-
-  const checkPermissions = async () => {
-    const { status } = await Notifications.getPermissionsAsync();
-    setPermissionGranted(status === 'granted');
-  };
-
-  const requestPermissions = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    setPermissionGranted(status === 'granted');
-    return status === 'granted';
-  };
-
-  const scheduleReminder = async () => {
-    try {
-      // Cancel all existing notifications first
-      await Notifications.cancelAllScheduledNotificationsAsync();
-
-      // Schedule daily reminder at 9 AM
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Portion Tracker',
-          body: 'Don&apos;t forget to track your portions today!',
-        },
-        trigger: {
-          hour: 9,
-          minute: 0,
-          repeats: true,
-        },
-      });
-
-      console.log('Daily reminder scheduled');
-    } catch (error) {
-      console.error('Error scheduling reminder:', error);
-      Alert.alert('Error', 'Failed to schedule reminder');
-    }
-  };
-
-  const cancelReminder = async () => {
-    try {
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      console.log('Reminders cancelled');
-    } catch (error) {
-      console.error('Error cancelling reminders:', error);
-    }
-  };
-
-  const handleToggleReminder = async (value: boolean) => {
-    if (value) {
-      // Enabling reminder
-      if (!permissionGranted) {
-        const granted = await requestPermissions();
-        if (!granted) {
-          Alert.alert(
-            'Permission Required',
-            'Please enable notifications in your device settings to use reminders.'
-          );
-          return;
-        }
-      }
-
-      await scheduleReminder();
-      setReminderEnabled(true);
-      await saveReminderEnabled(true);
-      Alert.alert('Success', 'Daily reminder enabled at 9:00 AM');
-    } else {
-      // Disabling reminder
-      await cancelReminder();
-      setReminderEnabled(false);
-      await saveReminderEnabled(false);
-    }
-  };
 
   return (
     <View style={commonStyles.container}>
@@ -103,23 +18,6 @@ export default function SettingsScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
           <Text style={styles.subtitle}>Manage your preferences</Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Daily Reminder</Text>
-              <Text style={styles.settingDescription}>
-                Get reminded to track your portions at 9:00 AM
-              </Text>
-            </View>
-            <Switch
-              value={reminderEnabled}
-              onValueChange={handleToggleReminder}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.card}
-            />
-          </View>
         </View>
 
         <View style={styles.section}>
@@ -173,30 +71,6 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 16,
     marginBottom: 24,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-    elevation: 1,
-  },
-  settingInfo: {
-    flex: 1,
-    marginRight: 16,
-  },
-  settingLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
   },
   button: {
     marginVertical: 8,
