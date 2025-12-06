@@ -1,8 +1,8 @@
 
 {
   "expo": {
-    "name": "Portion Tracker",
-    "slug": "Portion Tracker",
+    "name": "PortionTracker",
+    "slug": "portion-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
@@ -15,10 +15,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Natively",
+      "bundleIdentifier": "com.portiontracker.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +27,8 @@
         "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Natively"
+      "package": "com.portiontracker.app",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
@@ -37,13 +39,15 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "natively",
+    "scheme": "portiontracker",
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
     }
-  },
-  "scheme": "Portion Tracker"
+  }
 }
