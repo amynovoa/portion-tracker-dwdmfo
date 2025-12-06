@@ -1,12 +1,12 @@
 
 import "react-native-reanimated";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, Alert } from "react-native";
+import { useColorScheme, Alert, View, Text, StyleSheet } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -23,19 +23,88 @@ export const unstable_settings = {
   initialRouteName: "(tabs)", // Ensure any route can link back to `/`
 };
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    console.error("ErrorBoundary caught error:", error);
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={errorStyles.container}>
+          <Text style={errorStyles.title}>Something went wrong</Text>
+          <Text style={errorStyles.message}>
+            {this.state.error?.message || "An unexpected error occurred"}
+          </Text>
+          <Text style={errorStyles.hint}>
+            Please restart the app. If the problem persists, try reinstalling.
+          </Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const errorStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#000",
+  },
+  message: {
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: "center",
+    color: "#666",
+  },
+  hint: {
+    fontSize: 14,
+    textAlign: "center",
+    color: "#999",
+  },
+});
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (error) {
+      console.error("Font loading error:", error);
+      // Continue anyway - the app can work without custom fonts
+      SplashScreen.hideAsync();
+    } else if (loaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, error]);
 
-  if (!loaded) {
+  if (!loaded && !error) {
     return null;
   }
 
@@ -63,14 +132,15 @@ export default function RootLayout() {
       notification: "rgb(255, 69, 58)", // System Red (Dark Mode)
     },
   };
+
   return (
-    <>
+    <ErrorBoundary>
       <StatusBar style="auto" animated />
-        <ThemeProvider
-          value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
-        >
-          <WidgetProvider>
-            <GestureHandlerRootView>
+      <ThemeProvider
+        value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
+      >
+        <WidgetProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
             <Stack>
               {/* Main app with tabs */}
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -112,9 +182,9 @@ export default function RootLayout() {
               />
             </Stack>
             <SystemBars style={"auto"} />
-            </GestureHandlerRootView>
-          </WidgetProvider>
-        </ThemeProvider>
-    </>
+          </GestureHandlerRootView>
+        </WidgetProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

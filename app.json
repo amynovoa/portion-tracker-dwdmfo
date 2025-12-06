@@ -2,7 +2,7 @@
 {
   "expo": {
     "name": "Portion Tracker",
-    "slug": "Portion Tracker",
+    "slug": "portion-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
@@ -49,6 +49,5 @@
         "projectId": "your-project-id-here"
       }
     }
-  },
-  "scheme": "Portion Tracker"
+  }
 }
