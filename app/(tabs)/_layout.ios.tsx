@@ -1,66 +1,35 @@
 
 import React from 'react';
-import { Tabs } from 'expo-router/unstable-native-tabs';
-import { IconSymbol } from '@/components/IconSymbol.ios';
+import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.card,
-        },
-      }}
+    <NativeTabs
+      tintColor={colors.primary}
+      iconColor={colors.textSecondary}
+      backgroundColor={colors.card}
     >
-      <Tabs.Screen
-        name="(home)"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol ios_icon_name="house.fill" android_material_icon_name="home" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: 'History',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol ios_icon_name="calendar" android_material_icon_name="calendar_month" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="weight"
-        options={{
-          title: 'Weight',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol ios_icon_name="scalemass.fill" android_material_icon_name="monitor_weight" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol ios_icon_name="person.fill" android_material_icon_name="person" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol ios_icon_name="gearshape.fill" android_material_icon_name="settings" size={24} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="(home)/index">
+        <Label>Home</Label>
+        <Icon sf="house.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="history">
+        <Label>History</Label>
+        <Icon sf="calendar" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="weight">
+        <Label>Weight</Label>
+        <Icon sf="scalemass.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <Label>Profile</Label>
+        <Icon sf="person.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings">
+        <Label>Settings</Label>
+        <Icon sf="gearshape.fill" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

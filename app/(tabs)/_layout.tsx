@@ -45,11 +45,11 @@ export default function TabLayout() {
           animation: 'none',
         }}
       >
-        <Stack.Screen key="home" name="(home)" />
-        <Stack.Screen key="history" name="history" />
-        <Stack.Screen key="weight" name="weight" />
-        <Stack.Screen key="profile" name="profile" />
-        <Stack.Screen key="settings" name="settings" />
+        <Stack.Screen name="(home)/index" options={{ headerShown: false }} />
+        <Stack.Screen name="history" options={{ headerShown: false }} />
+        <Stack.Screen name="weight" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>
       <FloatingTabBar tabs={tabs} />
     </>
