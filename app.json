@@ -37,15 +37,7 @@
     "plugins": [
       "expo-font",
       "expo-router",
-      "expo-web-browser",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
-          "color": "#ffffff",
-          "mode": "production"
-        }
-      ]
+      "expo-web-browser"
     ],
     "scheme": "portiontracker",
     "experiments": {
