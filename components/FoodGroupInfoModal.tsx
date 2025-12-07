@@ -22,98 +22,101 @@ export default function FoodGroupInfoModal({
   avoid,
   examples,
 }: FoodGroupInfoModalProps) {
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
       transparent={true}
       animationType="fade"
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
-      <View style={styles.overlay}>
+      <View style={styles.centeredView}>
         <TouchableOpacity 
-          style={styles.overlayTouchable} 
+          style={styles.backdrop} 
           activeOpacity={1} 
           onPress={onClose}
-        >
-          <View style={styles.modalWrapper}>
-            <TouchableOpacity 
-              activeOpacity={1} 
-              onPress={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <View style={styles.modalContainer}>
-                <View style={styles.header}>
-                  <View style={styles.titleRow}>
-                    <Text style={styles.icon}>{icon}</Text>
-                    <Text style={styles.title}>{title}</Text>
-                  </View>
-                  <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView 
-                  style={styles.content}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.scrollContent}
-                >
-                  <Text style={styles.benefitText}>{benefit}</Text>
-
-                  <View style={styles.section}>
-                    <Text style={styles.avoidText}>{avoid}</Text>
-                  </View>
-
-                  <View style={styles.section}>
-                    <Text style={styles.examplesText}>{examples}</Text>
-                  </View>
-                </ScrollView>
+        />
+        
+        <View style={styles.modalView} pointerEvents="box-none">
+          <View style={styles.modalContent}>
+            <View style={styles.header}>
+              <View style={styles.titleRow}>
+                <Text style={styles.icon}>{icon}</Text>
+                <Text style={styles.title}>{title}</Text>
               </View>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={onClose} 
+                style={styles.closeButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView 
+              style={styles.scrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              <Text style={styles.benefitText}>{benefit}</Text>
+
+              <View style={styles.section}>
+                <Text style={styles.avoidText}>{avoid}</Text>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.examplesText}>{examples}</Text>
+              </View>
+            </ScrollView>
           </View>
-        </TouchableOpacity>
+        </View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  overlayTouchable: {
+  centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
-  modalWrapper: {
-    width: '100%',
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: '90%',
     maxWidth: 500,
+    maxHeight: '80%',
+    justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
   },
-  modalContainer: {
+  modalContent: {
+    width: '100%',
     backgroundColor: colors.card,
     borderRadius: 16,
-    width: '100%',
     maxHeight: 600,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 8,
+        elevation: 10,
       },
       default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.3)',
       },
     }),
   },
@@ -157,11 +160,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
   },
-  content: {
+  scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: 30,
   },
   benefitText: {
     fontSize: 16,

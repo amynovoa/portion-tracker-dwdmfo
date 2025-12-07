@@ -34,6 +34,16 @@ export default function FoodGroupRow({
   
   const foodGroupInfo = FOOD_GROUP_INFO[foodGroup];
 
+  const handleInfoPress = () => {
+    console.log(`Opening modal for ${label}`);
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    console.log(`Closing modal for ${label}`);
+    setModalVisible(false);
+  };
+
   return (
     <>
       <View style={styles.container}>
@@ -41,7 +51,7 @@ export default function FoodGroupRow({
           <Text style={styles.icon}>{icon}</Text>
           <Text style={styles.label}>{label}</Text>
           <TouchableOpacity 
-            onPress={() => setModalVisible(true)}
+            onPress={handleInfoPress}
             style={styles.infoButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -65,7 +75,7 @@ export default function FoodGroupRow({
 
       <FoodGroupInfoModal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={handleCloseModal}
         title={label}
         icon={icon}
         benefit={foodGroupInfo.benefit}
