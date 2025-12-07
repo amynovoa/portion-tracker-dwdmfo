@@ -1,9 +1,10 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, DailyPortions, WeightEntry } from '../types';
+import { UserProfile, DailyPortions, DailyPortionsWithServings, WeightEntry, ServingEntry } from '../types';
 
 const PROFILE_KEY = '@portion_tracker_profile';
 const DAILY_PORTIONS_KEY = '@portion_tracker_daily_';
+const DAILY_SERVINGS_KEY = '@portion_tracker_servings_';
 const REMINDER_KEY = '@portion_tracker_reminder';
 const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
 
@@ -31,6 +32,51 @@ export async function loadProfile(): Promise<UserProfile | null> {
   }
 }
 
+// New: Save daily servings with S/M/L tracking
+export async function saveDailyServings(daily: DailyPortionsWithServings): Promise<void> {
+  try {
+    const key = `${DAILY_SERVINGS_KEY}${daily.date}`;
+    await AsyncStorage.setItem(key, JSON.stringify(daily));
+    console.log('Daily servings saved for', daily.date);
+  } catch (error) {
+    console.error('Error saving daily servings:', error);
+    throw error;
+  }
+}
+
+// New: Load daily servings with S/M/L tracking
+export async function loadDailyServings(date: string): Promise<DailyPortionsWithServings | null> {
+  try {
+    const key = `${DAILY_SERVINGS_KEY}${date}`;
+    const data = await AsyncStorage.getItem(key);
+    if (data) {
+      return JSON.parse(data);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error loading daily servings:', error);
+    return null;
+  }
+}
+
+// New: Get all daily servings records
+export async function getAllDailyServings(): Promise<DailyPortionsWithServings[]> {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const servingsKeys = keys.filter(key => key.startsWith(DAILY_SERVINGS_KEY));
+    const items = await AsyncStorage.multiGet(servingsKeys);
+    
+    return items
+      .map(([_, value]) => (value ? JSON.parse(value) : null))
+      .filter((item): item is DailyPortionsWithServings => item !== null)
+      .sort((a, b) => b.date.localeCompare(a.date)); // Sort by date descending
+  } catch (error) {
+    console.error('Error loading all daily servings:', error);
+    return [];
+  }
+}
+
+// Legacy: Save daily portions (for backward compatibility)
 export async function saveDailyPortions(daily: DailyPortions): Promise<void> {
   try {
     const key = `${DAILY_PORTIONS_KEY}${daily.date}`;
@@ -42,6 +88,7 @@ export async function saveDailyPortions(daily: DailyPortions): Promise<void> {
   }
 }
 
+// Legacy: Load daily portions (for backward compatibility)
 export async function loadDailyPortions(date: string): Promise<DailyPortions | null> {
   try {
     const key = `${DAILY_PORTIONS_KEY}${date}`;
@@ -56,6 +103,7 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
   }
 }
 
+// Legacy: Get all daily portions
 export async function getAllDailyPortions(): Promise<DailyPortions[]> {
   try {
     const keys = await AsyncStorage.getAllKeys();

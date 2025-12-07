@@ -3,19 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions } from '@/utils/storage';
+import { loadProfile, loadDailyServings, saveDailyServings, getAllDailyServings } from '@/utils/storage';
 import { getTodayString } from '@/utils/dateUtils';
-import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
+import { UserProfile, DailyPortionsWithServings, ServingEntry, FOOD_GROUPS, FoodGroup, ServingSize } from '@/types';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AdherenceCard from '@/components/AdherenceCard';
-import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
+import { calculateDailyAdherenceWithServings, calculateWeeklyAdherenceWithServings, calculateMonthlyAdherenceWithServings } from '@/utils/adherenceCalculator';
+import { convertServingToPortionUnits } from '@/utils/portionCalculator';
 import AppLogo from '@/components/AppLogo';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [todayPortions, setTodayPortions] = useState<PortionTargets | null>(null);
-  const [allRecords, setAllRecords] = useState<DailyPortions[]>([]);
+  const [todayServings, setTodayServings] = useState<DailyPortionsWithServings | null>(null);
+  const [allRecords, setAllRecords] = useState<DailyPortionsWithServings[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -27,36 +28,39 @@ export default function HomeScreen() {
       console.log('Home: No profile found');
       setLoading(false);
       setProfile(null);
-      setTodayPortions(null);
+      setTodayServings(null);
       return;
     }
 
-    console.log('Home: Profile found, loading portions');
+    console.log('Home: Profile found, loading servings');
     setProfile(userProfile);
 
     const today = getTodayString();
-    const dailyData = await loadDailyPortions(today);
+    const dailyData = await loadDailyServings(today);
 
     if (dailyData) {
-      setTodayPortions(dailyData.portions);
+      setTodayServings(dailyData);
     } else {
-      // Initialize with zeros
-      const emptyPortions: PortionTargets = {
-        protein: 0,
-        veggies: 0,
-        fruit: 0,
-        wholeGrains: 0,
-        legumes: 0,
-        nutsSeeds: 0,
-        fats: 0,
-        dairy: 0,
-        water: 0,
-        alcohol: 0,
+      // Initialize with empty servings
+      const emptyServings: DailyPortionsWithServings = {
+        date: today,
+        servings: {
+          protein: [],
+          veggies: [],
+          fruit: [],
+          wholeGrains: [],
+          legumes: [],
+          nutsSeeds: [],
+          fats: [],
+          dairy: [],
+          water: 0,
+          alcohol: [],
+        },
       };
-      setTodayPortions(emptyPortions);
+      setTodayServings(emptyServings);
     }
 
-    const records = await getAllDailyPortions();
+    const records = await getAllDailyServings();
     setAllRecords(records);
     setLoading(false);
   };
@@ -75,37 +79,82 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handleTogglePortion = async (foodGroup: FoodGroup, index: number) => {
-    if (!profile || !todayPortions) return;
+  const handleAddServing = async (foodGroup: FoodGroup, size: ServingSize) => {
+    if (!profile || !todayServings) return;
 
-    const current = todayPortions[foodGroup];
+    // Calculate portion units for this serving
+    const portionUnits = convertServingToPortionUnits(profile.sex, profile.currentWeight, size);
 
-    let newValue: number;
-    if (index < current) {
-      // Tapping a completed slot - decrease count
-      newValue = index;
-    } else {
-      // Tapping an empty slot - increase count to that position
-      newValue = index + 1;
-    }
-
-    const updatedPortions = {
-      ...todayPortions,
-      [foodGroup]: newValue,
+    const newServing: ServingEntry = {
+      size,
+      portionUnits,
+      timestamp: Date.now(),
     };
 
-    setTodayPortions(updatedPortions);
-
-    const today = getTodayString();
-    const dailyData: DailyPortions = {
-      date: today,
-      portions: updatedPortions,
+    const updatedServings = {
+      ...todayServings.servings,
+      [foodGroup]: [...todayServings.servings[foodGroup], newServing],
     };
 
-    await saveDailyPortions(dailyData);
+    const updatedData: DailyPortionsWithServings = {
+      ...todayServings,
+      servings: updatedServings,
+    };
+
+    setTodayServings(updatedData);
+    await saveDailyServings(updatedData);
 
     // Reload all records for adherence calculation
-    const records = await getAllDailyPortions();
+    const records = await getAllDailyServings();
+    setAllRecords(records);
+  };
+
+  const handleRemoveServing = async (foodGroup: FoodGroup, index: number) => {
+    if (!profile || !todayServings) return;
+
+    const servingsList = [...todayServings.servings[foodGroup]];
+    servingsList.splice(index, 1);
+
+    const updatedServings = {
+      ...todayServings.servings,
+      [foodGroup]: servingsList,
+    };
+
+    const updatedData: DailyPortionsWithServings = {
+      ...todayServings,
+      servings: updatedServings,
+    };
+
+    setTodayServings(updatedData);
+    await saveDailyServings(updatedData);
+
+    // Reload all records for adherence calculation
+    const records = await getAllDailyServings();
+    setAllRecords(records);
+  };
+
+  const handleToggleWater = async () => {
+    if (!profile || !todayServings) return;
+
+    const currentWater = todayServings.servings.water;
+    const target = profile.targets.water;
+
+    // Toggle water: if at target, reset to 0, otherwise increment
+    const newWater = currentWater >= target ? 0 : currentWater + 1;
+
+    const updatedData: DailyPortionsWithServings = {
+      ...todayServings,
+      servings: {
+        ...todayServings.servings,
+        water: newWater,
+      },
+    };
+
+    setTodayServings(updatedData);
+    await saveDailyServings(updatedData);
+
+    // Reload all records for adherence calculation
+    const records = await getAllDailyServings();
     setAllRecords(records);
   };
 
@@ -122,7 +171,7 @@ export default function HomeScreen() {
   }
 
   // Show message if no profile
-  if (!profile || !todayPortions) {
+  if (!profile || !todayServings) {
     return (
       <View style={commonStyles.container}>
         <View style={styles.emptyContainer}>
@@ -136,9 +185,9 @@ export default function HomeScreen() {
     );
   }
 
-  const todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
-  const weekAdherence = calculateWeeklyAdherence(allRecords, profile.targets);
-  const monthAdherence = calculateMonthlyAdherence(allRecords, profile.targets);
+  const todayAdherence = calculateDailyAdherenceWithServings(todayServings, profile.targets);
+  const weekAdherence = calculateWeeklyAdherenceWithServings(allRecords, profile.targets);
+  const monthAdherence = calculateMonthlyAdherenceWithServings(allRecords, profile.targets);
 
   return (
     <View style={commonStyles.container}>
@@ -172,8 +221,11 @@ export default function HomeScreen() {
               label={group.label}
               foodGroup={group.key}
               target={profile.targets[group.key]}
-              completed={todayPortions[group.key]}
-              onToggle={(index) => handleTogglePortion(group.key, index)}
+              servings={group.key === 'water' ? [] : todayServings.servings[group.key]}
+              waterCount={group.key === 'water' ? todayServings.servings.water : undefined}
+              onAddServing={(size) => handleAddServing(group.key, size)}
+              onRemoveServing={(index) => handleRemoveServing(group.key, index)}
+              onToggleWater={group.key === 'water' ? handleToggleWater : undefined}
             />
           ))}
         </View>

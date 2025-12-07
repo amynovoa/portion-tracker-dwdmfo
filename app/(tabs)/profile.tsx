@@ -134,11 +134,27 @@ export default function ProfileScreen() {
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
     if (!targets) return;
-    const numValue = parseInt(value) || 0;
+    const numValue = parseFloat(value) || 0;
     setTargets({
       ...targets,
       [key]: Math.max(0, numValue),
     });
+  };
+
+  const formatTargetLabel = (key: string): string => {
+    const labels: { [key: string]: string } = {
+      protein: 'Protein',
+      veggies: 'Vegetables',
+      fruit: 'Fruits',
+      wholeGrains: 'Whole Grains',
+      legumes: 'Legumes',
+      nutsSeeds: 'Nuts & Seeds',
+      fats: 'Fats',
+      dairy: 'Dairy',
+      water: 'Water',
+      alcohol: 'Alcohol',
+    };
+    return labels[key] || key;
   };
 
   return (
@@ -247,16 +263,16 @@ export default function ProfileScreen() {
           <>
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>You can adjust these values</Text>
+              <Text style={styles.sectionSubtitle}>You can adjust these values (fractional values allowed)</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
-                  <Text style={styles.targetLabel}>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}</Text>
+                  <Text style={styles.targetLabel}>{formatTargetLabel(key)}</Text>
                   <TextInput
                     style={styles.targetInput}
                     value={value.toString()}
                     onChangeText={(text) => handleUpdateTargets(key as keyof PortionTargets, text)}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                   />
                 </View>
               ))}
@@ -393,7 +409,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   targetInput: {
-    width: 60,
+    width: 80,
     height: 40,
     borderWidth: 1,
     borderColor: colors.border,
