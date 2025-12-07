@@ -9,6 +9,9 @@ interface AdherenceCardProps {
 }
 
 export default function AdherenceCard({ title, percentage }: AdherenceCardProps) {
+  // Handle NaN or invalid values
+  const validPercentage = isNaN(percentage) || !isFinite(percentage) ? 0 : Math.max(0, Math.min(100, percentage));
+  
   const getColor = (pct: number) => {
     if (pct >= 80) return colors.success;
     if (pct >= 60) return colors.secondary;
@@ -24,14 +27,14 @@ export default function AdherenceCard({ title, percentage }: AdherenceCardProps)
             style={[
               styles.progressFill,
               {
-                width: `${percentage}%`,
-                backgroundColor: getColor(percentage),
+                width: `${validPercentage}%`,
+                backgroundColor: getColor(validPercentage),
               },
             ]}
           />
         </View>
-        <Text style={[styles.percentage, { color: getColor(percentage) }]}>
-          {percentage}%
+        <Text style={[styles.percentage, { color: getColor(validPercentage) }]}>
+          {validPercentage}%
         </Text>
       </View>
     </View>

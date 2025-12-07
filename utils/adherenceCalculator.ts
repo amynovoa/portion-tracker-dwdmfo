@@ -1,57 +1,8 @@
 
-import { PortionTargets, DailyPortions, DailyPortionsWithServings, FoodGroup } from '../types';
-import { getTodayString, getWeekStartDate, getMonthStartDate } from './dateUtils';
+import { PortionTargets, DailyPortions, FoodGroup } from '../types';
+import { getTodayString, getWeekStartDate, getMonthStartDate, formatDate } from './dateUtils';
 
-// Calculate total portion units from serving entries
-function calculateTotalPortionUnits(servings: any[]): number {
-  if (!servings || servings.length === 0) return 0;
-  return servings.reduce((sum, serving) => sum + (serving.portionUnits || 0), 0);
-}
-
-// Calculate adherence for a single day using new serving-based system
-export function calculateDailyAdherenceWithServings(
-  dailyServings: DailyPortionsWithServings,
-  targets: PortionTargets
-): number {
-  let totalCompleted = 0;
-  let totalTarget = 0;
-
-  const foodGroups: FoodGroup[] = [
-    'protein',
-    'veggies',
-    'fruit',
-    'wholeGrains',
-    'legumes',
-    'nutsSeeds',
-    'fats',
-    'dairy',
-    'alcohol',
-  ];
-
-  foodGroups.forEach((group) => {
-    const target = targets[group];
-    totalTarget += target;
-
-    if (group === 'water') {
-      // Water is still tracked as simple count
-      totalCompleted += Math.min(dailyServings.servings.water || 0, target);
-    } else {
-      // Calculate total portion units for this food group
-      const servingsList = dailyServings.servings[group] || [];
-      const portionUnits = calculateTotalPortionUnits(servingsList);
-      totalCompleted += Math.min(portionUnits, target);
-    }
-  });
-
-  // Add water separately
-  totalTarget += targets.water;
-  totalCompleted += Math.min(dailyServings.servings.water || 0, targets.water);
-
-  if (totalTarget === 0) return 0;
-  return Math.round((totalCompleted / totalTarget) * 100);
-}
-
-// Legacy: Calculate adherence for a single day (old system)
+// Calculate adherence for a single day
 export function calculateDailyAdherence(
   portions: PortionTargets,
   targets: PortionTargets
@@ -73,80 +24,123 @@ export function calculateDailyAdherence(
   ];
 
   foodGroups.forEach((group) => {
-    const target = targets[group];
-    const completed = portions[group];
+    const target = targets[group] || 0;
+    const completed = portions[group] || 0;
     totalTarget += target;
     totalCompleted += Math.min(completed, target);
   });
 
-  if (totalTarget === 0) return 0;
-  return Math.round((totalCompleted / totalTarget) * 100);
+  // Guard against division by zero
+  if (totalTarget === 0 || isNaN(totalTarget) || isNaN(totalCompleted)) {
+    console.log('Daily adherence: Invalid data', { totalTarget, totalCompleted });
+    return 0;
+  }
+
+  const percentage = Math.round((totalCompleted / totalTarget) * 100);
+  console.log('Daily adherence calculated:', { totalCompleted, totalTarget, percentage });
+  return percentage;
 }
 
-// Calculate weekly adherence using new serving-based system
-export function calculateWeeklyAdherenceWithServings(
-  allRecords: DailyPortionsWithServings[],
-  targets: PortionTargets
-): number {
-  const weekStart = getWeekStartDate();
-  const weekRecords = allRecords.filter((record) => record.date >= weekStart);
-
-  if (weekRecords.length === 0) return 0;
-
-  const totalAdherence = weekRecords.reduce((sum, record) => {
-    return sum + calculateDailyAdherenceWithServings(record, targets);
-  }, 0);
-
-  return Math.round(totalAdherence / weekRecords.length);
-}
-
-// Legacy: Calculate weekly adherence (old system)
+// Calculate weekly adherence
 export function calculateWeeklyAdherence(
   allRecords: DailyPortions[],
   targets: PortionTargets
 ): number {
-  const weekStart = getWeekStartDate();
-  const weekRecords = allRecords.filter((record) => record.date >= weekStart);
+  try {
+    const weekStart = getWeekStartDate();
+    console.log('Week start date:', weekStart);
+    
+    // Filter records for this week
+    const weekRecords = allRecords.filter((record) => {
+      if (!record || !record.date) {
+        console.log('Invalid record found:', record);
+        return false;
+      }
+      return record.date >= weekStart;
+    });
 
-  if (weekRecords.length === 0) return 0;
+    console.log('Week records found:', weekRecords.length);
 
-  const totalAdherence = weekRecords.reduce((sum, record) => {
-    return sum + calculateDailyAdherence(record.portions, targets);
-  }, 0);
+    if (weekRecords.length === 0) {
+      console.log('No records for this week');
+      return 0;
+    }
 
-  return Math.round(totalAdherence / weekRecords.length);
+    let totalAdherence = 0;
+    let validRecords = 0;
+
+    weekRecords.forEach((record) => {
+      if (record && record.portions && targets) {
+        const adherence = calculateDailyAdherence(record.portions, targets);
+        if (!isNaN(adherence)) {
+          totalAdherence += adherence;
+          validRecords++;
+        }
+      }
+    });
+
+    if (validRecords === 0) {
+      console.log('No valid records for weekly calculation');
+      return 0;
+    }
+
+    const weeklyPercentage = Math.round(totalAdherence / validRecords);
+    console.log('Weekly adherence:', { totalAdherence, validRecords, weeklyPercentage });
+    return weeklyPercentage;
+  } catch (error) {
+    console.error('Error calculating weekly adherence:', error);
+    return 0;
+  }
 }
 
-// Calculate monthly adherence using new serving-based system
-export function calculateMonthlyAdherenceWithServings(
-  allRecords: DailyPortionsWithServings[],
-  targets: PortionTargets
-): number {
-  const monthStart = getMonthStartDate();
-  const monthRecords = allRecords.filter((record) => record.date >= monthStart);
-
-  if (monthRecords.length === 0) return 0;
-
-  const totalAdherence = monthRecords.reduce((sum, record) => {
-    return sum + calculateDailyAdherenceWithServings(record, targets);
-  }, 0);
-
-  return Math.round(totalAdherence / monthRecords.length);
-}
-
-// Legacy: Calculate monthly adherence (old system)
+// Calculate monthly adherence
 export function calculateMonthlyAdherence(
   allRecords: DailyPortions[],
   targets: PortionTargets
 ): number {
-  const monthStart = getMonthStartDate();
-  const monthRecords = allRecords.filter((record) => record.date >= monthStart);
+  try {
+    const monthStart = getMonthStartDate();
+    console.log('Month start date:', monthStart);
+    
+    // Filter records for this month
+    const monthRecords = allRecords.filter((record) => {
+      if (!record || !record.date) {
+        console.log('Invalid record found:', record);
+        return false;
+      }
+      return record.date >= monthStart;
+    });
 
-  if (monthRecords.length === 0) return 0;
+    console.log('Month records found:', monthRecords.length);
 
-  const totalAdherence = monthRecords.reduce((sum, record) => {
-    return sum + calculateDailyAdherence(record.portions, targets);
-  }, 0);
+    if (monthRecords.length === 0) {
+      console.log('No records for this month');
+      return 0;
+    }
 
-  return Math.round(totalAdherence / monthRecords.length);
+    let totalAdherence = 0;
+    let validRecords = 0;
+
+    monthRecords.forEach((record) => {
+      if (record && record.portions && targets) {
+        const adherence = calculateDailyAdherence(record.portions, targets);
+        if (!isNaN(adherence)) {
+          totalAdherence += adherence;
+          validRecords++;
+        }
+      }
+    });
+
+    if (validRecords === 0) {
+      console.log('No valid records for monthly calculation');
+      return 0;
+    }
+
+    const monthlyPercentage = Math.round(totalAdherence / validRecords);
+    console.log('Monthly adherence:', { totalAdherence, validRecords, monthlyPercentage });
+    return monthlyPercentage;
+  } catch (error) {
+    console.error('Error calculating monthly adherence:', error);
+    return 0;
+  }
 }
