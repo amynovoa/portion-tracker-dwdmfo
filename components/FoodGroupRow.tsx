@@ -27,7 +27,9 @@ export default function FoodGroupRow({
   const [modalVisible, setModalVisible] = useState(false);
   
   // Calculate how many extra slots to show beyond target
-  const extraSlots = 3; // Always show 3 extra slots beyond target
+  // For alcohol, show 6 extra slots to allow tracking up to 6 portions
+  // For other food groups, show 3 extra slots
+  const extraSlots = foodGroup === 'alcohol' ? 6 : 3;
   const totalSlots = target + extraSlots;
   
   const foodGroupInfo = FOOD_GROUP_INFO[foodGroup];
