@@ -24,6 +24,7 @@ export default function HomeScreen() {
     
     if (!userProfile) {
       console.log('No profile found, redirecting to profile setup');
+      setLoading(false);
       router.replace('/(tabs)/profile');
       return;
     }
@@ -105,7 +106,11 @@ export default function HomeScreen() {
   }
 
   if (!profile || !todayPortions) {
-    return null;
+    return (
+      <View style={[commonStyles.container, styles.centerContent]}>
+        <Text style={commonStyles.text}>Redirecting to profile setup...</Text>
+      </View>
+    );
   }
 
   const todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
