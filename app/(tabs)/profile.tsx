@@ -5,7 +5,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, UserProfile, PortionTargets } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile, loadProfile } from '@/utils/storage';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
 
 export default function ProfileScreen() {
@@ -19,9 +19,13 @@ export default function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
 
-  useEffect(() => {
-    loadExistingProfile();
-  }, []);
+  // Load profile when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Profile screen focused, loading profile');
+      loadExistingProfile();
+    }, [])
+  );
 
   // Listen for custom targets returned from setup-targets screen
   useEffect(() => {
@@ -39,14 +43,19 @@ export default function ProfileScreen() {
   }, [params.customTargets]);
 
   const loadExistingProfile = async () => {
+    console.log('Loading existing profile...');
     const profile = await loadProfile();
     if (profile) {
+      console.log('Profile found, populating fields');
       setSex(profile.sex);
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
       setTargets(profile.targets);
       setHasProfile(true);
+    } else {
+      console.log('No profile found');
+      setHasProfile(false);
     }
   };
 
@@ -102,13 +111,21 @@ export default function ProfileScreen() {
       targets,
     };
 
+    console.log('Saving profile:', profile);
     await saveProfile(profile);
+    
+    // Verify the profile was saved
+    const savedProfile = await loadProfile();
+    console.log('Profile saved and verified:', savedProfile);
+    
     Alert.alert('Success', 'Profile saved successfully!', [
       {
         text: 'OK',
         onPress: () => {
           setHasProfile(true);
           setIsEditing(false);
+          // Navigate to home screen
+          console.log('Navigating to home screen');
           router.replace('/(tabs)/(home)/');
         },
       },

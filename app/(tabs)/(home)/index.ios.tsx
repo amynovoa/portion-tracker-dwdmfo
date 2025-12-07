@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions } from '@/utils/storage';
 import { getTodayString } from '@/utils/dateUtils';
@@ -9,6 +9,7 @@ import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } fr
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AdherenceCard from '@/components/AdherenceCard';
 import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
+import AppLogo from '@/components/AppLogo';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,12 +24,14 @@ export default function HomeScreen() {
     const userProfile = await loadProfile();
     
     if (!userProfile) {
-      console.log('Home: No profile found, redirecting to profile');
+      console.log('Home: No profile found');
       setLoading(false);
-      router.replace('/(tabs)/profile');
+      setProfile(null);
+      setTodayPortions(null);
       return;
     }
 
+    console.log('Home: Profile found, loading portions');
     setProfile(userProfile);
 
     const today = getTodayString();
@@ -56,9 +59,13 @@ export default function HomeScreen() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Load data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Home screen focused, loading data');
+      loadData();
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -98,8 +105,30 @@ export default function HomeScreen() {
   };
 
   // Show loading state
-  if (loading || !profile || !todayPortions) {
-    return <View style={commonStyles.container} />;
+  if (loading) {
+    return (
+      <View style={commonStyles.container}>
+        <View style={styles.loadingContainer}>
+          <AppLogo size={80} />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Show message if no profile
+  if (!profile || !todayPortions) {
+    return (
+      <View style={commonStyles.container}>
+        <View style={styles.emptyContainer}>
+          <AppLogo size={80} />
+          <Text style={styles.emptyTitle}>Welcome to Portion Tracker!</Text>
+          <Text style={styles.emptyMessage}>
+            Please create your profile in the Profile tab to get started.
+          </Text>
+        </View>
+      </View>
+    );
   }
 
   const todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
@@ -115,6 +144,10 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
         <View style={styles.header}>
           <Text style={styles.title}>Today&apos;s Portions</Text>
           <Text style={styles.subtitle}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
@@ -151,6 +184,10 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 100,
   },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   header: {
     paddingHorizontal: 16,
     marginBottom: 16,
@@ -173,5 +210,35 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    marginTop: 24,
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  emptyMessage: {
+    marginTop: 12,
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });

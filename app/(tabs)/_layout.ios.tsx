@@ -8,31 +8,31 @@ import { useRouter, useSegments } from 'expo-router';
 export default function TabLayout() {
   const router = useRouter();
   const segments = useSegments();
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
 
   useEffect(() => {
     async function checkProfile() {
       try {
-        console.log('Checking for profile in tabs layout (iOS)...');
+        console.log('Tabs layout (iOS): Checking for profile...');
         const profile = await loadProfile();
         const profileExists = !!profile;
-        console.log('Profile exists:', profileExists);
-        setHasProfile(profileExists);
+        console.log('Tabs layout (iOS): Profile exists:', profileExists);
 
-        // If no profile and not already on profile screen, redirect to profile
-        if (!profileExists && segments[1] !== 'profile') {
-          console.log('No profile found, redirecting to profile screen');
+        // Only redirect to profile if no profile exists AND we're on the home screen
+        if (!profileExists && segments[1] === '(home)') {
+          console.log('Tabs layout (iOS): No profile found, redirecting to profile screen');
           router.replace('/(tabs)/profile');
         }
+        
+        setIsCheckingProfile(false);
       } catch (error) {
-        console.error('Error checking profile:', error);
-        setHasProfile(false);
-        router.replace('/(tabs)/profile');
+        console.error('Tabs layout (iOS): Error checking profile:', error);
+        setIsCheckingProfile(false);
       }
     }
 
     checkProfile();
-  }, []);
+  }, [segments]);
 
   return (
     <NativeTabs
