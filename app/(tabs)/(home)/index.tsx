@@ -49,6 +49,7 @@ export default function HomeScreen() {
         legumes: 0,
         nutsSeeds: 0,
         fats: 0,
+        dairy: 0,
         water: 0,
         alcohol: 0,
       };

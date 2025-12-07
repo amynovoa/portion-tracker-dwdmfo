@@ -19,6 +19,7 @@ export default function SetupTargetsScreen() {
     legumes: 2,
     nutsSeeds: 2,
     fats: 2,
+    dairy: 2,
     water: 8,
     alcohol: 0,
   });
@@ -71,6 +72,7 @@ export default function SetupTargetsScreen() {
     { key: 'legumes', label: 'Legumes', icon: '🫘' },
     { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
     { key: 'fats', label: 'Fats', icon: '🥑' },
+    { key: 'dairy', label: 'Dairy', icon: '🥛' },
     { key: 'water', label: 'Water', icon: '💧' },
     { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
   ];

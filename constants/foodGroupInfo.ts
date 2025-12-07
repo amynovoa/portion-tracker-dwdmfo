@@ -43,6 +43,11 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
     avoid: 'Avoid: trans fats, processed oils, fried foods, sugary nut spreads.',
     examples: 'Examples: avocado; olive oil, avocado oil; chia, flax, hemp seeds; salmon, sardines.',
   },
+  dairy: {
+    benefit: 'Dairy can be a good source of protein, calcium, and vitamin D, which support bone health, muscle function, and overall nutrition.',
+    avoid: 'Avoid: sugary flavored yogurts, sweetened milks, heavy cream sauces, and highly processed cheese products.',
+    examples: 'Examples: Greek yogurt; cottage cheese; milk or lactose-free milk; almond milk, soy milk, oat milk, cashew milk; unsweetened yogurt or coconut yogurt; small amounts of cheese (cheddar, mozzarella, feta); kefir or unsweetened yogurt drinks; ricotta; paneer.',
+  },
   water: {
     benefit: 'Supports energy, digestion, metabolism, and reduces false hunger signals.',
     avoid: 'Avoid: sugary drinks.',
