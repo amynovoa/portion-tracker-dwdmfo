@@ -1,9 +1,11 @@
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import PortionSlot from './PortionSlot';
+import FoodGroupInfoModal from './FoodGroupInfoModal';
 import { FoodGroup } from '../types';
 import { colors } from '../styles/commonStyles';
+import { FOOD_GROUP_INFO } from '../constants/foodGroupInfo';
 
 interface FoodGroupRowProps {
   icon: string;
@@ -17,34 +19,58 @@ interface FoodGroupRowProps {
 export default function FoodGroupRow({
   icon,
   label,
+  foodGroup,
   target,
   completed,
   onToggle,
 }: FoodGroupRowProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  
   // Calculate how many extra slots to show beyond target
   const extraSlots = 3; // Always show 3 extra slots beyond target
   const totalSlots = target + extraSlots;
   
+  const foodGroupInfo = FOOD_GROUP_INFO[foodGroup];
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.icon}>{icon}</Text>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.count}>
-          {completed}/{target}
-        </Text>
+    <>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.icon}>{icon}</Text>
+          <Text style={styles.label}>{label}</Text>
+          <TouchableOpacity 
+            onPress={() => setModalVisible(true)}
+            style={styles.infoButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={styles.infoIcon}>ℹ️</Text>
+          </TouchableOpacity>
+          <Text style={styles.count}>
+            {completed}/{target}
+          </Text>
+        </View>
+        <View style={styles.slots}>
+          {Array.from({ length: totalSlots }).map((_, index) => (
+            <PortionSlot
+              key={index}
+              completed={index < completed}
+              isExtra={index >= target}
+              onPress={() => onToggle(index)}
+            />
+          ))}
+        </View>
       </View>
-      <View style={styles.slots}>
-        {Array.from({ length: totalSlots }).map((_, index) => (
-          <PortionSlot
-            key={index}
-            completed={index < completed}
-            isExtra={index >= target}
-            onPress={() => onToggle(index)}
-          />
-        ))}
-      </View>
-    </View>
+
+      <FoodGroupInfoModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={label}
+        icon={icon}
+        benefit={foodGroupInfo.benefit}
+        avoid={foodGroupInfo.avoid}
+        examples={foodGroupInfo.examples}
+      />
+    </>
   );
 }
 
@@ -72,6 +98,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     flex: 1,
+  },
+  infoButton: {
+    marginRight: 8,
+    padding: 4,
+  },
+  infoIcon: {
+    fontSize: 18,
+    opacity: 0.6,
   },
   count: {
     fontSize: 14,
