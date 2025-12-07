@@ -1,6 +1,6 @@
 
 import { PortionTargets, DailyPortions, DailyPortionsWithServings, FoodGroup } from '../types';
-import { getTodayString, getWeekStart, getMonthStart } from './dateUtils';
+import { getTodayString, getWeekStartDate, getMonthStartDate } from './dateUtils';
 
 // Calculate total portion units from serving entries
 function calculateTotalPortionUnits(servings: any[]): number {
@@ -88,7 +88,7 @@ export function calculateWeeklyAdherenceWithServings(
   allRecords: DailyPortionsWithServings[],
   targets: PortionTargets
 ): number {
-  const weekStart = getWeekStart();
+  const weekStart = getWeekStartDate();
   const weekRecords = allRecords.filter((record) => record.date >= weekStart);
 
   if (weekRecords.length === 0) return 0;
@@ -105,7 +105,7 @@ export function calculateWeeklyAdherence(
   allRecords: DailyPortions[],
   targets: PortionTargets
 ): number {
-  const weekStart = getWeekStart();
+  const weekStart = getWeekStartDate();
   const weekRecords = allRecords.filter((record) => record.date >= weekStart);
 
   if (weekRecords.length === 0) return 0;
@@ -122,7 +122,7 @@ export function calculateMonthlyAdherenceWithServings(
   allRecords: DailyPortionsWithServings[],
   targets: PortionTargets
 ): number {
-  const monthStart = getMonthStart();
+  const monthStart = getMonthStartDate();
   const monthRecords = allRecords.filter((record) => record.date >= monthStart);
 
   if (monthRecords.length === 0) return 0;
@@ -139,7 +139,7 @@ export function calculateMonthlyAdherence(
   allRecords: DailyPortions[],
   targets: PortionTargets
 ): number {
-  const monthStart = getMonthStart();
+  const monthStart = getMonthStartDate();
   const monthRecords = allRecords.filter((record) => record.date >= monthStart);
 
   if (monthRecords.length === 0) return 0;
