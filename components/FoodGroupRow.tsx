@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
-import ServingSizeModal from './ServingSizeModal';
-import { FoodGroup, ServingEntry, ServingSize } from '../types';
+import PortionSlot from './PortionSlot';
+import { FoodGroup } from '../types';
 import { colors } from '../styles/commonStyles';
 import { FOOD_GROUP_INFO } from '../constants/foodGroupInfo';
 
@@ -12,11 +12,8 @@ interface FoodGroupRowProps {
   label: string;
   foodGroup: FoodGroup;
   target: number;
-  servings: ServingEntry[];
-  waterCount?: number; // For water, which doesn't use S/M/L
-  onAddServing: (size: ServingSize) => void;
-  onRemoveServing: (index: number) => void;
-  onToggleWater?: () => void; // For water
+  completed: number;
+  onTogglePortion: () => void;
 }
 
 export default function FoodGroupRow({
@@ -24,46 +21,21 @@ export default function FoodGroupRow({
   label,
   foodGroup,
   target,
-  servings,
-  waterCount,
-  onAddServing,
-  onRemoveServing,
-  onToggleWater,
+  completed,
+  onTogglePortion,
 }: FoodGroupRowProps) {
   const [infoModalVisible, setInfoModalVisible] = useState(false);
-  const [sizeModalVisible, setSizeModalVisible] = useState(false);
   
   const foodGroupInfo = FOOD_GROUP_INFO[foodGroup];
-  const isWater = foodGroup === 'water';
-
-  // Calculate total portion units
-  const totalPortionUnits = isWater 
-    ? waterCount || 0 
-    : servings.reduce((sum, s) => sum + s.portionUnits, 0);
 
   const handleInfoPress = () => {
     console.log(`Opening info modal for ${label}`);
     setInfoModalVisible(true);
   };
 
-  const handleAddPress = () => {
-    if (isWater && onToggleWater) {
-      onToggleWater();
-    } else {
-      console.log(`Opening size modal for ${label}`);
-      setSizeModalVisible(true);
-    }
-  };
-
-  const handleSelectSize = (size: ServingSize) => {
-    console.log(`Selected size ${size} for ${label}`);
-    onAddServing(size);
-  };
-
-  const handleRemoveServing = (index: number) => {
-    console.log(`Removing serving ${index} from ${label}`);
-    onRemoveServing(index);
-  };
+  // Calculate how many slots to show (target + 2 extra)
+  const totalSlots = target + 2;
+  const slots = Array.from({ length: totalSlots }, (_, i) => i);
 
   return (
     <>
@@ -79,47 +51,21 @@ export default function FoodGroupRow({
             <Text style={styles.infoIcon}>ℹ️</Text>
           </TouchableOpacity>
           <Text style={styles.count}>
-            {totalPortionUnits.toFixed(1)}/{target}
+            {completed}/{target}
           </Text>
         </View>
 
-        {/* Progress bar */}
-        <View style={styles.progressBarContainer}>
-          <View 
-            style={[
-              styles.progressBar, 
-              { width: `${Math.min(100, (totalPortionUnits / target) * 100)}%` }
-            ]} 
-          />
+        {/* Portion slots */}
+        <View style={styles.slotsContainer}>
+          {slots.map((index) => (
+            <PortionSlot
+              key={index}
+              completed={index < completed}
+              isExtra={index >= target}
+              onPress={onTogglePortion}
+            />
+          ))}
         </View>
-
-        {/* Servings display */}
-        {!isWater && servings.length > 0 && (
-          <View style={styles.servingsContainer}>
-            {servings.map((serving, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.servingChip}
-                onPress={() => handleRemoveServing(index)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.servingSize}>{serving.size}</Text>
-                <Text style={styles.servingUnits}>({serving.portionUnits})</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Add button */}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleAddPress}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.addButtonText}>
-            {isWater ? '+ Add Glass' : '+ Add Serving'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <FoodGroupInfoModal
@@ -131,15 +77,6 @@ export default function FoodGroupRow({
         avoid={foodGroupInfo.avoid}
         examples={foodGroupInfo.examples}
       />
-
-      {!isWater && (
-        <ServingSizeModal
-          visible={sizeModalVisible}
-          onClose={() => setSizeModalVisible(false)}
-          onSelectSize={handleSelectSize}
-          foodGroupLabel={label}
-        />
-      )}
     </>
   );
 }
@@ -182,53 +119,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textSecondary,
   },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: colors.border,
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 4,
-  },
-  servingsContainer: {
+  slotsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 12,
-  },
-  servingChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.highlight,
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  servingSize: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.primary,
-    marginRight: 4,
-  },
-  servingUnits: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  addButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
 });

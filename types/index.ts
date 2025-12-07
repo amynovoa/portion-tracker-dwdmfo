@@ -1,8 +1,6 @@
 
 export type Sex = 'male' | 'female' | 'prefer-not-to-say';
 export type Goal = 'lose' | 'maintain' | 'build';
-export type SizeCategory = 'small' | 'medium' | 'large';
-export type ServingSize = 'S' | 'M' | 'L';
 
 export interface UserProfile {
   sex: Sex;
@@ -25,31 +23,7 @@ export interface PortionTargets {
   alcohol: number;
 }
 
-// New: Individual serving entry with size
-export interface ServingEntry {
-  size: ServingSize;
-  portionUnits: number; // Calculated based on user's sex/weight
-  timestamp: number;
-}
-
-// New: Daily portions with serving entries
-export interface DailyPortionsWithServings {
-  date: string; // YYYY-MM-DD format
-  servings: {
-    protein: ServingEntry[];
-    veggies: ServingEntry[];
-    fruit: ServingEntry[];
-    wholeGrains: ServingEntry[];
-    legumes: ServingEntry[];
-    nutsSeeds: ServingEntry[];
-    fats: ServingEntry[];
-    dairy: ServingEntry[];
-    water: number; // Water is still just a count (not S/M/L)
-    alcohol: ServingEntry[];
-  };
-}
-
-// Legacy format for backward compatibility
+// Daily portions - simplified (no S/M/L serving sizes)
 export interface DailyPortions {
   date: string; // YYYY-MM-DD format
   portions: PortionTargets;

@@ -74,17 +74,14 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handleTogglePortion = async (foodGroup: FoodGroup, index: number) => {
+  const handleTogglePortion = async (foodGroup: FoodGroup) => {
     if (!profile || !todayPortions) return;
 
     const current = todayPortions[foodGroup];
+    const target = profile.targets[foodGroup];
 
-    let newValue: number;
-    if (index < current) {
-      newValue = index;
-    } else {
-      newValue = index + 1;
-    }
+    // If at or above target, reset to 0, otherwise increment by 1
+    const newValue = current >= target ? 0 : current + 1;
 
     const updatedPortions = {
       ...todayPortions,
@@ -169,7 +166,7 @@ export default function HomeScreen() {
               foodGroup={group.key}
               target={profile.targets[group.key]}
               completed={todayPortions[group.key]}
-              onToggle={(index) => handleTogglePortion(group.key, index)}
+              onTogglePortion={() => handleTogglePortion(group.key)}
             />
           ))}
         </View>

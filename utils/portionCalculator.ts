@@ -1,84 +1,20 @@
 
 import { Sex, Goal, PortionTargets } from '../types';
 
-// Weight brackets for each sex
-interface WeightBracket {
-  min: number;
-  max: number;
-}
+// Size classification based on weight only (same for all sexes)
+export type SizeCategory = 'S' | 'M' | 'L';
 
-// S/M/L portion unit values
-interface ServingSizeUnits {
-  S: number;
-  M: number;
-  L: number;
-}
-
-// Get weight bracket index (0, 1, or 2) based on sex and weight
-function getWeightBracketIndex(sex: Sex, weight: number): number {
-  if (sex === 'female') {
-    if (weight < 150) return 0;
-    if (weight <= 180) return 1;
-    return 2;
-  } else if (sex === 'male') {
-    if (weight < 180) return 0;
-    if (weight <= 220) return 1;
-    return 2;
-  } else {
-    // prefer-not-to-say
-    if (weight < 165) return 0;
-    if (weight <= 200) return 1;
-    return 2;
-  }
-}
-
-// Get S/M/L portion units based on sex and weight
-export function getServingSizeUnits(sex: Sex, weight: number): ServingSizeUnits {
-  const bracketIndex = getWeightBracketIndex(sex, weight);
-
-  if (sex === 'female') {
-    const units: ServingSizeUnits[] = [
-      { S: 1, M: 1.5, L: 2 },      // < 150 lbs
-      { S: 1, M: 2, L: 2.5 },      // 150-180 lbs
-      { S: 1.5, M: 2.5, L: 3 },    // > 180 lbs
-    ];
-    return units[bracketIndex];
-  } else if (sex === 'male') {
-    const units: ServingSizeUnits[] = [
-      { S: 1.5, M: 2, L: 2.5 },    // < 180 lbs
-      { S: 2, M: 2.5, L: 3 },      // 180-220 lbs
-      { S: 2, M: 3, L: 3.5 },      // > 220 lbs
-    ];
-    return units[bracketIndex];
-  } else {
-    // prefer-not-to-say
-    const units: ServingSizeUnits[] = [
-      { S: 1.25, M: 1.75, L: 2.25 }, // < 165 lbs
-      { S: 1.5, M: 2, L: 2.5 },      // 165-200 lbs
-      { S: 1.75, M: 2.25, L: 3 },    // > 200 lbs
-    ];
-    return units[bracketIndex];
-  }
-}
-
-// Convert serving size (S/M/L) to portion units
-export function convertServingToPortionUnits(
-  sex: Sex,
-  weight: number,
-  servingSize: 'S' | 'M' | 'L'
-): number {
-  const units = getServingSizeUnits(sex, weight);
-  return units[servingSize];
+export function classifySize(weight: number): SizeCategory {
+  if (weight < 150) return 'S';
+  if (weight <= 200) return 'M';
+  return 'L';
 }
 
 // Get baseline daily portions before goal modifiers
-export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
-  const bracketIndex = getWeightBracketIndex(sex, weight);
-
+export function getBaselinePortions(sex: Sex, size: SizeCategory): PortionTargets {
   if (sex === 'female') {
-    const baselines: PortionTargets[] = [
-      {
-        // < 150 lbs
+    if (size === 'S') {
+      return {
         protein: 3,
         veggies: 4,
         fruit: 2,
@@ -86,12 +22,12 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         legumes: 1,
         fats: 2,
         nutsSeeds: 1,
-        dairy: 0, // 0-1, using lower end
-        water: 8, // Water is tracked separately, not using S/M/L
-        alcohol: 0, // 0-1, using lower end
-      },
-      {
-        // 150-180 lbs
+        dairy: 1,
+        water: 8,
+        alcohol: 0, // 0-1 range, using lower end
+      };
+    } else if (size === 'M') {
+      return {
         protein: 4,
         veggies: 5,
         fruit: 2,
@@ -101,10 +37,10 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         nutsSeeds: 1,
         dairy: 1,
         water: 8,
-        alcohol: 0, // 0-1, using lower end
-      },
-      {
-        // > 180 lbs
+        alcohol: 0, // 0-1 range, using lower end
+      };
+    } else { // size === 'L'
+      return {
         protein: 5,
         veggies: 6,
         fruit: 3,
@@ -112,16 +48,14 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         legumes: 2,
         fats: 3,
         nutsSeeds: 1,
-        dairy: 1, // 1-2, using lower end
+        dairy: 1, // 1-2 range, using lower end
         water: 10,
-        alcohol: 0, // 0-2, using lower end
-      },
-    ];
-    return baselines[bracketIndex];
+        alcohol: 0, // 0-2 range, using lower end
+      };
+    }
   } else if (sex === 'male') {
-    const baselines: PortionTargets[] = [
-      {
-        // < 180 lbs
+    if (size === 'S') {
+      return {
         protein: 4,
         veggies: 4,
         fruit: 2,
@@ -131,10 +65,10 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         nutsSeeds: 1,
         dairy: 1,
         water: 8,
-        alcohol: 0, // 0-1, using lower end
-      },
-      {
-        // 180-220 lbs
+        alcohol: 0, // 0-1 range, using lower end
+      };
+    } else if (size === 'M') {
+      return {
         protein: 5,
         veggies: 5,
         fruit: 3,
@@ -142,12 +76,12 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         legumes: 2,
         fats: 3,
         nutsSeeds: 1,
-        dairy: 1, // 1-2, using lower end
+        dairy: 1, // 1-2 range, using lower end
         water: 10,
-        alcohol: 0, // 0-2, using lower end
-      },
-      {
-        // > 220 lbs
+        alcohol: 0, // 0-2 range, using lower end
+      };
+    } else { // size === 'L'
+      return {
         protein: 6,
         veggies: 6,
         fruit: 3,
@@ -157,16 +91,13 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         nutsSeeds: 1,
         dairy: 2,
         water: 10,
-        alcohol: 0, // 0-2, using lower end
-      },
-    ];
-    return baselines[bracketIndex];
-  } else {
-    // prefer-not-to-say
-    const baselines: PortionTargets[] = [
-      {
-        // < 165 lbs
-        protein: 3.5,
+        alcohol: 0, // 0-2 range, using lower end
+      };
+    }
+  } else { // prefer-not-to-say
+    if (size === 'S') {
+      return {
+        protein: 3,
         veggies: 4,
         fruit: 2,
         wholeGrains: 2,
@@ -175,23 +106,23 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         nutsSeeds: 1,
         dairy: 1,
         water: 8,
-        alcohol: 0, // 0-1, using lower end
-      },
-      {
-        // 165-200 lbs
+        alcohol: 0, // 0-1 range, using lower end
+      };
+    } else if (size === 'M') {
+      return {
         protein: 4,
         veggies: 5,
-        fruit: 2, // 2-3, using lower end
+        fruit: 2,
         wholeGrains: 3,
-        legumes: 1, // 1-2, using lower end
+        legumes: 1,
         fats: 2,
         nutsSeeds: 1,
         dairy: 1,
         water: 8,
-        alcohol: 0, // 0-1, using lower end
-      },
-      {
-        // > 200 lbs
+        alcohol: 0, // 0-1 range, using lower end
+      };
+    } else { // size === 'L'
+      return {
         protein: 5,
         veggies: 6,
         fruit: 3,
@@ -199,12 +130,11 @@ export function getBaselinePortions(sex: Sex, weight: number): PortionTargets {
         legumes: 2,
         fats: 3,
         nutsSeeds: 1,
-        dairy: 1, // 1-2, using lower end
+        dairy: 1, // 1-2 range, using lower end
         water: 10,
-        alcohol: 0, // 0-2, using lower end
-      },
-    ];
-    return baselines[bracketIndex];
+        alcohol: 0, // 0-2 range, using lower end
+      };
+    }
   }
 }
 
@@ -220,15 +150,15 @@ export function applyGoalModifiers(
       // Protein: no change
       // Vegetables: +1
       targets.veggies += 1;
-      // Fruits: -1 (but never below 1)
+      // Fruits: -1 (floor = 1)
       targets.fruit = Math.max(1, targets.fruit - 1);
-      // Whole grains: -1 (never below 0)
+      // Whole grains: -1 (floor = 0)
       targets.wholeGrains = Math.max(0, targets.wholeGrains - 1);
-      // Fats: -1 (never below 1)
+      // Fats: -1 (floor = 1)
       targets.fats = Math.max(1, targets.fats - 1);
       // Legumes: no change
       // Nuts/Seeds: no change
-      // Dairy: if above 1, cap at 1
+      // Dairy: if > 1, bring down to 1
       if (targets.dairy > 1) {
         targets.dairy = 1;
       }
@@ -240,17 +170,17 @@ export function applyGoalModifiers(
       break;
 
     case 'build':
-      // Protein: +1 portion
+      // Protein: +1
       targets.protein += 1;
-      // Whole grains: +1 portion
+      // Whole grains: +1
       targets.wholeGrains += 1;
       // Fruits: no change
       // Vegetables: no change
       // Fats: no change
-      // Legumes: optional +1 (leaving as is for now)
-      // Dairy: +1 portion, but cap total at 2
+      // Legumes: optional +1 (leaving as is for simplicity)
+      // Dairy: +1, but cap total at 2
       targets.dairy = Math.min(2, targets.dairy + 1);
-      // Alcohol: keep within existing baseline range (no increase)
+      // Alcohol: keep within existing range (no increase)
       break;
   }
 
@@ -263,29 +193,18 @@ export function calculateRecommendedTargets(
   weight: number,
   goal: Goal
 ): PortionTargets {
-  const baseline = getBaselinePortions(sex, weight);
+  const size = classifySize(weight);
+  const baseline = getBaselinePortions(sex, size);
   const targets = applyGoalModifiers(baseline, goal);
   
   console.log('Calculated targets:', {
     sex,
     weight,
+    size,
     goal,
     baseline,
     targets,
   });
   
   return targets;
-}
-
-// Legacy function for backward compatibility (no longer used with new system)
-export function calculateSizeCategory(sex: Sex, weight: number): 'small' | 'medium' | 'large' {
-  if (sex === 'female') {
-    if (weight < 150) return 'small';
-    if (weight < 190) return 'medium';
-    return 'large';
-  } else {
-    if (weight < 170) return 'small';
-    if (weight < 210) return 'medium';
-    return 'large';
-  }
 }
