@@ -2,7 +2,7 @@
 import "react-native-reanimated";
 import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
-import { Stack, Redirect } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -15,7 +15,6 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
-import { loadProfile } from "@/utils/storage";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -92,7 +91,6 @@ const errorStyles = StyleSheet.create({
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const [isReady, setIsReady] = useState(false);
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
 
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -113,12 +111,7 @@ function RootLayoutNav() {
           console.error("Font loading error:", error);
         }
 
-        // Check for profile
-        console.log('Checking for profile...');
-        const profile = await loadProfile();
-        console.log('Profile exists:', !!profile);
-
-        setHasProfile(!!profile);
+        console.log('Fonts loaded, app ready');
         setIsReady(true);
         
         // Hide splash screen
@@ -127,7 +120,6 @@ function RootLayoutNav() {
       } catch (e) {
         console.error('Error during app preparation:', e);
         // Still hide splash screen even if there's an error
-        setHasProfile(false);
         setIsReady(true);
         await SplashScreen.hideAsync();
       }
@@ -137,7 +129,7 @@ function RootLayoutNav() {
   }, [loaded, error]);
 
   // Don't render anything until we're ready
-  if (!isReady || hasProfile === null) {
+  if (!isReady) {
     return null;
   }
 
@@ -165,17 +157,6 @@ function RootLayoutNav() {
       notification: "rgb(255, 69, 58)",
     },
   };
-
-  // If no profile exists, redirect to profile screen
-  if (!hasProfile) {
-    return (
-      <ThemeProvider
-        value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
-      >
-        <Redirect href="/(tabs)/profile" />
-      </ThemeProvider>
-    );
-  }
 
   return (
     <ThemeProvider

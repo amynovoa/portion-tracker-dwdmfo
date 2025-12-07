@@ -1,9 +1,38 @@
 
-import React from 'react';
-import { Stack } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
+import { loadProfile } from '@/utils/storage';
 
 export default function TabLayout() {
+  const router = useRouter();
+  const segments = useSegments();
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    async function checkProfile() {
+      try {
+        console.log('Checking for profile in tabs layout...');
+        const profile = await loadProfile();
+        const profileExists = !!profile;
+        console.log('Profile exists:', profileExists);
+        setHasProfile(profileExists);
+
+        // If no profile and not already on profile screen, redirect to profile
+        if (!profileExists && segments[1] !== 'profile') {
+          console.log('No profile found, redirecting to profile screen');
+          router.replace('/(tabs)/profile');
+        }
+      } catch (error) {
+        console.error('Error checking profile:', error);
+        setHasProfile(false);
+        router.replace('/(tabs)/profile');
+      }
+    }
+
+    checkProfile();
+  }, []);
+
   const tabs: TabBarItem[] = [
     {
       name: '(home)',
