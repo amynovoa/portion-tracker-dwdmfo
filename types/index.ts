@@ -27,6 +27,7 @@ export interface PortionTargets {
 export interface DailyPortions {
   date: string; // YYYY-MM-DD format
   portions: PortionTargets;
+  exercise?: boolean; // Track if exercise was completed
 }
 
 export interface WeightEntry {

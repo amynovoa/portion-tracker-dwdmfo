@@ -7,6 +7,7 @@ import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions 
 import { getTodayString } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import FoodGroupRow from '@/components/FoodGroupRow';
+import ExerciseRow from '@/components/ExerciseRow';
 import AdherenceCard from '@/components/AdherenceCard';
 import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
 import AppLogo from '@/components/AppLogo';
@@ -15,6 +16,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [todayPortions, setTodayPortions] = useState<PortionTargets | null>(null);
+  const [exerciseCompleted, setExerciseCompleted] = useState(false);
   const [allRecords, setAllRecords] = useState<DailyPortions[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ export default function HomeScreen() {
       setLoading(false);
       setProfile(null);
       setTodayPortions(null);
+      setExerciseCompleted(false);
       return;
     }
 
@@ -39,6 +42,7 @@ export default function HomeScreen() {
 
     if (dailyData) {
       setTodayPortions(dailyData.portions);
+      setExerciseCompleted(dailyData.exercise || false);
     } else {
       const emptyPortions: PortionTargets = {
         protein: 0,
@@ -53,6 +57,7 @@ export default function HomeScreen() {
         alcohol: 0,
       };
       setTodayPortions(emptyPortions);
+      setExerciseCompleted(false);
     }
 
     const records = await getAllDailyPortions();
@@ -94,12 +99,30 @@ export default function HomeScreen() {
     const dailyData: DailyPortions = {
       date: today,
       portions: updatedPortions,
+      exercise: exerciseCompleted,
     };
 
     await saveDailyPortions(dailyData);
 
     const records = await getAllDailyPortions();
     setAllRecords(records);
+  };
+
+  const handleToggleExercise = async () => {
+    if (!todayPortions) return;
+
+    const newExerciseState = !exerciseCompleted;
+    setExerciseCompleted(newExerciseState);
+
+    const today = getTodayString();
+    const dailyData: DailyPortions = {
+      date: today,
+      portions: todayPortions,
+      exercise: newExerciseState,
+    };
+
+    await saveDailyPortions(dailyData);
+    console.log('Exercise toggled:', newExerciseState);
   };
 
   // Show loading state
@@ -169,6 +192,11 @@ export default function HomeScreen() {
               onTogglePortion={() => handleTogglePortion(group.key)}
             />
           ))}
+          
+          <ExerciseRow 
+            completed={exerciseCompleted}
+            onToggle={handleToggleExercise}
+          />
         </View>
 
         <View style={styles.bottomPadding} />
