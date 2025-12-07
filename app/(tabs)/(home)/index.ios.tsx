@@ -19,13 +19,13 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
-    console.log('Loading data...');
+    console.log('Home: Loading data...');
     const userProfile = await loadProfile();
     
     if (!userProfile) {
-      console.log('No profile found on home screen');
+      console.log('Home: No profile found, redirecting to profile');
       setLoading(false);
-      // Don't redirect here - let the tab layout handle it
+      router.replace('/(tabs)/profile');
       return;
     }
 
@@ -97,7 +97,7 @@ export default function HomeScreen() {
     setAllRecords(records);
   };
 
-  // Show empty view if no profile - tab layout will handle redirect
+  // Show loading state
   if (loading || !profile || !todayPortions) {
     return <View style={commonStyles.container} />;
   }
