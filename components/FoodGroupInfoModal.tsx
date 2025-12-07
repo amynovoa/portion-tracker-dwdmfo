@@ -57,8 +57,9 @@ export default function FoodGroupInfoModal({
 
             <ScrollView 
               style={styles.scrollView}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
               contentContainerStyle={styles.scrollContent}
+              bounces={true}
             >
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Benefits</Text>
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
   },
   modalContent: {
-    width: '100%',
+    flex: 1,
     backgroundColor: colors.card,
     borderRadius: 16,
     overflow: 'hidden',
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   scrollView: {
-    maxHeight: 500,
+    flex: 1,
   },
   scrollContent: {
     padding: 20,
