@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Pressable } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Pressable, Platform } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 
 interface FoodGroupInfoModalProps {
@@ -76,8 +76,20 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 500,
     maxHeight: '80%',
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
   header: {
     flexDirection: 'row',

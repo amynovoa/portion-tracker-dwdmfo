@@ -37,7 +37,7 @@ export interface WeightEntry {
 export type FoodGroup = keyof PortionTargets;
 
 export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
-  { key: 'protein', label: 'Protein', icon: '🥩' },
+  { key: 'protein', label: 'Protein', icon: '🍗' },
   { key: 'veggies', label: 'Veggies', icon: '🥦' },
   { key: 'fruit', label: 'Fruit', icon: '🍎' },
   { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
