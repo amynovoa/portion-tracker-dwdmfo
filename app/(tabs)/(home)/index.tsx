@@ -24,9 +24,9 @@ export default function HomeScreen() {
     const userProfile = await loadProfile();
     
     if (!userProfile) {
-      console.log('No profile found, redirecting to profile setup');
+      console.log('No profile found on home screen');
       setLoading(false);
-      router.replace('/(tabs)/profile');
+      // Don't redirect here - let the tab layout handle it
       return;
     }
 
@@ -103,10 +103,9 @@ export default function HomeScreen() {
     setAllRecords(records);
   };
 
-  // Don't render anything while loading or if no profile
-  // The router.replace will handle navigation
+  // Show empty view if no profile - tab layout will handle redirect
   if (loading || !profile || !todayPortions) {
-    return null;
+    return <View style={commonStyles.container} />;
   }
 
   const todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);

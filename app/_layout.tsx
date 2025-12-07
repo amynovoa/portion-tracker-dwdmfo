@@ -2,11 +2,11 @@
 import "react-native-reanimated";
 import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
-import { Stack, router } from "expo-router";
+import { Stack, router, Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, Alert, View, Text, StyleSheet } from "react-native";
+import { useColorScheme, View, Text, StyleSheet } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -15,6 +15,7 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
+import { loadProfile } from "@/utils/storage";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
