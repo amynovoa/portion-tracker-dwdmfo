@@ -22,8 +22,6 @@ export default function FoodGroupInfoModal({
   avoid,
   examples,
 }: FoodGroupInfoModalProps) {
-  if (!visible) return null;
-
   return (
     <Modal
       visible={visible}
@@ -32,14 +30,16 @@ export default function FoodGroupInfoModal({
       onRequestClose={onClose}
       statusBarTranslucent={true}
     >
-      <View style={styles.centeredView}>
+      <TouchableOpacity 
+        style={styles.overlay} 
+        activeOpacity={1} 
+        onPress={onClose}
+      >
         <TouchableOpacity 
-          style={styles.backdrop} 
           activeOpacity={1} 
-          onPress={onClose}
-        />
-        
-        <View style={styles.modalView} pointerEvents="box-none">
+          onPress={(e) => e.stopPropagation()}
+          style={styles.modalContainer}
+        >
           <View style={styles.modalContent}>
             <View style={styles.header}>
               <View style={styles.titleRow}>
@@ -60,50 +60,44 @@ export default function FoodGroupInfoModal({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
             >
-              <Text style={styles.benefitText}>{benefit}</Text>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Benefits</Text>
+                <Text style={styles.benefitText}>{benefit}</Text>
+              </View>
 
               <View style={styles.section}>
+                <Text style={styles.sectionTitle}>What to Avoid</Text>
                 <Text style={styles.avoidText}>{avoid}</Text>
               </View>
 
               <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Examples</Text>
                 <Text style={styles.examplesText}>{examples}</Text>
               </View>
             </ScrollView>
           </View>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  centeredView: {
+  overlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalView: {
+  modalContainer: {
     width: '90%',
     maxWidth: 500,
     maxHeight: '80%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
   },
   modalContent: {
     width: '100%',
     backgroundColor: colors.card,
     borderRadius: 16,
-    maxHeight: 600,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -161,26 +155,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   scrollView: {
-    flex: 1,
+    maxHeight: 500,
   },
   scrollContent: {
     padding: 20,
     paddingBottom: 30,
   },
-  benefitText: {
-    fontSize: 16,
-    color: colors.text,
-    lineHeight: 24,
-    marginBottom: 16,
-  },
   section: {
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  benefitText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 22,
   },
   avoidText: {
     fontSize: 15,
     color: colors.text,
     lineHeight: 22,
-    marginBottom: 12,
   },
   examplesText: {
     fontSize: 15,
