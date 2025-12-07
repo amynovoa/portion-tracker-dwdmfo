@@ -103,20 +103,10 @@ export default function HomeScreen() {
     setAllRecords(records);
   };
 
-  if (loading) {
-    return (
-      <View style={[commonStyles.container, styles.centerContent]}>
-        <Text style={commonStyles.text}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (!profile || !todayPortions) {
-    return (
-      <View style={[commonStyles.container, styles.centerContent]}>
-        <Text style={commonStyles.text}>Redirecting to profile setup...</Text>
-      </View>
-    );
+  // Don't render anything while loading or if no profile
+  // The router.replace will handle navigation
+  if (loading || !profile || !todayPortions) {
+    return null;
   }
 
   const todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
@@ -171,10 +161,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 48,
     paddingBottom: 120,
-  },
-  centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   logoContainer: {
     alignItems: 'center',
