@@ -2,7 +2,7 @@
 import "react-native-reanimated";
 import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -91,9 +91,8 @@ const errorStyles = StyleSheet.create({
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const router = useRouter();
-  const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
 
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -119,21 +118,7 @@ function RootLayoutNav() {
         const profile = await loadProfile();
         console.log('Profile exists:', !!profile);
 
-        // Navigate to appropriate screen
-        if (!profile) {
-          console.log('No profile found, navigating to profile setup');
-          // Use replace to avoid back navigation to blank screen
-          router.replace('/(tabs)/profile');
-        } else {
-          console.log('Profile found, navigating to home');
-          // Navigate to home if we're not already in the tabs
-          const inTabs = segments[0] === '(tabs)';
-          if (!inTabs) {
-            router.replace('/(tabs)/(home)/');
-          }
-        }
-
-        // Mark as ready
+        setHasProfile(!!profile);
         setIsReady(true);
         
         // Hide splash screen
@@ -142,6 +127,7 @@ function RootLayoutNav() {
       } catch (e) {
         console.error('Error during app preparation:', e);
         // Still hide splash screen even if there's an error
+        setHasProfile(false);
         setIsReady(true);
         await SplashScreen.hideAsync();
       }
@@ -151,7 +137,7 @@ function RootLayoutNav() {
   }, [loaded, error]);
 
   // Don't render anything until we're ready
-  if (!isReady) {
+  if (!isReady || hasProfile === null) {
     return null;
   }
 
@@ -179,6 +165,17 @@ function RootLayoutNav() {
       notification: "rgb(255, 69, 58)",
     },
   };
+
+  // If no profile exists, redirect to profile screen
+  if (!hasProfile) {
+    return (
+      <ThemeProvider
+        value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
+      >
+        <Redirect href="/(tabs)/profile" />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider
