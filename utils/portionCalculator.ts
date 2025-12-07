@@ -10,181 +10,263 @@ export function classifySize(weight: number): SizeCategory {
   return 'L';
 }
 
-// Get baseline daily portions before goal modifiers
-export function getBaselinePortions(sex: Sex, size: SizeCategory): PortionTargets {
-  if (sex === 'female') {
+// Get daily portions based on sex, size, and goal
+// These tables are used exactly as specified - no modifiers applied
+export function getPortionTargets(sex: Sex, size: SizeCategory, goal: Goal): PortionTargets {
+  // For "prefer-not-to-say", use Female tables
+  const effectiveSex = sex === 'prefer-not-to-say' ? 'female' : sex;
+  
+  if (effectiveSex === 'female') {
     if (size === 'S') {
-      return {
-        protein: 3,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 2,
-        legumes: 1,
-        fats: 2,
-        nutsSeeds: 1,
-        dairy: 1,
-        water: 8,
-        alcohol: 0, // 0-1 range, using lower end
-      };
-    } else if (size === 'M') {
-      return {
-        protein: 4,
-        veggies: 5,
-        fruit: 2,
-        wholeGrains: 3,
-        legumes: 1,
-        fats: 2,
-        nutsSeeds: 1,
-        dairy: 1,
-        water: 8,
-        alcohol: 0, // 0-1 range, using lower end
-      };
-    } else { // size === 'L'
-      return {
-        protein: 5,
-        veggies: 6,
-        fruit: 3,
-        wholeGrains: 3,
-        legumes: 2,
-        fats: 3,
-        nutsSeeds: 1,
-        dairy: 1, // 1-2 range, using lower end
-        water: 10,
-        alcohol: 0, // 0-2 range, using lower end
-      };
-    }
-  } else if (sex === 'male') {
-    if (size === 'S') {
-      return {
-        protein: 4,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 3,
-        legumes: 1,
-        fats: 2,
-        nutsSeeds: 1,
-        dairy: 1,
-        water: 8,
-        alcohol: 0, // 0-1 range, using lower end
-      };
-    } else if (size === 'M') {
-      return {
-        protein: 5,
-        veggies: 5,
-        fruit: 3,
-        wholeGrains: 3,
-        legumes: 2,
-        fats: 3,
-        nutsSeeds: 1,
-        dairy: 1, // 1-2 range, using lower end
-        water: 10,
-        alcohol: 0, // 0-2 range, using lower end
-      };
-    } else { // size === 'L'
-      return {
-        protein: 6,
-        veggies: 6,
-        fruit: 3,
-        wholeGrains: 4,
-        legumes: 2,
-        fats: 3,
-        nutsSeeds: 1,
-        dairy: 2,
-        water: 10,
-        alcohol: 0, // 0-2 range, using lower end
-      };
-    }
-  } else { // prefer-not-to-say
-    if (size === 'S') {
-      return {
-        protein: 3,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 2,
-        legumes: 1,
-        fats: 2,
-        nutsSeeds: 1,
-        dairy: 1,
-        water: 8,
-        alcohol: 0, // 0-1 range, using lower end
-      };
-    } else if (size === 'M') {
-      return {
-        protein: 4,
-        veggies: 5,
-        fruit: 2,
-        wholeGrains: 3,
-        legumes: 1,
-        fats: 2,
-        nutsSeeds: 1,
-        dairy: 1,
-        water: 8,
-        alcohol: 0, // 0-1 range, using lower end
-      };
-    } else { // size === 'L'
-      return {
-        protein: 5,
-        veggies: 6,
-        fruit: 3,
-        wholeGrains: 3,
-        legumes: 2,
-        fats: 3,
-        nutsSeeds: 1,
-        dairy: 1, // 1-2 range, using lower end
-        water: 10,
-        alcohol: 0, // 0-2 range, using lower end
-      };
-    }
-  }
-}
-
-// Apply goal modifiers to baseline portions
-export function applyGoalModifiers(
-  baseTargets: PortionTargets,
-  goal: Goal
-): PortionTargets {
-  const targets = { ...baseTargets };
-
-  switch (goal) {
-    case 'lose':
-      // Protein: no change
-      // Vegetables: +1
-      targets.veggies += 1;
-      // Fruits: -1 (floor = 1)
-      targets.fruit = Math.max(1, targets.fruit - 1);
-      // Whole grains: -1 (floor = 0)
-      targets.wholeGrains = Math.max(0, targets.wholeGrains - 1);
-      // Fats: -1 (floor = 1)
-      targets.fats = Math.max(1, targets.fats - 1);
-      // Legumes: no change
-      // Nuts/Seeds: no change
-      // Dairy: if > 1, bring down to 1
-      if (targets.dairy > 1) {
-        targets.dairy = 1;
+      if (goal === 'lose') {
+        return {
+          protein: 4,
+          veggies: 6,
+          fruit: 1,
+          wholeGrains: 2,
+          legumes: 1,
+          fats: 1,
+          nutsSeeds: 1,
+          dairy: 1,
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      } else if (goal === 'maintain') {
+        return {
+          protein: 4,
+          veggies: 5,
+          fruit: 2,
+          wholeGrains: 3,
+          legumes: 1,
+          fats: 2,
+          nutsSeeds: 1,
+          dairy: 1, // 1-2 range
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      } else { // build
+        return {
+          protein: 5,
+          veggies: 5,
+          fruit: 2,
+          wholeGrains: 3,
+          legumes: 1,
+          fats: 1,
+          nutsSeeds: 1,
+          dairy: 2,
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
       }
-      // Alcohol: keep within existing range (no increase)
-      break;
-
-    case 'maintain':
-      // No changes
-      break;
-
-    case 'build':
-      // Protein: +1
-      targets.protein += 1;
-      // Whole grains: +1
-      targets.wholeGrains += 1;
-      // Fruits: no change
-      // Vegetables: no change
-      // Fats: no change
-      // Legumes: optional +1 (leaving as is for simplicity)
-      // Dairy: +1, but cap total at 2
-      targets.dairy = Math.min(2, targets.dairy + 1);
-      // Alcohol: keep within existing range (no increase)
-      break;
+    } else if (size === 'M') {
+      if (goal === 'lose') {
+        return {
+          protein: 4,
+          veggies: 6,
+          fruit: 1,
+          wholeGrains: 2,
+          legumes: 1,
+          fats: 1,
+          nutsSeeds: 1,
+          dairy: 1,
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      } else if (goal === 'maintain') {
+        return {
+          protein: 4,
+          veggies: 5,
+          fruit: 2,
+          wholeGrains: 3,
+          legumes: 1,
+          fats: 2,
+          nutsSeeds: 1,
+          dairy: 1, // 1-2 range
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      } else { // build
+        return {
+          protein: 5,
+          veggies: 5,
+          fruit: 2,
+          wholeGrains: 3,
+          legumes: 1,
+          fats: 1,
+          nutsSeeds: 1,
+          dairy: 2,
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      }
+    } else { // size === 'L'
+      if (goal === 'lose') {
+        return {
+          protein: 5,
+          veggies: 6,
+          fruit: 1,
+          wholeGrains: 2,
+          legumes: 1,
+          fats: 1,
+          nutsSeeds: 1,
+          dairy: 1,
+          water: 10,
+          alcohol: 0, // 0-2 range
+        };
+      } else if (goal === 'maintain') {
+        return {
+          protein: 5,
+          veggies: 6,
+          fruit: 2,
+          wholeGrains: 3,
+          legumes: 1, // 1-2 range
+          water: 10,
+          fats: 2,
+          nutsSeeds: 1,
+          dairy: 1, // 1-2 range
+          alcohol: 0, // 0-2 range
+        };
+      } else { // build
+        return {
+          protein: 6,
+          veggies: 6,
+          fruit: 2,
+          wholeGrains: 3, // 3-4 range
+          legumes: 1, // 1-2 range
+          fats: 1, // 1-2 range
+          nutsSeeds: 1,
+          dairy: 2,
+          water: 10,
+          alcohol: 0, // 0-2 range
+        };
+      }
+    }
+  } else { // male
+    if (size === 'S') {
+      if (goal === 'lose') {
+        return {
+          protein: 4,
+          veggies: 5,
+          fruit: 1, // 1-2 range
+          wholeGrains: 2,
+          legumes: 1,
+          fats: 1,
+          nutsSeeds: 1,
+          dairy: 1,
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      } else if (goal === 'maintain') {
+        return {
+          protein: 5,
+          veggies: 5,
+          fruit: 2,
+          wholeGrains: 3,
+          legumes: 1,
+          fats: 2,
+          nutsSeeds: 1,
+          dairy: 1, // 1-2 range
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      } else { // build
+        return {
+          protein: 5, // 5-6 range
+          veggies: 5,
+          fruit: 2, // 2-3 range
+          wholeGrains: 3,
+          legumes: 1, // 1-2 range
+          fats: 2,
+          nutsSeeds: 1,
+          dairy: 2,
+          water: 8,
+          alcohol: 0, // 0-1 range
+        };
+      }
+    } else if (size === 'M') {
+      if (goal === 'lose') {
+        return {
+          protein: 5,
+          veggies: 5,
+          fruit: 1, // 1-2 range
+          wholeGrains: 2, // 2-3 range
+          legumes: 1,
+          fats: 1,
+          nutsSeeds: 1,
+          dairy: 1,
+          water: 10,
+          alcohol: 0, // 0-1 range
+        };
+      } else if (goal === 'maintain') {
+        return {
+          protein: 5,
+          veggies: 5,
+          fruit: 2, // 2-3 range
+          wholeGrains: 3,
+          legumes: 1, // 1-2 range
+          fats: 2, // 2-3 range
+          nutsSeeds: 1,
+          dairy: 1, // 1-2 range
+          water: 10,
+          alcohol: 0, // 0-2 range
+        };
+      } else { // build
+        return {
+          protein: 6,
+          veggies: 5, // 5-6 range
+          fruit: 2, // 2-3 range
+          wholeGrains: 3, // 3-4 range
+          legumes: 2,
+          fats: 2, // 2-3 range
+          nutsSeeds: 1,
+          dairy: 2,
+          water: 10,
+          alcohol: 0, // 0-2 range
+        };
+      }
+    } else { // size === 'L'
+      if (goal === 'lose') {
+        return {
+          protein: 5, // 5-6 range
+          veggies: 5, // 5-6 range
+          fruit: 1, // 1-2 range
+          wholeGrains: 2, // 2-3 range
+          legumes: 1, // 1-2 range
+          fats: 1, // 1-2 range
+          nutsSeeds: 1,
+          dairy: 1, // 1-2 range
+          water: 10,
+          alcohol: 0, // 0-2 range
+        };
+      } else if (goal === 'maintain') {
+        return {
+          protein: 6,
+          veggies: 6,
+          fruit: 2, // 2-3 range
+          wholeGrains: 3, // 3-4 range
+          legumes: 2,
+          fats: 2, // 2-3 range
+          nutsSeeds: 1,
+          dairy: 2,
+          water: 10,
+          alcohol: 0, // 0-2 range
+        };
+      } else { // build
+        return {
+          protein: 6, // 6-7 range
+          veggies: 6,
+          fruit: 3,
+          wholeGrains: 4,
+          legumes: 2,
+          fats: 3,
+          nutsSeeds: 1,
+          dairy: 2,
+          water: 10,
+          alcohol: 0, // 0-2 range
+        };
+      }
+    }
   }
-
-  return targets;
 }
 
 // Calculate recommended targets based on sex, weight, and goal
@@ -194,15 +276,13 @@ export function calculateRecommendedTargets(
   goal: Goal
 ): PortionTargets {
   const size = classifySize(weight);
-  const baseline = getBaselinePortions(sex, size);
-  const targets = applyGoalModifiers(baseline, goal);
+  const targets = getPortionTargets(sex, size, goal);
   
   console.log('Calculated targets:', {
     sex,
     weight,
     size,
     goal,
-    baseline,
     targets,
   });
   
