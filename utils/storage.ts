@@ -145,3 +145,29 @@ export async function deleteWeightEntry(date: string): Promise<void> {
     throw error;
   }
 }
+
+// Clear all app data
+export async function clearAllData(): Promise<void> {
+  try {
+    console.log('Clearing all app data...');
+    
+    // Get all keys from AsyncStorage
+    const keys = await AsyncStorage.getAllKeys();
+    console.log('Found keys to clear:', keys.length);
+    
+    // Filter only our app's keys (those starting with @portion_tracker)
+    const appKeys = keys.filter(key => key.startsWith('@portion_tracker'));
+    console.log('App keys to clear:', appKeys.length);
+    
+    // Remove all app keys
+    if (appKeys.length > 0) {
+      await AsyncStorage.multiRemove(appKeys);
+      console.log('All app data cleared successfully');
+    } else {
+      console.log('No app data found to clear');
+    }
+  } catch (error) {
+    console.error('Error clearing all data:', error);
+    throw error;
+  }
+}
