@@ -46,15 +46,16 @@ export default function ProfileScreen() {
     console.log('Loading existing profile...');
     const profile = await loadProfile();
     if (profile) {
-      console.log('Profile found, populating fields');
+      console.log('Profile found, populating fields:', profile);
       setSex(profile.sex);
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
       setTargets(profile.targets);
       setHasProfile(true);
+      setIsEditing(false);
     } else {
-      console.log('No profile found - showing clean setup');
+      console.log('No profile found - resetting to clean state');
       // Reset all state to ensure clean setup
       setSex('female');
       setCurrentWeight('');

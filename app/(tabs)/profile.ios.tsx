@@ -17,9 +17,26 @@ export default function ProfileScreen() {
   const [targets, setTargets] = useState<PortionTargets | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Load profile on mount and when refreshKey changes
   useEffect(() => {
+    console.log('Profile screen mounted or refreshed, loading profile');
     loadExistingProfile();
+  }, [refreshKey]);
+
+  // Listen for navigation events to reload profile
+  useEffect(() => {
+    const unsubscribe = router.subscribe(() => {
+      console.log('Navigation event detected, refreshing profile');
+      setRefreshKey(prev => prev + 1);
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // Listen for custom targets returned from setup-targets screen
@@ -41,15 +58,16 @@ export default function ProfileScreen() {
     console.log('Loading existing profile...');
     const profile = await loadProfile();
     if (profile) {
-      console.log('Profile found, populating fields');
+      console.log('Profile found, populating fields:', profile);
       setSex(profile.sex);
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
       setTargets(profile.targets);
       setHasProfile(true);
+      setIsEditing(false);
     } else {
-      console.log('No profile found - showing clean setup');
+      console.log('No profile found - resetting to clean state');
       // Reset all state to ensure clean setup
       setSex('female');
       setCurrentWeight('');
