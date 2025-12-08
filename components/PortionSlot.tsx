@@ -23,6 +23,7 @@ export default function PortionSlot({ completed, isExtra = false, onPress }: Por
     >
       <Text style={[
         styles.checkmark,
+        completed && !isExtra && styles.checkmarkCompleted,
         completed && isExtra && styles.checkmarkExtra,
       ]}>
         {completed ? '✓' : ''}
@@ -42,6 +43,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 4,
+    marginVertical: 4,
   },
   slotExtra: {
     borderStyle: 'dashed',
@@ -59,8 +61,11 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     fontSize: 20,
-    color: colors.card,
+    color: 'transparent',
     fontWeight: '700',
+  },
+  checkmarkCompleted: {
+    color: colors.card,
   },
   checkmarkExtra: {
     color: colors.text,

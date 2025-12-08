@@ -9,42 +9,43 @@ import { clearAllData } from '@/utils/storage';
 export default function SettingsScreen() {
   const router = useRouter();
   const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleResetApp = () => {
+    console.log('Reset app button pressed');
     setShowResetModal(true);
   };
 
   const confirmReset = async () => {
     try {
-      console.log('Resetting app data...');
+      console.log('User confirmed reset, starting process...');
+      setIsResetting(true);
+      
+      // Clear all data
       await clearAllData();
       console.log('All data cleared successfully');
       
+      // Close modal
       setShowResetModal(false);
+      setIsResetting(false);
       
-      // Show success message and redirect
-      Alert.alert(
-        'Reset Complete',
-        'All your data has been cleared. You will now be redirected to set up your profile.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Navigate to profile screen (setup phase)
-              router.replace('/(tabs)/profile');
-            },
-          },
-        ],
-        { cancelable: false }
-      );
+      // Small delay to ensure state updates
+      setTimeout(() => {
+        console.log('Navigating to profile screen');
+        // Navigate to profile screen (setup phase)
+        router.replace('/(tabs)/profile');
+      }, 100);
+      
     } catch (error) {
       console.error('Error resetting app:', error);
-      Alert.alert('Error', 'Failed to reset app data. Please try again.');
+      setIsResetting(false);
       setShowResetModal(false);
+      Alert.alert('Error', 'Failed to reset app data. Please try again.');
     }
   };
 
   const cancelReset = () => {
+    console.log('Reset cancelled');
     setShowResetModal(false);
   };
 
@@ -101,6 +102,7 @@ export default function SettingsScreen() {
         transparent={true}
         animationType="fade"
         onRequestClose={cancelReset}
+        statusBarTranslucent={true}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -125,14 +127,18 @@ export default function SettingsScreen() {
               <TouchableOpacity
                 style={[buttonStyles.outline, styles.modalButton]}
                 onPress={cancelReset}
+                disabled={isResetting}
               >
                 <Text style={commonStyles.buttonTextOutline}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[buttonStyles.primary, styles.modalButton, styles.dangerButtonPrimary]}
                 onPress={confirmReset}
+                disabled={isResetting}
               >
-                <Text style={commonStyles.buttonText}>Reset App</Text>
+                <Text style={commonStyles.buttonText}>
+                  {isResetting ? 'Resetting...' : 'Reset App'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -222,7 +228,7 @@ const styles = StyleSheet.create({
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

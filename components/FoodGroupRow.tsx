@@ -13,7 +13,7 @@ interface FoodGroupRowProps {
   foodGroup: FoodGroup;
   target: number;
   completed: number;
-  onTogglePortion: () => void;
+  onTogglePortion: (increment: boolean) => void;
 }
 
 export default function FoodGroupRow({
@@ -33,8 +33,16 @@ export default function FoodGroupRow({
     setInfoModalVisible(true);
   };
 
-  // Calculate how many slots to show (target + 2 extra)
-  const totalSlots = target + 2;
+  const handleCloseModal = () => {
+    console.log(`Closing info modal for ${label}`);
+    setInfoModalVisible(false);
+  };
+
+  // Calculate how many slots to show
+  // Show at least target slots, but if user has tracked more, show those too
+  // Always show at least 2 extra slots beyond current completion
+  const minSlots = Math.max(target, completed + 2);
+  const totalSlots = minSlots;
   const slots = Array.from({ length: totalSlots }, (_, i) => i);
 
   return (
@@ -62,21 +70,28 @@ export default function FoodGroupRow({
               key={index}
               completed={index < completed}
               isExtra={index >= target}
-              onPress={onTogglePortion}
+              onPress={() => {
+                // If clicking on a completed slot, decrement
+                // If clicking on an empty slot, increment
+                const shouldIncrement = index >= completed;
+                onTogglePortion(shouldIncrement);
+              }}
             />
           ))}
         </View>
       </View>
 
-      <FoodGroupInfoModal
-        visible={infoModalVisible}
-        onClose={() => setInfoModalVisible(false)}
-        title={label}
-        icon={icon}
-        benefit={foodGroupInfo.benefit}
-        avoid={foodGroupInfo.avoid}
-        examples={foodGroupInfo.examples}
-      />
+      {foodGroupInfo && (
+        <FoodGroupInfoModal
+          visible={infoModalVisible}
+          onClose={handleCloseModal}
+          title={label}
+          icon={icon}
+          benefit={foodGroupInfo.benefit}
+          avoid={foodGroupInfo.avoid}
+          examples={foodGroupInfo.examples}
+        />
+      )}
     </>
   );
 }

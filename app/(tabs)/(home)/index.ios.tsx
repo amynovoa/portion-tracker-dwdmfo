@@ -22,47 +22,57 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
-    console.log('Home: Loading data...');
-    const userProfile = await loadProfile();
-    
-    if (!userProfile) {
-      console.log('Home: No profile found');
+    try {
+      console.log('Home: Loading data...');
+      const userProfile = await loadProfile();
+      
+      if (!userProfile) {
+        console.log('Home: No profile found');
+        setLoading(false);
+        setProfile(null);
+        setTodayPortions(null);
+        setExerciseCompleted(false);
+        return;
+      }
+
+      console.log('Home: Profile found, loading portions');
+      setProfile(userProfile);
+
+      const today = getTodayString();
+      console.log('Today date:', today);
+      
+      const dailyData = await loadDailyPortions(today);
+
+      if (dailyData && dailyData.portions) {
+        console.log('Daily data found:', dailyData);
+        setTodayPortions(dailyData.portions);
+        setExerciseCompleted(dailyData.exercise || false);
+      } else {
+        console.log('No daily data, creating empty portions');
+        const emptyPortions: PortionTargets = {
+          protein: 0,
+          veggies: 0,
+          fruit: 0,
+          wholeGrains: 0,
+          legumes: 0,
+          nutsSeeds: 0,
+          fats: 0,
+          dairy: 0,
+          water: 0,
+          alcohol: 0,
+        };
+        setTodayPortions(emptyPortions);
+        setExerciseCompleted(false);
+      }
+
+      const records = await getAllDailyPortions();
+      console.log('All records loaded:', records.length);
+      setAllRecords(records);
       setLoading(false);
-      setProfile(null);
-      setTodayPortions(null);
-      setExerciseCompleted(false);
-      return;
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setLoading(false);
     }
-
-    console.log('Home: Profile found, loading portions');
-    setProfile(userProfile);
-
-    const today = getTodayString();
-    const dailyData = await loadDailyPortions(today);
-
-    if (dailyData) {
-      setTodayPortions(dailyData.portions);
-      setExerciseCompleted(dailyData.exercise || false);
-    } else {
-      const emptyPortions: PortionTargets = {
-        protein: 0,
-        veggies: 0,
-        fruit: 0,
-        wholeGrains: 0,
-        legumes: 0,
-        nutsSeeds: 0,
-        fats: 0,
-        dairy: 0,
-        water: 0,
-        alcohol: 0,
-      };
-      setTodayPortions(emptyPortions);
-      setExerciseCompleted(false);
-    }
-
-    const records = await getAllDailyPortions();
-    setAllRecords(records);
-    setLoading(false);
   };
 
   // Load data when screen comes into focus
@@ -79,14 +89,20 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handleTogglePortion = async (foodGroup: FoodGroup) => {
+  const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
     if (!profile || !todayPortions) return;
 
     const current = todayPortions[foodGroup];
-    const target = profile.targets[foodGroup];
 
-    // If at or above target, reset to 0, otherwise increment by 1
-    const newValue = current >= target ? 0 : current + 1;
+    // Allow unlimited tracking - increment or decrement
+    let newValue: number;
+    if (increment) {
+      newValue = current + 1;
+    } else {
+      newValue = Math.max(0, current - 1); // Don't go below 0
+    }
+
+    console.log(`Toggling ${foodGroup}: ${current} -> ${newValue}`);
 
     const updatedPortions = {
       ...todayPortions,
@@ -152,9 +168,20 @@ export default function HomeScreen() {
     );
   }
 
-  const todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
-  const weekAdherence = calculateWeeklyAdherence(allRecords, profile.targets);
-  const monthAdherence = calculateMonthlyAdherence(allRecords, profile.targets);
+  // Calculate adherence with error handling
+  let todayAdherence = 0;
+  let weekAdherence = 0;
+  let monthAdherence = 0;
+
+  try {
+    todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
+    weekAdherence = calculateWeeklyAdherence(allRecords, profile.targets);
+    monthAdherence = calculateMonthlyAdherence(allRecords, profile.targets);
+    
+    console.log('Adherence calculated:', { todayAdherence, weekAdherence, monthAdherence });
+  } catch (error) {
+    console.error('Error calculating adherence:', error);
+  }
 
   return (
     <View style={commonStyles.container}>
@@ -189,7 +216,7 @@ export default function HomeScreen() {
               foodGroup={group.key}
               target={profile.targets[group.key]}
               completed={todayPortions[group.key]}
-              onTogglePortion={() => handleTogglePortion(group.key)}
+              onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
             />
           ))}
           

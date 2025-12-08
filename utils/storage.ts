@@ -149,20 +149,33 @@ export async function deleteWeightEntry(date: string): Promise<void> {
 // Clear all app data
 export async function clearAllData(): Promise<void> {
   try {
-    console.log('Clearing all app data...');
+    console.log('Starting clearAllData...');
     
     // Get all keys from AsyncStorage
-    const keys = await AsyncStorage.getAllKeys();
-    console.log('Found keys to clear:', keys.length);
+    const allKeys = await AsyncStorage.getAllKeys();
+    console.log('Total keys in AsyncStorage:', allKeys.length);
+    console.log('All keys:', allKeys);
     
     // Filter only our app's keys (those starting with @portion_tracker)
-    const appKeys = keys.filter(key => key.startsWith('@portion_tracker'));
-    console.log('App keys to clear:', appKeys.length);
+    const appKeys = allKeys.filter(key => key.startsWith('@portion_tracker'));
+    console.log('App keys found:', appKeys.length);
+    console.log('App keys to clear:', appKeys);
     
     // Remove all app keys
     if (appKeys.length > 0) {
       await AsyncStorage.multiRemove(appKeys);
-      console.log('All app data cleared successfully');
+      console.log('Successfully removed all app keys');
+      
+      // Verify deletion
+      const remainingKeys = await AsyncStorage.getAllKeys();
+      const remainingAppKeys = remainingKeys.filter(key => key.startsWith('@portion_tracker'));
+      console.log('Remaining app keys after deletion:', remainingAppKeys.length);
+      
+      if (remainingAppKeys.length > 0) {
+        console.warn('Warning: Some app keys were not deleted:', remainingAppKeys);
+      } else {
+        console.log('All app data cleared successfully');
+      }
     } else {
       console.log('No app data found to clear');
     }

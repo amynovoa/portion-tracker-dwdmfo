@@ -89,14 +89,20 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handleTogglePortion = async (foodGroup: FoodGroup) => {
+  const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
     if (!profile || !todayPortions) return;
 
     const current = todayPortions[foodGroup];
-    const target = profile.targets[foodGroup];
 
-    // If at or above target, reset to 0, otherwise increment by 1
-    const newValue = current >= target ? 0 : current + 1;
+    // Allow unlimited tracking - increment or decrement
+    let newValue: number;
+    if (increment) {
+      newValue = current + 1;
+    } else {
+      newValue = Math.max(0, current - 1); // Don't go below 0
+    }
+
+    console.log(`Toggling ${foodGroup}: ${current} -> ${newValue}`);
 
     const updatedPortions = {
       ...todayPortions,
@@ -210,7 +216,7 @@ export default function HomeScreen() {
               foodGroup={group.key}
               target={profile.targets[group.key]}
               completed={todayPortions[group.key]}
-              onTogglePortion={() => handleTogglePortion(group.key)}
+              onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
             />
           ))}
           
