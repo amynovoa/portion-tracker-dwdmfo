@@ -159,7 +159,7 @@ export default function HomeScreen() {
       <View style={commonStyles.container}>
         <View style={styles.emptyContainer}>
           <AppLogo size={80} />
-          <Text style={styles.emptyTitle}>Welcome to Portion Tracker!</Text>
+          <Text style={styles.emptyTitle}>Welcome to Portion Track!</Text>
           <Text style={styles.emptyMessage}>
             Please create your profile in the Profile tab to get started.
           </Text>
