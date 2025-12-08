@@ -54,8 +54,15 @@ export default function ProfileScreen() {
       setTargets(profile.targets);
       setHasProfile(true);
     } else {
-      console.log('No profile found');
+      console.log('No profile found - showing clean setup');
+      // Reset all state to ensure clean setup
+      setSex('female');
+      setCurrentWeight('');
+      setGoalWeight('');
+      setGoal('maintain');
+      setTargets(null);
       setHasProfile(false);
+      setIsEditing(false);
     }
   };
 
@@ -243,14 +250,14 @@ export default function ProfileScreen() {
 
         {!targets && (
           <>
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Choose how to set your targets</Text>
-              <View style={styles.dividerLine} />
+            <View style={styles.infoBox}>
+              <Text style={styles.infoText}>
+                💡 Next, calculate your personalized portion targets based on your profile, or set up your own custom targets.
+              </Text>
             </View>
 
             <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={calculateTargets}>
-              <Text style={commonStyles.buttonText}>Calculate Recommended Targets</Text>
+              <Text style={commonStyles.buttonText}>Calculate My Portions</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[buttonStyles.outline, styles.button]} onPress={handleSetupCustomTargets}>
@@ -358,22 +365,20 @@ const styles = StyleSheet.create({
   optionTextActive: {
     color: colors.primary,
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginVertical: 16,
+  infoBox: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 8,
+    padding: 16,
+    backgroundColor: colors.highlight,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    marginHorizontal: 12,
+  infoText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.text,
+    lineHeight: 20,
   },
   button: {
     marginHorizontal: 16,
