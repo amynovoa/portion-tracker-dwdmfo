@@ -80,16 +80,19 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
-        <View style={styles.dangerSection}>
-          <Text style={styles.dangerTitle}>Danger Zone</Text>
+        <View style={styles.resetSection}>
+          <Text style={styles.resetTitle}>Reset App Data</Text>
+          <Text style={styles.resetDescription}>
+            Need a fresh start? You can reset the app and clear all your data.
+          </Text>
           <TouchableOpacity
-            style={[buttonStyles.outline, styles.dangerButton]}
+            style={[buttonStyles.outline, styles.resetButton]}
             onPress={handleResetApp}
           >
-            <Text style={styles.dangerButtonText}>Reset App & Clear All Data</Text>
+            <Text style={styles.resetButtonText}>Clear All Data</Text>
           </TouchableOpacity>
-          <Text style={styles.dangerWarning}>
-            ⚠️ This will permanently delete all your data including profile, portion history, and weight entries. This action cannot be undone.
+          <Text style={styles.resetWarning}>
+            Note: This will permanently delete all your data including profile, portion history, and weight entries.
           </Text>
         </View>
 
@@ -106,12 +109,12 @@ export default function SettingsScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Reset App?</Text>
+            <Text style={styles.modalTitle}>Start Fresh?</Text>
             <Text style={styles.modalMessage}>
-              Are you sure you want to reset the app and clear all data?
+              This will clear all your app data and return you to the setup screen.
             </Text>
-            <Text style={styles.modalWarning}>
-              This will permanently delete:
+            <Text style={styles.modalSubtitle}>
+              The following will be deleted:
             </Text>
             <View style={styles.modalList}>
               <Text style={styles.modalListItem}>• Your profile and portion targets</Text>
@@ -119,7 +122,7 @@ export default function SettingsScreen() {
               <Text style={styles.modalListItem}>• All weight entries</Text>
               <Text style={styles.modalListItem}>• Reminder settings</Text>
             </View>
-            <Text style={styles.modalWarning}>
+            <Text style={styles.modalNote}>
               This action cannot be undone.
             </Text>
 
@@ -132,12 +135,12 @@ export default function SettingsScreen() {
                 <Text style={commonStyles.buttonTextOutline}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[buttonStyles.primary, styles.modalButton, styles.dangerButtonPrimary]}
+                style={[buttonStyles.primary, styles.modalButton]}
                 onPress={confirmReset}
                 disabled={isResetting}
               >
                 <Text style={commonStyles.buttonText}>
-                  {isResetting ? 'Resetting...' : 'Reset App'}
+                  {isResetting ? 'Clearing...' : 'Clear Data'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -194,33 +197,40 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 8,
   },
-  dangerSection: {
+  resetSection: {
     paddingHorizontal: 16,
     marginTop: 48,
     paddingTop: 24,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  dangerTitle: {
+  resetTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FF3B30',
-    marginBottom: 12,
+    color: colors.text,
+    marginBottom: 8,
   },
-  dangerButton: {
-    borderColor: '#FF3B30',
+  resetDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  resetButton: {
+    borderColor: colors.textSecondary,
     marginVertical: 8,
   },
-  dangerButtonText: {
+  resetButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FF3B30',
+    color: colors.textSecondary,
   },
-  dangerWarning: {
+  resetWarning: {
     fontSize: 12,
     color: colors.textSecondary,
     lineHeight: 18,
     marginTop: 8,
+    fontStyle: 'italic',
   },
   bottomPadding: {
     height: 20,
@@ -259,10 +269,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  modalWarning: {
+  modalSubtitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FF3B30',
+    color: colors.text,
     marginBottom: 8,
   },
   modalList: {
@@ -274,6 +284,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 22,
   },
+  modalNote: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 8,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
   modalButtons: {
     flexDirection: 'row',
     gap: 12,
@@ -281,8 +298,5 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-  },
-  dangerButtonPrimary: {
-    backgroundColor: '#FF3B30',
   },
 });

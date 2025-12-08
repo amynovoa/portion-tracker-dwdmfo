@@ -146,10 +146,10 @@ export async function deleteWeightEntry(date: string): Promise<void> {
   }
 }
 
-// Clear all app data
+// Clear all app data - comprehensive version
 export async function clearAllData(): Promise<void> {
   try {
-    console.log('Starting clearAllData...');
+    console.log('Starting comprehensive clearAllData...');
     
     // Get all keys from AsyncStorage
     const allKeys = await AsyncStorage.getAllKeys();
@@ -164,20 +164,53 @@ export async function clearAllData(): Promise<void> {
     // Remove all app keys
     if (appKeys.length > 0) {
       await AsyncStorage.multiRemove(appKeys);
-      console.log('Successfully removed all app keys');
-      
-      // Verify deletion
-      const remainingKeys = await AsyncStorage.getAllKeys();
-      const remainingAppKeys = remainingKeys.filter(key => key.startsWith('@portion_tracker'));
-      console.log('Remaining app keys after deletion:', remainingAppKeys.length);
-      
-      if (remainingAppKeys.length > 0) {
-        console.warn('Warning: Some app keys were not deleted:', remainingAppKeys);
-      } else {
-        console.log('All app data cleared successfully');
+      console.log('Successfully removed all app keys via multiRemove');
+    }
+    
+    // Double-check by explicitly removing known keys
+    const knownKeys = [
+      PROFILE_KEY,
+      REMINDER_KEY,
+      WEIGHT_ENTRIES_KEY,
+    ];
+    
+    console.log('Explicitly removing known keys:', knownKeys);
+    for (const key of knownKeys) {
+      try {
+        await AsyncStorage.removeItem(key);
+        console.log(`Removed key: ${key}`);
+      } catch (error) {
+        console.error(`Error removing key ${key}:`, error);
+      }
+    }
+    
+    // Also remove any daily portion keys that might have been missed
+    const remainingKeys = await AsyncStorage.getAllKeys();
+    const remainingDailyKeys = remainingKeys.filter(key => key.startsWith(DAILY_PORTIONS_KEY));
+    if (remainingDailyKeys.length > 0) {
+      console.log('Found remaining daily portion keys:', remainingDailyKeys.length);
+      await AsyncStorage.multiRemove(remainingDailyKeys);
+      console.log('Removed remaining daily portion keys');
+    }
+    
+    // Final verification
+    const finalKeys = await AsyncStorage.getAllKeys();
+    const finalAppKeys = finalKeys.filter(key => key.startsWith('@portion_tracker'));
+    console.log('Final app keys remaining:', finalAppKeys.length);
+    
+    if (finalAppKeys.length > 0) {
+      console.warn('Warning: Some app keys were not deleted:', finalAppKeys);
+      // Try one more time with individual removes
+      for (const key of finalAppKeys) {
+        try {
+          await AsyncStorage.removeItem(key);
+          console.log(`Force removed key: ${key}`);
+        } catch (error) {
+          console.error(`Error force removing key ${key}:`, error);
+        }
       }
     } else {
-      console.log('No app data found to clear');
+      console.log('✅ All app data cleared successfully');
     }
   } catch (error) {
     console.error('Error clearing all data:', error);

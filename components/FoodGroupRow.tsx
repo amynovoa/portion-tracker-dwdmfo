@@ -29,7 +29,14 @@ export default function FoodGroupRow({
   const foodGroupInfo = FOOD_GROUP_INFO[foodGroup];
 
   const handleInfoPress = () => {
-    console.log(`Opening info modal for ${label}`);
+    console.log(`Opening info modal for ${label}, foodGroup: ${foodGroup}`);
+    console.log('Food group info:', foodGroupInfo);
+    
+    if (!foodGroupInfo) {
+      console.error(`No info found for food group: ${foodGroup}`);
+      return;
+    }
+    
     setInfoModalVisible(true);
   };
 
@@ -87,9 +94,9 @@ export default function FoodGroupRow({
           onClose={handleCloseModal}
           title={label}
           icon={icon}
-          benefit={foodGroupInfo.benefit}
-          avoid={foodGroupInfo.avoid}
-          examples={foodGroupInfo.examples}
+          benefit={foodGroupInfo.benefit || ''}
+          avoid={foodGroupInfo.avoid || ''}
+          examples={foodGroupInfo.examples || ''}
         />
       )}
     </>
