@@ -54,7 +54,6 @@ export default function HomeScreen() {
           veggies: 0,
           fruit: 0,
           wholeGrains: 0,
-          legumes: 0,
           nutsSeeds: 0,
           fats: 0,
           dairy: 0,
