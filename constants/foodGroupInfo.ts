@@ -25,16 +25,7 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
   },
   wholeGrains: {
     benefit: 'Healthy Carbs include nutrient-dense carbohydrate foods that provide steady energy, fiber, and vitamins. These foods help support digestion, blood sugar balance, and long-term health.',
-    avoid: `What to avoid:
-- White bread
-- White pasta
-- White rice
-- Pastries, donuts, cakes
-- Cookies
-- Breakfast cereals made from refined grains
-- Chips, fries, and processed snacks
-- Sugary drinks or juices
-- Candy or granola bars`,
+    avoid: 'Avoid: white bread, white pasta, white rice, pastries, donuts, cakes, cookies, breakfast cereals made from refined grains, chips, fries, processed snacks, sugary drinks or juices, candy or granola bars.',
     examples: `Whole Grains
 - Oats
 - Quinoa
