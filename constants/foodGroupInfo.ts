@@ -24,9 +24,31 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
     examples: 'Examples: berries; apples, pears, peaches; oranges, grapefruit; melons, pineapple, mango.',
   },
   wholeGrains: {
-    benefit: 'Provide steady, long-lasting energy and support digestive and heart health.',
-    avoid: 'Avoid: white bread, white rice, sugary cereals, pastries, refined flour products.',
-    examples: 'Examples: brown rice, quinoa, farro, barley; whole grain pasta; oats; whole grain bread or tortillas.',
+    benefit: 'Healthy Carbs include nutrient-dense carbohydrate foods that provide steady energy, fiber, and vitamins. These foods help support digestion, blood sugar balance, and long-term health.',
+    avoid: '',
+    examples: `Whole Grains
+- Oats
+- Quinoa
+- Brown rice
+- Farro
+- Barley
+- Whole-wheat pasta
+- Whole-grain bread
+
+Beans & Lentils (Legumes)
+- Black beans
+- Pinto beans
+- Kidney beans
+- Chickpeas
+- Lentils
+- Split peas
+- Edamame / soybeans
+
+Starchy Vegetables
+- Sweet potatoes
+- Potatoes
+- Winter squash (butternut, acorn, kabocha)
+- Corn`,
   },
   legumes: {
     benefit: 'Nutrient-dense, high in fiber and plant-based protein, and support stable blood sugar.',
