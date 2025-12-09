@@ -15,7 +15,6 @@ export interface PortionTargets {
   veggies: number;
   fruit: number;
   wholeGrains: number;
-  legumes: number;
   nutsSeeds: number;
   fats: number;
   dairy: number;
@@ -43,7 +42,6 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'veggies', label: 'Veggies', icon: '🥦' },
   { key: 'fruit', label: 'Fruit', icon: '🍎' },
   { key: 'wholeGrains', label: 'Healthy Carbs', icon: '🌾' },
-  { key: 'legumes', label: 'Legumes', icon: '🫘' },
   { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
   { key: 'fats', label: 'Fats', icon: '🥑' },
   { key: 'dairy', label: 'Dairy', icon: '🥛' },

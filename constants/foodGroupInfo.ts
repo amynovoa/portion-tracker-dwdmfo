@@ -50,11 +50,6 @@ Starchy Vegetables
 - Winter squash (butternut, acorn, kabocha)
 - Corn`,
   },
-  legumes: {
-    benefit: 'Nutrient-dense, high in fiber and plant-based protein, and support stable blood sugar.',
-    avoid: 'Avoid: canned legumes with syrups, excess sodium, or added fats.',
-    examples: 'Examples: black, pinto, kidney, navy beans; lentils; chickpeas; split peas.',
-  },
   nutsSeeds: {
     benefit: 'Deliver protein, fiber, and omega fats that support heart health and satiety.',
     avoid: 'Avoid: candied nuts, nuts roasted in heavy oils, overly salted nuts.',
