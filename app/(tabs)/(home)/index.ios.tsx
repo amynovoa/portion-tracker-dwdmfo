@@ -36,6 +36,12 @@ export default function HomeScreen() {
       }
 
       console.log('Home: Profile found, loading portions');
+      
+      // Ensure profile has all required fields with defaults
+      if (!userProfile.targets.dairy) {
+        userProfile.targets.dairy = 1;
+      }
+      
       setProfile(userProfile);
 
       const today = getTodayString();
@@ -45,7 +51,21 @@ export default function HomeScreen() {
 
       if (dailyData && dailyData.portions) {
         console.log('Daily data found:', dailyData);
-        setTodayPortions(dailyData.portions);
+        
+        // Ensure all fields exist with defaults
+        const portions: PortionTargets = {
+          protein: dailyData.portions.protein || 0,
+          veggies: dailyData.portions.veggies || 0,
+          fruit: dailyData.portions.fruit || 0,
+          wholeGrains: dailyData.portions.wholeGrains || 0,
+          nutsSeeds: dailyData.portions.nutsSeeds || 0,
+          fats: dailyData.portions.fats || 0,
+          dairy: dailyData.portions.dairy || 0,
+          water: dailyData.portions.water || 0,
+          alcohol: dailyData.portions.alcohol || 0,
+        };
+        
+        setTodayPortions(portions);
         setExerciseCompleted(dailyData.exercise || false);
       } else {
         console.log('No daily data, creating empty portions');
@@ -91,7 +111,7 @@ export default function HomeScreen() {
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
     if (!profile || !todayPortions) return;
 
-    const current = todayPortions[foodGroup];
+    const current = todayPortions[foodGroup] || 0;
 
     // Allow unlimited tracking - increment or decrement
     let newValue: number;
@@ -213,8 +233,8 @@ export default function HomeScreen() {
               icon={group.icon}
               label={group.label}
               foodGroup={group.key}
-              target={profile.targets[group.key]}
-              completed={todayPortions[group.key]}
+              target={profile.targets[group.key] || 0}
+              completed={todayPortions[group.key] || 0}
               onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
             />
           ))}

@@ -22,7 +22,15 @@ export async function loadProfile(): Promise<UserProfile | null> {
     const data = await AsyncStorage.getItem(PROFILE_KEY);
     if (data) {
       console.log('Profile loaded successfully');
-      return JSON.parse(data);
+      const profile = JSON.parse(data);
+      
+      // Ensure dairy field exists for backward compatibility
+      if (profile.targets && typeof profile.targets.dairy === 'undefined') {
+        console.log('Adding missing dairy field to profile');
+        profile.targets.dairy = 1; // Default value
+      }
+      
+      return profile;
     }
     return null;
   } catch (error) {
@@ -47,7 +55,15 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
     const key = `${DAILY_PORTIONS_KEY}${date}`;
     const data = await AsyncStorage.getItem(key);
     if (data) {
-      return JSON.parse(data);
+      const dailyData = JSON.parse(data);
+      
+      // Ensure dairy field exists for backward compatibility
+      if (dailyData.portions && typeof dailyData.portions.dairy === 'undefined') {
+        console.log('Adding missing dairy field to daily portions');
+        dailyData.portions.dairy = 0; // Default value
+      }
+      
+      return dailyData;
     }
     return null;
   } catch (error) {
@@ -63,7 +79,19 @@ export async function getAllDailyPortions(): Promise<DailyPortions[]> {
     const items = await AsyncStorage.multiGet(dailyKeys);
     
     return items
-      .map(([_, value]) => (value ? JSON.parse(value) : null))
+      .map(([_, value]) => {
+        if (!value) return null;
+        
+        const dailyData = JSON.parse(value);
+        
+        // Ensure dairy field exists for backward compatibility
+        if (dailyData.portions && typeof dailyData.portions.dairy === 'undefined') {
+          console.log('Adding missing dairy field to daily portions');
+          dailyData.portions.dairy = 0; // Default value
+        }
+        
+        return dailyData;
+      })
       .filter((item): item is DailyPortions => item !== null)
       .sort((a, b) => b.date.localeCompare(a.date)); // Sort by date descending
   } catch (error) {
