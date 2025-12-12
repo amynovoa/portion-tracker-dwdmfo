@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { colors } from '@/styles/commonStyles';
 import { loadProfile } from '@/utils/storage';
 import { useRouter, useSegments } from 'expo-router';
@@ -19,7 +19,7 @@ export default function TabLayout() {
         console.log('Tabs layout (iOS): Profile exists:', profileExists);
 
         // Only redirect to profile if no profile exists AND we're on the home screen
-        if (!profileExists && segments[1] === '(home)') {
+        if (!profileExists && segments && segments[1] === '(home)') {
           console.log('Tabs layout (iOS): No profile found, redirecting to profile screen');
           router.replace('/(tabs)/profile');
         }
@@ -41,24 +41,24 @@ export default function TabLayout() {
       backgroundColor={colors.card}
     >
       <NativeTabs.Trigger name="(home)/index">
-        <Label>Home</Label>
-        <Icon sf="house.fill" />
+        <NativeTabs.Label>Home</NativeTabs.Label>
+        <NativeTabs.Icon sf="house.fill" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
-        <Label>History</Label>
-        <Icon sf="calendar" />
+        <NativeTabs.Label>History</NativeTabs.Label>
+        <NativeTabs.Icon sf="calendar" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="weight">
-        <Label>Weight</Label>
-        <Icon sf="scalemass.fill" />
+        <NativeTabs.Label>Weight</NativeTabs.Label>
+        <NativeTabs.Icon sf="scalemass.fill" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
-        <Label>Profile</Label>
-        <Icon sf="person.fill" />
+        <NativeTabs.Label>Profile</NativeTabs.Label>
+        <NativeTabs.Icon sf="person.fill" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
-        <Label>Settings</Label>
-        <Icon sf="gearshape.fill" />
+        <NativeTabs.Label>Settings</NativeTabs.Label>
+        <NativeTabs.Icon sf="gearshape.fill" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

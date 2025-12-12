@@ -5,7 +5,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, UserProfile, PortionTargets } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile, loadProfile } from '@/utils/storage';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -17,27 +17,14 @@ export default function ProfileScreen() {
   const [targets, setTargets] = useState<PortionTargets | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load profile on mount and when refreshKey changes
-  useEffect(() => {
-    console.log('Profile screen mounted or refreshed, loading profile');
-    loadExistingProfile();
-  }, [refreshKey]);
-
-  // Listen for navigation events to reload profile
-  useEffect(() => {
-    const unsubscribe = router.subscribe(() => {
-      console.log('Navigation event detected, refreshing profile');
-      setRefreshKey(prev => prev + 1);
-    });
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, []);
+  // Load profile when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Profile screen (iOS) focused, loading profile');
+      loadExistingProfile();
+    }, [])
+  );
 
   // Listen for custom targets returned from setup-targets screen
   useEffect(() => {
@@ -152,7 +139,7 @@ export default function ProfileScreen() {
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
     if (!targets) return;
-    const numValue = parseInt(value) || 0;
+    const numValue = parseFloat(value) || 0;
     setTargets({
       ...targets,
       [key]: Math.max(0, numValue),
@@ -164,8 +151,7 @@ export default function ProfileScreen() {
       protein: 'Protein',
       veggies: 'Vegetables',
       fruit: 'Fruits',
-      wholeGrains: 'Whole Grains',
-      legumes: 'Legumes',
+      wholeGrains: 'Healthy Carbs',
       nutsSeeds: 'Nuts & Seeds',
       fats: 'Fats',
       dairy: 'Dairy',
@@ -277,7 +263,7 @@ export default function ProfileScreen() {
           <>
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>You can adjust these values</Text>
+              <Text style={styles.sectionSubtitle}>You can adjust these values (fractional values allowed)</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
@@ -286,7 +272,7 @@ export default function ProfileScreen() {
                     style={styles.targetInput}
                     value={value.toString()}
                     onChangeText={(text) => handleUpdateTargets(key as keyof PortionTargets, text)}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
                   />
                 </View>
               ))}
@@ -417,7 +403,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   targetInput: {
-    width: 60,
+    width: 80,
     height: 40,
     borderWidth: 1,
     borderColor: colors.border,

@@ -38,10 +38,26 @@ export default function HomeScreen() {
       console.log('Home: Profile found, loading portions');
       
       // Ensure profile has all required fields with defaults
-      if (!userProfile.targets.dairy) {
-        userProfile.targets.dairy = 1;
+      if (!userProfile.targets) {
+        console.error('Profile has no targets!');
+        setLoading(false);
+        return;
       }
-      
+
+      // Ensure all food groups exist with defaults
+      const safeTargets: PortionTargets = {
+        protein: userProfile.targets.protein || 0,
+        veggies: userProfile.targets.veggies || 0,
+        fruit: userProfile.targets.fruit || 0,
+        wholeGrains: userProfile.targets.wholeGrains || 0,
+        nutsSeeds: userProfile.targets.nutsSeeds || 0,
+        fats: userProfile.targets.fats || 0,
+        dairy: userProfile.targets.dairy || 0,
+        water: userProfile.targets.water || 0,
+        alcohol: userProfile.targets.alcohol || 0,
+      };
+
+      userProfile.targets = safeTargets;
       setProfile(userProfile);
 
       const today = getTodayString();
@@ -85,8 +101,8 @@ export default function HomeScreen() {
       }
 
       const records = await getAllDailyPortions();
-      console.log('All records loaded:', records.length);
-      setAllRecords(records);
+      console.log('All records loaded:', records ? records.length : 0);
+      setAllRecords(Array.isArray(records) ? records : []);
       setLoading(false);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -109,7 +125,10 @@ export default function HomeScreen() {
   };
 
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
-    if (!profile || !todayPortions) return;
+    if (!profile || !todayPortions) {
+      console.log('Cannot toggle portion: missing profile or todayPortions');
+      return;
+    }
 
     const current = todayPortions[foodGroup] || 0;
 
@@ -137,14 +156,20 @@ export default function HomeScreen() {
       exercise: exerciseCompleted,
     };
 
-    await saveDailyPortions(dailyData);
-
-    const records = await getAllDailyPortions();
-    setAllRecords(records);
+    try {
+      await saveDailyPortions(dailyData);
+      const records = await getAllDailyPortions();
+      setAllRecords(Array.isArray(records) ? records : []);
+    } catch (error) {
+      console.error('Error saving portion toggle:', error);
+    }
   };
 
   const handleToggleExercise = async () => {
-    if (!todayPortions) return;
+    if (!todayPortions) {
+      console.log('Cannot toggle exercise: missing todayPortions');
+      return;
+    }
 
     const newExerciseState = !exerciseCompleted;
     setExerciseCompleted(newExerciseState);
@@ -156,8 +181,12 @@ export default function HomeScreen() {
       exercise: newExerciseState,
     };
 
-    await saveDailyPortions(dailyData);
-    console.log('Exercise toggled:', newExerciseState);
+    try {
+      await saveDailyPortions(dailyData);
+      console.log('Exercise toggled:', newExerciseState);
+    } catch (error) {
+      console.error('Error saving exercise toggle:', error);
+    }
   };
 
   // Show loading state
@@ -193,11 +222,13 @@ export default function HomeScreen() {
   let monthAdherence = 0;
 
   try {
-    todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
-    weekAdherence = calculateWeeklyAdherence(allRecords, profile.targets);
-    monthAdherence = calculateMonthlyAdherence(allRecords, profile.targets);
-    
-    console.log('Adherence calculated:', { todayAdherence, weekAdherence, monthAdherence });
+    if (profile && profile.targets && todayPortions) {
+      todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
+      weekAdherence = calculateWeeklyAdherence(allRecords, profile.targets);
+      monthAdherence = calculateMonthlyAdherence(allRecords, profile.targets);
+      
+      console.log('Adherence calculated:', { todayAdherence, weekAdherence, monthAdherence });
+    }
   } catch (error) {
     console.error('Error calculating adherence:', error);
   }
@@ -227,7 +258,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.portionsSection}>
-          {FOOD_GROUPS.map((group) => (
+          {FOOD_GROUPS && Array.isArray(FOOD_GROUPS) && FOOD_GROUPS.map((group) => (
             <FoodGroupRow
               key={group.key}
               icon={group.icon}

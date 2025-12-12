@@ -7,37 +7,52 @@ export function calculateDailyAdherence(
   portions: PortionTargets,
   targets: PortionTargets
 ): number {
-  let totalCompleted = 0;
-  let totalTarget = 0;
+  try {
+    // Validate inputs
+    if (!portions || !targets || typeof portions !== 'object' || typeof targets !== 'object') {
+      console.log('Daily adherence: Invalid input data', { portions, targets });
+      return 0;
+    }
 
-  const foodGroups: (keyof PortionTargets)[] = [
-    'protein',
-    'veggies',
-    'fruit',
-    'wholeGrains',
-    'nutsSeeds',
-    'fats',
-    'dairy',
-    'water',
-    'alcohol',
-  ];
+    let totalCompleted = 0;
+    let totalTarget = 0;
 
-  foodGroups.forEach((group) => {
-    const target = targets[group] || 0;
-    const completed = portions[group] || 0;
-    totalTarget += target;
-    totalCompleted += Math.min(completed, target);
-  });
+    const foodGroups: (keyof PortionTargets)[] = [
+      'protein',
+      'veggies',
+      'fruit',
+      'wholeGrains',
+      'nutsSeeds',
+      'fats',
+      'dairy',
+      'water',
+      'alcohol',
+    ];
 
-  // Guard against division by zero
-  if (totalTarget === 0 || isNaN(totalTarget) || isNaN(totalCompleted)) {
-    console.log('Daily adherence: Invalid data', { totalTarget, totalCompleted });
+    foodGroups.forEach((group) => {
+      const target = targets[group] || 0;
+      const completed = portions[group] || 0;
+      
+      // Validate that values are numbers
+      if (typeof target === 'number' && typeof completed === 'number' && !isNaN(target) && !isNaN(completed)) {
+        totalTarget += target;
+        totalCompleted += Math.min(completed, target);
+      }
+    });
+
+    // Guard against division by zero
+    if (totalTarget === 0 || isNaN(totalTarget) || isNaN(totalCompleted)) {
+      console.log('Daily adherence: Invalid totals', { totalTarget, totalCompleted });
+      return 0;
+    }
+
+    const percentage = Math.round((totalCompleted / totalTarget) * 100);
+    console.log('Daily adherence calculated:', { totalCompleted, totalTarget, percentage });
+    return percentage;
+  } catch (error) {
+    console.error('Error in calculateDailyAdherence:', error);
     return 0;
   }
-
-  const percentage = Math.round((totalCompleted / totalTarget) * 100);
-  console.log('Daily adherence calculated:', { totalCompleted, totalTarget, percentage });
-  return percentage;
 }
 
 // Calculate weekly adherence
@@ -46,12 +61,18 @@ export function calculateWeeklyAdherence(
   targets: PortionTargets
 ): number {
   try {
+    // Validate inputs
+    if (!Array.isArray(allRecords) || !targets || typeof targets !== 'object') {
+      console.log('Weekly adherence: Invalid input data');
+      return 0;
+    }
+
     const weekStart = getWeekStartDate();
     console.log('Week start date:', weekStart);
     
     // Filter records for this week
     const weekRecords = allRecords.filter((record) => {
-      if (!record || !record.date) {
+      if (!record || !record.date || typeof record.date !== 'string') {
         console.log('Invalid record found:', record);
         return false;
       }
@@ -71,7 +92,7 @@ export function calculateWeeklyAdherence(
     weekRecords.forEach((record) => {
       if (record && record.portions && targets) {
         const adherence = calculateDailyAdherence(record.portions, targets);
-        if (!isNaN(adherence)) {
+        if (!isNaN(adherence) && isFinite(adherence)) {
           totalAdherence += adherence;
           validRecords++;
         }
@@ -98,12 +119,18 @@ export function calculateMonthlyAdherence(
   targets: PortionTargets
 ): number {
   try {
+    // Validate inputs
+    if (!Array.isArray(allRecords) || !targets || typeof targets !== 'object') {
+      console.log('Monthly adherence: Invalid input data');
+      return 0;
+    }
+
     const monthStart = getMonthStartDate();
     console.log('Month start date:', monthStart);
     
     // Filter records for this month
     const monthRecords = allRecords.filter((record) => {
-      if (!record || !record.date) {
+      if (!record || !record.date || typeof record.date !== 'string') {
         console.log('Invalid record found:', record);
         return false;
       }
@@ -123,7 +150,7 @@ export function calculateMonthlyAdherence(
     monthRecords.forEach((record) => {
       if (record && record.portions && targets) {
         const adherence = calculateDailyAdherence(record.portions, targets);
-        if (!isNaN(adherence)) {
+        if (!isNaN(adherence) && isFinite(adherence)) {
           totalAdherence += adherence;
           validRecords++;
         }

@@ -18,7 +18,7 @@ export default function TabLayout() {
         console.log('Tabs layout: Profile exists:', profileExists);
 
         // Only redirect to profile if no profile exists AND we're on the home screen
-        if (!profileExists && segments[1] === '(home)') {
+        if (!profileExists && segments && segments[1] === '(home)') {
           console.log('Tabs layout: No profile found, redirecting to profile screen');
           router.replace('/(tabs)/profile');
         }
