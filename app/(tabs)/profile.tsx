@@ -131,14 +131,15 @@ export default function ProfileScreen() {
     
     Alert.alert(
       'Profile Saved! 🎉', 
-      'Your personalized portion targets are ready. Head to the Today tab to start tracking your portions!',
+      'Your personalized portion targets are ready. Head to the Track tab to start tracking your portions!',
       [
         {
-          text: 'Go to Today',
+          text: 'Go to Track',
           onPress: () => {
             setHasProfile(true);
             setIsEditing(false);
-            router.replace('/(tabs)/(home)/');
+            // Navigate to the Track (home) screen
+            router.push('/(tabs)/(home)/');
           },
         },
       ]
@@ -316,7 +317,7 @@ export default function ProfileScreen() {
             </View>
 
             <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={handleSaveProfile}>
-              <Text style={commonStyles.buttonText}>Save Profile & Start Tracking</Text>
+              <Text style={commonStyles.buttonText}>Save Profile & Go to Track</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

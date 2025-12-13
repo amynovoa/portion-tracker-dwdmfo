@@ -228,7 +228,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Today&apos;s Portions</Text>
+          <Text style={styles.title}>Track</Text>
           <Text style={styles.subtitle}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
         </View>
 

@@ -41,7 +41,7 @@ export default function TabLayout() {
       backgroundColor={colors.card}
     >
       <NativeTabs.Trigger name="(home)/index">
-        <NativeTabs.Label>Home</NativeTabs.Label>
+        <NativeTabs.Label>Track</NativeTabs.Label>
         <NativeTabs.Icon sf="house.fill" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
