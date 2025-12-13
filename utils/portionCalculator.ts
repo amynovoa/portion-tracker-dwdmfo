@@ -97,9 +97,9 @@ function applySizeAdjustment(portions: PortionTargets, size: SizeCategory): Port
   return adjusted;
 }
 
-// Apply alcohol adjustment with new priority order
-// Priority: Healthy Carbs (min 1) → Fats (min 1) → Nuts (min 0)
-// Do not reduce Protein, Vegetables, or Fruit
+// Apply alcohol adjustment with specific rule:
+// For 2 drinks: reduce Healthy Carbs by 1 and Fats by 1, Nuts remain unchanged
+// Only adjust for a maximum of 2 drinks (if user selects more, we don't adjust more)
 function applyAlcoholAdjustment(
   portions: PortionTargets,
   includeAlcohol: boolean,
@@ -112,44 +112,45 @@ function applyAlcoholAdjustment(
     return adjusted;
   }
   
-  // Set alcohol servings
+  // Set alcohol servings (user can select any number)
   adjusted.alcohol = alcoholServings;
   
-  // Only reduce portions for up to 3 drinks
-  // Anything above 3 is considered "off plan" but still allowed
-  const reductionNeeded = Math.min(3, alcoholServings);
-  let remainingReduction = reductionNeeded;
+  // Only adjust portions for a maximum of 2 drinks
+  // If user selects more than 2, we still only adjust for 2
+  const drinksToAdjustFor = Math.min(2, alcoholServings);
   
-  console.log('Alcohol adjustment - Starting reduction:', reductionNeeded);
+  console.log('Alcohol adjustment - Drinks to adjust for:', drinksToAdjustFor);
   console.log('Initial portions:', { 
     healthyCarbs: adjusted.healthyCarbs, 
     fats: adjusted.fats, 
     nuts: adjusted.nuts 
   });
   
-  // Step 1: Reduce Healthy Carbs first (but keep at minimum 1)
-  if (remainingReduction > 0 && adjusted.healthyCarbs > 1) {
-    const carbsToReduce = Math.min(remainingReduction, adjusted.healthyCarbs - 1);
-    adjusted.healthyCarbs -= carbsToReduce;
-    remainingReduction -= carbsToReduce;
-    console.log(`Reduced Healthy Carbs by ${carbsToReduce}, remaining reduction: ${remainingReduction}`);
+  // For 2 drinks: reduce Healthy Carbs by 1 and Fats by 1
+  // Nuts remain unchanged
+  if (drinksToAdjustFor === 2) {
+    // Reduce Healthy Carbs by 1 (but not below 0)
+    if (adjusted.healthyCarbs > 0) {
+      adjusted.healthyCarbs -= 1;
+      console.log('Reduced Healthy Carbs by 1');
+    }
+    
+    // Reduce Fats by 1 (but not below 0)
+    if (adjusted.fats > 0) {
+      adjusted.fats -= 1;
+      console.log('Reduced Fats by 1');
+    }
+    
+    // Nuts remain unchanged
+    console.log('Nuts remain unchanged');
+  } else if (drinksToAdjustFor === 1) {
+    // For 1 drink: only reduce Healthy Carbs by 1
+    if (adjusted.healthyCarbs > 0) {
+      adjusted.healthyCarbs -= 1;
+      console.log('Reduced Healthy Carbs by 1 (for 1 drink)');
+    }
   }
-  
-  // Step 2: If more reduction needed, reduce Fats (but keep at minimum 1)
-  if (remainingReduction > 0 && adjusted.fats > 1) {
-    const fatsToReduce = Math.min(remainingReduction, adjusted.fats - 1);
-    adjusted.fats -= fatsToReduce;
-    remainingReduction -= fatsToReduce;
-    console.log(`Reduced Fats by ${fatsToReduce}, remaining reduction: ${remainingReduction}`);
-  }
-  
-  // Step 3: If more reduction needed, reduce Nuts (but keep at minimum 0)
-  if (remainingReduction > 0 && adjusted.nuts > 0) {
-    const nutsToReduce = Math.min(remainingReduction, adjusted.nuts);
-    adjusted.nuts -= nutsToReduce;
-    remainingReduction -= nutsToReduce;
-    console.log(`Reduced Nuts by ${nutsToReduce}, remaining reduction: ${remainingReduction}`);
-  }
+  // For 0 drinks or if drinksToAdjustFor is somehow different, no adjustment
   
   console.log('Final portions after alcohol adjustment:', { 
     healthyCarbs: adjusted.healthyCarbs, 
@@ -157,8 +158,8 @@ function applyAlcoholAdjustment(
     nuts: adjusted.nuts 
   });
   
-  if (remainingReduction > 0) {
-    console.log(`Warning: Could not fully accommodate ${remainingReduction} more drink(s) without violating minimums`);
+  if (alcoholServings > 2) {
+    console.log(`Note: User selected ${alcoholServings} drinks, but only adjusted portions for 2 drinks (max)`);
   }
   
   return adjusted;
@@ -181,7 +182,7 @@ export function calculateRecommendedTargets(
   // Step 3: Apply size adjustment
   portions = applySizeAdjustment(portions, sizeCategory);
   
-  // Step 4: Apply alcohol adjustment with new priority order
+  // Step 4: Apply alcohol adjustment with new rule
   portions = applyAlcoholAdjustment(portions, includeAlcohol, alcoholServings);
   
   console.log('Calculated targets:', {
