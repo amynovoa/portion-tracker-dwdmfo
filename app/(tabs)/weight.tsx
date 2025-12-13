@@ -167,7 +167,7 @@ export default function WeightTrackingScreen() {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.secondary, fontSize: 24 }]}>
+              <Text style={[styles.statValue, { color: colors.secondary, fontSize: 20 }]}>
                 {goalWeight && latestWeight ? Math.abs(latestWeight - goalWeight).toFixed(1) : '--'}
               </Text>
               <Text style={styles.statLabel}>To Go</Text>
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   title: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: '700',
     color: colors.text,
   },
@@ -295,13 +295,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statValue: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textSecondary,
     fontWeight: '500',
   },
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   changeText: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
     fontWeight: '500',
   },
