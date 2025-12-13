@@ -8,8 +8,6 @@ import { getTodayString } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
-import AdherenceCard from '@/components/AdherenceCard';
-import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
 import AppLogo from '@/components/AppLogo';
 
 export default function HomeScreen() {
@@ -216,23 +214,6 @@ export default function HomeScreen() {
     );
   }
 
-  // Calculate adherence with error handling
-  let todayAdherence = 0;
-  let weekAdherence = 0;
-  let monthAdherence = 0;
-
-  try {
-    if (profile && profile.targets && todayPortions) {
-      todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
-      weekAdherence = calculateWeeklyAdherence(allRecords, profile.targets);
-      monthAdherence = calculateMonthlyAdherence(allRecords, profile.targets);
-      
-      console.log('Adherence calculated:', { todayAdherence, weekAdherence, monthAdherence });
-    }
-  } catch (error) {
-    console.error('Error calculating adherence:', error);
-  }
-
   return (
     <View style={commonStyles.container}>
       <ScrollView
@@ -249,12 +230,6 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Today&apos;s Portions</Text>
           <Text style={styles.subtitle}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
-        </View>
-
-        <View style={styles.adherenceSection}>
-          <AdherenceCard title="Today" percentage={todayAdherence} />
-          <AdherenceCard title="This Week" percentage={weekAdherence} />
-          <AdherenceCard title="This Month" percentage={monthAdherence} />
         </View>
 
         <View style={styles.portionsSection}>
@@ -304,9 +279,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: colors.textSecondary,
-  },
-  adherenceSection: {
-    marginBottom: 24,
   },
   portionsSection: {
     marginBottom: 16,
