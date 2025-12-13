@@ -93,6 +93,7 @@ export default function ProfileScreen() {
     }
 
     const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings);
+    console.log('Calculated targets:', result.targets);
     setTargets(result.targets);
     setIsEditing(true);
   };
@@ -271,7 +272,7 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Include alcohol in my daily plan</Text>
+            <Text style={styles.switchLabel}>Include alcohol in my daily plan</Text>
             <Switch
               value={includeAlcohol}
               onValueChange={setIncludeAlcohol}
@@ -418,6 +419,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+    flexShrink: 1,
   },
   infoBox: {
     marginHorizontal: 16,
