@@ -24,10 +24,35 @@ export async function loadProfile(): Promise<UserProfile | null> {
       console.log('Profile loaded successfully');
       const profile = JSON.parse(data);
       
-      // Ensure dairy field exists for backward compatibility
-      if (profile.targets && typeof profile.targets.dairy === 'undefined') {
-        console.log('Adding missing dairy field to profile');
-        profile.targets.dairy = 1; // Default value
+      // Migration: Handle old profile structure
+      if (profile.targets) {
+        // If old structure exists, migrate to new structure
+        if (typeof profile.targets.wholeGrains !== 'undefined') {
+          console.log('Migrating old profile structure to new structure');
+          // Map old fields to new fields
+          profile.targets.healthyCarbs = profile.targets.wholeGrains || 0;
+          profile.targets.nuts = profile.targets.nutsSeeds || 0;
+          
+          // Remove old fields
+          delete profile.targets.wholeGrains;
+          delete profile.targets.nutsSeeds;
+          delete profile.targets.dairy;
+          delete profile.targets.water;
+          
+          // Set default values for new fields if missing
+          if (typeof profile.includeAlcohol === 'undefined') {
+            profile.includeAlcohol = false;
+          }
+          if (typeof profile.alcoholServings === 'undefined') {
+            profile.alcoholServings = 0;
+          }
+          if (typeof profile.sizeCategory === 'undefined') {
+            profile.sizeCategory = 'medium';
+          }
+          
+          // Save migrated profile
+          await saveProfile(profile);
+        }
       }
       
       return profile;
@@ -57,10 +82,21 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
     if (data) {
       const dailyData = JSON.parse(data);
       
-      // Ensure dairy field exists for backward compatibility
-      if (dailyData.portions && typeof dailyData.portions.dairy === 'undefined') {
-        console.log('Adding missing dairy field to daily portions');
-        dailyData.portions.dairy = 0; // Default value
+      // Migration: Handle old daily portions structure
+      if (dailyData.portions) {
+        if (typeof dailyData.portions.wholeGrains !== 'undefined') {
+          console.log('Migrating old daily portions structure');
+          dailyData.portions.healthyCarbs = dailyData.portions.wholeGrains || 0;
+          dailyData.portions.nuts = dailyData.portions.nutsSeeds || 0;
+          
+          delete dailyData.portions.wholeGrains;
+          delete dailyData.portions.nutsSeeds;
+          delete dailyData.portions.dairy;
+          delete dailyData.portions.water;
+          
+          // Save migrated data
+          await saveDailyPortions(dailyData);
+        }
       }
       
       return dailyData;
@@ -84,10 +120,17 @@ export async function getAllDailyPortions(): Promise<DailyPortions[]> {
         
         const dailyData = JSON.parse(value);
         
-        // Ensure dairy field exists for backward compatibility
-        if (dailyData.portions && typeof dailyData.portions.dairy === 'undefined') {
-          console.log('Adding missing dairy field to daily portions');
-          dailyData.portions.dairy = 0; // Default value
+        // Migration: Handle old daily portions structure
+        if (dailyData.portions) {
+          if (typeof dailyData.portions.wholeGrains !== 'undefined') {
+            dailyData.portions.healthyCarbs = dailyData.portions.wholeGrains || 0;
+            dailyData.portions.nuts = dailyData.portions.nutsSeeds || 0;
+            
+            delete dailyData.portions.wholeGrains;
+            delete dailyData.portions.nutsSeeds;
+            delete dailyData.portions.dairy;
+            delete dailyData.portions.water;
+          }
         }
         
         return dailyData;

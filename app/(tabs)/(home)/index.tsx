@@ -47,11 +47,9 @@ export default function HomeScreen() {
         protein: userProfile.targets.protein || 0,
         veggies: userProfile.targets.veggies || 0,
         fruit: userProfile.targets.fruit || 0,
-        wholeGrains: userProfile.targets.wholeGrains || 0,
-        nutsSeeds: userProfile.targets.nutsSeeds || 0,
+        healthyCarbs: userProfile.targets.healthyCarbs || 0,
         fats: userProfile.targets.fats || 0,
-        dairy: userProfile.targets.dairy || 0,
-        water: userProfile.targets.water || 0,
+        nuts: userProfile.targets.nuts || 0,
         alcohol: userProfile.targets.alcohol || 0,
       };
 
@@ -71,11 +69,9 @@ export default function HomeScreen() {
           protein: dailyData.portions.protein || 0,
           veggies: dailyData.portions.veggies || 0,
           fruit: dailyData.portions.fruit || 0,
-          wholeGrains: dailyData.portions.wholeGrains || 0,
-          nutsSeeds: dailyData.portions.nutsSeeds || 0,
+          healthyCarbs: dailyData.portions.healthyCarbs || 0,
           fats: dailyData.portions.fats || 0,
-          dairy: dailyData.portions.dairy || 0,
-          water: dailyData.portions.water || 0,
+          nuts: dailyData.portions.nuts || 0,
           alcohol: dailyData.portions.alcohol || 0,
         };
         
@@ -87,11 +83,9 @@ export default function HomeScreen() {
           protein: 0,
           veggies: 0,
           fruit: 0,
-          wholeGrains: 0,
-          nutsSeeds: 0,
+          healthyCarbs: 0,
           fats: 0,
-          dairy: 0,
-          water: 0,
+          nuts: 0,
           alcohol: 0,
         };
         setTodayPortions(emptyPortions);

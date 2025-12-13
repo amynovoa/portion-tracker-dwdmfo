@@ -1,12 +1,15 @@
 
-export type Sex = 'male' | 'female' | 'prefer-not-to-say';
+export type Sex = 'male' | 'female';
 export type Goal = 'lose' | 'maintain' | 'build';
+export type SizeCategory = 'small' | 'medium' | 'large';
 
 export interface UserProfile {
   sex: Sex;
   currentWeight: number;
-  goalWeight: number;
   goal: Goal;
+  includeAlcohol: boolean;
+  alcoholServings: number;
+  sizeCategory: SizeCategory;
   targets: PortionTargets;
 }
 
@@ -14,11 +17,9 @@ export interface PortionTargets {
   protein: number;
   veggies: number;
   fruit: number;
-  wholeGrains: number;
-  nutsSeeds: number;
+  healthyCarbs: number;
   fats: number;
-  dairy: number;
-  water: number;
+  nuts: number;
   alcohol: number;
 }
 
@@ -39,12 +40,10 @@ export type FoodGroup = keyof PortionTargets;
 
 export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'protein', label: 'Protein', icon: '🍗' },
-  { key: 'veggies', label: 'Veggies', icon: '🥦' },
+  { key: 'veggies', label: 'Vegetables', icon: '🥦' },
   { key: 'fruit', label: 'Fruit', icon: '🍎' },
-  { key: 'wholeGrains', label: 'Healthy Carbs', icon: '🌾' },
-  { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
+  { key: 'healthyCarbs', label: 'Healthy Carbs', icon: '🌾' },
   { key: 'fats', label: 'Fats', icon: '🥑' },
-  { key: 'dairy', label: 'Dairy', icon: '🥛' },
-  { key: 'water', label: 'Water', icon: '💧' },
+  { key: 'nuts', label: 'Nuts', icon: '🥜' },
   { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
 ];

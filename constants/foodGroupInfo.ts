@@ -23,7 +23,7 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
     avoid: 'Avoid: fruit juices, canned fruit in syrup, sugary dried fruit.',
     examples: 'Examples: berries; apples, pears, peaches; oranges, grapefruit; melons, pineapple, mango.',
   },
-  wholeGrains: {
+  healthyCarbs: {
     benefit: 'Healthy Carbs include nutrient-dense carbohydrate foods that provide steady energy, fiber, and vitamins. These foods help support digestion, blood sugar balance, and long-term health.',
     avoid: 'Avoid: white bread, white pasta, white rice, pastries, donuts, cakes, cookies, breakfast cereals made from refined grains, chips, fries, processed snacks, sugary drinks or juices, candy or granola bars.',
     examples: `Whole Grains
@@ -50,7 +50,7 @@ Starchy Vegetables
 - Winter squash (butternut, acorn, kabocha)
 - Corn`,
   },
-  nutsSeeds: {
+  nuts: {
     benefit: 'Deliver protein, fiber, and omega fats that support heart health and satiety.',
     avoid: 'Avoid: candied nuts, nuts roasted in heavy oils, overly salted nuts.',
     examples: 'Examples: almonds, walnuts, pecans; pistachios; chia, flax, hemp seeds; natural nut butters.',
@@ -59,16 +59,6 @@ Starchy Vegetables
     benefit: 'Support hormones, brain function, and satiety.',
     avoid: 'Avoid: trans fats, processed oils, fried foods, sugary nut spreads.',
     examples: 'Examples: avocado; olive oil, avocado oil; chia, flax, hemp seeds; salmon, sardines.',
-  },
-  dairy: {
-    benefit: 'Dairy can be a good source of protein, calcium, and vitamin D, which support bone health, muscle function, and overall nutrition.',
-    avoid: 'Avoid: sugary flavored yogurts, sweetened milks, heavy cream sauces, and highly processed cheese products.',
-    examples: 'Examples: Greek yogurt; cottage cheese; milk or lactose-free milk; almond milk, soy milk, oat milk, cashew milk; unsweetened yogurt or coconut yogurt; small amounts of cheese (cheddar, mozzarella, feta); kefir or unsweetened yogurt drinks; ricotta; paneer.',
-  },
-  water: {
-    benefit: 'Supports energy, digestion, metabolism, and reduces false hunger signals.',
-    avoid: 'Avoid: sugary drinks.',
-    examples: 'Examples: water; sparkling water; herbal tea; fruit-infused water.',
   },
   alcohol: {
     benefit: 'Tracking alcohol helps keep intake mindful and reduces empty calories.',

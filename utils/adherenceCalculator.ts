@@ -21,11 +21,9 @@ export function calculateDailyAdherence(
       'protein',
       'veggies',
       'fruit',
-      'wholeGrains',
-      'nutsSeeds',
+      'healthyCarbs',
       'fats',
-      'dairy',
-      'water',
+      'nuts',
       'alcohol',
     ];
 
