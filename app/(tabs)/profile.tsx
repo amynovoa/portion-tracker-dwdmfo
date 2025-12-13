@@ -15,7 +15,7 @@ export default function ProfileScreen() {
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
-  const [alcoholServings, setAlcoholServings] = useState('1');
+  const [alcoholServings, setAlcoholServings] = useState('');
   const [targets, setTargets] = useState<PortionTargets | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
@@ -50,7 +50,7 @@ export default function ProfileScreen() {
       setGoalWeight('');
       setGoal('maintain');
       setIncludeAlcohol(false);
-      setAlcoholServings('1');
+      setAlcoholServings('');
       setTargets(null);
       setHasProfile(false);
       setIsEditing(false);
@@ -261,7 +261,7 @@ export default function ProfileScreen() {
         {includeAlcohol && (
           <View style={styles.section}>
             <Text style={styles.label}>How many alcoholic drinks per day do you want to budget for?</Text>
-            <Text style={styles.helperText}>Suggested range: 0–5 (higher numbers allowed)</Text>
+            <Text style={styles.helperText}>Suggested range: 0–3 (higher numbers allowed)</Text>
             <TextInput
               style={commonStyles.input}
               value={alcoholServings}
