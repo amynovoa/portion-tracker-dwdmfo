@@ -26,20 +26,12 @@ export default function FoodGroupInfoModal({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="fade"
+      animationType="slide"
       onRequestClose={onClose}
-      statusBarTranslucent={true}
+      statusBarTranslucent={false}
     >
-      <TouchableOpacity 
-        style={styles.overlay} 
-        activeOpacity={1} 
-        onPress={onClose}
-      >
-        <TouchableOpacity 
-          activeOpacity={1} 
-          onPress={(e) => e.stopPropagation()}
-          style={styles.modalContainer}
-        >
+      <View style={styles.overlay}>
+        <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.header}>
               <View style={styles.titleRow}>
@@ -76,9 +68,18 @@ export default function FoodGroupInfoModal({
                 <Text style={styles.examplesText}>{examples}</Text>
               </View>
             </ScrollView>
+
+            <View style={styles.footer}>
+              <TouchableOpacity 
+                onPress={onClose} 
+                style={styles.doneButton}
+              >
+                <Text style={styles.doneButtonText}>Got it!</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -86,24 +87,19 @@ export default function FoodGroupInfoModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
   modalContainer: {
-    width: '90%',
-    maxWidth: 500,
-    maxHeight: '80%',
-  },
-  modalContent: {
-    flex: 1,
+    maxHeight: '85%',
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
       },
@@ -111,9 +107,12 @@ const styles = StyleSheet.create({
         elevation: 10,
       },
       default: {
-        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0px -4px 20px rgba(0, 0, 0, 0.3)',
       },
     }),
+  },
+  modalContent: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -185,5 +184,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     lineHeight: 22,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  doneButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

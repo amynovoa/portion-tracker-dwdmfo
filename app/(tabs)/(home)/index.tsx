@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, RefreshControl } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions } from '@/utils/storage';
 import { getTodayString } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
@@ -201,8 +201,14 @@ export default function HomeScreen() {
           <AppLogo size={80} />
           <Text style={styles.emptyTitle}>Welcome to Portion Track!</Text>
           <Text style={styles.emptyMessage}>
-            Please create your profile in the Profile tab to get started.
+            Let&apos;s set up your personalized portion targets to get started.
           </Text>
+          <TouchableOpacity 
+            style={[buttonStyles.primary, styles.setupButton]} 
+            onPress={() => router.push('/(tabs)/profile')}
+          >
+            <Text style={commonStyles.buttonText}>Set Up My Profile</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -309,5 +315,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  setupButton: {
+    marginTop: 24,
+    paddingHorizontal: 32,
   },
 });

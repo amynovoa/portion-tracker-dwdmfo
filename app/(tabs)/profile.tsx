@@ -129,18 +129,20 @@ export default function ProfileScreen() {
     const savedProfile = await loadProfile();
     console.log('Profile saved and verified:', savedProfile);
     
-    Alert.alert('Success', 'Profile saved successfully!', [
-      {
-        text: 'OK',
-        onPress: () => {
-          setHasProfile(true);
-          setIsEditing(false);
-          // Navigate to home screen
-          console.log('Navigating to home screen');
-          router.replace('/(tabs)/(home)/');
+    Alert.alert(
+      'Profile Saved! 🎉', 
+      'Your personalized portion targets are ready. Head to the Today tab to start tracking your portions!',
+      [
+        {
+          text: 'Go to Today',
+          onPress: () => {
+            setHasProfile(true);
+            setIsEditing(false);
+            router.replace('/(tabs)/(home)/');
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
@@ -288,7 +290,7 @@ export default function ProfileScreen() {
           <>
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>You can adjust these values if needed</Text>
+              <Text style={styles.sectionSubtitle}>Review and adjust these values if needed, then save your profile below.</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
@@ -307,8 +309,14 @@ export default function ProfileScreen() {
               ))}
             </View>
 
+            <View style={styles.saveInfoBox}>
+              <Text style={styles.saveInfoText}>
+                ✅ Ready to save? Click the button below to save your profile and start tracking!
+              </Text>
+            </View>
+
             <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={handleSaveProfile}>
-              <Text style={commonStyles.buttonText}>Save Profile</Text>
+              <Text style={commonStyles.buttonText}>Save Profile & Start Tracking</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -420,6 +428,22 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
   },
+  saveInfoBox: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 8,
+    padding: 16,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  saveInfoText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
   button: {
     marginHorizontal: 16,
     marginVertical: 8,
@@ -439,6 +463,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 16,
+    lineHeight: 20,
   },
   targetRow: {
     flexDirection: 'row',
