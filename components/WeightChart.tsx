@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Line, Circle, Polyline, Text as SvgText, Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import Svg, { Line, Circle, Polyline, Text as SvgText, Path } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
 
@@ -10,12 +10,12 @@ interface WeightChartProps {
   goalWeight?: number;
 }
 
-const CHART_HEIGHT = 250;
-const CHART_PADDING = { top: 20, right: 20, bottom: 40, left: 50 };
+const CHART_HEIGHT = 220;
+const CHART_PADDING = { top: 20, right: 10, bottom: 30, left: 45 };
 
 export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
   const screenWidth = Dimensions.get('window').width;
-  const chartWidth = screenWidth - 32; // Account for container padding
+  const chartWidth = screenWidth - 80; // Account for container padding
 
   const chartData = useMemo(() => {
     if (entries.length === 0) {
@@ -32,8 +32,8 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
     
     // Add padding to y-axis range
     const weightRange = maxWeight - minWeight;
-    const yMin = Math.floor(minWeight - weightRange * 0.1);
-    const yMax = Math.ceil(maxWeight + weightRange * 0.1);
+    const yMin = Math.floor(minWeight - weightRange * 0.15);
+    const yMax = Math.ceil(maxWeight + weightRange * 0.15);
 
     // Calculate chart dimensions
     const plotWidth = chartWidth - CHART_PADDING.left - CHART_PADDING.right;
@@ -90,17 +90,17 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
   if (!chartData || entries.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No weight data yet</Text>
-        <Text style={styles.emptySubtext}>Add your first weight entry to see your progress</Text>
+        <Text style={styles.emptyText}>No data yet</Text>
+        <Text style={styles.emptySubtext}>Add weight entries to see your progress</Text>
       </View>
     );
   }
 
   const { points, trendLine, goalLine, yMin, yMax, plotWidth, plotHeight } = chartData;
 
-  // Generate y-axis labels
+  // Generate y-axis labels (fewer labels for cleaner look)
   const yAxisLabels = [];
-  const labelCount = 5;
+  const labelCount = 4;
   for (let i = 0; i < labelCount; i++) {
     const weight = yMin + ((yMax - yMin) * i) / (labelCount - 1);
     const y = CHART_PADDING.top + plotHeight - ((weight - yMin) / (yMax - yMin)) * plotHeight;
@@ -110,17 +110,15 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
   // Create polyline points string for the weight line
   const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ');
 
+  // Create gradient area path
+  const areaPath = points.length > 0 
+    ? `M ${points[0].x},${CHART_PADDING.top + plotHeight} L ${polylinePoints} L ${points[points.length - 1].x},${CHART_PADDING.top + plotHeight} Z`
+    : '';
+
   return (
     <View style={styles.container}>
       <Svg width={chartWidth} height={CHART_HEIGHT}>
-        <Defs>
-          <LinearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={colors.primary} stopOpacity="0.3" />
-            <Stop offset="1" stopColor={colors.primary} stopOpacity="0.05" />
-          </LinearGradient>
-        </Defs>
-
-        {/* Grid lines */}
+        {/* Grid lines - subtle */}
         {yAxisLabels.map((label, index) => (
           <Line
             key={`grid-${index}`}
@@ -130,35 +128,34 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
             y2={label.y}
             stroke={colors.border}
             strokeWidth="1"
-            strokeDasharray="4,4"
+            opacity={0.3}
           />
         ))}
 
         {/* Goal line */}
         {goalLine && (
-          <>
-            <Line
-              x1={CHART_PADDING.left}
-              y1={goalLine.y}
-              x2={CHART_PADDING.left + plotWidth}
-              y2={goalLine.y}
-              stroke={colors.secondary}
-              strokeWidth="2"
-              strokeDasharray="6,4"
-            />
-            <SvgText
-              x={CHART_PADDING.left + plotWidth + 5}
-              y={goalLine.y + 4}
-              fill={colors.secondary}
-              fontSize="10"
-              fontWeight="600"
-            >
-              Goal
-            </SvgText>
-          </>
+          <Line
+            x1={CHART_PADDING.left}
+            y1={goalLine.y}
+            x2={CHART_PADDING.left + plotWidth}
+            y2={goalLine.y}
+            stroke={colors.secondary}
+            strokeWidth="2"
+            strokeDasharray="4,4"
+            opacity={0.7}
+          />
         )}
 
-        {/* Trend line */}
+        {/* Gradient area under line */}
+        {areaPath && (
+          <Path
+            d={areaPath}
+            fill={colors.primary}
+            opacity={0.1}
+          />
+        )}
+
+        {/* Trend line - subtle */}
         {trendLine && (
           <Line
             x1={trendLine.x1}
@@ -166,9 +163,9 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
             x2={trendLine.x2}
             y2={trendLine.y2}
             stroke={colors.primary}
-            strokeWidth="2"
-            strokeDasharray="8,4"
-            opacity={0.5}
+            strokeWidth="1.5"
+            strokeDasharray="6,4"
+            opacity={0.4}
           />
         )}
 
@@ -188,7 +185,7 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
             key={`point-${index}`}
             cx={point.x}
             cy={point.y}
-            r="5"
+            r="4"
             fill={colors.primary}
             stroke="#FFFFFF"
             strokeWidth="2"
@@ -199,24 +196,24 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
         {yAxisLabels.map((label, index) => (
           <SvgText
             key={`y-label-${index}`}
-            x={CHART_PADDING.left - 10}
+            x={CHART_PADDING.left - 8}
             y={label.y + 4}
             fill={colors.textSecondary}
-            fontSize="12"
+            fontSize="11"
             textAnchor="end"
           >
             {label.weight}
           </SvgText>
         ))}
 
-        {/* X-axis labels (first and last date) */}
+        {/* X-axis labels (first and last date only) */}
         {points.length > 0 && (
           <>
             <SvgText
               x={points[0].x}
-              y={CHART_HEIGHT - 10}
+              y={CHART_HEIGHT - 8}
               fill={colors.textSecondary}
-              fontSize="12"
+              fontSize="11"
               textAnchor="start"
             >
               {new Date(points[0].entry.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -224,9 +221,9 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
             {points.length > 1 && (
               <SvgText
                 x={points[points.length - 1].x}
-                y={CHART_HEIGHT - 10}
+                y={CHART_HEIGHT - 8}
                 fill={colors.textSecondary}
-                fontSize="12"
+                fontSize="11"
                 textAnchor="end"
               >
                 {new Date(points[points.length - 1].entry.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -234,18 +231,6 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
             )}
           </>
         )}
-
-        {/* Y-axis label */}
-        <SvgText
-          x={15}
-          y={CHART_HEIGHT / 2}
-          fill={colors.textSecondary}
-          fontSize="12"
-          textAnchor="middle"
-          transform={`rotate(-90, 15, ${CHART_HEIGHT / 2})`}
-        >
-          Weight (lbs)
-        </SvgText>
       </Svg>
     </View>
   );
@@ -253,29 +238,24 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 8,
+    marginTop: 8,
   },
   emptyContainer: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 32,
-    marginVertical: 8,
+    padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 200,
+    minHeight: 180,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
+    color: colors.textSecondary,
+    marginBottom: 4,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
     textAlign: 'center',
+    opacity: 0.7,
   },
 });

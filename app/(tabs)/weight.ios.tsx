@@ -5,9 +5,8 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
 import { saveWeightEntry, loadWeightEntries, loadProfile, deleteWeightEntry } from '@/utils/storage';
 import WeightChart from '@/components/WeightChart';
-import AppLogo from '@/components/AppLogo';
 
-type TimeRange = 'week' | '30days' | '60days' | '90days' | 'all';
+type TimeRange = 'week' | '30days' | '90days' | 'all';
 
 export default function WeightTrackingScreen() {
   const [weightInput, setWeightInput] = useState('');
@@ -16,6 +15,7 @@ export default function WeightTrackingScreen() {
   const [currentWeight, setCurrentWeight] = useState<number | undefined>(undefined);
   const [timeRange, setTimeRange] = useState<TimeRange>('30days');
   const [filteredEntries, setFilteredEntries] = useState<WeightEntry[]>([]);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -63,9 +63,6 @@ export default function WeightTrackingScreen() {
         break;
       case '30days':
         cutoffTime = now - 30 * 24 * 60 * 60 * 1000;
-        break;
-      case '60days':
-        cutoffTime = now - 60 * 24 * 60 * 60 * 1000;
         break;
       case '90days':
         cutoffTime = now - 90 * 24 * 60 * 60 * 1000;
@@ -146,136 +143,116 @@ export default function WeightTrackingScreen() {
 
   const weightChange = getWeightChange();
   const latestWeight = entries.length > 0 ? entries[0].weight : currentWeight;
+  const displayedHistory = showAllHistory ? entries : entries.slice(0, 3);
 
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.logoContainer}>
-          <AppLogo size={60} />
-        </View>
-
+        {/* Compact Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Weight Tracking</Text>
-          <Text style={styles.subtitle}>Track your progress over time</Text>
+          <Text style={styles.title}>Weight Progress</Text>
         </View>
 
-        {/* Current Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Current Weight</Text>
-            <Text style={styles.statValue}>{latestWeight ? `${latestWeight} lbs` : '--'}</Text>
+        {/* Main Stats Card */}
+        <View style={styles.mainStatsCard}>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{latestWeight ? `${latestWeight}` : '--'}</Text>
+              <Text style={styles.statLabel}>Current</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{goalWeight ? `${goalWeight}` : '--'}</Text>
+              <Text style={styles.statLabel}>Goal</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.secondary, fontSize: 24 }]}>
+                {goalWeight && latestWeight ? Math.abs(latestWeight - goalWeight).toFixed(1) : '--'}
+              </Text>
+              <Text style={styles.statLabel}>To Go</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Goal Weight</Text>
-            <Text style={styles.statValue}>{goalWeight ? `${goalWeight} lbs` : '--'}</Text>
-          </View>
-          {goalWeight && latestWeight && (
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>To Goal</Text>
-              <Text style={[styles.statValue, { color: colors.secondary }]}>
-                {Math.abs(latestWeight - goalWeight).toFixed(1)} lbs
+          
+          {weightChange && (
+            <View style={styles.changeIndicator}>
+              <Text style={styles.changeText}>
+                {weightChange.change > 0 ? '↑' : '↓'} {Math.abs(weightChange.change).toFixed(1)} lbs ({weightChange.change > 0 ? '+' : ''}{weightChange.percentage}%) this period
               </Text>
             </View>
           )}
         </View>
 
-        {/* Weight Change Summary */}
-        {weightChange && (
-          <View style={[styles.changeCard, weightChange.change < 0 ? styles.changeCardPositive : styles.changeCardNeutral]}>
-            <Text style={styles.changeLabel}>Change in selected period</Text>
-            <Text style={styles.changeValue}>
-              {weightChange.change > 0 ? '+' : ''}{weightChange.change.toFixed(1)} lbs ({weightChange.change > 0 ? '+' : ''}{weightChange.percentage}%)
-            </Text>
-          </View>
-        )}
-
-        {/* Add Weight Entry */}
-        <View style={styles.inputSection}>
-          <Text style={styles.sectionTitle}>Log Today&apos;s Weight</Text>
-          <View style={styles.inputRow}>
+        {/* Quick Add Weight */}
+        <View style={styles.quickAddCard}>
+          <Text style={styles.quickAddLabel}>Log Weight</Text>
+          <View style={styles.quickAddRow}>
             <TextInput
-              style={[commonStyles.input, styles.weightInput]}
+              style={styles.quickAddInput}
               value={weightInput}
               onChangeText={setWeightInput}
               keyboardType="decimal-pad"
-              placeholder="Enter weight"
+              placeholder="lbs"
               placeholderTextColor={colors.textSecondary}
             />
-            <TouchableOpacity style={[buttonStyles.primary, styles.addButton]} onPress={handleAddWeight}>
-              <Text style={commonStyles.buttonText}>Add</Text>
+            <TouchableOpacity style={styles.quickAddButton} onPress={handleAddWeight}>
+              <Text style={styles.quickAddButtonText}>Add</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Time Range Selector */}
-        <View style={styles.timeRangeSection}>
-          <Text style={styles.sectionTitle}>Time Range</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timeRangeButtons}>
-            <TouchableOpacity
-              style={[styles.timeRangeButton, timeRange === 'week' && styles.timeRangeButtonActive]}
-              onPress={() => setTimeRange('week')}
-            >
-              <Text style={[styles.timeRangeText, timeRange === 'week' && styles.timeRangeTextActive]}>Week</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.timeRangeButton, timeRange === '30days' && styles.timeRangeButtonActive]}
-              onPress={() => setTimeRange('30days')}
-            >
-              <Text style={[styles.timeRangeText, timeRange === '30days' && styles.timeRangeTextActive]}>30 Days</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.timeRangeButton, timeRange === '60days' && styles.timeRangeButtonActive]}
-              onPress={() => setTimeRange('60days')}
-            >
-              <Text style={[styles.timeRangeText, timeRange === '60days' && styles.timeRangeTextActive]}>60 Days</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.timeRangeButton, timeRange === '90days' && styles.timeRangeButtonActive]}
-              onPress={() => setTimeRange('90days')}
-            >
-              <Text style={[styles.timeRangeText, timeRange === '90days' && styles.timeRangeTextActive]}>90 Days</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.timeRangeButton, timeRange === 'all' && styles.timeRangeButtonActive]}
-              onPress={() => setTimeRange('all')}
-            >
-              <Text style={[styles.timeRangeText, timeRange === 'all' && styles.timeRangeTextActive]}>All</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-
-        {/* Chart */}
-        <View style={styles.chartSection}>
+        {/* Chart with integrated time range selector */}
+        <View style={styles.chartCard}>
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>Progress Chart</Text>
+            <View style={styles.compactTimeRange}>
+              {(['week', '30days', '90days', 'all'] as TimeRange[]).map((range) => (
+                <TouchableOpacity
+                  key={range}
+                  style={[styles.timeChip, timeRange === range && styles.timeChipActive]}
+                  onPress={() => setTimeRange(range)}
+                >
+                  <Text style={[styles.timeChipText, timeRange === range && styles.timeChipTextActive]}>
+                    {range === 'week' ? '7D' : range === '30days' ? '30D' : range === '90days' ? '90D' : 'All'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
           <WeightChart entries={filteredEntries} goalWeight={goalWeight} />
         </View>
 
-        {/* Weight History */}
-        <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>Weight History</Text>
-          {entries.length === 0 ? (
-            <View style={styles.emptyHistory}>
-              <Text style={styles.emptyHistoryText}>No weight entries yet</Text>
+        {/* Compact History */}
+        {entries.length > 0 && (
+          <View style={styles.historyCard}>
+            <View style={styles.historyHeader}>
+              <Text style={styles.historyTitle}>Recent Entries</Text>
+              {entries.length > 3 && (
+                <TouchableOpacity onPress={() => setShowAllHistory(!showAllHistory)}>
+                  <Text style={styles.showMoreText}>
+                    {showAllHistory ? 'Show Less' : `Show All (${entries.length})`}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
-          ) : (
-            entries.map((entry, index) => (
-              <View key={`${entry.date}-${index}`} style={styles.historyItem}>
-                <View style={styles.historyItemLeft}>
+            {displayedHistory.map((entry, index) => (
+              <View key={`${entry.date}-${index}`} style={styles.historyRow}>
+                <View style={styles.historyLeft}>
+                  <Text style={styles.historyWeight}>{entry.weight} lbs</Text>
                   <Text style={styles.historyDate}>
                     {new Date(entry.timestamp).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
-                      year: 'numeric',
                     })}
                   </Text>
-                  <Text style={styles.historyWeight}>{entry.weight} lbs</Text>
                 </View>
-                <TouchableOpacity onPress={() => handleDeleteEntry(entry.date)} style={styles.deleteButton}>
-                  <Text style={styles.deleteButtonText}>Delete</Text>
+                <TouchableOpacity onPress={() => handleDeleteEntry(entry.date)} style={styles.deleteIcon}>
+                  <Text style={styles.deleteIconText}>×</Text>
                 </TouchableOpacity>
               </View>
-            ))
-          )}
-        </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -288,176 +265,207 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 120,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   header: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
+  mainStatsCard: {
+    marginHorizontal: 20,
     marginBottom: 16,
-    gap: 8,
-  },
-  statCard: {
-    flex: 1,
     backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
+    borderRadius: 16,
+    padding: 24,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
   },
-  statLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginBottom: 4,
-    textAlign: 'center',
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 32,
     fontWeight: '700',
     color: colors.text,
-  },
-  changeCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: colors.card,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
-  },
-  changeCardPositive: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.secondary,
-  },
-  changeCardNeutral: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-  },
-  changeLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
     marginBottom: 4,
   },
-  changeValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
+  statLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
-  inputSection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: colors.border,
   },
-  sectionTitle: {
-    fontSize: 18,
+  changeIndicator: {
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    alignItems: 'center',
+  },
+  changeText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  quickAddCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: colors.highlight,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: colors.primary + '20',
+  },
+  quickAddLabel: {
+    fontSize: 14,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 12,
   },
-  inputRow: {
+  quickAddRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
   },
-  weightInput: {
+  quickAddInput: {
     flex: 1,
-    marginVertical: 0,
-  },
-  addButton: {
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-  },
-  timeRangeSection: {
-    marginBottom: 16,
-  },
-  timeRangeButtons: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  timeRangeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: colors.border,
     backgroundColor: colors.card,
-  },
-  timeRangeButtonActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.highlight,
-  },
-  timeRangeText: {
-    fontSize: 14,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  timeRangeTextActive: {
-    color: colors.primary,
+  quickAddButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  chartSection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
+  quickAddButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  historySection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
+  chartCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
   },
-  historyItem: {
+  chartHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    marginBottom: 16,
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  compactTimeRange: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  timeChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
-    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-    elevation: 1,
+    backgroundColor: colors.backgroundSecondary,
   },
-  historyItemLeft: {
-    flex: 1,
+  timeChipActive: {
+    backgroundColor: colors.primary,
   },
-  historyDate: {
-    fontSize: 14,
+  timeChipText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: colors.textSecondary,
-    marginBottom: 4,
+  },
+  timeChipTextActive: {
+    color: '#FFFFFF',
+  },
+  historyCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  historyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border + '40',
+  },
+  historyLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   historyWeight: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
+    minWidth: 70,
   },
-  deleteButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    backgroundColor: colors.error + '20',
-  },
-  deleteButtonText: {
+  historyDate: {
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.error,
+    color: colors.textSecondary,
   },
-  emptyHistory: {
-    padding: 32,
+  deleteIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.error + '15',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  emptyHistoryText: {
-    fontSize: 16,
-    color: colors.textSecondary,
+  deleteIconText: {
+    fontSize: 24,
+    color: colors.error,
+    fontWeight: '400',
+    lineHeight: 24,
   },
   bottomPadding: {
     height: 20,
