@@ -97,6 +97,7 @@ export default function FoodGroupRow({
           benefit={foodGroupInfo.benefit || ''}
           avoid={foodGroupInfo.avoid || ''}
           examples={foodGroupInfo.examples || ''}
+          portionSize={foodGroupInfo.portionSize || ''}
         />
       )}
     </>

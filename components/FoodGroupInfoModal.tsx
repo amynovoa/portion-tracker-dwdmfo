@@ -11,6 +11,7 @@ interface FoodGroupInfoModalProps {
   benefit: string;
   avoid: string;
   examples: string;
+  portionSize: string;
 }
 
 export default function FoodGroupInfoModal({
@@ -21,6 +22,7 @@ export default function FoodGroupInfoModal({
   benefit,
   avoid,
   examples,
+  portionSize,
 }: FoodGroupInfoModalProps) {
   return (
     <Modal
@@ -53,6 +55,14 @@ export default function FoodGroupInfoModal({
               contentContainerStyle={styles.scrollContent}
               bounces={true}
             >
+              <View style={styles.portionSizeHighlight}>
+                <Text style={styles.portionSizeTitle}>What is 1 Portion?</Text>
+                <Text style={styles.portionSizeText}>{portionSize}</Text>
+                <Text style={styles.helperText}>
+                  Portions don&apos;t need to be exact — this is a guide, not a scale.
+                </Text>
+              </View>
+
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Benefits</Text>
                 <Text style={styles.benefitText}>{benefit}</Text>
@@ -160,6 +170,32 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingBottom: 30,
+  },
+  portionSizeHighlight: {
+    backgroundColor: colors.primary + '15',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+  },
+  portionSizeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 12,
+  },
+  portionSizeText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  helperText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    lineHeight: 18,
   },
   section: {
     marginBottom: 20,
