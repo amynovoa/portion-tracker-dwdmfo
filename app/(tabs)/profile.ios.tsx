@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Switch } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, UserProfile, PortionTargets } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
@@ -14,6 +14,8 @@ export default function ProfileScreen() {
   const [currentWeight, setCurrentWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
+  const [includeAlcohol, setIncludeAlcohol] = useState(false);
+  const [alcoholServings, setAlcoholServings] = useState('1');
   const [targets, setTargets] = useState<PortionTargets | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
@@ -50,6 +52,8 @@ export default function ProfileScreen() {
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
+      setIncludeAlcohol(profile.includeAlcohol);
+      setAlcoholServings(profile.alcoholServings.toString());
       setTargets(profile.targets);
       setHasProfile(true);
       setIsEditing(false);
@@ -60,6 +64,8 @@ export default function ProfileScreen() {
       setCurrentWeight('');
       setGoalWeight('');
       setGoal('maintain');
+      setIncludeAlcohol(false);
+      setAlcoholServings('1');
       setTargets(null);
       setHasProfile(false);
       setIsEditing(false);
@@ -68,22 +74,40 @@ export default function ProfileScreen() {
 
   const calculateTargets = () => {
     const weight = parseFloat(currentWeight);
+    const goalWt = parseFloat(goalWeight);
+    const servings = parseInt(alcoholServings) || 0;
 
     if (isNaN(weight) || weight <= 0) {
       Alert.alert('Invalid Input', 'Please enter a valid current weight.');
       return;
     }
 
-    const recommended = calculateRecommendedTargets(sex, weight, goal);
-    setTargets(recommended);
+    if (isNaN(goalWt) || goalWt <= 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid goal weight.');
+      return;
+    }
+
+    if (includeAlcohol && servings < 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid number of alcohol servings (0 or more).');
+      return;
+    }
+
+    const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings);
+    setTargets(result.targets);
     setIsEditing(true);
   };
 
   const handleSetupCustomTargets = () => {
     const weight = parseFloat(currentWeight);
+    const goalWt = parseFloat(goalWeight);
 
     if (isNaN(weight) || weight <= 0) {
       Alert.alert('Invalid Input', 'Please enter a valid current weight before setting up custom targets.');
+      return;
+    }
+
+    if (isNaN(goalWt) || goalWt <= 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid goal weight before setting up custom targets.');
       return;
     }
 
@@ -99,6 +123,7 @@ export default function ProfileScreen() {
 
     const weight = parseFloat(currentWeight);
     const goalWt = parseFloat(goalWeight);
+    const servings = parseInt(alcoholServings) || 0;
 
     if (isNaN(weight) || weight <= 0) {
       Alert.alert('Invalid Input', 'Please enter a valid current weight.');
@@ -110,11 +135,22 @@ export default function ProfileScreen() {
       return;
     }
 
+    if (includeAlcohol && servings < 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid number of alcohol servings (0 or more).');
+      return;
+    }
+
+    // Calculate size category for storage
+    const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings);
+
     const profile: UserProfile = {
       sex,
       currentWeight: weight,
       goalWeight: goalWt,
       goal,
+      includeAlcohol,
+      alcoholServings: servings,
+      sizeCategory: result.sizeCategory,
       targets,
     };
 
@@ -139,7 +175,7 @@ export default function ProfileScreen() {
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
     if (!targets) return;
-    const numValue = parseFloat(value) || 0;
+    const numValue = parseInt(value) || 0;
     setTargets({
       ...targets,
       [key]: Math.max(0, numValue),
@@ -150,12 +186,10 @@ export default function ProfileScreen() {
     const labels: { [key: string]: string } = {
       protein: 'Protein',
       veggies: 'Vegetables',
-      fruit: 'Fruits',
-      wholeGrains: 'Healthy Carbs',
-      nutsSeeds: 'Nuts & Seeds',
+      fruit: 'Fruit',
+      healthyCarbs: 'Healthy Carbs',
       fats: 'Fats',
-      dairy: 'Dairy',
-      water: 'Water',
+      nuts: 'Nuts',
       alcohol: 'Alcohol',
     };
     return labels[key] || key;
@@ -170,7 +204,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Sex</Text>
+          <Text style={styles.label}>Gender</Text>
           <View style={styles.buttonGroup}>
             <TouchableOpacity
               style={[styles.optionButton, sex === 'female' && styles.optionButtonActive]}
@@ -183,12 +217,6 @@ export default function ProfileScreen() {
               onPress={() => setSex('male')}
             >
               <Text style={[styles.optionText, sex === 'male' && styles.optionTextActive]}>Male</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, sex === 'prefer-not-to-say' && styles.optionButtonActive]}
-              onPress={() => setSex('prefer-not-to-say')}
-            >
-              <Text style={[styles.optionText, sex === 'prefer-not-to-say' && styles.optionTextActive]}>Prefer not to say</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -218,7 +246,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Primary Goal</Text>
+          <Text style={styles.label}>Goal</Text>
           <View style={styles.buttonGroup}>
             <TouchableOpacity
               style={[styles.optionButton, goal === 'lose' && styles.optionButtonActive]}
@@ -241,20 +269,43 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>Include alcohol in my daily plan</Text>
+            <Switch
+              value={includeAlcohol}
+              onValueChange={setIncludeAlcohol}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.card}
+            />
+          </View>
+        </View>
+
+        {includeAlcohol && (
+          <View style={styles.section}>
+            <Text style={styles.label}>How many alcoholic drinks per day do you want to budget for?</Text>
+            <Text style={styles.helperText}>Suggested range: 0–5 (higher numbers allowed)</Text>
+            <TextInput
+              style={commonStyles.input}
+              value={alcoholServings}
+              onChangeText={setAlcoholServings}
+              keyboardType="numeric"
+              placeholder="Enter number of drinks"
+              placeholderTextColor={colors.textSecondary}
+            />
+          </View>
+        )}
+
         {!targets && (
           <>
             <View style={styles.infoBox}>
               <Text style={styles.infoText}>
-                💡 Next, calculate your personalized portion targets based on your profile, or set up your own custom targets.
+                💡 Click below to calculate your personalized portion targets based on your profile.
               </Text>
             </View>
 
             <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={calculateTargets}>
               <Text style={commonStyles.buttonText}>Calculate My Portions</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[buttonStyles.outline, styles.button]} onPress={handleSetupCustomTargets}>
-              <Text style={commonStyles.buttonTextOutline}>Set Up My Own Portion Targets</Text>
             </TouchableOpacity>
           </>
         )}
@@ -263,17 +314,21 @@ export default function ProfileScreen() {
           <>
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>You can adjust these values (fractional values allowed)</Text>
+              <Text style={styles.sectionSubtitle}>You can adjust these values if needed</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
                   <Text style={styles.targetLabel}>{formatTargetLabel(key)}</Text>
-                  <TextInput
-                    style={styles.targetInput}
-                    value={value.toString()}
-                    onChangeText={(text) => handleUpdateTargets(key as keyof PortionTargets, text)}
-                    keyboardType="decimal-pad"
-                  />
+                  <View style={styles.targetInputContainer}>
+                    <TextInput
+                      style={styles.targetInput}
+                      value={value.toString()}
+                      onChangeText={(text) => handleUpdateTargets(key as keyof PortionTargets, text)}
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                    <Text style={styles.portionsText}>portions</Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -329,6 +384,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 8,
   },
+  helperText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
   buttonGroup: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -353,6 +413,11 @@ const styles = StyleSheet.create({
   },
   optionTextActive: {
     color: colors.primary,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   infoBox: {
     marginHorizontal: 16,
@@ -402,17 +467,27 @@ const styles = StyleSheet.create({
     color: colors.text,
     flex: 1,
   },
+  targetInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   targetInput: {
-    width: 80,
+    width: 60,
     height: 40,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
     backgroundColor: colors.card,
+  },
+  portionsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   bottomPadding: {
     height: 20,

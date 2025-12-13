@@ -6,6 +6,7 @@ export type SizeCategory = 'small' | 'medium' | 'large';
 export interface UserProfile {
   sex: Sex;
   currentWeight: number;
+  goalWeight: number;
   goal: Goal;
   includeAlcohol: boolean;
   alcoholServings: number;

@@ -12,6 +12,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [sex, setSex] = useState<Sex>('female');
   const [currentWeight, setCurrentWeight] = useState('');
+  const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
   const [alcoholServings, setAlcoholServings] = useState('1');
@@ -34,6 +35,7 @@ export default function ProfileScreen() {
       console.log('Profile found, populating fields:', profile);
       setSex(profile.sex);
       setCurrentWeight(profile.currentWeight.toString());
+      setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
       setIncludeAlcohol(profile.includeAlcohol);
       setAlcoholServings(profile.alcoholServings.toString());
@@ -45,6 +47,7 @@ export default function ProfileScreen() {
       // Reset all state to ensure clean setup
       setSex('female');
       setCurrentWeight('');
+      setGoalWeight('');
       setGoal('maintain');
       setIncludeAlcohol(false);
       setAlcoholServings('1');
@@ -56,10 +59,16 @@ export default function ProfileScreen() {
 
   const calculateTargets = () => {
     const weight = parseFloat(currentWeight);
+    const goalWt = parseFloat(goalWeight);
     const servings = parseInt(alcoholServings) || 0;
 
     if (isNaN(weight) || weight <= 0) {
       Alert.alert('Invalid Input', 'Please enter a valid current weight.');
+      return;
+    }
+
+    if (isNaN(goalWt) || goalWt <= 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid goal weight.');
       return;
     }
 
@@ -80,10 +89,16 @@ export default function ProfileScreen() {
     }
 
     const weight = parseFloat(currentWeight);
+    const goalWt = parseFloat(goalWeight);
     const servings = parseInt(alcoholServings) || 0;
 
     if (isNaN(weight) || weight <= 0) {
       Alert.alert('Invalid Input', 'Please enter a valid current weight.');
+      return;
+    }
+
+    if (isNaN(goalWt) || goalWt <= 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid goal weight.');
       return;
     }
 
@@ -98,6 +113,7 @@ export default function ProfileScreen() {
     const profile: UserProfile = {
       sex,
       currentWeight: weight,
+      goalWeight: goalWt,
       goal,
       includeAlcohol,
       alcoholServings: servings,
@@ -186,6 +202,18 @@ export default function ProfileScreen() {
             onChangeText={setCurrentWeight}
             keyboardType="numeric"
             placeholder="Enter current weight"
+            placeholderTextColor={colors.textSecondary}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Goal Weight (lbs)</Text>
+          <TextInput
+            style={commonStyles.input}
+            value={goalWeight}
+            onChangeText={setGoalWeight}
+            keyboardType="numeric"
+            placeholder="Enter goal weight"
             placeholderTextColor={colors.textSecondary}
           />
         </View>

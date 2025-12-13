@@ -53,6 +53,13 @@ export async function loadProfile(): Promise<UserProfile | null> {
           // Save migrated profile
           await saveProfile(profile);
         }
+        
+        // Migration: Add goalWeight if missing (set to currentWeight as default)
+        if (typeof profile.goalWeight === 'undefined') {
+          console.log('Adding goalWeight field to existing profile');
+          profile.goalWeight = profile.currentWeight || 150; // Default to current weight or 150
+          await saveProfile(profile);
+        }
       }
       
       return profile;
