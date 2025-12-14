@@ -5,6 +5,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
 import { saveWeightEntry, loadWeightEntries, loadProfile, deleteWeightEntry } from '@/utils/storage';
 import WeightChart from '@/components/WeightChart';
+import { useFocusEffect } from 'expo-router';
 
 type TimeRange = 'week' | '30days' | '90days' | 'all';
 
@@ -17,34 +18,50 @@ export default function WeightTrackingScreen() {
   const [filteredEntries, setFilteredEntries] = useState<WeightEntry[]>([]);
   const [showAllHistory, setShowAllHistory] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Reload data whenever the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Weight screen focused, loading data');
+      loadData();
+    }, [])
+  );
 
   useEffect(() => {
     filterEntriesByTimeRange();
   }, [entries, timeRange]);
 
   const loadData = async () => {
+    console.log('Loading weight data...');
     const profile = await loadProfile();
+    
     if (profile) {
+      console.log('Profile found:', { currentWeight: profile.currentWeight, goalWeight: profile.goalWeight });
       setGoalWeight(profile.goalWeight);
       setCurrentWeight(profile.currentWeight);
-    }
+      
+      const weightEntries = await loadWeightEntries();
+      console.log('Weight entries found:', weightEntries.length);
+      setEntries(weightEntries);
 
-    const weightEntries = await loadWeightEntries();
-    setEntries(weightEntries);
-
-    // If no entries exist and we have a profile, create initial entry
-    if (weightEntries.length === 0 && profile) {
-      const today = new Date();
-      const initialEntry: WeightEntry = {
-        date: today.toISOString().split('T')[0],
-        weight: profile.currentWeight,
-        timestamp: today.getTime(),
-      };
-      await saveWeightEntry(initialEntry);
-      setEntries([initialEntry]);
+      // If no entries exist and we have a profile, create initial entry
+      if (weightEntries.length === 0) {
+        console.log('No weight entries found, creating initial entry with profile weight:', profile.currentWeight);
+        const today = new Date();
+        const initialEntry: WeightEntry = {
+          date: today.toISOString().split('T')[0],
+          weight: profile.currentWeight,
+          timestamp: today.getTime(),
+        };
+        await saveWeightEntry(initialEntry);
+        setEntries([initialEntry]);
+      }
+    } else {
+      console.log('No profile found, clearing weight data');
+      // No profile means data was cleared or user hasn't set up yet
+      setGoalWeight(undefined);
+      setCurrentWeight(undefined);
+      setEntries([]);
+      setWeightInput('');
     }
   };
 
