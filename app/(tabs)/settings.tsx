@@ -75,8 +75,21 @@ export default function SettingsScreen() {
           <Text style={styles.infoText}>
             Portion Tracker helps you maintain healthy eating habits by tracking daily portions from key food groups.
           </Text>
-          <Text style={styles.infoText}>
-            Your data is stored locally on your device and is never shared.
+        </View>
+
+        <View style={styles.dataStorageSection}>
+          <Text style={styles.dataStorageTitle}>📱 Your Data Stays on This Device</Text>
+          <Text style={styles.dataStorageText}>
+            All your data is stored locally on this device only. This means:
+          </Text>
+          <View style={styles.dataStorageList}>
+            <Text style={styles.dataStorageListItem}>• Your profile, portions, and weight entries are private and secure</Text>
+            <Text style={styles.dataStorageListItem}>• No account or internet connection required</Text>
+            <Text style={styles.dataStorageListItem}>• Your data will not sync across multiple devices</Text>
+            <Text style={styles.dataStorageListItem}>• If you delete the app or switch devices, your data will be lost</Text>
+          </View>
+          <Text style={styles.dataStorageNote}>
+            💡 Tip: If you use Portion Tracker on multiple devices, each device will have its own separate tracking data.
           </Text>
         </View>
 
@@ -196,6 +209,48 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 8,
+  },
+  dataStorageSection: {
+    paddingHorizontal: 16,
+    marginTop: 24,
+    paddingVertical: 20,
+    backgroundColor: colors.card,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dataStorageTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  dataStorageText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  dataStorageList: {
+    marginBottom: 16,
+    paddingLeft: 4,
+  },
+  dataStorageListItem: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 24,
+    marginBottom: 4,
+  },
+  dataStorageNote: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    fontStyle: 'italic',
+    backgroundColor: colors.background,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
   },
   resetSection: {
     paddingHorizontal: 16,
