@@ -318,21 +318,31 @@ export default function ProfileScreen() {
 
         {targets && (
           <>
+            <View style={styles.customizeCallout}>
+              <Text style={styles.customizeTitle}>✏️ You Can Customize These!</Text>
+              <Text style={styles.customizeText}>
+                These are recommended targets based on your profile. Feel free to tap any number below to adjust it to your preferences. Make them work for YOU!
+              </Text>
+            </View>
+
             <View style={styles.targetsSection}>
-              <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>Review and adjust these values if needed, then save your profile below.</Text>
+              <Text style={styles.sectionTitle}>Your Daily Portion Targets</Text>
+              <Text style={styles.sectionSubtitle}>Tap any number to edit and personalize your goals</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
                   <Text style={styles.targetLabel}>{formatTargetLabel(key)}</Text>
                   <View style={styles.targetInputContainer}>
-                    <TextInput
-                      style={styles.targetInput}
-                      value={value.toString()}
-                      onChangeText={(text) => handleUpdateTargets(key as keyof PortionTargets, text)}
-                      keyboardType="numeric"
-                      maxLength={2}
-                    />
+                    <View style={styles.editableInputWrapper}>
+                      <TextInput
+                        style={styles.targetInput}
+                        value={value.toString()}
+                        onChangeText={(text) => handleUpdateTargets(key as keyof PortionTargets, text)}
+                        keyboardType="numeric"
+                        maxLength={2}
+                      />
+                      <Text style={styles.editIcon}>✏️</Text>
+                    </View>
                     <Text style={styles.portionsText}>portions</Text>
                   </View>
                 </View>
@@ -341,7 +351,7 @@ export default function ProfileScreen() {
 
             <View style={styles.saveInfoBox}>
               <Text style={styles.saveInfoText}>
-                ✅ Ready to save? Click the button below to save your profile and start tracking!
+                ✅ Happy with your targets? Save your profile below to start tracking!
               </Text>
             </View>
 
@@ -454,6 +464,28 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
   },
+  customizeCallout: {
+    marginHorizontal: 16,
+    marginBottom: 20,
+    marginTop: 8,
+    padding: 20,
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FF9800',
+  },
+  customizeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#E65100',
+    marginBottom: 8,
+  },
+  customizeText: {
+    fontSize: 15,
+    color: '#E65100',
+    lineHeight: 22,
+    fontWeight: '500',
+  },
   saveInfoBox: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -476,7 +508,7 @@ const styles = StyleSheet.create({
   },
   targetsSection: {
     paddingHorizontal: 16,
-    marginTop: 24,
+    marginTop: 8,
     marginBottom: 16,
   },
   sectionTitle: {
@@ -486,10 +518,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
+    fontSize: 15,
+    color: colors.primary,
     marginBottom: 16,
     lineHeight: 20,
+    fontWeight: '600',
   },
   targetRow: {
     flexDirection: 'row',
@@ -509,18 +542,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  editableInputWrapper: {
+    position: 'relative',
+  },
   targetInput: {
     width: 60,
     height: 40,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: colors.highlight,
+  },
+  editIcon: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    fontSize: 16,
   },
   portionsText: {
     fontSize: 14,
