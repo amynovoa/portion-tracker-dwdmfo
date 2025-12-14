@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { getTodayString } from '@/utils/dateUtils';
@@ -12,6 +12,7 @@ import AppLogo from '@/components/AppLogo';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [todayPortions, setTodayPortions] = useState<PortionTargets | null>(null);
   const [exerciseCompleted, setExerciseCompleted] = useState(false);
@@ -117,13 +118,23 @@ export default function HomeScreen() {
     }
   };
 
-  // Load data when screen comes into focus
+  // Load data when screen comes into focus OR when reload param changes
   useFocusEffect(
     React.useCallback(() => {
       console.log('Home screen focused, loading data');
       loadData();
     }, [])
   );
+
+  // Also reload when the reload param changes (from profile save)
+  useEffect(() => {
+    if (params.reload) {
+      console.log('Reload param detected, reloading data:', params.reload);
+      loadData();
+      // Clear the param after loading
+      router.setParams({ reload: undefined });
+    }
+  }, [params.reload]);
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -140,9 +140,13 @@ export default function ProfileScreen() {
         {
           text: 'Go to Track',
           onPress: () => {
-            console.log('Navigating to Track screen...');
-            // Use replace to ensure clean navigation
-            router.replace('/(tabs)/(home)');
+            console.log('Navigating to Track screen with timestamp to force reload...');
+            // Add a timestamp parameter to force the Track screen to reload
+            const timestamp = Date.now();
+            router.push({
+              pathname: '/(tabs)/(home)',
+              params: { reload: timestamp.toString() }
+            });
           },
         },
       ]
