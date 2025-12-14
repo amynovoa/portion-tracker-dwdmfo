@@ -223,19 +223,22 @@ export default function HomeScreen() {
   if (!profile || !todayPortions) {
     return (
       <View style={commonStyles.container}>
-        <View style={styles.emptyContainer}>
-          <AppLogo size={80} />
-          <Text style={styles.emptyTitle}>Welcome to Portion Track!</Text>
-          <Text style={styles.emptyMessage}>
-            Let&apos;s set up your personalized portion targets to get started.
-          </Text>
-          <TouchableOpacity 
-            style={[buttonStyles.primary, styles.setupButton]} 
-            onPress={() => router.push('/(tabs)/profile')}
-          >
-            <Text style={commonStyles.buttonText}>Set Up My Profile</Text>
-          </TouchableOpacity>
-        </View>
+        <ScrollView contentContainerStyle={styles.welcomeScrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.emptyContainer}>
+            <AppLogo size={80} />
+            <Text style={styles.emptyTitle}>Welcome to Portion Tracker</Text>
+            <Text style={styles.emptyTagline}>Simple portions. Real life flexibility.</Text>
+            <Text style={styles.emptyMessage}>
+              Track your day using portions instead of calories — and adjust them to fit you, not the other way around.
+            </Text>
+            <TouchableOpacity 
+              style={[buttonStyles.primary, styles.setupButton]} 
+              onPress={() => router.push('/(tabs)/profile')}
+            >
+              <Text style={commonStyles.buttonText}>Set Up My Profile</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -324,28 +327,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
+  welcomeScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 120,
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
+    paddingVertical: 40,
   },
   emptyTitle: {
     marginTop: 24,
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
   },
-  emptyMessage: {
+  emptyTagline: {
     marginTop: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
+    lineHeight: 26,
+  },
+  emptyMessage: {
+    marginTop: 16,
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+    maxWidth: 400,
   },
   setupButton: {
-    marginTop: 24,
+    marginTop: 32,
     paddingHorizontal: 32,
   },
 });
