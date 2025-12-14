@@ -166,24 +166,15 @@ export default function ProfileScreen() {
     setHasProfile(true);
     setIsEditing(false);
     
-    Alert.alert(
-      'Profile Saved! 🎉', 
-      'Your personalized portion targets are ready. Head to the Track tab to start tracking your portions!',
-      [
-        {
-          text: 'Go to Track',
-          onPress: () => {
-            console.log('Navigating to Track screen with timestamp to force reload...');
-            // Add a timestamp parameter to force the Track screen to reload
-            const timestamp = Date.now();
-            router.push({
-              pathname: '/(tabs)/(home)',
-              params: { reload: timestamp.toString() }
-            });
-          },
-        },
-      ]
-    );
+    // Navigate immediately to Track screen with reload parameter
+    console.log('Navigating to Track screen with timestamp to force reload...');
+    const timestamp = Date.now();
+    
+    // Use replace to navigate to the home tab
+    router.replace({
+      pathname: '/(tabs)/(home)',
+      params: { reload: timestamp.toString() }
+    });
   };
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
