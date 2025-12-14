@@ -162,6 +162,10 @@ export default function ProfileScreen() {
     const savedProfile = await loadProfile();
     console.log('Profile saved and verified:', savedProfile);
     
+    // Update local state
+    setHasProfile(true);
+    setIsEditing(false);
+    
     Alert.alert(
       'Profile Saved! 🎉', 
       'Your personalized portion targets are ready. Head to the Track tab to start tracking your portions!',
@@ -169,10 +173,9 @@ export default function ProfileScreen() {
         {
           text: 'Go to Track',
           onPress: () => {
-            setHasProfile(true);
-            setIsEditing(false);
-            // Navigate to the Track (home) screen
-            router.push('/(tabs)/(home)/');
+            console.log('Navigating to Track screen...');
+            // Use replace to ensure clean navigation
+            router.replace('/(tabs)/(home)');
           },
         },
       ]
