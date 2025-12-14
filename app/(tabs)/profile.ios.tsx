@@ -166,14 +166,13 @@ export default function ProfileScreen() {
     setHasProfile(true);
     setIsEditing(false);
     
-    // Navigate immediately to Track screen with reload parameter
-    console.log('Navigating to Track screen with timestamp to force reload...');
-    const timestamp = Date.now();
+    // Navigate to Track screen
+    console.log('Navigating to Track screen...');
     
-    // Use replace to navigate to the home tab
-    router.replace({
+    // Use push to navigate to the home tab with reload parameter
+    router.push({
       pathname: '/(tabs)/(home)',
-      params: { reload: timestamp.toString() }
+      params: { reload: Date.now().toString() }
     });
   };
 

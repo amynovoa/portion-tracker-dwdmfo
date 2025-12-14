@@ -42,7 +42,7 @@ export default function TabLayout() {
     >
       <NativeTabs.Trigger name="(home)/index">
         <NativeTabs.Label>Track</NativeTabs.Label>
-        <NativeTabs.Icon sf="house.fill" />
+        <NativeTabs.Icon sf="checkmark.circle.fill" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
         <NativeTabs.Label>History</NativeTabs.Label>

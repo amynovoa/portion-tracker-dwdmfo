@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     flex: 1,
+    flexShrink: 1,
   },
   closeButton: {
     width: 32,
@@ -136,6 +137,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 12,
+    flexShrink: 0,
   },
   closeButtonText: {
     fontSize: 20,
