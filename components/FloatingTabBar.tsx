@@ -11,7 +11,6 @@ import {
 import { useRouter, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/IconSymbol';
-import { BlurView } from 'expo-blur';
 import { useTheme } from '@react-navigation/native';
 import Animated, {
   useAnimatedStyle,
@@ -100,8 +99,6 @@ export default function FloatingTabBar({
     router.push(route);
   };
 
-  // Remove unnecessary tabBarStyle animation to prevent flickering
-
   const tabWidthPercent = ((100 / tabs.length) - 1).toFixed(2);
 
   const indicatorStyle = useAnimatedStyle(() => {
@@ -121,25 +118,26 @@ export default function FloatingTabBar({
 
   // Dynamic styles based on theme
   const dynamicStyles = {
-    blurContainer: {
-      ...styles.blurContainer,
+    container: {
+      ...styles.container,
       borderWidth: 1.2,
       borderColor: 'rgba(255, 255, 255, 1)',
+      borderRadius: borderRadius,
       ...Platform.select({
         ios: {
           backgroundColor: theme.dark
-            ? 'rgba(28, 28, 30, 0.8)'
-            : 'rgba(255, 255, 255, 0.6)',
+            ? 'rgba(28, 28, 30, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
         },
         android: {
           backgroundColor: theme.dark
             ? 'rgba(28, 28, 30, 0.95)'
-            : 'rgba(255, 255, 255, 0.6)',
+            : 'rgba(255, 255, 255, 0.95)',
         },
         web: {
           backgroundColor: theme.dark
             ? 'rgba(28, 28, 30, 0.95)'
-            : 'rgba(255, 255, 255, 0.6)',
+            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
         },
       }),
@@ -159,16 +157,13 @@ export default function FloatingTabBar({
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={[
-        styles.container,
+        styles.containerWrapper,
         {
           width: containerWidth,
           marginBottom: bottomMargin ?? 20
         }
       ]}>
-        <BlurView
-          intensity={80}
-          style={[dynamicStyles.blurContainer, { borderRadius }]}
-        >
+        <View style={dynamicStyles.container}>
           <View style={dynamicStyles.background} />
           <Animated.View style={[dynamicStyles.indicator, indicatorStyle]} />
           <View style={styles.tabsContainer}>
@@ -178,12 +173,11 @@ export default function FloatingTabBar({
               return (
                 <React.Fragment key={index}>
                 <TouchableOpacity
-                  key={index}
                   style={styles.tab}
                   onPress={() => handleTabPress(tab.route)}
                   activeOpacity={0.7}
                 >
-                  <View key={index} style={styles.tabContent}>
+                  <View style={styles.tabContent}>
                     <IconSymbol
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
@@ -205,7 +199,7 @@ export default function FloatingTabBar({
               );
             })}
           </View>
-        </BlurView>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -220,11 +214,11 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     alignItems: 'center',
   },
-  container: {
+  containerWrapper: {
     marginHorizontal: 20,
     alignSelf: 'center',
   },
-  blurContainer: {
+  container: {
     overflow: 'hidden',
   },
   background: {
