@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    backgroundColor: cards.card,
+    backgroundColor: colors.card,
   },
   doneButton: {
     backgroundColor: colors.primary,
