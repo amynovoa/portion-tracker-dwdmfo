@@ -37,6 +37,7 @@ export default function FoodGroupRow({
       return;
     }
     
+    console.log('Setting infoModalVisible to true');
     setInfoModalVisible(true);
   };
 
@@ -51,6 +52,8 @@ export default function FoodGroupRow({
   const minSlots = Math.max(target, completed + 2);
   const totalSlots = minSlots;
   const slots = Array.from({ length: totalSlots }, (_, i) => i);
+
+  console.log(`FoodGroupRow ${label}: infoModalVisible = ${infoModalVisible}`);
 
   return (
     <>

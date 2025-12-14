@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 
 interface FoodGroupInfoModalProps {
@@ -24,17 +24,17 @@ export default function FoodGroupInfoModal({
   examples,
   portionSize,
 }: FoodGroupInfoModalProps) {
-  console.log('FoodGroupInfoModal rendering, visible:', visible);
+  console.log('FoodGroupInfoModal (iOS) rendering, visible:', visible);
   
   return (
     <Modal
       visible={visible}
       animationType="slide"
+      presentationStyle="pageSheet"
       onRequestClose={onClose}
-      statusBarTranslucent={false}
     >
-      <View style={styles.container}>
-        <View style={styles.modalContent}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleRow}>
               <Text style={styles.icon}>{icon}</Text>
@@ -88,17 +88,17 @@ export default function FoodGroupInfoModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  modalContent: {
+  container: {
     flex: 1,
     backgroundColor: colors.background,
   },
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -203,7 +203,6 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    paddingBottom: 32,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.card,
