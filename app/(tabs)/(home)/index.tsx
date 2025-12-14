@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions } from '@/utils/storage';
+import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { getTodayString } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import FoodGroupRow from '@/components/FoodGroupRow';
@@ -18,6 +18,7 @@ export default function HomeScreen() {
   const [allRecords, setAllRecords] = useState<DailyPortions[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showInfoHint, setShowInfoHint] = useState(false);
 
   const loadData = async () => {
     try {
@@ -95,6 +96,20 @@ export default function HomeScreen() {
       const records = await getAllDailyPortions();
       console.log('All records loaded:', records ? records.length : 0);
       setAllRecords(Array.isArray(records) ? records : []);
+      
+      // Check if user has seen the info hint
+      const seenHint = await hasSeenInfoHint();
+      console.log('Has seen info hint:', seenHint);
+      setShowInfoHint(!seenHint);
+      
+      // Auto-hide hint after 8 seconds and mark as seen
+      if (!seenHint) {
+        setTimeout(async () => {
+          setShowInfoHint(false);
+          await saveInfoHintSeen();
+        }, 8000);
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -233,7 +248,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.portionsSection}>
-          {FOOD_GROUPS && Array.isArray(FOOD_GROUPS) && FOOD_GROUPS.map((group) => (
+          {FOOD_GROUPS && Array.isArray(FOOD_GROUPS) && FOOD_GROUPS.map((group, index) => (
             <FoodGroupRow
               key={group.key}
               icon={group.icon}
@@ -242,6 +257,8 @@ export default function HomeScreen() {
               target={profile.targets[group.key] || 0}
               completed={todayPortions[group.key] || 0}
               onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
+              showInfoHint={showInfoHint}
+              isFirstRow={index === 0}
             />
           ))}
           

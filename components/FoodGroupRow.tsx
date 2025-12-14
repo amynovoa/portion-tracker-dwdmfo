@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import PortionSlot from './PortionSlot';
+import InfoHintTooltip from './InfoHintTooltip';
 import { FoodGroup } from '../types';
 import { colors } from '../styles/commonStyles';
 import { FOOD_GROUP_INFO } from '../constants/foodGroupInfo';
@@ -14,6 +15,8 @@ interface FoodGroupRowProps {
   target: number;
   completed: number;
   onTogglePortion: (increment: boolean) => void;
+  showInfoHint?: boolean;
+  isFirstRow?: boolean;
 }
 
 export default function FoodGroupRow({
@@ -23,6 +26,8 @@ export default function FoodGroupRow({
   target,
   completed,
   onTogglePortion,
+  showInfoHint = false,
+  isFirstRow = false,
 }: FoodGroupRowProps) {
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   
@@ -61,13 +66,18 @@ export default function FoodGroupRow({
         <View style={styles.header}>
           <Text style={styles.icon}>{icon}</Text>
           <Text style={styles.label}>{label}</Text>
-          <TouchableOpacity 
-            onPress={handleInfoPress}
-            style={styles.infoButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Text style={styles.infoIcon}>ℹ️</Text>
-          </TouchableOpacity>
+          <View style={styles.infoButtonContainer}>
+            {showInfoHint && isFirstRow && (
+              <InfoHintTooltip visible={true} />
+            )}
+            <TouchableOpacity 
+              onPress={handleInfoPress}
+              style={styles.infoButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={styles.infoIcon}>ℹ️</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.count}>
             {completed}/{target}
           </Text>
@@ -132,8 +142,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     flex: 1,
   },
-  infoButton: {
+  infoButtonContainer: {
+    position: 'relative',
     marginRight: 8,
+  },
+  infoButton: {
     padding: 4,
   },
   infoIcon: {

@@ -6,6 +6,7 @@ const PROFILE_KEY = '@portion_tracker_profile';
 const DAILY_PORTIONS_KEY = '@portion_tracker_daily_';
 const REMINDER_KEY = '@portion_tracker_reminder';
 const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
+const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
 
 export async function saveProfile(profile: UserProfile): Promise<void> {
   try {
@@ -221,6 +222,27 @@ export async function deleteWeightEntry(date: string): Promise<void> {
   } catch (error) {
     console.error('Error deleting weight entry:', error);
     throw error;
+  }
+}
+
+// Info hint functions
+export async function saveInfoHintSeen(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(INFO_HINT_SEEN_KEY, 'true');
+    console.log('Info hint marked as seen');
+  } catch (error) {
+    console.error('Error saving info hint seen:', error);
+    throw error;
+  }
+}
+
+export async function hasSeenInfoHint(): Promise<boolean> {
+  try {
+    const data = await AsyncStorage.getItem(INFO_HINT_SEEN_KEY);
+    return data === 'true';
+  } catch (error) {
+    console.error('Error loading info hint seen:', error);
+    return false;
   }
 }
 
