@@ -69,13 +69,13 @@ export default function FoodGroupInfoModal({
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>What to Avoid</Text>
-              <Text style={styles.avoidText}>{avoid}</Text>
+              <Text style={styles.sectionTitle}>Good Choices</Text>
+              <Text style={styles.examplesText}>{examples}</Text>
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Examples</Text>
-              <Text style={styles.examplesText}>{examples}</Text>
+              <Text style={styles.sectionTitle}>What to Avoid</Text>
+              <Text style={styles.avoidText}>{avoid}</Text>
             </View>
           </ScrollView>
 
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    backgroundColor: colors.card,
+    backgroundColor: cards.card,
   },
   doneButton: {
     backgroundColor: colors.primary,
