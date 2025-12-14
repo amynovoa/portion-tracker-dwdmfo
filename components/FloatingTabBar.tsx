@@ -12,12 +12,6 @@ import { useRouter, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useTheme } from '@react-navigation/native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  interpolate,
-} from 'react-native-reanimated';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Href } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
@@ -47,7 +41,6 @@ export default function FloatingTabBar({
   const router = useRouter();
   const pathname = usePathname();
   const theme = useTheme();
-  const animatedValue = useSharedValue(0);
 
   // Improved active tab detection with better path matching
   const activeTabIndex = React.useMemo(() => {
@@ -85,36 +78,17 @@ export default function FloatingTabBar({
     return bestMatch >= 0 ? bestMatch : 0;
   }, [pathname, tabs]);
 
-  React.useEffect(() => {
-    if (activeTabIndex >= 0) {
-      animatedValue.value = withSpring(activeTabIndex, {
-        damping: 20,
-        stiffness: 120,
-        mass: 1,
-      });
-    }
-  }, [activeTabIndex, animatedValue]);
-
   const handleTabPress = (route: Href) => {
     router.push(route);
   };
 
   const tabWidthPercent = ((100 / tabs.length) - 1).toFixed(2);
 
-  const indicatorStyle = useAnimatedStyle(() => {
-    const tabWidth = (containerWidth - 8) / tabs.length; // Account for container padding (4px on each side)
-    return {
-      transform: [
-        {
-          translateX: interpolate(
-            animatedValue.value,
-            [0, tabs.length - 1],
-            [0, tabWidth * (tabs.length - 1)]
-          ),
-        },
-      ],
-    };
-  });
+  // Calculate indicator position without animation
+  const indicatorLeft = React.useMemo(() => {
+    const tabWidth = (containerWidth - 8) / tabs.length;
+    return 2 + (tabWidth * activeTabIndex);
+  }, [activeTabIndex, containerWidth, tabs.length]);
 
   // Dynamic styles based on theme
   const dynamicStyles = {
@@ -151,6 +125,7 @@ export default function FloatingTabBar({
         ? 'rgba(200, 214, 71, 0.15)'
         : 'rgba(201, 74, 61, 0.1)',
       width: `${tabWidthPercent}%` as `${number}%`,
+      left: indicatorLeft,
     },
   };
 
@@ -165,7 +140,7 @@ export default function FloatingTabBar({
       ]}>
         <View style={dynamicStyles.container}>
           <View style={dynamicStyles.background} />
-          <Animated.View style={[dynamicStyles.indicator, indicatorStyle]} />
+          <View style={dynamicStyles.indicator} />
           <View style={styles.tabsContainer}>
             {tabs.map((tab, index) => {
               const isActive = activeTabIndex === index;
@@ -227,7 +202,6 @@ const styles = StyleSheet.create({
   indicator: {
     position: 'absolute',
     top: 4,
-    left: 2,
     bottom: 4,
     borderRadius: 27,
     width: `${(100 / 2) - 1}%`,
