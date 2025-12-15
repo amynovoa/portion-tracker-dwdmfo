@@ -353,7 +353,7 @@ export default function SettingsScreen() {
           
           {expandedSections.about && (
             <View style={styles.sectionContent}>
-              <Text style={styles.infoText}>
+              <Text style={styles.aboutText}>
                 Portion Track helps you build healthy, sustainable eating habits by tracking daily portions from key food groups—without calorie counting or rigid rules. Designed by a certified integrative health coach, Portion Track focuses on flexibility, real-life eating, and long-term success that fits you.
               </Text>
             </View>
@@ -638,11 +638,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 8,
   },
-  infoText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
+  aboutText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 24,
     marginTop: 8,
+    marginBottom: 4,
+    flexWrap: 'wrap',
   },
   resetDescription: {
     fontSize: 14,
