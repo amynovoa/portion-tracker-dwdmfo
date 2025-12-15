@@ -43,6 +43,21 @@ export default function ProfileScreen() {
     }
   }, [params.customTargets]);
 
+  // Recalculate targets when alcohol settings change
+  useEffect(() => {
+    if (targets && currentWeight && goalWeight) {
+      console.log('Alcohol settings changed, recalculating targets...');
+      const weight = parseFloat(currentWeight);
+      const servings = parseInt(alcoholServings) || 0;
+      
+      if (!isNaN(weight) && weight > 0) {
+        const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings);
+        console.log('Recalculated targets:', result.targets);
+        setTargets(result.targets);
+      }
+    }
+  }, [includeAlcohol, alcoholServings]);
+
   const loadExistingProfile = async () => {
     console.log('Loading existing profile...');
     const profile = await loadProfile();
