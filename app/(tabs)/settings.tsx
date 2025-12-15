@@ -354,7 +354,7 @@ export default function SettingsScreen() {
           {expandedSections.about && (
             <View style={styles.sectionContent}>
               <Text style={styles.infoText}>
-                Portion Tracker helps you maintain healthy eating habits by tracking daily portions from key food groups.
+                Portion Track helps you build healthy, sustainable eating habits by tracking daily portions from key food groups—without calorie counting or rigid rules. Designed by a certified integrative health coach, Portion Track focuses on flexibility, real-life eating, and long-term success that fits you.
               </Text>
             </View>
           )}
