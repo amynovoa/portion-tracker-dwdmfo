@@ -11,8 +11,8 @@ export interface FoodGroupInfo {
 export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
   protein: {
     benefit: 'Supports muscle repair, keeps you full longer, and helps stabilize blood sugar.',
-    avoid: 'Processed meats high in sodium; fillers; added sugars.',
-    examples: 'Chicken; turkey; lean beef; salmon; tuna; shrimp; white fish; tofu; tempeh; lentils; edamame; Greek yogurt; eggs; egg whites; protein powder.',
+    avoid: 'Processed meats high in sodium, fillers, added sugars.',
+    examples: 'Chicken, turkey, lean beef, salmon, tuna, shrimp, white fish, tofu, tempeh, lentils, edamame, Greek yogurt, eggs, egg whites, protein powder.',
     portionSize: `About 20–25 grams of protein, such as:
 - 3–4 oz cooked chicken, fish, or meat
 - 2 eggs
@@ -21,8 +21,8 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
   },
   veggies: {
     benefit: 'Packed with fiber, vitamins, minerals, and antioxidants that support digestion and metabolic health.',
-    avoid: 'Vegetables covered in heavy sauces; cheeses; fried coatings.',
-    examples: 'Spinach; kale; romaine; broccoli; cauliflower; Brussels sprouts; peppers; carrots; squash; beets; cucumbers; zucchini; mushrooms.',
+    avoid: 'Vegetables covered in heavy sauces, cheeses, fried coatings.',
+    examples: 'Spinach, kale, romaine, broccoli, cauliflower, Brussels sprouts, peppers, carrots, squash, beets, cucumbers, zucchini, mushrooms.',
     portionSize: `- 1 cup raw vegetables
 - ½ cup cooked vegetables
 
@@ -30,14 +30,14 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
   },
   fruit: {
     benefit: 'Provide natural energy, fiber, and antioxidants that support digestion and reduce inflammation.',
-    avoid: 'Fruit juices; canned fruit in syrup; sugary dried fruit.',
-    examples: 'Berries; apples; pears; peaches; oranges; grapefruit; melons; pineapple; mango.',
+    avoid: 'Fruit juices, canned fruit in syrup, sugary dried fruit.',
+    examples: 'Berries, apples, pears, peaches, oranges, grapefruit, melons, pineapple, mango.',
     portionSize: `- 1 medium piece of fruit
 - 1 cup cut fruit`,
   },
   healthyCarbs: {
     benefit: 'Healthy Carbs include nutrient-dense carbohydrate foods that provide steady energy, fiber, and vitamins. These foods help support digestion, blood sugar balance, and long-term health.',
-    avoid: 'White bread; white pasta; white rice; pastries; donuts; cakes; cookies; breakfast cereals made from refined grains; chips; fries; processed snacks; sugary drinks; juices; candy; granola bars.',
+    avoid: 'White bread, white pasta, white rice, pastries, donuts, cakes, cookies, breakfast cereals made from refined grains, chips, fries, processed snacks, sugary drinks, juices, candy, granola bars.',
     examples: `Whole Grains
 - Oats
 - Quinoa
@@ -67,15 +67,15 @@ Starchy Vegetables
   },
   nuts: {
     benefit: 'Deliver protein, fiber, and omega fats that support heart health and satiety.',
-    avoid: 'Candied nuts; nuts roasted in heavy oils; overly salted nuts.',
-    examples: 'Almonds; walnuts; pecans; pistachios; chia; flax; hemp seeds; natural nut butters.',
+    avoid: 'Candied nuts, nuts roasted in heavy oils, overly salted nuts.',
+    examples: 'Almonds, walnuts, pecans, pistachios, chia, flax, hemp seeds, natural nut butters.',
     portionSize: `- ¼ cup nuts or seeds
 - 2 tablespoons seeds`,
   },
   fats: {
     benefit: 'Support hormones, brain function, and satiety.',
-    avoid: 'Trans fats; processed oils; fried foods; sugary nut spreads.',
-    examples: 'Avocado; olive oil; avocado oil; chia; flax; hemp seeds; salmon; sardines.',
+    avoid: 'Trans fats, processed oils, fried foods, sugary nut spreads.',
+    examples: 'Avocado, olive oil, avocado oil, chia, flax, hemp seeds, salmon, sardines.',
     portionSize: `- 1 tablespoon oil or butter
 - ¼ avocado
 - 1 tablespoon nut butter`,
@@ -83,7 +83,7 @@ Starchy Vegetables
   alcohol: {
     benefit: 'Tracking alcohol helps keep intake mindful and reduces empty calories.',
     avoid: 'Sugary mixers and high-calorie cocktails.',
-    examples: '5 oz wine; 1.5 oz spirits; light beer.',
+    examples: '5 oz wine, 1.5 oz spirits, light beer.',
     portionSize: `- 5 oz wine
 - 12 oz beer
 - 1.5 oz spirits`,
