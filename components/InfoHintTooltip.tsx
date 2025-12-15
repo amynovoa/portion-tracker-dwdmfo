@@ -60,7 +60,9 @@ export default function InfoHintTooltip({ visible }: InfoHintTooltipProps) {
       ]}
     >
       <View style={styles.tooltip}>
-        <Text style={styles.text}>👆 Tap the ℹ️ for portion tips!</Text>
+        <Text style={styles.text}>👆</Text>
+        <Text style={styles.text}>Tap the ℹ️</Text>
+        <Text style={styles.text}>for portion tips!</Text>
       </View>
       <View style={styles.arrow} />
     </Animated.View>
@@ -70,22 +72,24 @@ export default function InfoHintTooltip({ visible }: InfoHintTooltipProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: -50,
+    top: -80,
     right: 60,
     zIndex: 1000,
   },
   tooltip: {
     backgroundColor: colors.primary,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 8,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.2)',
     elevation: 4,
+    alignItems: 'center',
   },
   text: {
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
+    textAlign: 'center',
   },
   arrow: {
     position: 'absolute',
