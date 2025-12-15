@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import PortionSlot from './PortionSlot';
-import InfoHintTooltip from './InfoHintTooltip';
 import { FoodGroup } from '../types';
 import { colors } from '../styles/commonStyles';
 import { FOOD_GROUP_INFO } from '../constants/foodGroupInfo';
@@ -67,9 +66,6 @@ export default function FoodGroupRow({
           <Text style={styles.icon}>{icon}</Text>
           <Text style={styles.label}>{label}</Text>
           <View style={styles.infoButtonContainer}>
-            {showInfoHint && isFirstRow && (
-              <InfoHintTooltip visible={true} />
-            )}
             <TouchableOpacity 
               onPress={handleInfoPress}
               style={styles.infoButton}

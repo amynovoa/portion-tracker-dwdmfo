@@ -9,6 +9,7 @@ import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } fr
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
 import AppLogo from '@/components/AppLogo';
+import InfoHintTooltip from '@/components/InfoHintTooltip';
 import { checkAndPerformDailyReset } from '@/utils/dailyReset';
 
 export default function HomeScreen() {
@@ -111,14 +112,6 @@ export default function HomeScreen() {
       console.log('Has seen info hint:', seenHint);
       setShowInfoHint(!seenHint);
       
-      // Auto-hide hint after 8 seconds and mark as seen
-      if (!seenHint) {
-        setTimeout(async () => {
-          setShowInfoHint(false);
-          await saveInfoHintSeen();
-        }, 8000);
-      }
-      
       setLoading(false);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -215,6 +208,12 @@ export default function HomeScreen() {
     }
   };
 
+  const handleDismissInfoHint = async () => {
+    console.log('Dismissing info hint');
+    setShowInfoHint(false);
+    await saveInfoHintSeen();
+  };
+
   // Show loading state
   if (loading) {
     return (
@@ -279,7 +278,7 @@ export default function HomeScreen() {
               target={profile.targets[group.key] || 0}
               completed={todayPortions[group.key] || 0}
               onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
-              showInfoHint={showInfoHint}
+              showInfoHint={false}
               isFirstRow={index === 0}
             />
           ))}
@@ -292,6 +291,14 @@ export default function HomeScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
+
+      {/* Info hint overlay - shown on top of everything */}
+      {showInfoHint && (
+        <InfoHintTooltip 
+          visible={showInfoHint} 
+          onDismiss={handleDismissInfoHint}
+        />
+      )}
     </View>
   );
 }
