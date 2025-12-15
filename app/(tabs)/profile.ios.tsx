@@ -6,6 +6,7 @@ import { Sex, Goal, UserProfile, PortionTargets } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile, loadProfile } from '@/utils/storage';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import PortionDropdown from '@/components/PortionDropdown';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -191,12 +192,11 @@ export default function ProfileScreen() {
     });
   };
 
-  const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
+  const handleUpdateTargets = (key: keyof PortionTargets, value: number) => {
     if (!targets) return;
-    const numValue = parseInt(value) || 0;
     setTargets({
       ...targets,
-      [key]: Math.max(0, numValue),
+      [key]: Math.max(0, value),
     });
   };
 
@@ -333,28 +333,23 @@ export default function ProfileScreen() {
             <View style={styles.customizeCallout}>
               <Text style={styles.customizeTitle}>✏️ You Can Customize These!</Text>
               <Text style={styles.customizeText}>
-                These are recommended targets based on your profile. Feel free to tap any number below to adjust it to your preferences. Make them work for YOU!
+                These are recommended targets based on your profile. Tap the dropdown for any food group to easily adjust your portions. Make them work for YOU!
               </Text>
             </View>
 
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Your Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>Tap any number to edit and personalize your goals</Text>
+              <Text style={styles.sectionSubtitle}>Tap any dropdown to select your preferred portions</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
                   <Text style={styles.targetLabel}>{formatTargetLabel(key)}</Text>
                   <View style={styles.targetInputContainer}>
-                    <View style={styles.editableInputWrapper}>
-                      <TextInput
-                        style={styles.targetInput}
-                        value={value.toString()}
-                        onChangeText={(text) => handleUpdateTargets(key as keyof PortionTargets, text)}
-                        keyboardType="numeric"
-                        maxLength={2}
-                      />
-                      <Text style={styles.editIcon}>✏️</Text>
-                    </View>
+                    <PortionDropdown
+                      value={value}
+                      onValueChange={(newValue) => handleUpdateTargets(key as keyof PortionTargets, newValue)}
+                      maxValue={key === 'alcohol' ? 10 : 15}
+                    />
                     <Text style={styles.portionsText}>portions</Text>
                   </View>
                 </View>
@@ -553,28 +548,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  editableInputWrapper: {
-    position: 'relative',
-  },
-  targetInput: {
-    width: 60,
-    height: 40,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
-    backgroundColor: colors.highlight,
-  },
-  editIcon: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    fontSize: 16,
   },
   portionsText: {
     fontSize: 14,
