@@ -1,15 +1,100 @@
 
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Modal, Switch, Platform } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
-import { clearAllData } from '@/utils/storage';
+import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig } from '@/utils/storage';
+import { formatResetTime } from '@/utils/dailyReset';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const [showResetModal, setShowResetModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  
+  // Daily reset time settings
+  const [resetEnabled, setResetEnabled] = useState(false);
+  const [resetHour, setResetHour] = useState(0); // 0-23 (midnight default)
+  const [resetMinute, setResetMinute] = useState(0);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
+
+  useEffect(() => {
+    loadResetSettings();
+  }, []);
+
+  const loadResetSettings = async () => {
+    try {
+      const config = await loadResetTime();
+      if (config) {
+        setResetEnabled(config.enabled);
+        setResetHour(config.hour);
+        setResetMinute(config.minute);
+        
+        // Set temp date for picker
+        const date = new Date();
+        date.setHours(config.hour, config.minute, 0, 0);
+        setTempDate(date);
+      }
+    } catch (error) {
+      console.error('Error loading reset settings:', error);
+    }
+  };
+
+  const handleToggleReset = async (enabled: boolean) => {
+    setResetEnabled(enabled);
+    
+    const config: ResetTimeConfig = {
+      hour: resetHour,
+      minute: resetMinute,
+      enabled,
+    };
+    
+    try {
+      await saveResetTime(config);
+      console.log('Reset time config saved:', config);
+    } catch (error) {
+      console.error('Error saving reset time:', error);
+      Alert.alert('Error', 'Failed to save reset time setting.');
+    }
+  };
+
+  const handleTimeChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    
+    if (selectedDate) {
+      setTempDate(selectedDate);
+      
+      if (Platform.OS === 'android' || event.type === 'set') {
+        const hours = selectedDate.getHours();
+        const minutes = selectedDate.getMinutes();
+        
+        setResetHour(hours);
+        setResetMinute(minutes);
+        
+        const config: ResetTimeConfig = {
+          hour: hours,
+          minute: minutes,
+          enabled: resetEnabled,
+        };
+        
+        saveResetTime(config).catch(error => {
+          console.error('Error saving reset time:', error);
+          Alert.alert('Error', 'Failed to save reset time.');
+        });
+      }
+    }
+  };
+
+  const handleShowTimePicker = () => {
+    const date = new Date();
+    date.setHours(resetHour, resetMinute, 0, 0);
+    setTempDate(date);
+    setShowTimePicker(true);
+  };
 
   const handleResetApp = () => {
     console.log('Reset app button pressed');
@@ -70,6 +155,43 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Daily Reset Time Section */}
+        <View style={styles.resetTimeSection}>
+          <Text style={styles.sectionTitle}>⏰ Daily Reset Time</Text>
+          <Text style={styles.sectionDescription}>
+            Automatically clear your daily tracking at a specific time each day. Your history will be preserved.
+          </Text>
+          
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Enable daily reset</Text>
+            <Switch
+              value={resetEnabled}
+              onValueChange={handleToggleReset}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.card}
+            />
+          </View>
+
+          {resetEnabled && (
+            <View style={styles.timePickerSection}>
+              <Text style={styles.timeLabel}>Reset time:</Text>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={handleShowTimePicker}
+              >
+                <Text style={styles.timeButtonText}>
+                  {formatResetTime(resetHour, resetMinute)}
+                </Text>
+                <Text style={styles.timeButtonIcon}>🕐</Text>
+              </TouchableOpacity>
+              
+              <Text style={styles.timeHelperText}>
+                Your daily portions will reset to zero at this time, and today&apos;s data will be saved to history.
+              </Text>
+            </View>
+          )}
+        </View>
+
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>About Portion Tracker</Text>
           <Text style={styles.infoText}>
@@ -111,6 +233,49 @@ export default function SettingsScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
+
+      {/* Time Picker Modal */}
+      {showTimePicker && (
+        Platform.OS === 'ios' ? (
+          <Modal
+            visible={showTimePicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowTimePicker(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.timePickerModal}>
+                <View style={styles.timePickerHeader}>
+                  <Text style={styles.timePickerTitle}>Select Reset Time</Text>
+                </View>
+                <DateTimePicker
+                  value={tempDate}
+                  mode="time"
+                  display="spinner"
+                  onChange={handleTimeChange}
+                  style={styles.timePicker}
+                />
+                <TouchableOpacity
+                  style={[buttonStyles.primary, styles.timePickerButton]}
+                  onPress={() => {
+                    handleTimeChange({ type: 'set' }, tempDate);
+                    setShowTimePicker(false);
+                  }}
+                >
+                  <Text style={commonStyles.buttonText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        ) : (
+          <DateTimePicker
+            value={tempDate}
+            mode="time"
+            display="default"
+            onChange={handleTimeChange}
+          />
+        )
+      )}
 
       {/* Reset Confirmation Modal */}
       <Modal
@@ -193,6 +358,79 @@ const styles = StyleSheet.create({
   },
   button: {
     marginVertical: 8,
+  },
+  resetTimeSection: {
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 24,
+    paddingVertical: 20,
+    backgroundColor: colors.card,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+  },
+  timePickerSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  timeLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  timeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.highlight,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  timeButtonText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  timeButtonIcon: {
+    fontSize: 24,
+  },
+  timeHelperText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    fontStyle: 'italic',
   },
   infoSection: {
     paddingHorizontal: 16,
@@ -353,5 +591,34 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+  },
+  // Time picker modal styles
+  timePickerModal: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  timePickerHeader: {
+    marginBottom: 16,
+  },
+  timePickerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  timePicker: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  timePickerButton: {
+    marginTop: 8,
   },
 });

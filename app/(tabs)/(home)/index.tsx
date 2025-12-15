@@ -9,6 +9,7 @@ import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } fr
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
 import AppLogo from '@/components/AppLogo';
+import { checkAndPerformDailyReset } from '@/utils/dailyReset';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -24,6 +25,13 @@ export default function HomeScreen() {
   const loadData = async () => {
     try {
       console.log('Home: Loading data...');
+      
+      // Check and perform daily reset if needed
+      const wasReset = await checkAndPerformDailyReset();
+      if (wasReset) {
+        console.log('✅ Daily reset was performed');
+      }
+      
       const userProfile = await loadProfile();
       
       if (!userProfile) {

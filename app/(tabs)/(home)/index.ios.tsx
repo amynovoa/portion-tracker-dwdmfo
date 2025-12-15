@@ -8,7 +8,7 @@ import { getTodayString } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
-import AppLogo from '@/components/AppLogo';
+import { checkAndPerformDailyReset } from '@/utils/dailyReset';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -24,10 +24,17 @@ export default function HomeScreen() {
   const loadData = async () => {
     try {
       console.log('Home (iOS): Loading data...');
+      
+      // Check and perform daily reset if needed
+      const wasReset = await checkAndPerformDailyReset();
+      if (wasReset) {
+        console.log('✅ Daily reset was performed');
+      }
+      
       const userProfile = await loadProfile();
       
       if (!userProfile) {
-        console.log('Home (iOS): No profile found');
+        console.log('Home: No profile found');
         setLoading(false);
         setProfile(null);
         setTodayPortions(null);
@@ -35,7 +42,7 @@ export default function HomeScreen() {
         return;
       }
 
-      console.log('Home (iOS): Profile found, loading portions');
+      console.log('Home: Profile found, loading portions');
       
       // Ensure profile has all required fields with defaults
       if (!userProfile.targets) {
@@ -212,7 +219,6 @@ export default function HomeScreen() {
     return (
       <View style={commonStyles.container}>
         <View style={styles.loadingContainer}>
-          <AppLogo size={80} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </View>
@@ -225,7 +231,6 @@ export default function HomeScreen() {
       <View style={commonStyles.container}>
         <ScrollView contentContainerStyle={styles.welcomeScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.emptyContainer}>
-            <AppLogo size={80} />
             <Text style={styles.emptyTitle}>Welcome to Portion Track</Text>
             <Text style={styles.emptyTagline}>Simple portions. Real-life flexibility.</Text>
             <Text style={styles.emptyMessage}>
@@ -252,10 +257,6 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.logoContainer}>
-          <AppLogo size={60} />
-        </View>
-
         <View style={styles.header}>
           <Text style={styles.title}>Track</Text>
           <Text style={styles.subtitle}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
@@ -292,10 +293,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 16,
     paddingBottom: 100,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
   },
   header: {
     paddingHorizontal: 16,

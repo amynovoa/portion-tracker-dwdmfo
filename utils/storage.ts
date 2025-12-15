@@ -7,6 +7,8 @@ const DAILY_PORTIONS_KEY = '@portion_tracker_daily_';
 const REMINDER_KEY = '@portion_tracker_reminder';
 const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
 const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
+const RESET_TIME_KEY = '@portion_tracker_reset_time';
+const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 
 export async function saveProfile(profile: UserProfile): Promise<void> {
   try {
@@ -243,6 +245,56 @@ export async function hasSeenInfoHint(): Promise<boolean> {
   } catch (error) {
     console.error('Error loading info hint seen:', error);
     return false;
+  }
+}
+
+// Daily reset time functions
+export interface ResetTimeConfig {
+  hour: number; // 0-23
+  minute: number; // 0-59
+  enabled: boolean;
+}
+
+export async function saveResetTime(config: ResetTimeConfig): Promise<void> {
+  try {
+    await AsyncStorage.setItem(RESET_TIME_KEY, JSON.stringify(config));
+    console.log('Reset time saved:', config);
+  } catch (error) {
+    console.error('Error saving reset time:', error);
+    throw error;
+  }
+}
+
+export async function loadResetTime(): Promise<ResetTimeConfig | null> {
+  try {
+    const data = await AsyncStorage.getItem(RESET_TIME_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error loading reset time:', error);
+    return null;
+  }
+}
+
+export async function saveLastResetDate(date: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem(LAST_RESET_DATE_KEY, date);
+    console.log('Last reset date saved:', date);
+  } catch (error) {
+    console.error('Error saving last reset date:', error);
+    throw error;
+  }
+}
+
+export async function loadLastResetDate(): Promise<string | null> {
+  try {
+    const data = await AsyncStorage.getItem(LAST_RESET_DATE_KEY);
+    return data;
+  } catch (error) {
+    console.error('Error loading last reset date:', error);
+    return null;
   }
 }
 
