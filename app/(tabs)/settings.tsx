@@ -14,7 +14,7 @@ export default function SettingsScreen() {
   const [isResetting, setIsResetting] = useState(false);
   
   // Daily reset time settings
-  const [resetEnabled, setResetEnabled] = useState(false);
+  const [resetEnabled, setResetEnabled] = useState(true); // Default to true since we always want daily reset
   const [resetHour, setResetHour] = useState(0); // 0-23 (midnight default)
   const [resetMinute, setResetMinute] = useState(0);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -36,6 +36,14 @@ export default function SettingsScreen() {
         const date = new Date();
         date.setHours(config.hour, config.minute, 0, 0);
         setTempDate(date);
+      } else {
+        // If no config exists, save default config (enabled at midnight)
+        const defaultConfig: ResetTimeConfig = {
+          hour: 0,
+          minute: 0,
+          enabled: true,
+        };
+        await saveResetTime(defaultConfig);
       }
     } catch (error) {
       console.error('Error loading reset settings:', error);
@@ -61,8 +69,17 @@ export default function SettingsScreen() {
   };
 
   const handleTimeChange = (event: any, selectedDate?: Date) => {
+    console.log('Time picker event:', event.type, selectedDate);
+    
     if (Platform.OS === 'android') {
       setShowTimePicker(false);
+    }
+    
+    if (event.type === 'dismissed') {
+      if (Platform.OS === 'ios') {
+        setShowTimePicker(false);
+      }
+      return;
     }
     
     if (selectedDate) {
@@ -71,6 +88,8 @@ export default function SettingsScreen() {
       if (Platform.OS === 'android' || event.type === 'set') {
         const hours = selectedDate.getHours();
         const minutes = selectedDate.getMinutes();
+        
+        console.log('Setting new time:', hours, minutes);
         
         setResetHour(hours);
         setResetMinute(minutes);
@@ -81,7 +100,9 @@ export default function SettingsScreen() {
           enabled: resetEnabled,
         };
         
-        saveResetTime(config).catch(error => {
+        saveResetTime(config).then(() => {
+          console.log('Time saved successfully');
+        }).catch(error => {
           console.error('Error saving reset time:', error);
           Alert.alert('Error', 'Failed to save reset time.');
         });
@@ -90,10 +111,35 @@ export default function SettingsScreen() {
   };
 
   const handleShowTimePicker = () => {
+    console.log('Opening time picker with current time:', resetHour, resetMinute);
     const date = new Date();
     date.setHours(resetHour, resetMinute, 0, 0);
     setTempDate(date);
     setShowTimePicker(true);
+  };
+
+  const handleDoneTimePicker = () => {
+    console.log('Done button pressed, saving time:', tempDate.getHours(), tempDate.getMinutes());
+    const hours = tempDate.getHours();
+    const minutes = tempDate.getMinutes();
+    
+    setResetHour(hours);
+    setResetMinute(minutes);
+    
+    const config: ResetTimeConfig = {
+      hour: hours,
+      minute: minutes,
+      enabled: resetEnabled,
+    };
+    
+    saveResetTime(config).then(() => {
+      console.log('Time saved successfully');
+      setShowTimePicker(false);
+    }).catch(error => {
+      console.error('Error saving reset time:', error);
+      Alert.alert('Error', 'Failed to save reset time.');
+      setShowTimePicker(false);
+    });
   };
 
   const handleResetApp = () => {
@@ -163,7 +209,7 @@ export default function SettingsScreen() {
           </Text>
           
           <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Enable daily reset</Text>
+            <Text style={styles.switchLabel}>Customize daily reset</Text>
             <Switch
               value={resetEnabled}
               onValueChange={handleToggleReset}
@@ -178,6 +224,7 @@ export default function SettingsScreen() {
               <TouchableOpacity
                 style={styles.timeButton}
                 onPress={handleShowTimePicker}
+                activeOpacity={0.7}
               >
                 <Text style={styles.timeButtonText}>
                   {formatResetTime(resetHour, resetMinute)}
@@ -257,10 +304,7 @@ export default function SettingsScreen() {
                 />
                 <TouchableOpacity
                   style={[buttonStyles.primary, styles.timePickerButton]}
-                  onPress={() => {
-                    handleTimeChange({ type: 'set' }, tempDate);
-                    setShowTimePicker(false);
-                  }}
+                  onPress={handleDoneTimePicker}
                 >
                   <Text style={commonStyles.buttonText}>Done</Text>
                 </TouchableOpacity>
