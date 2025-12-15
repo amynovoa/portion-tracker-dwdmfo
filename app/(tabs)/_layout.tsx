@@ -37,7 +37,7 @@ export default function TabLayout() {
     {
       name: '(home)',
       route: '/(tabs)/(home)/',
-      icon: 'home',
+      icon: 'assignment',
       label: 'Track',
     },
     {
