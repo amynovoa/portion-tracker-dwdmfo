@@ -227,9 +227,9 @@ export default function HomeScreen() {
           <View style={styles.emptyContainer}>
             <AppLogo size={80} />
             <Text style={styles.emptyTitle}>Welcome to Portion Track</Text>
-            <Text style={styles.emptyTagline}>Simple portions. Real life flexibility.</Text>
+            <Text style={styles.emptyTagline}>Simple portions. Real-life flexibility.</Text>
             <Text style={styles.emptyMessage}>
-              Track your day using portions instead of calories — and adjust them to fit you, not the other way around.
+              Track what you eat using portions instead of calories—and adjust them to fit your goals with ease.
             </Text>
             <TouchableOpacity 
               style={[buttonStyles.primary, styles.setupButton]} 
