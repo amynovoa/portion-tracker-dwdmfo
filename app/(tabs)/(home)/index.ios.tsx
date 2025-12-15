@@ -226,7 +226,7 @@ export default function HomeScreen() {
         <ScrollView contentContainerStyle={styles.welcomeScrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.emptyContainer}>
             <AppLogo size={80} />
-            <Text style={styles.emptyTitle}>Welcome to Portion Tracker</Text>
+            <Text style={styles.emptyTitle}>Welcome to Portion Track</Text>
             <Text style={styles.emptyTagline}>Simple portions. Real life flexibility.</Text>
             <Text style={styles.emptyMessage}>
               Track your day using portions instead of calories — and adjust them to fit you, not the other way around.
