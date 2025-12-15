@@ -7,15 +7,25 @@ import AppLogo from '@/components/AppLogo';
 import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig } from '@/utils/storage';
 import { formatResetTime } from '@/utils/dailyReset';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { IconSymbol } from '@/components/IconSymbol';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const [showResetModal, setShowResetModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   
+  // Collapsible sections state
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
+    profile: false,
+    dailyReset: false,
+    dataStorage: false,
+    about: false,
+    resetApp: false,
+  });
+  
   // Daily reset time settings
-  const [resetEnabled, setResetEnabled] = useState(true); // Default to true since we always want daily reset
-  const [resetHour, setResetHour] = useState(0); // 0-23 (midnight default)
+  const [resetEnabled, setResetEnabled] = useState(true);
+  const [resetHour, setResetHour] = useState(0);
   const [resetMinute, setResetMinute] = useState(0);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
@@ -32,12 +42,10 @@ export default function SettingsScreen() {
         setResetHour(config.hour);
         setResetMinute(config.minute);
         
-        // Set temp date for picker
         const date = new Date();
         date.setHours(config.hour, config.minute, 0, 0);
         setTempDate(date);
       } else {
-        // If no config exists, save default config (enabled at midnight)
         const defaultConfig: ResetTimeConfig = {
           hour: 0,
           minute: 0,
@@ -48,6 +56,13 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error('Error loading reset settings:', error);
     }
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const handleToggleReset = async (enabled: boolean) => {
@@ -152,18 +167,14 @@ export default function SettingsScreen() {
       console.log('User confirmed reset, starting process...');
       setIsResetting(true);
       
-      // Clear all data
       await clearAllData();
       console.log('All data cleared successfully');
       
-      // Close modal
       setShowResetModal(false);
       setIsResetting(false);
       
-      // Small delay to ensure state updates
       setTimeout(() => {
         console.log('Navigating to profile screen');
-        // Navigate to profile screen (setup phase)
         router.replace('/(tabs)/profile');
       }, 100);
       
@@ -192,90 +203,198 @@ export default function SettingsScreen() {
           <Text style={styles.subtitle}>Manage your preferences</Text>
         </View>
 
-        <View style={styles.section}>
+        {/* Profile Section */}
+        <View style={styles.collapsibleSection}>
           <TouchableOpacity
-            style={[buttonStyles.outline, styles.button]}
-            onPress={() => router.push('/(tabs)/profile')}
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('profile')}
+            activeOpacity={0.7}
           >
-            <Text style={commonStyles.buttonTextOutline}>Edit Profile</Text>
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>👤</Text>
+              <Text style={styles.sectionHeaderTitle}>Profile</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.profile ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.profile ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
+            />
           </TouchableOpacity>
+          
+          {expandedSections.profile && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.sectionDescription}>
+                Update your personal information and portion targets
+              </Text>
+              <TouchableOpacity
+                style={[buttonStyles.outline, styles.button]}
+                onPress={() => router.push('/(tabs)/profile')}
+              >
+                <Text style={commonStyles.buttonTextOutline}>Edit Profile</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Daily Reset Time Section */}
-        <View style={styles.resetTimeSection}>
-          <Text style={styles.sectionTitle}>⏰ Daily Reset Time</Text>
-          <Text style={styles.sectionDescription}>
-            Automatically clear your daily tracking at a specific time each day. Your history will be preserved.
-          </Text>
-          
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Customize daily reset</Text>
-            <Switch
-              value={resetEnabled}
-              onValueChange={handleToggleReset}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.card}
+        <View style={styles.collapsibleSection}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('dailyReset')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>⏰</Text>
+              <Text style={styles.sectionHeaderTitle}>Daily Reset Time</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.dailyReset ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.dailyReset ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
             />
-          </View>
-
-          {resetEnabled && (
-            <View style={styles.timePickerSection}>
-              <Text style={styles.timeLabel}>Reset time:</Text>
-              <TouchableOpacity
-                style={styles.timeButton}
-                onPress={handleShowTimePicker}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.timeButtonText}>
-                  {formatResetTime(resetHour, resetMinute)}
-                </Text>
-                <Text style={styles.timeButtonIcon}>🕐</Text>
-              </TouchableOpacity>
+          </TouchableOpacity>
+          
+          {expandedSections.dailyReset && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.sectionDescription}>
+                Automatically clear your daily tracking at a specific time each day. Your history will be preserved.
+              </Text>
               
-              <Text style={styles.timeHelperText}>
-                Your daily portions will reset to zero at this time, and today&apos;s data will be saved to history.
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Customize daily reset</Text>
+                <Switch
+                  value={resetEnabled}
+                  onValueChange={handleToggleReset}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.card}
+                />
+              </View>
+
+              {resetEnabled && (
+                <View style={styles.timePickerSection}>
+                  <Text style={styles.timeLabel}>Reset time:</Text>
+                  <TouchableOpacity
+                    style={styles.timeButton}
+                    onPress={handleShowTimePicker}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.timeButtonText}>
+                      {formatResetTime(resetHour, resetMinute)}
+                    </Text>
+                    <Text style={styles.timeButtonIcon}>🕐</Text>
+                  </TouchableOpacity>
+                  
+                  <Text style={styles.timeHelperText}>
+                    Your daily portions will reset to zero at this time, and today&apos;s data will be saved to history.
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Data Storage Section */}
+        <View style={styles.collapsibleSection}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('dataStorage')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>📱</Text>
+              <Text style={styles.sectionHeaderTitle}>Data Storage</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.dataStorage ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.dataStorage ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+          
+          {expandedSections.dataStorage && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.dataStorageText}>
+                All your data is stored locally on this device only. This means:
+              </Text>
+              <View style={styles.dataStorageList}>
+                <Text style={styles.dataStorageListItem}>• Your profile, portions, and weight entries are private and secure</Text>
+                <Text style={styles.dataStorageListItem}>• No account or internet connection required</Text>
+                <Text style={styles.dataStorageListItem}>• Your data will not sync across multiple devices</Text>
+                <Text style={styles.dataStorageListItem}>• If you delete the app or switch devices, your data will be lost</Text>
+              </View>
+              <Text style={styles.dataStorageNote}>
+                💡 Tip: If you use Portion Tracker on multiple devices, each device will have its own separate tracking data.
               </Text>
             </View>
           )}
         </View>
 
-        <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>About Portion Tracker</Text>
-          <Text style={styles.infoText}>
-            Portion Tracker helps you maintain healthy eating habits by tracking daily portions from key food groups.
-          </Text>
-        </View>
-
-        <View style={styles.dataStorageSection}>
-          <Text style={styles.dataStorageTitle}>📱 Your Data Stays on This Device</Text>
-          <Text style={styles.dataStorageText}>
-            All your data is stored locally on this device only. This means:
-          </Text>
-          <View style={styles.dataStorageList}>
-            <Text style={styles.dataStorageListItem}>• Your profile, portions, and weight entries are private and secure</Text>
-            <Text style={styles.dataStorageListItem}>• No account or internet connection required</Text>
-            <Text style={styles.dataStorageListItem}>• Your data will not sync across multiple devices</Text>
-            <Text style={styles.dataStorageListItem}>• If you delete the app or switch devices, your data will be lost</Text>
-          </View>
-          <Text style={styles.dataStorageNote}>
-            💡 Tip: If you use Portion Tracker on multiple devices, each device will have its own separate tracking data.
-          </Text>
-        </View>
-
-        <View style={styles.resetSection}>
-          <Text style={styles.resetTitle}>Reset App Data</Text>
-          <Text style={styles.resetDescription}>
-            Need a fresh start? You can reset the app and clear all your data.
-          </Text>
+        {/* About Section */}
+        <View style={styles.collapsibleSection}>
           <TouchableOpacity
-            style={[buttonStyles.outline, styles.resetButton]}
-            onPress={handleResetApp}
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('about')}
+            activeOpacity={0.7}
           >
-            <Text style={styles.resetButtonText}>Clear All Data</Text>
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>ℹ️</Text>
+              <Text style={styles.sectionHeaderTitle}>About</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.about ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.about ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
+            />
           </TouchableOpacity>
-          <Text style={styles.resetWarning}>
-            Note: This will permanently delete all your data including profile, portion history, and weight entries.
-          </Text>
+          
+          {expandedSections.about && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.infoText}>
+                Portion Tracker helps you maintain healthy eating habits by tracking daily portions from key food groups.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Reset App Section */}
+        <View style={styles.collapsibleSection}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('resetApp')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>🔄</Text>
+              <Text style={styles.sectionHeaderTitle}>Reset App Data</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.resetApp ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.resetApp ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+          
+          {expandedSections.resetApp && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.resetDescription}>
+                Need a fresh start? You can reset the app and clear all your data.
+              </Text>
+              <TouchableOpacity
+                style={[buttonStyles.outline, styles.resetButton]}
+                onPress={handleResetApp}
+              >
+                <Text style={styles.resetButtonText}>Clear All Data</Text>
+              </TouchableOpacity>
+              <Text style={styles.resetWarning}>
+                Note: This will permanently delete all your data including profile, portion history, and weight entries.
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.bottomPadding} />
@@ -396,41 +515,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
-  section: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  button: {
-    marginVertical: 8,
-  },
-  resetTimeSection: {
-    paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 24,
-    paddingVertical: 20,
-    backgroundColor: colors.card,
+  collapsibleSection: {
     marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
   },
-  sectionTitle: {
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  sectionHeaderIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  sectionHeaderTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+  },
+  sectionContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   sectionDescription: {
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 16,
+    marginTop: 8,
+  },
+  button: {
+    marginVertical: 8,
   },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    marginTop: 8,
   },
   switchLabel: {
     fontSize: 16,
@@ -476,43 +611,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontStyle: 'italic',
   },
-  infoSection: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-  },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  infoText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  dataStorageSection: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-    paddingVertical: 20,
-    backgroundColor: colors.card,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  dataStorageTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
   dataStorageText: {
     fontSize: 15,
     color: colors.text,
     lineHeight: 22,
     marginBottom: 12,
+    marginTop: 8,
   },
   dataStorageList: {
     marginBottom: 16,
@@ -534,24 +638,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 8,
   },
-  resetSection: {
-    paddingHorizontal: 16,
-    marginTop: 48,
-    paddingTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  resetTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
+  infoText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginTop: 8,
   },
   resetDescription: {
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 16,
+    marginTop: 8,
   },
   resetButton: {
     borderColor: colors.textSecondary,
@@ -572,7 +670,6 @@ const styles = StyleSheet.create({
   bottomPadding: {
     height: 20,
   },
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -636,7 +733,6 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
   },
-  // Time picker modal styles
   timePickerModal: {
     backgroundColor: colors.card,
     borderRadius: 16,
