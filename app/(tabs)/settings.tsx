@@ -246,14 +246,16 @@ export default function SettingsScreen() {
           >
             <View style={styles.sectionHeaderLeft}>
               <Text style={styles.sectionHeaderIcon}>⏰</Text>
-              <Text style={styles.sectionHeaderTitle}>Daily Reset Time</Text>
+              <Text style={styles.sectionHeaderTitle} numberOfLines={1}>Daily Reset Time</Text>
             </View>
-            <IconSymbol
-              ios_icon_name={expandedSections.dailyReset ? "chevron.up" : "chevron.down"}
-              android_material_icon_name={expandedSections.dailyReset ? "expand_less" : "expand_more"}
-              size={24}
-              color={colors.text}
-            />
+            <View style={styles.chevronContainer}>
+              <IconSymbol
+                ios_icon_name={expandedSections.dailyReset ? "chevron.up" : "chevron.down"}
+                android_material_icon_name={expandedSections.dailyReset ? "expand_less" : "expand_more"}
+                size={24}
+                color={colors.text}
+              />
+            </View>
           </TouchableOpacity>
           
           {expandedSections.dailyReset && (
@@ -534,6 +536,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 8,
   },
   sectionHeaderIcon: {
     fontSize: 24,
@@ -543,6 +546,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
+    flex: 1,
+  },
+  chevronContainer: {
+    marginLeft: 8,
+    flexShrink: 0,
   },
   sectionContent: {
     paddingHorizontal: 16,
