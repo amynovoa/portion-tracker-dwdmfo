@@ -222,19 +222,19 @@ export default function WeightTrackingScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <Text style={styles.chartTitle}>Progress Chart</Text>
-            <View style={styles.compactTimeRange}>
-              {(['week', '30days', '90days', 'all'] as TimeRange[]).map((range) => (
-                <TouchableOpacity
-                  key={range}
-                  style={[styles.timeChip, timeRange === range && styles.timeChipActive]}
-                  onPress={() => setTimeRange(range)}
-                >
-                  <Text style={[styles.timeChipText, timeRange === range && styles.timeChipTextActive]}>
-                    {range === 'week' ? '7D' : range === '30days' ? '30D' : range === '90days' ? '90D' : 'All'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          </View>
+          <View style={styles.compactTimeRange}>
+            {(['week', '30days', '90days', 'all'] as TimeRange[]).map((range) => (
+              <TouchableOpacity
+                key={range}
+                style={[styles.timeChip, timeRange === range && styles.timeChipActive]}
+                onPress={() => setTimeRange(range)}
+              >
+                <Text style={[styles.timeChipText, timeRange === range && styles.timeChipTextActive]}>
+                  {range === 'week' ? '7D' : range === '30days' ? '30D' : range === '90days' ? '90D' : 'All'}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
           <WeightChart entries={filteredEntries} goalWeight={goalWeight} />
         </View>
@@ -391,10 +391,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   chartTitle: {
     fontSize: 16,
@@ -403,19 +400,23 @@ const styles = StyleSheet.create({
   },
   compactTimeRange: {
     flexDirection: 'row',
-    gap: 6,
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
   },
   timeChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: 8,
     backgroundColor: colors.backgroundSecondary,
+    minWidth: 60,
+    alignItems: 'center',
   },
   timeChipActive: {
     backgroundColor: colors.primary,
   },
   timeChipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.textSecondary,
   },
