@@ -59,6 +59,10 @@ const faqData: FAQItem[] = [
     question: 'What happens if I go over my portions one day?',
     answer: 'Nothing breaks. One day doesn\'t define progress — patterns do. You can optionally adjust your portions the next day if you choose.',
   },
+  {
+    question: 'Can Portion Track help with goals like improving cholesterol or blood sugar?',
+    answer: 'Portion Track does not diagnose or treat medical conditions. However, many people use portion control and balanced eating to support overall health. Eating consistent portions, limiting excess carbs and fats, reducing alcohol, and focusing on balanced meals can all play a role in supporting healthy cholesterol and blood sugar levels.\n\nIf you have specific medical concerns, always follow the guidance of your healthcare provider.',
+  },
 ];
 
 export default function FAQScreen() {
