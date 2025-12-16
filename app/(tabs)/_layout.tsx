@@ -53,6 +53,12 @@ export default function TabLayout() {
       label: 'Weight',
     },
     {
+      name: 'faq',
+      route: '/(tabs)/faq',
+      icon: 'help',
+      label: 'FAQs',
+    },
+    {
       name: 'profile',
       route: '/(tabs)/profile',
       icon: 'person',
@@ -77,6 +83,7 @@ export default function TabLayout() {
         <Stack.Screen name="(home)/index" options={{ headerShown: false }} />
         <Stack.Screen name="history" options={{ headerShown: false }} />
         <Stack.Screen name="weight" options={{ headerShown: false }} />
+        <Stack.Screen name="faq" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>

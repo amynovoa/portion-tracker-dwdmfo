@@ -52,6 +52,10 @@ export default function TabLayout() {
         <Label>Weight</Label>
         <Icon sf="scalemass.fill" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="faq">
+        <Label>FAQs</Label>
+        <Icon sf="questionmark.circle.fill" />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Label>Profile</Label>
         <Icon sf="person.fill" />
