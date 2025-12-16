@@ -1,9 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
-import { colors } from '@/styles/commonStyles';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { loadProfile } from '@/utils/storage';
-import { useRouter, useSegments } from 'expo-router';
 
 export default function TabLayout() {
   const router = useRouter();
@@ -34,36 +33,61 @@ export default function TabLayout() {
     checkProfile();
   }, [segments]);
 
+  const tabs: TabBarItem[] = [
+    {
+      name: '(home)',
+      route: '/(tabs)/(home)/',
+      icon: 'assignment',
+      label: 'Track',
+    },
+    {
+      name: 'history',
+      route: '/(tabs)/history',
+      icon: 'calendar',
+      label: 'History',
+    },
+    {
+      name: 'weight',
+      route: '/(tabs)/weight',
+      icon: 'scale',
+      label: 'Weight',
+    },
+    {
+      name: 'faq',
+      route: '/(tabs)/faq',
+      icon: 'help',
+      label: 'FAQs',
+    },
+    {
+      name: 'profile',
+      route: '/(tabs)/profile',
+      icon: 'person',
+      label: 'Profile',
+    },
+    {
+      name: 'settings',
+      route: '/(tabs)/settings',
+      icon: 'settings',
+      label: 'Settings',
+    },
+  ];
+
   return (
-    <NativeTabs
-      tintColor={colors.primary}
-      iconColor={colors.textSecondary}
-      backgroundColor={colors.card}
-    >
-      <NativeTabs.Trigger name="(home)/index">
-        <Label>Track</Label>
-        <Icon sf="list.clipboard.fill" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="history">
-        <Label>History</Label>
-        <Icon sf="calendar" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="weight">
-        <Label>Weight</Label>
-        <Icon sf="scalemass.fill" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="faq">
-        <Label>FAQs</Label>
-        <Icon sf="questionmark.circle.fill" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Label>Profile</Label>
-        <Icon sf="person.fill" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <Label>Settings</Label>
-        <Icon sf="gearshape.fill" />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'none',
+        }}
+      >
+        <Stack.Screen name="(home)/index" options={{ headerShown: false }} />
+        <Stack.Screen name="history" options={{ headerShown: false }} />
+        <Stack.Screen name="weight" options={{ headerShown: false }} />
+        <Stack.Screen name="faq" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
+      </Stack>
+      <FloatingTabBar tabs={tabs} useFullWidth={true} />
+    </>
   );
 }

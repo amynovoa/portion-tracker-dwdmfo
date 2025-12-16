@@ -30,17 +30,30 @@ interface FloatingTabBarProps {
   containerWidth?: number;
   borderRadius?: number;
   bottomMargin?: number;
+  useFullWidth?: boolean;
 }
 
 export default function FloatingTabBar({
   tabs,
-  containerWidth = screenWidth / 2.5,
+  containerWidth,
   borderRadius = 35,
-  bottomMargin
+  bottomMargin,
+  useFullWidth = false
 }: FloatingTabBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const theme = useTheme();
+
+  // Calculate width based on number of tabs and screen size
+  const calculatedWidth = React.useMemo(() => {
+    if (containerWidth) return containerWidth;
+    if (useFullWidth) {
+      // Use almost full width with some padding
+      return screenWidth - 32;
+    }
+    // Default behavior for fewer tabs
+    return screenWidth / 2.5;
+  }, [containerWidth, useFullWidth, tabs.length]);
 
   // Improved active tab detection with better path matching
   const activeTabIndex = React.useMemo(() => {
@@ -86,9 +99,9 @@ export default function FloatingTabBar({
 
   // Calculate indicator position without animation
   const indicatorLeft = React.useMemo(() => {
-    const tabWidth = (containerWidth - 8) / tabs.length;
+    const tabWidth = (calculatedWidth - 8) / tabs.length;
     return 2 + (tabWidth * activeTabIndex);
-  }, [activeTabIndex, containerWidth, tabs.length]);
+  }, [activeTabIndex, calculatedWidth, tabs.length]);
 
   // Dynamic styles based on theme
   const dynamicStyles = {
@@ -134,7 +147,7 @@ export default function FloatingTabBar({
       <View style={[
         styles.containerWrapper,
         {
-          width: containerWidth,
+          width: calculatedWidth,
           marginBottom: bottomMargin ?? 20
         }
       ]}>
@@ -156,7 +169,7 @@ export default function FloatingTabBar({
                     <IconSymbol
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
-                      size={24}
+                      size={22}
                       color={isActive ? (theme.dark ? colors.secondary : colors.primary) : (theme.dark ? '#98989D' : colors.accent)}
                     />
                     <Text
@@ -165,6 +178,7 @@ export default function FloatingTabBar({
                         { color: theme.dark ? '#98989D' : colors.accent },
                         isActive && { color: theme.dark ? colors.secondary : colors.primary, fontWeight: '600' },
                       ]}
+                      numberOfLines={1}
                     >
                       {tab.label}
                     </Text>
