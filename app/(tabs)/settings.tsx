@@ -497,7 +497,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 48,
-    paddingBottom: 120,
+    paddingBottom: 180,
   },
   logoContainer: {
     alignItems: 'center',
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   bottomPadding: {
-    height: 20,
+    height: 40,
   },
   modalOverlay: {
     flex: 1,
