@@ -4,12 +4,12 @@ import { Sex, Goal, PortionTargets, SizeCategory } from '../types';
 // Size classification based on gender and weight
 export function classifySize(sex: Sex, weight: number): SizeCategory {
   if (sex === 'female') {
-    if (weight <= 150) return 'small';
-    if (weight <= 190) return 'medium';
+    if (weight < 150) return 'small';
+    if (weight < 190) return 'medium';
     return 'large';
   } else { // male
-    if (weight <= 170) return 'small';
-    if (weight <= 210) return 'medium';
+    if (weight < 170) return 'small';
+    if (weight < 210) return 'medium';
     return 'large';
   }
 }

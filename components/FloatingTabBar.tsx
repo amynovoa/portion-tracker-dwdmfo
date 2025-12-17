@@ -49,7 +49,7 @@ export default function FloatingTabBar({
     if (containerWidth) return containerWidth;
     if (useFullWidth) {
       // Use almost full width with some padding
-      return screenWidth - 32;
+      return screenWidth - 24;
     }
     // Default behavior for fewer tabs
     return screenWidth / 2.5;
@@ -169,7 +169,7 @@ export default function FloatingTabBar({
                     <IconSymbol
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
-                      size={22}
+                      size={20}
                       color={isActive ? (theme.dark ? colors.secondary : colors.primary) : (theme.dark ? '#98989D' : colors.accent)}
                     />
                     <Text
@@ -179,6 +179,8 @@ export default function FloatingTabBar({
                         isActive && { color: theme.dark ? colors.secondary : colors.primary, fontWeight: '600' },
                       ]}
                       numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
                     >
                       {tab.label}
                     </Text>
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   containerWrapper: {
-    marginHorizontal: 20,
+    marginHorizontal: 12,
     alignSelf: 'center',
   },
   container: {
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    height: 60,
+    height: 64,
     alignItems: 'center',
     paddingHorizontal: 4,
   },
@@ -231,15 +233,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
+    paddingHorizontal: 2,
   },
   tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
+    width: '100%',
   },
   tabLabel: {
     fontSize: 9,
     fontWeight: '500',
     marginTop: 2,
+    textAlign: 'center',
   },
 });
