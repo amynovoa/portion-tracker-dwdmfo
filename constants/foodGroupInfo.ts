@@ -12,7 +12,7 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
   protein: {
     benefit: 'Supports muscle repair, keeps you full longer, and helps stabilize blood sugar.',
     avoid: 'Processed meats high in sodium, fillers, added sugars.',
-    examples: 'Chicken, turkey, lean beef, salmon, tuna, shrimp, white fish, tofu, tempeh, lentils, edamame, Greek yogurt, eggs, egg whites, protein powder.',
+    examples: 'Chicken, turkey, lean beef, salmon, tuna, shrimp, white fish, tofu, tempeh, lentils, edamame, Greek yogurt (plain), cottage cheese, skyr, high-protein yogurt, soy yogurt (plain, high-protein), eggs, egg whites, protein powder.',
     portionSize: `About 20–25 grams of protein, such as:
 - 3–4 oz cooked chicken, fish, or meat
 - 2 eggs
@@ -60,10 +60,19 @@ Starchy Vegetables
 - Sweet potatoes
 - Potatoes
 - Winter squash (butternut, acorn, kabocha)
-- Corn`,
+- Corn
+
+Dairy & Dairy Alternatives
+- Milk (cow's milk)
+- Plant-based milk (unsweetened)
+- Sweetened or flavored milk
+- Sweetened yogurt
+- Flavored yogurt
+- Kefir`,
     portionSize: `- ½ cup cooked grains or starchy vegetables (rice, quinoa, oats, potatoes)
 - 1 slice bread
-- 1 small tortilla`,
+- 1 small tortilla
+- 1 cup milk or kefir`,
   },
   nuts: {
     benefit: 'Deliver protein, fiber, and omega fats that support heart health and satiety.',
@@ -75,10 +84,12 @@ Starchy Vegetables
   fats: {
     benefit: 'Support hormones, brain function, and satiety.',
     avoid: 'Trans fats, processed oils, fried foods, sugary nut spreads.',
-    examples: 'Avocado, olive oil, avocado oil, chia, flax, hemp seeds, salmon, sardines.',
+    examples: 'Avocado, olive oil, avocado oil, chia, flax, hemp seeds, salmon, sardines, cheese (all types), cream cheese, butter, heavy cream / half-and-half, sour cream, full-fat yogurt, plant-based cheese, coconut or nut-based creamers.',
     portionSize: `- 1 tablespoon oil or butter
 - ¼ avocado
-- 1 tablespoon nut butter`,
+- 1 tablespoon nut butter
+- 1 oz cheese
+- 2 tablespoons cream cheese or sour cream`,
   },
   alcohol: {
     benefit: 'Tracking alcohol helps keep intake mindful and reduces empty calories.',
