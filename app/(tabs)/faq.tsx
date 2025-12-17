@@ -20,6 +20,10 @@ const faqData: FAQItem[] = [
     answer: 'No. Portion Track is designed so you don\'t need to count calories at all.',
   },
   {
+    question: 'Where do I log dairy or plant-based dairy?',
+    answer: 'Dairy and plant-based dairy are counted as Protein, Fat, or Carbs depending on type.\n\nFor example:\n\n- Greek yogurt or cottage cheese → Protein\n- Cheese or cream → Fat\n- Milk or plant-based milk → Carbs',
+  },
+  {
     question: 'How do I know how much a "portion" is?',
     answer: 'Tap the ⓘ info icon next to each food group to see portion examples and tips. You don\'t need to be exact — consistency matters more than precision.',
   },
