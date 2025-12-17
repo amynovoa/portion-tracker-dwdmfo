@@ -22,7 +22,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 4,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 2,
+        healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
         alcohol: 0,
@@ -32,7 +32,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 5,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 2,
+        healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
         alcohol: 0,
@@ -42,7 +42,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 6,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 3,
+        healthyCarbs: 4, // Increased from 3 to 4
         fats: 2,
         nuts: 1,
         alcohol: 0,
@@ -54,7 +54,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 5,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 2,
+        healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
         alcohol: 0,
@@ -64,7 +64,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 6,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 2,
+        healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
         alcohol: 0,
@@ -74,7 +74,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 7,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 3,
+        healthyCarbs: 4, // Increased from 3 to 4
         fats: 2,
         nuts: 1,
         alcohol: 0,
