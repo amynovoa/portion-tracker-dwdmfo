@@ -21,7 +21,7 @@ const { width: screenWidth } = Dimensions.get('window');
 export interface TabBarItem {
   name: string;
   route: Href;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: string; // Can be SF Symbol name or Material Icon name
   label: string;
 }
 
@@ -32,6 +32,16 @@ interface FloatingTabBarProps {
   bottomMargin?: number;
   useFullWidth?: boolean;
 }
+
+// Map SF Symbol names to Material Icon names for Android/Web
+const iconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  'checkmark.square': 'assignment',
+  'calendar': 'calendar-today',
+  'scalemass': 'monitor-weight',
+  'questionmark.circle': 'help',
+  'person.fill': 'person',
+  'gearshape': 'settings',
+};
 
 export default function FloatingTabBar({
   tabs,
@@ -157,6 +167,9 @@ export default function FloatingTabBar({
           <View style={styles.tabsContainer}>
             {tabs.map((tab, index) => {
               const isActive = activeTabIndex === index;
+              
+              // Get the appropriate icon name for the platform
+              const androidIconName = iconMap[tab.icon] || tab.icon as keyof typeof MaterialIcons.glyphMap;
 
               return (
                 <React.Fragment key={index}>
@@ -167,7 +180,7 @@ export default function FloatingTabBar({
                 >
                   <View style={styles.tabContent}>
                     <IconSymbol
-                      android_material_icon_name={tab.icon}
+                      android_material_icon_name={androidIconName}
                       ios_icon_name={tab.icon}
                       size={20}
                       color={isActive ? (theme.dark ? colors.secondary : colors.primary) : (theme.dark ? '#98989D' : colors.accent)}

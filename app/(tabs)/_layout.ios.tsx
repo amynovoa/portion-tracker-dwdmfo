@@ -37,7 +37,7 @@ export default function TabLayout() {
     {
       name: '(home)',
       route: '/(tabs)/(home)/',
-      icon: 'assignment',
+      icon: 'checkmark.square',
       label: 'Track',
     },
     {
@@ -49,25 +49,25 @@ export default function TabLayout() {
     {
       name: 'weight',
       route: '/(tabs)/weight',
-      icon: 'scale',
+      icon: 'scalemass',
       label: 'Weight',
     },
     {
       name: 'faq',
       route: '/(tabs)/faq',
-      icon: 'help',
+      icon: 'questionmark.circle',
       label: 'FAQs',
     },
     {
       name: 'profile',
       route: '/(tabs)/profile',
-      icon: 'person',
+      icon: 'person.fill',
       label: 'Profile',
     },
     {
       name: 'settings',
       route: '/(tabs)/settings',
-      icon: 'settings',
+      icon: 'gearshape',
       label: 'Settings',
     },
   ];
