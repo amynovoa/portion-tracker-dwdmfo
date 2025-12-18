@@ -41,19 +41,39 @@ export default function WeightTrackingScreen() {
       
       const weightEntries = await loadWeightEntries();
       console.log('Weight entries found:', weightEntries.length);
-      setEntries(weightEntries);
 
-      // If no entries exist and we have a profile, create initial entry
-      if (weightEntries.length === 0) {
-        console.log('No weight entries found, creating initial entry with profile weight:', profile.currentWeight);
+      // Check if we need to create an initial entry with the profile weight
+      // This should happen if:
+      // 1. There are no entries at all, OR
+      // 2. There are entries but none match the profile's current weight (meaning profile was updated)
+      const hasProfileWeightEntry = weightEntries.some(entry => entry.weight === profile.currentWeight);
+      
+      if (weightEntries.length === 0 || !hasProfileWeightEntry) {
+        console.log('Creating/updating initial entry with profile weight:', profile.currentWeight);
         const today = new Date();
-        const initialEntry: WeightEntry = {
-          date: today.toISOString().split('T')[0],
-          weight: profile.currentWeight,
-          timestamp: today.getTime(),
-        };
-        await saveWeightEntry(initialEntry);
-        setEntries([initialEntry]);
+        const todayString = today.toISOString().split('T')[0];
+        
+        // Check if there's already an entry for today
+        const todayEntry = weightEntries.find(entry => entry.date === todayString);
+        
+        if (!todayEntry) {
+          // No entry for today, create one with profile weight
+          const initialEntry: WeightEntry = {
+            date: todayString,
+            weight: profile.currentWeight,
+            timestamp: today.getTime(),
+          };
+          await saveWeightEntry(initialEntry);
+          
+          // Reload entries after adding the initial one
+          const updatedEntries = await loadWeightEntries();
+          setEntries(updatedEntries);
+        } else {
+          // There's already an entry for today, just use existing entries
+          setEntries(weightEntries);
+        }
+      } else {
+        setEntries(weightEntries);
       }
     } else {
       console.log('No profile found, clearing weight data');

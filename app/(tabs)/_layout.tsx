@@ -8,6 +8,7 @@ export default function TabLayout() {
   const router = useRouter();
   const segments = useSegments();
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+  const [hasCheckedInitially, setHasCheckedInitially] = useState(false);
 
   useEffect(() => {
     async function checkProfile() {
@@ -17,12 +18,17 @@ export default function TabLayout() {
         const profileExists = !!profile;
         console.log('Tabs layout: Profile exists:', profileExists);
 
-        // Only redirect to profile if no profile exists AND we're on the home screen
-        if (!profileExists && segments && segments[1] === '(home)') {
-          console.log('Tabs layout: No profile found, redirecting to profile screen');
-          router.replace('/(tabs)/profile');
+        // Only redirect to profile if:
+        // 1. No profile exists
+        // 2. We haven't checked initially yet (to avoid redirecting on every navigation)
+        // 3. We're on the home screen
+        if (!profileExists && !hasCheckedInitially && segments && segments[1] === '(home)') {
+          console.log('Tabs layout: No profile found, but letting home screen show welcome message');
+          // Don't redirect - let the home screen show the welcome message
+          // The user will click "Set Up My Profile" button to navigate to profile
         }
         
+        setHasCheckedInitially(true);
         setIsCheckingProfile(false);
       } catch (error) {
         console.error('Tabs layout: Error checking profile:', error);
