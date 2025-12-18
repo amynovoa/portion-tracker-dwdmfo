@@ -25,6 +25,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
+        water: 8, // Medium baseline
         alcohol: 0,
       };
     } else if (goal === 'maintain') {
@@ -35,6 +36,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
+        water: 8, // Medium baseline
         alcohol: 0,
       };
     } else { // build
@@ -45,6 +47,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         healthyCarbs: 4, // Increased from 3 to 4
         fats: 2,
         nuts: 1,
+        water: 8, // Medium baseline
         alcohol: 0,
       };
     }
@@ -57,6 +60,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
+        water: 8, // Medium baseline
         alcohol: 0,
       };
     } else if (goal === 'maintain') {
@@ -67,6 +71,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         healthyCarbs: 3, // Increased from 2 to 3
         fats: 2,
         nuts: 1,
+        water: 8, // Medium baseline
         alcohol: 0,
       };
     } else { // build
@@ -77,22 +82,25 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         healthyCarbs: 4, // Increased from 3 to 4
         fats: 2,
         nuts: 1,
+        water: 8, // Medium baseline
         alcohol: 0,
       };
     }
   }
 }
 
-// Apply size adjustment (only affects Healthy Carbs)
+// Apply size adjustment (affects Healthy Carbs and Water)
 function applySizeAdjustment(portions: PortionTargets, size: SizeCategory): PortionTargets {
   const adjusted = { ...portions };
   
   if (size === 'small') {
     adjusted.healthyCarbs = Math.max(0, adjusted.healthyCarbs - 1);
+    adjusted.water = 7; // Small: 7 portions
   } else if (size === 'large') {
     adjusted.healthyCarbs = adjusted.healthyCarbs + 1;
+    adjusted.water = 10; // Large: 10 portions
   }
-  // medium: no change
+  // medium: water stays at 8
   
   return adjusted;
 }
@@ -179,7 +187,7 @@ export function calculateRecommendedTargets(
   // Step 2: Get baseline portions for Medium size
   let portions = getBaselinePortions(sex, goal);
   
-  // Step 3: Apply size adjustment
+  // Step 3: Apply size adjustment (affects Healthy Carbs and Water)
   portions = applySizeAdjustment(portions, sizeCategory);
   
   // Step 4: Apply alcohol adjustment with new rule

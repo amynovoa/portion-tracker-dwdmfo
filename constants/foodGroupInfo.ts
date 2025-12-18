@@ -91,6 +91,15 @@ Dairy & Dairy Alternatives
 - 1 oz cheese
 - 2 tablespoons cream cheese or sour cream`,
   },
+  water: {
+    benefit: 'Essential for hydration, digestion, nutrient transport, and overall health. Proper hydration supports energy levels, cognitive function, and helps regulate body temperature.',
+    avoid: 'Sugary drinks, sodas, excessive caffeine that can dehydrate.',
+    examples: 'Plain water, sparkling water, herbal tea, water with lemon or cucumber.',
+    portionSize: `- 8 oz glass of water
+- 1 cup (8 fl oz)
+
+Aim for 7-10 glasses per day depending on your size and activity level.`,
+  },
   alcohol: {
     benefit: 'Tracking alcohol helps keep intake mindful and reduces empty calories.',
     avoid: 'Sugary mixers and high-calorie cocktails.',

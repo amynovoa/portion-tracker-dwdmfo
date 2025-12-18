@@ -21,6 +21,7 @@ export interface PortionTargets {
   healthyCarbs: number;
   fats: number;
   nuts: number;
+  water: number;
   alcohol: number;
 }
 
@@ -46,5 +47,6 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'healthyCarbs', label: 'Healthy Carbs', icon: '🌾' },
   { key: 'fats', label: 'Fats', icon: '🥑' },
   { key: 'nuts', label: 'Nuts', icon: '🥜' },
+  { key: 'water', label: 'Water', icon: '💧' },
   { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
 ];

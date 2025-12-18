@@ -61,6 +61,7 @@ export default function HomeScreen() {
         healthyCarbs: userProfile.targets.healthyCarbs || 0,
         fats: userProfile.targets.fats || 0,
         nuts: userProfile.targets.nuts || 0,
+        water: userProfile.targets.water || 8, // Default to 8 if missing
         alcohol: userProfile.targets.alcohol || 0,
       };
 
@@ -83,6 +84,7 @@ export default function HomeScreen() {
           healthyCarbs: dailyData.portions.healthyCarbs || 0,
           fats: dailyData.portions.fats || 0,
           nuts: dailyData.portions.nuts || 0,
+          water: dailyData.portions.water || 0,
           alcohol: dailyData.portions.alcohol || 0,
         };
         
@@ -97,6 +99,7 @@ export default function HomeScreen() {
           healthyCarbs: 0,
           fats: 0,
           nuts: 0,
+          water: 0,
           alcohol: 0,
         };
         setTodayPortions(emptyPortions);
