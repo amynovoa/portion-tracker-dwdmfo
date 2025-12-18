@@ -24,6 +24,10 @@ const faqData: FAQItem[] = [
     answer: 'Dairy and plant-based dairy are counted as Protein, Fat, or Carbs depending on type.\n\nFor example:\n\n- Greek yogurt or cottage cheese → Protein\n- Cheese or cream → Fat\n- Milk or plant-based milk → Carbs',
   },
   {
+    question: 'Will Portion Track work with keto or other diet plans?',
+    answer: 'Yes. Portion Track is designed to work with a wide variety of eating styles — including keto, low-carb, Mediterranean, plant-based, and more.\n\nBecause the app focuses on portions and food groups, not strict calorie counting or meal rules, users can adjust their portion choices to match their preferred approach while still tracking consistently.\n\nPortion Track supports flexibility and awareness rather than enforcing a specific diet plan.',
+  },
+  {
     question: 'How do I know how much a "portion" is?',
     answer: 'Tap the ⓘ info icon next to each food group to see portion examples and tips. You don\'t need to be exact — consistency matters more than precision.',
   },
