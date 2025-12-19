@@ -4,18 +4,20 @@ import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } 
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
-import { getTodayString } from '@/utils/dateUtils';
+import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
 import AppLogo from '@/components/AppLogo';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
+import DaySelector from '@/components/DaySelector';
 
 export default function HomeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [todayPortions, setTodayPortions] = useState<PortionTargets | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
+  const [datePortions, setDatePortions] = useState<PortionTargets | null>(null);
   const [exerciseCompleted, setExerciseCompleted] = useState(false);
   const [allRecords, setAllRecords] = useState<DailyPortions[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -32,7 +34,7 @@ export default function HomeScreen() {
         console.log('Home: No profile found');
         setLoading(false);
         setProfile(null);
-        setTodayPortions(null);
+        setDatePortions(null);
         setExerciseCompleted(false);
         return;
       }
@@ -61,10 +63,34 @@ export default function HomeScreen() {
       userProfile.targets = safeTargets;
       setProfile(userProfile);
 
-      const today = getTodayString();
-      console.log('Today date:', today);
+      // Load data for the selected date
+      await loadDateData(selectedDate);
+
+      const records = await getAllDailyPortions();
+      console.log('All records loaded:', records ? records.length : 0);
+      setAllRecords(Array.isArray(records) ? records : []);
       
-      const dailyData = await loadDailyPortions(today);
+      // Check if user has seen the info hint (only show on today)
+      if (selectedDate === getTodayString()) {
+        const seenHint = await hasSeenInfoHint();
+        console.log('Has seen info hint:', seenHint);
+        setShowInfoHint(!seenHint);
+      } else {
+        setShowInfoHint(false);
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setLoading(false);
+    }
+  };
+
+  const loadDateData = async (date: string) => {
+    try {
+      console.log('Loading data for date:', date);
+      
+      const dailyData = await loadDailyPortions(date);
 
       if (dailyData && dailyData.portions) {
         console.log('Daily data found:', dailyData);
@@ -81,7 +107,7 @@ export default function HomeScreen() {
           alcohol: dailyData.portions.alcohol || 0,
         };
         
-        setTodayPortions(portions);
+        setDatePortions(portions);
         setExerciseCompleted(dailyData.exercise || false);
       } else {
         console.log('No daily data, creating empty portions');
@@ -95,23 +121,11 @@ export default function HomeScreen() {
           water: 0,
           alcohol: 0,
         };
-        setTodayPortions(emptyPortions);
+        setDatePortions(emptyPortions);
         setExerciseCompleted(false);
       }
-
-      const records = await getAllDailyPortions();
-      console.log('All records loaded:', records ? records.length : 0);
-      setAllRecords(Array.isArray(records) ? records : []);
-      
-      // Check if user has seen the info hint
-      const seenHint = await hasSeenInfoHint();
-      console.log('Has seen info hint:', seenHint);
-      setShowInfoHint(!seenHint);
-      
-      setLoading(false);
     } catch (error) {
-      console.error('Error loading data:', error);
-      setLoading(false);
+      console.error('Error loading date data:', error);
     }
   };
 
@@ -133,19 +147,40 @@ export default function HomeScreen() {
     }
   }, [params.reload]);
 
+  // Reload data when selected date changes
+  useEffect(() => {
+    if (profile) {
+      loadDateData(selectedDate);
+      
+      // Update info hint visibility based on selected date
+      if (selectedDate === getTodayString()) {
+        hasSeenInfoHint().then(seenHint => {
+          setShowInfoHint(!seenHint);
+        });
+      } else {
+        setShowInfoHint(false);
+      }
+    }
+  }, [selectedDate]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
   };
 
+  const handleDateSelect = (date: string) => {
+    console.log('Date selected:', date);
+    setSelectedDate(date);
+  };
+
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
-    if (!profile || !todayPortions) {
-      console.log('Cannot toggle portion: missing profile or todayPortions');
+    if (!profile || !datePortions) {
+      console.log('Cannot toggle portion: missing profile or datePortions');
       return;
     }
 
-    const current = todayPortions[foodGroup] || 0;
+    const current = datePortions[foodGroup] || 0;
 
     // Allow unlimited tracking - increment or decrement
     let newValue: number;
@@ -155,18 +190,17 @@ export default function HomeScreen() {
       newValue = Math.max(0, current - 1); // Don't go below 0
     }
 
-    console.log(`Toggling ${foodGroup}: ${current} -> ${newValue}`);
+    console.log(`Toggling ${foodGroup} for ${selectedDate}: ${current} -> ${newValue}`);
 
     const updatedPortions = {
-      ...todayPortions,
+      ...datePortions,
       [foodGroup]: newValue,
     };
 
-    setTodayPortions(updatedPortions);
+    setDatePortions(updatedPortions);
 
-    const today = getTodayString();
     const dailyData: DailyPortions = {
-      date: today,
+      date: selectedDate,
       portions: updatedPortions,
       exercise: exerciseCompleted,
     };
@@ -181,24 +215,23 @@ export default function HomeScreen() {
   };
 
   const handleToggleExercise = async () => {
-    if (!todayPortions) {
-      console.log('Cannot toggle exercise: missing todayPortions');
+    if (!datePortions) {
+      console.log('Cannot toggle exercise: missing datePortions');
       return;
     }
 
     const newExerciseState = !exerciseCompleted;
     setExerciseCompleted(newExerciseState);
 
-    const today = getTodayString();
     const dailyData: DailyPortions = {
-      date: today,
-      portions: todayPortions,
+      date: selectedDate,
+      portions: datePortions,
       exercise: newExerciseState,
     };
 
     try {
       await saveDailyPortions(dailyData);
-      console.log('Exercise toggled:', newExerciseState);
+      console.log('Exercise toggled for', selectedDate, ':', newExerciseState);
     } catch (error) {
       console.error('Error saving exercise toggle:', error);
     }
@@ -223,7 +256,7 @@ export default function HomeScreen() {
   }
 
   // Show message if no profile
-  if (!profile || !todayPortions) {
+  if (!profile || !datePortions) {
     return (
       <View style={commonStyles.container}>
         <ScrollView contentContainerStyle={styles.welcomeScrollContent} showsVerticalScrollIndicator={false}>
@@ -246,6 +279,8 @@ export default function HomeScreen() {
     );
   }
 
+  const isToday = selectedDate === getTodayString();
+
   return (
     <View style={commonStyles.container}>
       <ScrollView
@@ -261,8 +296,23 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <Text style={styles.title}>Track</Text>
-          <Text style={styles.subtitle}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
+          <Text style={styles.subtitle}>
+            {isToday ? 'Today' : formatDisplayDate(selectedDate)}
+          </Text>
         </View>
+
+        <DaySelector 
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+        />
+
+        {!isToday && (
+          <View style={styles.pastDayNotice}>
+            <Text style={styles.pastDayNoticeText}>
+              📅 Editing {formatDisplayDate(selectedDate)}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.portionsSection}>
           {FOOD_GROUPS && Array.isArray(FOOD_GROUPS) && FOOD_GROUPS.map((group, index) => (
@@ -272,7 +322,7 @@ export default function HomeScreen() {
               label={group.label}
               foodGroup={group.key}
               target={profile.targets[group.key] || 0}
-              completed={todayPortions[group.key] || 0}
+              completed={datePortions[group.key] || 0}
               onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
               showInfoHint={false}
               isFirstRow={index === 0}
@@ -321,6 +371,21 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: colors.textSecondary,
+  },
+  pastDayNotice: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: colors.highlight,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  pastDayNoticeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
   },
   portionsSection: {
     marginBottom: 16,
