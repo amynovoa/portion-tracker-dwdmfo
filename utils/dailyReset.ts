@@ -16,22 +16,36 @@ export async function checkAndPerformDailyReset(): Promise<boolean> {
     // Load reset time configuration
     const resetConfig = await loadResetTime();
     
-    // If reset is not enabled, skip
+    // If reset is not enabled, we still need to check if it's a new day
+    // and clear the data (default behavior without scheduled reset)
+    const now = new Date();
+    const currentDate = getTodayString();
+    const lastResetDate = await loadLastResetDate();
+    
+    console.log('📅 Last reset date:', lastResetDate);
+    console.log('📅 Current date:', currentDate);
+    
+    // If no reset config, use simple date-based reset (reset at midnight)
     if (!resetConfig || !resetConfig.enabled) {
-      console.log('⏭️ Daily reset is not enabled, skipping');
+      console.log('⏭️ Daily reset is not configured, using simple date-based reset');
+      
+      // If we've already reset today, skip
+      if (lastResetDate === currentDate) {
+        console.log('✅ Already reset today, skipping');
+        return false;
+      }
+      
+      // If it's a new day, reset
+      if (!lastResetDate || lastResetDate !== currentDate) {
+        console.log('📆 New day detected, performing reset');
+        await performReset(currentDate);
+        return true;
+      }
+      
       return false;
     }
     
     console.log(`⏰ Reset time configured: ${resetConfig.hour}:${resetConfig.minute.toString().padStart(2, '0')}`);
-    
-    // Get current date and time
-    const now = new Date();
-    const currentDate = getTodayString();
-    
-    // Get last reset date
-    const lastResetDate = await loadLastResetDate();
-    console.log('📅 Last reset date:', lastResetDate);
-    console.log('📅 Current date:', currentDate);
     
     // If we've already reset today, skip
     if (lastResetDate === currentDate) {
@@ -55,11 +69,13 @@ export async function checkAndPerformDailyReset(): Promise<boolean> {
       if (now >= resetTime) {
         console.log('🆕 First time with reset enabled and past reset time');
         shouldReset = true;
+      } else {
+        console.log('🆕 First time with reset enabled but before reset time, waiting...');
       }
     } else {
       // We have a last reset date
-      const lastResetDateObj = new Date(lastResetDate);
-      const currentDateObj = new Date(currentDate);
+      const lastResetDateObj = new Date(lastResetDate + 'T00:00:00');
+      const currentDateObj = new Date(currentDate + 'T00:00:00');
       
       // If it's a new day
       if (currentDateObj > lastResetDateObj) {
@@ -69,6 +85,12 @@ export async function checkAndPerformDailyReset(): Promise<boolean> {
           shouldReset = true;
         } else {
           console.log('📆 New day but before reset time, waiting...');
+          // Even though we're before the reset time, if it's a new day
+          // we should still reset to avoid confusion
+          // This handles the case where someone opens the app at 8 AM
+          // but the reset time is 6 AM - they should see cleared data
+          console.log('📆 Actually, resetting anyway since it\'s a new day');
+          shouldReset = true;
         }
       }
     }
@@ -111,6 +133,7 @@ async function performReset(currentDate: string): Promise<void> {
       healthyCarbs: 0,
       fats: 0,
       nuts: 0,
+      water: 0,
       alcohol: 0,
     };
     

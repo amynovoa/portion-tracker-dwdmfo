@@ -5,7 +5,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, View, Text, StyleSheet } from "react-native";
+import { useColorScheme, View, Text, StyleSheet, AppState, AppStateStatus } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -14,6 +14,7 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
+import { checkAndPerformDailyReset } from "@/utils/dailyReset";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -95,6 +96,23 @@ function RootLayoutNav() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  // Handle app state changes (foreground/background)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+      console.log('App state changed to:', nextAppState);
+      
+      if (nextAppState === 'active') {
+        console.log('App became active, checking for daily reset...');
+        // Check and perform daily reset when app comes to foreground
+        await checkAndPerformDailyReset();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   useEffect(() => {
     async function prepare() {
       try {
@@ -110,7 +128,12 @@ function RootLayoutNav() {
           console.error("Font loading error:", error);
         }
 
-        console.log('Fonts loaded, app ready');
+        console.log('Fonts loaded, checking for daily reset...');
+        
+        // Check and perform daily reset on app startup
+        await checkAndPerformDailyReset();
+        
+        console.log('App ready');
         setIsReady(true);
         
         // Hide splash screen
