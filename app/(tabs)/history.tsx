@@ -38,10 +38,9 @@ export default function HistoryScreen() {
           protein: 0,
           veggies: 0,
           fruit: 0,
-          wholeGrains: 0,
-          nutsSeeds: 0,
+          healthyCarbs: 0,
           fats: 0,
-          dairy: 0,
+          nuts: 0,
           water: 0,
           alcohol: 0,
         };
@@ -130,6 +129,7 @@ export default function HistoryScreen() {
           records.map((record) => {
             const adherence = calculateDailyAdherence(record.portions, profile.targets);
             const isExpanded = expandedDate === record.date;
+            const hasExercise = record.exercise === true;
 
             return (
               <TouchableOpacity
@@ -139,9 +139,16 @@ export default function HistoryScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.recordHeader}>
-                  <View>
+                  <View style={styles.recordHeaderLeft}>
                     <Text style={styles.recordDate}>{formatDisplayDate(record.date)}</Text>
-                    <Text style={styles.recordSubtext}>{record.date}</Text>
+                    <View style={styles.recordSubtextRow}>
+                      <Text style={styles.recordSubtext}>{record.date}</Text>
+                      {hasExercise && (
+                        <View style={styles.exerciseBadge}>
+                          <Text style={styles.exerciseBadgeText}>💪 Exercise</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                   <View style={styles.adherenceBadge}>
                     <Text style={styles.adherenceText}>{adherence}%</Text>
@@ -164,6 +171,15 @@ export default function HistoryScreen() {
                         </View>
                       );
                     })}
+                    
+                    {/* Exercise row in expanded view */}
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailIcon}>💪</Text>
+                      <Text style={styles.detailLabel}>Exercise</Text>
+                      <Text style={[styles.detailValue, hasExercise && styles.detailValueCompleted]}>
+                        {hasExercise ? '✓ Completed' : '— Not logged'}
+                      </Text>
+                    </View>
                   </View>
                 )}
               </TouchableOpacity>
@@ -245,15 +261,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  recordHeaderLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
   recordDate: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
   },
+  recordSubtextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
   recordSubtext: {
     fontSize: 12,
     color: colors.textSecondary,
-    marginTop: 2,
+    marginRight: 8,
+  },
+  exerciseBadge: {
+    backgroundColor: colors.primary,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+  },
+  exerciseBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   adherenceBadge: {
     backgroundColor: colors.highlight,
@@ -290,6 +327,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.textSecondary,
+  },
+  detailValueCompleted: {
+    color: colors.primary,
   },
   bottomPadding: {
     height: 20,
