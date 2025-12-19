@@ -32,6 +32,10 @@ const faqData: FAQItem[] = [
     answer: 'Tap the ⓘ info icon next to each food group to see portion examples and tips. You don\'t need to be exact — consistency matters more than precision.',
   },
   {
+    question: 'I forgot to log my food yesterday. What do I do?',
+    answer: 'No problem — life happens! You can go back and log food or exercise for up to 7 previous days.\n\nJust use the day selector at the top of the screen to choose the day you want to update. Your totals and history will automatically adjust.',
+  },
+  {
     question: 'I\'m following the weight-loss portions but not losing weight. What should I do?',
     answer: 'If progress stalls after a few weeks:\n\n- Review alcohol intake\n- Check portion sizes (especially carbs, fats, and alcohol)\n- Consider reducing portions of carbs, fat, or protein\n- Make sure you are drinking enough water\n- Make sure movement and sleep are consistent\n\nSmall adjustments can make a big difference.',
   },
