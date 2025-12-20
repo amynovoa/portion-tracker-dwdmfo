@@ -5,7 +5,9 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
 import { saveWeightEntry, loadWeightEntries, loadProfile, deleteWeightEntry } from '@/utils/storage';
 import WeightChart from '@/components/WeightChart';
+import DaySelector from '@/components/DaySelector';
 import { useFocusEffect } from 'expo-router';
+import { formatDate } from '@/utils/dateUtils';
 
 type TimeRange = 'week' | '30days' | '90days' | 'all';
 
@@ -17,6 +19,7 @@ export default function WeightTrackingScreen() {
   const [timeRange, setTimeRange] = useState<TimeRange>('30days');
   const [filteredEntries, setFilteredEntries] = useState<WeightEntry[]>([]);
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
 
   // Reload data whenever the screen comes into focus
   useFocusEffect(
@@ -29,6 +32,16 @@ export default function WeightTrackingScreen() {
   useEffect(() => {
     filterEntriesByTimeRange();
   }, [entries, timeRange]);
+
+  useEffect(() => {
+    // Load weight for selected date
+    const entry = entries.find(e => e.date === selectedDate);
+    if (entry) {
+      setWeightInput(entry.weight.toString());
+    } else {
+      setWeightInput('');
+    }
+  }, [selectedDate, entries]);
 
   const loadData = async () => {
     console.log('Loading weight data...');
@@ -121,19 +134,22 @@ export default function WeightTrackingScreen() {
       return;
     }
 
-    const today = new Date();
+    // Parse the selected date to get the timestamp
+    const selectedDateObj = new Date(selectedDate + 'T12:00:00');
     const entry: WeightEntry = {
-      date: today.toISOString().split('T')[0],
+      date: selectedDate,
       weight,
-      timestamp: today.getTime(),
+      timestamp: selectedDateObj.getTime(),
     };
 
     try {
       await saveWeightEntry(entry);
       const updatedEntries = await loadWeightEntries();
       setEntries(updatedEntries);
-      setWeightInput('');
-      Alert.alert('Success', 'Weight entry saved!');
+      
+      const isToday = selectedDate === formatDate(new Date());
+      const dateLabel = isToday ? 'today' : selectedDate;
+      Alert.alert('Success', `Weight entry saved for ${dateLabel}!`);
     } catch (error) {
       Alert.alert('Error', 'Failed to save weight entry.');
       console.error('Error saving weight:', error);
@@ -154,6 +170,11 @@ export default function WeightTrackingScreen() {
               await deleteWeightEntry(date);
               const updatedEntries = await loadWeightEntries();
               setEntries(updatedEntries);
+              
+              // Clear input if we deleted the currently selected date
+              if (date === selectedDate) {
+                setWeightInput('');
+              }
             } catch (error) {
               Alert.alert('Error', 'Failed to delete weight entry.');
               console.error('Error deleting weight:', error);
@@ -181,6 +202,10 @@ export default function WeightTrackingScreen() {
   const weightChange = getWeightChange();
   const latestWeight = entries.length > 0 ? entries[0].weight : currentWeight;
   const displayedHistory = showAllHistory ? entries : entries.slice(0, 3);
+
+  // Check if there's an entry for the selected date
+  const hasEntryForSelectedDate = entries.some(e => e.date === selectedDate);
+  const isToday = selectedDate === formatDate(new Date());
 
   return (
     <View style={commonStyles.container}>
@@ -220,9 +245,14 @@ export default function WeightTrackingScreen() {
           )}
         </View>
 
+        {/* Day Selector */}
+        <DaySelector selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+
         {/* Quick Add Weight */}
         <View style={styles.quickAddCard}>
-          <Text style={styles.quickAddLabel}>Log Weight</Text>
+          <Text style={styles.quickAddLabel}>
+            {hasEntryForSelectedDate ? 'Update Weight' : 'Log Weight'} {!isToday && `for ${selectedDate}`}
+          </Text>
           <View style={styles.quickAddRow}>
             <TextInput
               style={styles.quickAddInput}
@@ -233,7 +263,9 @@ export default function WeightTrackingScreen() {
               placeholderTextColor={colors.textSecondary}
             />
             <TouchableOpacity style={styles.quickAddButton} onPress={handleAddWeight}>
-              <Text style={styles.quickAddButtonText}>Add</Text>
+              <Text style={styles.quickAddButtonText}>
+                {hasEntryForSelectedDate ? 'Update' : 'Add'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
