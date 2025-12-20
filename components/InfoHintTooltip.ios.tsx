@@ -73,7 +73,7 @@ export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipP
           <View style={styles.textContainer}>
             <Text style={styles.title}>Portion Tips Available</Text>
             <Text style={styles.text}>
-              Tap the ℹ️ icon next to any food group to see examples and portion sizes.
+              Tap the ℹ️ icon next to any food group to see examples and portion sizes.{'\n\n'}More tips can be found in the FAQs.
             </Text>
           </View>
           <TouchableOpacity 
