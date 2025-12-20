@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Switch } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { Sex, Goal, UserProfile, PortionTargets } from '@/types';
-import { calculateRecommendedTargets } from '@/utils/portionCalculator';
+import { Sex, Goal, UserProfile, PortionTargets, ActivityLevel, ACTIVITY_LEVELS } from '@/types';
+import { calculateRecommendedTargets, shouldShowWeightLossGuardrail, getWeightLossGuardrailMessage } from '@/utils/portionCalculator';
 import { saveProfile, loadProfile } from '@/utils/storage';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import PortionDropdown from '@/components/PortionDropdown';
@@ -15,6 +15,7 @@ export default function ProfileScreen() {
   const [currentWeight, setCurrentWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('sedentary');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
   const [alcoholServings, setAlcoholServings] = useState('');
   const [targets, setTargets] = useState<PortionTargets | null>(null);
@@ -44,20 +45,20 @@ export default function ProfileScreen() {
     }
   }, [params.customTargets]);
 
-  // Recalculate targets when alcohol settings change
+  // Recalculate targets when activity level or alcohol settings change
   useEffect(() => {
     if (targets && currentWeight && goalWeight) {
-      console.log('Alcohol settings changed, recalculating targets...');
+      console.log('Activity level or alcohol settings changed, recalculating targets...');
       const weight = parseFloat(currentWeight);
       const servings = parseInt(alcoholServings) || 0;
       
       if (!isNaN(weight) && weight > 0) {
-        const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings);
+        const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings, activityLevel);
         console.log('Recalculated targets:', result.targets);
         setTargets(result.targets);
       }
     }
-  }, [includeAlcohol, alcoholServings]);
+  }, [includeAlcohol, alcoholServings, activityLevel]);
 
   const loadExistingProfile = async () => {
     console.log('Loading existing profile...');
@@ -68,6 +69,7 @@ export default function ProfileScreen() {
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
+      setActivityLevel(profile.activityLevel || 'sedentary');
       setIncludeAlcohol(profile.includeAlcohol);
       setAlcoholServings(profile.alcoholServings.toString());
       setTargets(profile.targets);
@@ -80,6 +82,7 @@ export default function ProfileScreen() {
       setCurrentWeight('');
       setGoalWeight('');
       setGoal('maintain');
+      setActivityLevel('sedentary');
       setIncludeAlcohol(false);
       setAlcoholServings('');
       setTargets(null);
@@ -108,7 +111,7 @@ export default function ProfileScreen() {
       return;
     }
 
-    const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings);
+    const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings, activityLevel);
     console.log('Calculated targets:', result.targets);
     setTargets(result.targets);
     setIsEditing(true);
@@ -158,13 +161,14 @@ export default function ProfileScreen() {
     }
 
     // Calculate size category for storage
-    const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings);
+    const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings, activityLevel);
 
     const profile: UserProfile = {
       sex,
       currentWeight: weight,
       goalWeight: goalWt,
       goal,
+      activityLevel,
       includeAlcohol,
       alcoholServings: servings,
       sizeCategory: result.sizeCategory,
@@ -212,6 +216,8 @@ export default function ProfileScreen() {
     };
     return labels[key] || key;
   };
+
+  const showGuardrail = shouldShowWeightLossGuardrail(goal, activityLevel);
 
   return (
     <View style={commonStyles.container}>
@@ -286,6 +292,45 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Activity Level</Text>
+          <Text style={styles.helperText}>How active are you on most days?</Text>
+          <View style={styles.activityLevelContainer}>
+            {ACTIVITY_LEVELS.map((level) => (
+              <TouchableOpacity
+                key={level.key}
+                style={[
+                  styles.activityLevelButton,
+                  activityLevel === level.key && styles.activityLevelButtonActive
+                ]}
+                onPress={() => setActivityLevel(level.key)}
+              >
+                <Text style={[
+                  styles.activityLevelLabel,
+                  activityLevel === level.key && styles.activityLevelLabelActive
+                ]}>
+                  {level.label}
+                </Text>
+                <Text style={[
+                  styles.activityLevelDescription,
+                  activityLevel === level.key && styles.activityLevelDescriptionActive
+                ]}>
+                  {level.description}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {showGuardrail && (
+          <View style={styles.guardrailBox}>
+            <Text style={styles.guardrailTitle}>💪 Fuel Matters When You&apos;re Active</Text>
+            <Text style={styles.guardrailText}>
+              {getWeightLossGuardrailMessage()}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.section}>
           <View style={styles.switchRow}>
@@ -442,6 +487,58 @@ const styles = StyleSheet.create({
   },
   optionTextActive: {
     color: colors.primary,
+  },
+  activityLevelContainer: {
+    gap: 10,
+  },
+  activityLevelButton: {
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  activityLevelButtonActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.highlight,
+  },
+  activityLevelLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  activityLevelLabelActive: {
+    color: colors.primary,
+  },
+  activityLevelDescription: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  activityLevelDescriptionActive: {
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  guardrailBox: {
+    marginHorizontal: 16,
+    marginBottom: 24,
+    padding: 18,
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FF9800',
+  },
+  guardrailTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 10,
+  },
+  guardrailText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 22,
   },
   switchRow: {
     flexDirection: 'row',
