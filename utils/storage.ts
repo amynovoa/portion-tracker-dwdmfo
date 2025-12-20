@@ -32,17 +32,14 @@ export async function loadProfile(): Promise<UserProfile | null> {
         // If old structure exists, migrate to new structure
         if (typeof profile.targets.wholeGrains !== 'undefined') {
           console.log('Migrating old profile structure to new structure');
-          // Map old fields to new fields
           profile.targets.healthyCarbs = profile.targets.wholeGrains || 0;
           profile.targets.nuts = profile.targets.nutsSeeds || 0;
           
-          // Remove old fields
           delete profile.targets.wholeGrains;
           delete profile.targets.nutsSeeds;
           delete profile.targets.dairy;
           delete profile.targets.water;
           
-          // Set default values for new fields if missing
           if (typeof profile.includeAlcohol === 'undefined') {
             profile.includeAlcohol = false;
           }
@@ -53,14 +50,20 @@ export async function loadProfile(): Promise<UserProfile | null> {
             profile.sizeCategory = 'medium';
           }
           
-          // Save migrated profile
           await saveProfile(profile);
         }
         
-        // Migration: Add goalWeight if missing (set to currentWeight as default)
+        // Migration: Add goalWeight if missing
         if (typeof profile.goalWeight === 'undefined') {
           console.log('Adding goalWeight field to existing profile');
-          profile.goalWeight = profile.currentWeight || 150; // Default to current weight or 150
+          profile.goalWeight = profile.currentWeight || 150;
+          await saveProfile(profile);
+        }
+        
+        // Migration: Add activityLevel if missing (default to sedentary)
+        if (typeof profile.activityLevel === 'undefined') {
+          console.log('Adding activityLevel field to existing profile');
+          profile.activityLevel = 'sedentary';
           await saveProfile(profile);
         }
       }
@@ -104,7 +107,6 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
           delete dailyData.portions.dairy;
           delete dailyData.portions.water;
           
-          // Save migrated data
           await saveDailyPortions(dailyData);
         }
       }
@@ -146,7 +148,7 @@ export async function getAllDailyPortions(): Promise<DailyPortions[]> {
         return dailyData;
       })
       .filter((item): item is DailyPortions => item !== null)
-      .sort((a, b) => b.date.localeCompare(a.date)); // Sort by date descending
+      .sort((a, b) => b.date.localeCompare(a.date));
   } catch (error) {
     console.error('Error loading all daily portions:', error);
     return [];
@@ -180,18 +182,14 @@ export async function loadReminderEnabled(): Promise<boolean> {
 export async function saveWeightEntry(entry: WeightEntry): Promise<void> {
   try {
     const entries = await loadWeightEntries();
-    // Check if entry for this date already exists
     const existingIndex = entries.findIndex(e => e.date === entry.date);
     
     if (existingIndex >= 0) {
-      // Update existing entry
       entries[existingIndex] = entry;
     } else {
-      // Add new entry
       entries.push(entry);
     }
     
-    // Sort by date descending
     entries.sort((a, b) => b.timestamp - a.timestamp);
     
     await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(entries));
@@ -250,8 +248,8 @@ export async function hasSeenInfoHint(): Promise<boolean> {
 
 // Daily reset time functions
 export interface ResetTimeConfig {
-  hour: number; // 0-23
-  minute: number; // 0-59
+  hour: number;
+  minute: number;
   enabled: boolean;
 }
 
@@ -303,28 +301,23 @@ export async function clearAllData(): Promise<void> {
   try {
     console.log('🧹 Starting comprehensive data clear...');
     
-    // Get all keys from AsyncStorage
     const allKeys = await AsyncStorage.getAllKeys();
     console.log('📋 Total keys in AsyncStorage:', allKeys.length);
     
-    // Filter only our app's keys (those starting with @portion_tracker)
     const appKeys = allKeys.filter(key => key.startsWith('@portion_tracker'));
     console.log('🎯 App keys found:', appKeys.length);
     console.log('🔑 Keys to clear:', appKeys);
     
-    // Remove all app keys in one go
     if (appKeys.length > 0) {
       await AsyncStorage.multiRemove(appKeys);
       console.log('✅ Successfully removed all app keys');
     }
     
-    // Verify the clear was successful
     const remainingKeys = await AsyncStorage.getAllKeys();
     const remainingAppKeys = remainingKeys.filter(key => key.startsWith('@portion_tracker'));
     
     if (remainingAppKeys.length > 0) {
       console.warn('⚠️ Warning: Some app keys remain:', remainingAppKeys);
-      // Try removing them individually
       for (const key of remainingAppKeys) {
         try {
           await AsyncStorage.removeItem(key);
@@ -337,7 +330,6 @@ export async function clearAllData(): Promise<void> {
       console.log('✅ All app data cleared successfully!');
     }
     
-    // Final verification
     const finalKeys = await AsyncStorage.getAllKeys();
     const finalAppKeys = finalKeys.filter(key => key.startsWith('@portion_tracker'));
     console.log('📊 Final verification - remaining app keys:', finalAppKeys.length);

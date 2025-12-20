@@ -6,6 +6,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
+import { shouldShowWeightLossGuardrail, getWeightLossGuardrailMessage } from '@/utils/portionCalculator';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
 import AppLogo from '@/components/AppLogo';
@@ -41,14 +42,12 @@ export default function HomeScreen() {
 
       console.log('Home: Profile found, loading portions');
       
-      // Ensure profile has all required fields with defaults
       if (!userProfile.targets) {
         console.error('Profile has no targets!');
         setLoading(false);
         return;
       }
 
-      // Ensure all food groups exist with defaults
       const safeTargets: PortionTargets = {
         protein: userProfile.targets.protein || 0,
         veggies: userProfile.targets.veggies || 0,
@@ -56,21 +55,19 @@ export default function HomeScreen() {
         healthyCarbs: userProfile.targets.healthyCarbs || 0,
         fats: userProfile.targets.fats || 0,
         nuts: userProfile.targets.nuts || 0,
-        water: userProfile.targets.water || 8, // Default to 8 if missing
+        water: userProfile.targets.water || 8,
         alcohol: userProfile.targets.alcohol || 0,
       };
 
       userProfile.targets = safeTargets;
       setProfile(userProfile);
 
-      // Load data for the selected date
       await loadDateData(selectedDate);
 
       const records = await getAllDailyPortions();
       console.log('All records loaded:', records ? records.length : 0);
       setAllRecords(Array.isArray(records) ? records : []);
       
-      // Check if user has seen the info hint (only show on today)
       if (selectedDate === getTodayString()) {
         const seenHint = await hasSeenInfoHint();
         console.log('Has seen info hint:', seenHint);
@@ -95,7 +92,6 @@ export default function HomeScreen() {
       if (dailyData && dailyData.portions) {
         console.log('Daily data found:', dailyData);
         
-        // Ensure all fields exist with defaults
         const portions: PortionTargets = {
           protein: dailyData.portions.protein || 0,
           veggies: dailyData.portions.veggies || 0,
@@ -129,7 +125,6 @@ export default function HomeScreen() {
     }
   };
 
-  // Load data when screen comes into focus OR when reload param changes
   useFocusEffect(
     React.useCallback(() => {
       console.log('Home screen focused, loading data');
@@ -137,22 +132,18 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // Also reload when the reload param changes (from profile save)
   useEffect(() => {
     if (params.reload) {
       console.log('Reload param detected, reloading data:', params.reload);
       loadData();
-      // Clear the param after loading
       router.setParams({ reload: undefined });
     }
   }, [params.reload]);
 
-  // Reload data when selected date changes
   useEffect(() => {
     if (profile) {
       loadDateData(selectedDate);
       
-      // Update info hint visibility based on selected date
       if (selectedDate === getTodayString()) {
         hasSeenInfoHint().then(seenHint => {
           setShowInfoHint(!seenHint);
@@ -182,12 +173,11 @@ export default function HomeScreen() {
 
     const current = datePortions[foodGroup] || 0;
 
-    // Allow unlimited tracking - increment or decrement
     let newValue: number;
     if (increment) {
       newValue = current + 1;
     } else {
-      newValue = Math.max(0, current - 1); // Don't go below 0
+      newValue = Math.max(0, current - 1);
     }
 
     console.log(`Toggling ${foodGroup} for ${selectedDate}: ${current} -> ${newValue}`);
@@ -243,7 +233,6 @@ export default function HomeScreen() {
     await saveInfoHintSeen();
   };
 
-  // Show loading state
   if (loading) {
     return (
       <View style={commonStyles.container}>
@@ -255,7 +244,6 @@ export default function HomeScreen() {
     );
   }
 
-  // Show message if no profile
   if (!profile || !datePortions) {
     return (
       <View style={commonStyles.container}>
@@ -280,6 +268,7 @@ export default function HomeScreen() {
   }
 
   const isToday = selectedDate === getTodayString();
+  const showGuardrail = shouldShowWeightLossGuardrail(profile.goal, profile.activityLevel || 'sedentary');
 
   return (
     <View style={commonStyles.container}>
@@ -314,6 +303,15 @@ export default function HomeScreen() {
           </View>
         )}
 
+        {showGuardrail && (
+          <View style={styles.guardrailBox}>
+            <Text style={styles.guardrailTitle}>💪 Fuel Matters When You&apos;re Active</Text>
+            <Text style={styles.guardrailText}>
+              {getWeightLossGuardrailMessage()}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.portionsSection}>
           {FOOD_GROUPS && Array.isArray(FOOD_GROUPS) && FOOD_GROUPS.map((group, index) => (
             <FoodGroupRow
@@ -338,7 +336,6 @@ export default function HomeScreen() {
         <View style={styles.bottomPadding} />
       </ScrollView>
 
-      {/* Info hint overlay - shown on top of everything */}
       {showInfoHint && (
         <InfoHintTooltip 
           visible={showInfoHint} 
@@ -386,6 +383,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
+  },
+  guardrailBox: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FF9800',
+  },
+  guardrailTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  guardrailText: {
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 20,
   },
   portionsSection: {
     marginBottom: 16,

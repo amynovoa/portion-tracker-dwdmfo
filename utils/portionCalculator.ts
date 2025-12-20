@@ -1,5 +1,5 @@
 
-import { Sex, Goal, PortionTargets, SizeCategory } from '../types';
+import { Sex, Goal, PortionTargets, SizeCategory, ActivityLevel } from '../types';
 
 // Size classification based on gender and weight
 export function classifySize(sex: Sex, weight: number): SizeCategory {
@@ -22,10 +22,10 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 4,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 3, // Increased from 2 to 3
+        healthyCarbs: 3,
         fats: 2,
         nuts: 1,
-        water: 8, // Medium baseline
+        water: 8,
         alcohol: 0,
       };
     } else if (goal === 'maintain') {
@@ -33,10 +33,10 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 5,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 3, // Increased from 2 to 3
+        healthyCarbs: 3,
         fats: 2,
         nuts: 1,
-        water: 8, // Medium baseline
+        water: 8,
         alcohol: 0,
       };
     } else { // build
@@ -44,10 +44,10 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 6,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 4, // Increased from 3 to 4
+        healthyCarbs: 4,
         fats: 2,
         nuts: 1,
-        water: 8, // Medium baseline
+        water: 8,
         alcohol: 0,
       };
     }
@@ -57,10 +57,10 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 5,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 3, // Increased from 2 to 3
+        healthyCarbs: 3,
         fats: 2,
         nuts: 1,
-        water: 8, // Medium baseline
+        water: 8,
         alcohol: 0,
       };
     } else if (goal === 'maintain') {
@@ -68,10 +68,10 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 6,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 3, // Increased from 2 to 3
+        healthyCarbs: 3,
         fats: 2,
         nuts: 1,
-        water: 8, // Medium baseline
+        water: 8,
         alcohol: 0,
       };
     } else { // build
@@ -79,10 +79,10 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 7,
         veggies: 4,
         fruit: 2,
-        healthyCarbs: 4, // Increased from 3 to 4
+        healthyCarbs: 4,
         fats: 2,
         nuts: 1,
-        water: 8, // Medium baseline
+        water: 8,
         alcohol: 0,
       };
     }
@@ -95,12 +95,11 @@ function applySizeAdjustment(portions: PortionTargets, size: SizeCategory): Port
   
   if (size === 'small') {
     adjusted.healthyCarbs = Math.max(0, adjusted.healthyCarbs - 1);
-    adjusted.water = 7; // Small: 7 portions
+    adjusted.water = 7;
   } else if (size === 'large') {
     adjusted.healthyCarbs = adjusted.healthyCarbs + 1;
-    adjusted.water = 10; // Large: 10 portions
+    adjusted.water = 10;
   }
-  // medium: water stays at 8
   
   return adjusted;
 }
@@ -120,11 +119,8 @@ function applyAlcoholAdjustment(
     return adjusted;
   }
   
-  // Set alcohol servings (user can select any number)
   adjusted.alcohol = alcoholServings;
   
-  // Only adjust portions for a maximum of 2 drinks
-  // If user selects more than 2, we still only adjust for 2
   const drinksToAdjustFor = Math.min(2, alcoholServings);
   
   console.log('Alcohol adjustment - Drinks to adjust for:', drinksToAdjustFor);
@@ -134,31 +130,24 @@ function applyAlcoholAdjustment(
     nuts: adjusted.nuts 
   });
   
-  // For 2 drinks: reduce Healthy Carbs by 1 and Fats by 1
-  // Nuts remain unchanged
   if (drinksToAdjustFor === 2) {
-    // Reduce Healthy Carbs by 1 (but not below 0)
     if (adjusted.healthyCarbs > 0) {
       adjusted.healthyCarbs -= 1;
       console.log('Reduced Healthy Carbs by 1');
     }
     
-    // Reduce Fats by 1 (but not below 0)
     if (adjusted.fats > 0) {
       adjusted.fats -= 1;
       console.log('Reduced Fats by 1');
     }
     
-    // Nuts remain unchanged
     console.log('Nuts remain unchanged');
   } else if (drinksToAdjustFor === 1) {
-    // For 1 drink: only reduce Healthy Carbs by 1
     if (adjusted.healthyCarbs > 0) {
       adjusted.healthyCarbs -= 1;
       console.log('Reduced Healthy Carbs by 1 (for 1 drink)');
     }
   }
-  // For 0 drinks or if drinksToAdjustFor is somehow different, no adjustment
   
   console.log('Final portions after alcohol adjustment:', { 
     healthyCarbs: adjusted.healthyCarbs, 
@@ -173,13 +162,63 @@ function applyAlcoholAdjustment(
   return adjusted;
 }
 
+// Apply activity level adjustment (AFTER base portions are calculated)
+// This is the adjustment layer that increases daily targets for active users
+export function applyActivityAdjustment(
+  portions: PortionTargets,
+  activityLevel: ActivityLevel
+): PortionTargets {
+  const adjusted = { ...portions };
+  
+  console.log('Applying activity adjustment for level:', activityLevel);
+  console.log('Base portions before activity adjustment:', adjusted);
+  
+  switch (activityLevel) {
+    case 'sedentary':
+      // No adjustment
+      console.log('Sedentary: No adjustment');
+      break;
+      
+    case 'lightlyActive':
+      // Add 1 Healthy Carb
+      adjusted.healthyCarbs += 1;
+      console.log('Lightly Active: +1 Healthy Carb');
+      break;
+      
+    case 'moderatelyActive':
+      // Add 2 Healthy Carbs
+      adjusted.healthyCarbs += 2;
+      console.log('Moderately Active: +2 Healthy Carbs');
+      break;
+      
+    case 'veryActive':
+      // Add 3 Healthy Carbs and 1 Protein
+      adjusted.healthyCarbs += 3;
+      adjusted.protein += 1;
+      console.log('Very Active: +3 Healthy Carbs, +1 Protein');
+      break;
+      
+    case 'extremelyActive':
+      // Add 4 Healthy Carbs and 1 Protein
+      adjusted.healthyCarbs += 4;
+      adjusted.protein += 1;
+      console.log('Extremely Active: +4 Healthy Carbs, +1 Protein');
+      break;
+  }
+  
+  console.log('Final portions after activity adjustment:', adjusted);
+  
+  return adjusted;
+}
+
 // Calculate recommended targets based on all profile inputs
 export function calculateRecommendedTargets(
   sex: Sex,
   weight: number,
   goal: Goal,
   includeAlcohol: boolean,
-  alcoholServings: number
+  alcoholServings: number,
+  activityLevel: ActivityLevel = 'sedentary'
 ): { targets: PortionTargets; sizeCategory: SizeCategory } {
   // Step 1: Determine size category
   const sizeCategory = classifySize(sex, weight);
@@ -190,8 +229,11 @@ export function calculateRecommendedTargets(
   // Step 3: Apply size adjustment (affects Healthy Carbs and Water)
   portions = applySizeAdjustment(portions, sizeCategory);
   
-  // Step 4: Apply alcohol adjustment with new rule
+  // Step 4: Apply alcohol adjustment
   portions = applyAlcoholAdjustment(portions, includeAlcohol, alcoholServings);
+  
+  // Step 5: Apply activity level adjustment (AFTER all base calculations)
+  portions = applyActivityAdjustment(portions, activityLevel);
   
   console.log('Calculated targets:', {
     sex,
@@ -200,8 +242,22 @@ export function calculateRecommendedTargets(
     sizeCategory,
     includeAlcohol,
     alcoholServings,
+    activityLevel,
     finalPortions: portions,
   });
   
   return { targets: portions, sizeCategory };
+}
+
+// Check if weight loss guardrail should be shown
+export function shouldShowWeightLossGuardrail(
+  goal: Goal,
+  activityLevel: ActivityLevel
+): boolean {
+  return goal === 'lose' && activityLevel !== 'sedentary';
+}
+
+// Get the weight loss guardrail message
+export function getWeightLossGuardrailMessage(): string {
+  return "Fuel matters when you're active.\n\nIf you're training or moving a lot while trying to lose weight, eating too little can slow progress and impact energy.\n\nOn active days, it's okay to use your extra Healthy Carb portions — they support workouts and recovery.";
 }

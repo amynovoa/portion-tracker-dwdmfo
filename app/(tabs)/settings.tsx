@@ -4,8 +4,10 @@ import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Modal, Swi
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
-import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig } from '@/utils/storage';
+import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig, loadProfile, saveProfile } from '@/utils/storage';
 import { formatResetTime } from '@/utils/dailyReset';
+import { ActivityLevel, ACTIVITY_LEVELS } from '@/types';
+import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { IconSymbol } from '@/components/IconSymbol';
 
@@ -13,17 +15,18 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [showResetModal, setShowResetModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [currentActivityLevel, setCurrentActivityLevel] = useState<ActivityLevel>('sedentary');
   
-  // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
     profile: false,
+    activityLevel: false,
     dailyReset: false,
     dataStorage: false,
     about: false,
     resetApp: false,
   });
   
-  // Daily reset time settings
   const [resetEnabled, setResetEnabled] = useState(true);
   const [resetHour, setResetHour] = useState(0);
   const [resetMinute, setResetMinute] = useState(0);
@@ -32,7 +35,19 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     loadResetSettings();
+    loadActivityLevel();
   }, []);
+
+  const loadActivityLevel = async () => {
+    try {
+      const profile = await loadProfile();
+      if (profile && profile.activityLevel) {
+        setCurrentActivityLevel(profile.activityLevel);
+      }
+    } catch (error) {
+      console.error('Error loading activity level:', error);
+    }
+  };
 
   const loadResetSettings = async () => {
     try {
@@ -157,6 +172,41 @@ export default function SettingsScreen() {
     });
   };
 
+  const handleUpdateActivityLevel = async (newLevel: ActivityLevel) => {
+    try {
+      const profile = await loadProfile();
+      if (!profile) {
+        Alert.alert('Error', 'No profile found. Please set up your profile first.');
+        return;
+      }
+
+      const result = calculateRecommendedTargets(
+        profile.sex,
+        profile.currentWeight,
+        profile.goal,
+        profile.includeAlcohol,
+        profile.alcoholServings,
+        newLevel
+      );
+
+      profile.activityLevel = newLevel;
+      profile.targets = result.targets;
+
+      await saveProfile(profile);
+      setCurrentActivityLevel(newLevel);
+      setShowActivityModal(false);
+
+      Alert.alert(
+        'Activity Level Updated',
+        'Your portion targets have been adjusted based on your new activity level.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Error updating activity level:', error);
+      Alert.alert('Error', 'Failed to update activity level.');
+    }
+  };
+
   const handleResetApp = () => {
     console.log('Reset app button pressed');
     setShowResetModal(true);
@@ -191,6 +241,11 @@ export default function SettingsScreen() {
     setShowResetModal(false);
   };
 
+  const getActivityLevelLabel = (level: ActivityLevel): string => {
+    const found = ACTIVITY_LEVELS.find(a => a.key === level);
+    return found ? found.label : 'Sedentary';
+  };
+
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -203,7 +258,6 @@ export default function SettingsScreen() {
           <Text style={styles.subtitle}>Manage your preferences</Text>
         </View>
 
-        {/* Profile Section */}
         <View style={styles.collapsibleSection}>
           <TouchableOpacity
             style={styles.sectionHeader}
@@ -237,7 +291,45 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Daily Reset Time Section */}
+        <View style={styles.collapsibleSection}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('activityLevel')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>🏃</Text>
+              <Text style={styles.sectionHeaderTitle}>Activity Level</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.activityLevel ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.activityLevel ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+          
+          {expandedSections.activityLevel && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.sectionDescription}>
+                Your current activity level affects your daily portion targets
+              </Text>
+              <View style={styles.currentActivityBox}>
+                <Text style={styles.currentActivityLabel}>Current Level:</Text>
+                <Text style={styles.currentActivityValue}>
+                  {getActivityLevelLabel(currentActivityLevel)}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[buttonStyles.outline, styles.button]}
+                onPress={() => setShowActivityModal(true)}
+              >
+                <Text style={commonStyles.buttonTextOutline}>Change Activity Level</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
         <View style={styles.collapsibleSection}>
           <TouchableOpacity
             style={styles.sectionHeader}
@@ -297,7 +389,6 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Data Storage Section */}
         <View style={styles.collapsibleSection}>
           <TouchableOpacity
             style={styles.sectionHeader}
@@ -334,7 +425,6 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* About Section */}
         <View style={styles.collapsibleSection}>
           <TouchableOpacity
             style={styles.sectionHeader}
@@ -362,7 +452,6 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Reset App Section */}
         <View style={styles.collapsibleSection}>
           <TouchableOpacity
             style={styles.sectionHeader}
@@ -402,7 +491,6 @@ export default function SettingsScreen() {
         <View style={styles.bottomPadding} />
       </ScrollView>
 
-      {/* Time Picker Modal */}
       {showTimePicker && (
         Platform.OS === 'ios' ? (
           <Modal
@@ -442,7 +530,55 @@ export default function SettingsScreen() {
         )
       )}
 
-      {/* Reset Confirmation Modal */}
+      <Modal
+        visible={showActivityModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowActivityModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.activityModalContent}>
+            <Text style={styles.activityModalTitle}>Select Activity Level</Text>
+            <Text style={styles.activityModalSubtitle}>
+              Your portion targets will be adjusted automatically
+            </Text>
+            
+            <ScrollView style={styles.activityLevelList} showsVerticalScrollIndicator={false}>
+              {ACTIVITY_LEVELS.map((level) => (
+                <TouchableOpacity
+                  key={level.key}
+                  style={[
+                    styles.activityLevelOption,
+                    currentActivityLevel === level.key && styles.activityLevelOptionActive
+                  ]}
+                  onPress={() => handleUpdateActivityLevel(level.key)}
+                >
+                  <Text style={[
+                    styles.activityLevelOptionLabel,
+                    currentActivityLevel === level.key && styles.activityLevelOptionLabelActive
+                  ]}>
+                    {level.label}
+                  </Text>
+                  <Text style={[
+                    styles.activityLevelOptionDescription,
+                    currentActivityLevel === level.key && styles.activityLevelOptionDescriptionActive
+                  ]}>
+                    {level.description}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[buttonStyles.outline, styles.activityModalButton]}
+              onPress={() => setShowActivityModal(false)}
+            >
+              <Text style={commonStyles.buttonTextOutline}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <Modal
         visible={showResetModal}
         transparent={true}
@@ -564,6 +700,24 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
     marginTop: 8,
+  },
+  currentActivityBox: {
+    backgroundColor: colors.highlight,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  currentActivityLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  currentActivityValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primary,
   },
   button: {
     marginVertical: 8,
@@ -693,10 +847,7 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.25)',
     elevation: 5,
   },
   modalTitle: {
@@ -749,10 +900,7 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '90%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.25)',
     elevation: 5,
   },
   timePickerHeader: {
@@ -769,6 +917,66 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   timePickerButton: {
+    marginTop: 8,
+  },
+  activityModalContent: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 450,
+    maxHeight: '80%',
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.25)',
+    elevation: 5,
+  },
+  activityModalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  activityModalSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  activityLevelList: {
+    maxHeight: 400,
+    marginBottom: 16,
+  },
+  activityLevelOption: {
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    marginBottom: 10,
+  },
+  activityLevelOptionActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.highlight,
+  },
+  activityLevelOptionLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  activityLevelOptionLabelActive: {
+    color: colors.primary,
+  },
+  activityLevelOptionDescription: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  activityLevelOptionDescriptionActive: {
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  activityModalButton: {
     marginTop: 8,
   },
 });
