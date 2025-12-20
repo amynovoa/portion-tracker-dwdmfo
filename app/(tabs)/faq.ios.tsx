@@ -40,10 +40,6 @@ const faqData: FAQItem[] = [
     answer: 'If progress stalls after a few weeks:\n\n- Review alcohol intake\n- Check portion sizes (especially carbs, fats, and alcohol)\n- Consider reducing portions of carbs, fat, or protein\n- Make sure you are drinking enough water\n- Make sure movement and sleep are consistent\n\nSmall adjustments can make a big difference.',
   },
   {
-    question: 'I think my protein portions are too high. Can I lower them?',
-    answer: 'Yes. Portions are adjustable by design. If protein feels excessive or crowds out other foods, reduce by 1 portion and reassess after 1–2 weeks.',
-  },
-  {
     question: 'How do I log a food that isn\'t listed?',
     answer: 'Choose the food group that best fits the item and log the portion manually. You don\'t need perfect matches.',
   },
