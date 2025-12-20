@@ -164,9 +164,11 @@ function applyAlcoholAdjustment(
 
 // Apply activity level adjustment (AFTER base portions are calculated)
 // This is the adjustment layer that increases daily targets for active users
+// UPDATED LOGIC: Revised adjustments to fuel activity without over-carbing
 export function applyActivityAdjustment(
   portions: PortionTargets,
-  activityLevel: ActivityLevel
+  activityLevel: ActivityLevel,
+  goal?: Goal
 ): PortionTargets {
   const adjusted = { ...portions };
   
@@ -186,24 +188,31 @@ export function applyActivityAdjustment(
       break;
       
     case 'moderatelyActive':
-      // Add 2 Healthy Carbs
-      adjusted.healthyCarbs += 2;
-      console.log('Moderately Active: +2 Healthy Carbs');
+      // Add 1 Healthy Carb (UPDATED from +2)
+      adjusted.healthyCarbs += 1;
+      console.log('Moderately Active: +1 Healthy Carb');
       break;
       
     case 'veryActive':
-      // Add 3 Healthy Carbs and 1 Protein
-      adjusted.healthyCarbs += 3;
+      // Add 2 Healthy Carbs and 1 Protein (UPDATED from +3 carbs)
+      adjusted.healthyCarbs += 2;
       adjusted.protein += 1;
-      console.log('Very Active: +3 Healthy Carbs, +1 Protein');
+      console.log('Very Active: +2 Healthy Carbs, +1 Protein');
       break;
       
     case 'extremelyActive':
-      // Add 4 Healthy Carbs and 1 Protein
-      adjusted.healthyCarbs += 4;
+      // Add 3 Healthy Carbs and 1 Protein (UPDATED from +4 carbs)
+      adjusted.healthyCarbs += 3;
       adjusted.protein += 1;
-      console.log('Extremely Active: +4 Healthy Carbs, +1 Protein');
+      console.log('Extremely Active: +3 Healthy Carbs, +1 Protein');
       break;
+  }
+  
+  // Goal-based protein priority check
+  // If Goal = Build AND Activity Level = Very Active or Extremely Active,
+  // protein is already prioritized (covered by adjustments above)
+  if (goal === 'build' && (activityLevel === 'veryActive' || activityLevel === 'extremelyActive')) {
+    console.log('Build goal + high activity: Protein priority ensured');
   }
   
   console.log('Final portions after activity adjustment:', adjusted);
@@ -233,7 +242,7 @@ export function calculateRecommendedTargets(
   portions = applyAlcoholAdjustment(portions, includeAlcohol, alcoholServings);
   
   // Step 5: Apply activity level adjustment (AFTER all base calculations)
-  portions = applyActivityAdjustment(portions, activityLevel);
+  portions = applyActivityAdjustment(portions, activityLevel, goal);
   
   console.log('Calculated targets:', {
     sex,
@@ -257,7 +266,7 @@ export function shouldShowWeightLossGuardrail(
   return goal === 'lose' && activityLevel !== 'sedentary';
 }
 
-// Get the weight loss guardrail message
+// Get the weight loss guardrail message (UPDATED - shorter, simpler)
 export function getWeightLossGuardrailMessage(): string {
-  return "Fuel matters when you're active.\n\nIf you're training or moving a lot while trying to lose weight, eating too little can slow progress and impact energy.\n\nOn active days, it's okay to use your extra Healthy Carb portions — they support workouts and recovery.";
+  return "Fuel matters when you're active.\nOn training days, it's okay to use your extra Healthy Carb portions.";
 }
