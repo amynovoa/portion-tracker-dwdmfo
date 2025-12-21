@@ -120,24 +120,9 @@ export default function FloatingTabBar({
       borderWidth: 1.2,
       borderColor: 'rgba(255, 255, 255, 1)',
       borderRadius: borderRadius,
-      ...Platform.select({
-        ios: {
-          backgroundColor: theme.dark
-            ? 'rgba(28, 28, 30, 0.95)'
-            : 'rgba(255, 255, 255, 0.95)',
-        },
-        android: {
-          backgroundColor: theme.dark
-            ? 'rgba(28, 28, 30, 0.95)'
-            : 'rgba(255, 255, 255, 0.95)',
-        },
-        web: {
-          backgroundColor: theme.dark
-            ? 'rgba(28, 28, 30, 0.95)'
-            : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-        },
-      }),
+      backgroundColor: theme.dark
+        ? 'rgba(28, 28, 30, 0.95)'
+        : 'rgba(255, 255, 255, 0.95)',
     },
     background: {
       ...styles.background,

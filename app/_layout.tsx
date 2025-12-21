@@ -5,7 +5,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, View, Text, StyleSheet, AppState, AppStateStatus } from "react-native";
+import { useColorScheme, View, Text, StyleSheet, AppState, AppStateStatus, Platform } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -104,7 +104,11 @@ function RootLayoutNav() {
       if (nextAppState === 'active') {
         console.log('App became active, checking for daily reset...');
         // Check and perform daily reset when app comes to foreground
-        await checkAndPerformDailyReset();
+        try {
+          await checkAndPerformDailyReset();
+        } catch (resetError) {
+          console.error('Error during daily reset:', resetError);
+        }
       }
     });
 
@@ -131,7 +135,12 @@ function RootLayoutNav() {
         console.log('Fonts loaded, checking for daily reset...');
         
         // Check and perform daily reset on app startup
-        await checkAndPerformDailyReset();
+        try {
+          await checkAndPerformDailyReset();
+        } catch (resetError) {
+          console.error('Error during daily reset:', resetError);
+          // Don't block app startup if reset fails
+        }
         
         console.log('App ready');
         setIsReady(true);

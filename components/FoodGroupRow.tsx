@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import PortionSlot from './PortionSlot';
 import { FoodGroup } from '../types';
@@ -120,8 +120,20 @@ const styles = StyleSheet.create({
     padding: 16,
     marginVertical: 6,
     marginHorizontal: 16,
-    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+      web: {
+        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
+      },
+    }),
   },
   header: {
     flexDirection: 'row',

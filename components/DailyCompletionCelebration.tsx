@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 
 interface DailyCompletionCelebrationProps {
@@ -49,7 +49,7 @@ export default function DailyCompletionCelebration({ visible, onDismiss }: Daily
         ),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, fadeAnim, scaleAnim, glowAnim]);
 
   const glowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
@@ -118,8 +118,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minWidth: 280,
     maxWidth: 340,
-    boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.2)',
-    elevation: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.2)',
+      },
+    }),
   },
   glowContainer: {
     position: 'absolute',
@@ -133,7 +145,6 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     backgroundColor: '#FFD700',
     opacity: 0.3,
-    boxShadow: '0px 0px 40px rgba(255, 215, 0, 0.6)',
   },
   starIcon: {
     fontSize: 72,
