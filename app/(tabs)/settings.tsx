@@ -5,6 +5,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
 import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig, loadProfile, saveProfile } from '@/utils/storage';
+import { saveCelebrationEnabled, loadCelebrationEnabled } from '@/utils/celebrationStorage';
 import { formatResetTime } from '@/utils/dailyReset';
 import { ActivityLevel, ACTIVITY_LEVELS } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
@@ -17,10 +18,12 @@ export default function SettingsScreen() {
   const [isResetting, setIsResetting] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [currentActivityLevel, setCurrentActivityLevel] = useState<ActivityLevel>('sedentary');
+  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
   
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
     profile: false,
     activityLevel: false,
+    celebrations: false,
     dailyReset: false,
     dataStorage: false,
     about: false,
@@ -36,7 +39,17 @@ export default function SettingsScreen() {
   useEffect(() => {
     loadResetSettings();
     loadActivityLevel();
+    loadCelebrationSettings();
   }, []);
+
+  const loadCelebrationSettings = async () => {
+    try {
+      const enabled = await loadCelebrationEnabled();
+      setCelebrationEnabled(enabled);
+    } catch (error) {
+      console.error('Error loading celebration settings:', error);
+    }
+  };
 
   const loadActivityLevel = async () => {
     try {
@@ -78,6 +91,18 @@ export default function SettingsScreen() {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const handleToggleCelebration = async (enabled: boolean) => {
+    setCelebrationEnabled(enabled);
+    
+    try {
+      await saveCelebrationEnabled(enabled);
+      console.log('Celebration setting saved:', enabled);
+    } catch (error) {
+      console.error('Error saving celebration setting:', error);
+      Alert.alert('Error', 'Failed to save celebration setting.');
+    }
   };
 
   const handleToggleReset = async (enabled: boolean) => {
@@ -326,6 +351,47 @@ export default function SettingsScreen() {
               >
                 <Text style={commonStyles.buttonTextOutline}>Change Activity Level</Text>
               </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.collapsibleSection}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('celebrations')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>⭐</Text>
+              <Text style={styles.sectionHeaderTitle}>Celebrations</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.celebrations ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.celebrations ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+          
+          {expandedSections.celebrations && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.sectionDescription}>
+                Get a gentle celebration when you complete your daily tracking goals
+              </Text>
+              
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Daily completion celebration</Text>
+                <Switch
+                  value={celebrationEnabled}
+                  onValueChange={handleToggleCelebration}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.card}
+                />
+              </View>
+
+              <Text style={styles.celebrationHelperText}>
+                When enabled, you&apos;ll see a calm, minimal celebration when you log 100% of your daily portion targets. This appears once per day and can be dismissed with a tap.
+              </Text>
             </View>
           )}
         </View>
@@ -734,6 +800,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     flex: 1,
+  },
+  celebrationHelperText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    fontStyle: 'italic',
+    marginTop: 12,
   },
   timePickerSection: {
     marginTop: 16,

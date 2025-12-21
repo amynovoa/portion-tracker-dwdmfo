@@ -6,10 +6,12 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
+import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import DaySelector from '@/components/DaySelector';
+import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showInfoHint, setShowInfoHint] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const loadData = async () => {
     try {
@@ -40,14 +43,12 @@ export default function HomeScreen() {
 
       console.log('Home: Profile found, loading portions');
       
-      // Ensure profile has all required fields with defaults
       if (!userProfile.targets) {
         console.error('Profile has no targets!');
         setLoading(false);
         return;
       }
 
-      // Ensure all food groups exist with defaults
       const safeTargets: PortionTargets = {
         protein: userProfile.targets.protein || 0,
         veggies: userProfile.targets.veggies || 0,
@@ -55,21 +56,19 @@ export default function HomeScreen() {
         healthyCarbs: userProfile.targets.healthyCarbs || 0,
         fats: userProfile.targets.fats || 0,
         nuts: userProfile.targets.nuts || 0,
-        water: userProfile.targets.water || 8, // Default to 8 if missing
+        water: userProfile.targets.water || 8,
         alcohol: userProfile.targets.alcohol || 0,
       };
 
       userProfile.targets = safeTargets;
       setProfile(userProfile);
 
-      // Load data for the selected date
       await loadDateData(selectedDate);
 
       const records = await getAllDailyPortions();
       console.log('All records loaded:', records ? records.length : 0);
       setAllRecords(Array.isArray(records) ? records : []);
       
-      // Check if user has seen the info hint (only show on today)
       if (selectedDate === getTodayString()) {
         const seenHint = await hasSeenInfoHint();
         console.log('Has seen info hint:', seenHint);
@@ -94,7 +93,6 @@ export default function HomeScreen() {
       if (dailyData && dailyData.portions) {
         console.log('Daily data found:', dailyData);
         
-        // Ensure all fields exist with defaults
         const portions: PortionTargets = {
           protein: dailyData.portions.protein || 0,
           veggies: dailyData.portions.veggies || 0,
@@ -128,7 +126,6 @@ export default function HomeScreen() {
     }
   };
 
-  // Load data when screen comes into focus OR when reload param changes
   useFocusEffect(
     React.useCallback(() => {
       console.log('Home screen (iOS) focused, loading data');
@@ -136,22 +133,18 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // Also reload when the reload param changes (from profile save)
   useEffect(() => {
     if (params.reload) {
       console.log('Reload param detected, reloading data:', params.reload);
       loadData();
-      // Clear the param after loading
       router.setParams({ reload: undefined });
     }
   }, [params.reload]);
 
-  // Reload data when selected date changes
   useEffect(() => {
     if (profile) {
       loadDateData(selectedDate);
       
-      // Update info hint visibility based on selected date
       if (selectedDate === getTodayString()) {
         hasSeenInfoHint().then(seenHint => {
           setShowInfoHint(!seenHint);
@@ -173,6 +166,54 @@ export default function HomeScreen() {
     setSelectedDate(date);
   };
 
+  const checkAndShowCelebration = async (updatedPortions: PortionTargets) => {
+    if (!profile) return;
+
+    // Only check for today
+    if (selectedDate !== getTodayString()) return;
+
+    // Check if celebration is enabled
+    const celebrationEnabled = await loadCelebrationEnabled();
+    if (!celebrationEnabled) {
+      console.log('Celebration is disabled');
+      return;
+    }
+
+    // Check if celebration was already shown today
+    const alreadyShown = await hasCelebrationBeenShownToday(selectedDate);
+    if (alreadyShown) {
+      console.log('Celebration already shown today');
+      return;
+    }
+
+    // Check if all targets are met (100% completion)
+    const targets = profile.targets;
+    let allComplete = true;
+
+    // Check each food group
+    for (const group of FOOD_GROUPS) {
+      const target = targets[group.key] || 0;
+      const completed = updatedPortions[group.key] || 0;
+      
+      // Skip if target is 0 (not tracking this food group)
+      if (target === 0) continue;
+      
+      if (completed < target) {
+        allComplete = false;
+        break;
+      }
+    }
+
+    if (allComplete) {
+      console.log('All targets met! Showing celebration...');
+      // Small delay to ensure the UI has updated
+      setTimeout(() => {
+        setShowCelebration(true);
+        saveCelebrationShownToday(selectedDate);
+      }, 300);
+    }
+  };
+
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
     if (!profile || !datePortions) {
       console.log('Cannot toggle portion: missing profile or datePortions');
@@ -181,12 +222,11 @@ export default function HomeScreen() {
 
     const current = datePortions[foodGroup] || 0;
 
-    // Allow unlimited tracking - increment or decrement
     let newValue: number;
     if (increment) {
       newValue = current + 1;
     } else {
-      newValue = Math.max(0, current - 1); // Don't go below 0
+      newValue = Math.max(0, current - 1);
     }
 
     console.log(`Toggling ${foodGroup} for ${selectedDate}: ${current} -> ${newValue}`);
@@ -208,6 +248,9 @@ export default function HomeScreen() {
       await saveDailyPortions(dailyData);
       const records = await getAllDailyPortions();
       setAllRecords(Array.isArray(records) ? records : []);
+      
+      // Check if we should show celebration
+      await checkAndShowCelebration(updatedPortions);
     } catch (error) {
       console.error('Error saving portion toggle:', error);
     }
@@ -242,7 +285,11 @@ export default function HomeScreen() {
     await saveInfoHintSeen();
   };
 
-  // Show loading state
+  const handleDismissCelebration = () => {
+    console.log('Dismissing celebration');
+    setShowCelebration(false);
+  };
+
   if (loading) {
     return (
       <View style={commonStyles.container}>
@@ -253,7 +300,6 @@ export default function HomeScreen() {
     );
   }
 
-  // Show message if no profile
   if (!profile || !datePortions) {
     return (
       <View style={commonStyles.container}>
@@ -331,13 +377,17 @@ export default function HomeScreen() {
         <View style={styles.bottomPadding} />
       </ScrollView>
 
-      {/* Info hint overlay - shown on top of everything */}
       {showInfoHint && (
         <InfoHintTooltip 
           visible={showInfoHint} 
           onDismiss={handleDismissInfoHint}
         />
       )}
+
+      <DailyCompletionCelebration
+        visible={showCelebration}
+        onDismiss={handleDismissCelebration}
+      />
     </View>
   );
 }

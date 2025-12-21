@@ -7,11 +7,13 @@ import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions,
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import { shouldShowWeightLossGuardrail, getWeightLossGuardrailMessage } from '@/utils/portionCalculator';
+import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
 import AppLogo from '@/components/AppLogo';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import DaySelector from '@/components/DaySelector';
+import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showInfoHint, setShowInfoHint] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const loadData = async () => {
     try {
@@ -165,6 +168,54 @@ export default function HomeScreen() {
     setSelectedDate(date);
   };
 
+  const checkAndShowCelebration = async (updatedPortions: PortionTargets) => {
+    if (!profile) return;
+
+    // Only check for today
+    if (selectedDate !== getTodayString()) return;
+
+    // Check if celebration is enabled
+    const celebrationEnabled = await loadCelebrationEnabled();
+    if (!celebrationEnabled) {
+      console.log('Celebration is disabled');
+      return;
+    }
+
+    // Check if celebration was already shown today
+    const alreadyShown = await hasCelebrationBeenShownToday(selectedDate);
+    if (alreadyShown) {
+      console.log('Celebration already shown today');
+      return;
+    }
+
+    // Check if all targets are met (100% completion)
+    const targets = profile.targets;
+    let allComplete = true;
+
+    // Check each food group
+    for (const group of FOOD_GROUPS) {
+      const target = targets[group.key] || 0;
+      const completed = updatedPortions[group.key] || 0;
+      
+      // Skip if target is 0 (not tracking this food group)
+      if (target === 0) continue;
+      
+      if (completed < target) {
+        allComplete = false;
+        break;
+      }
+    }
+
+    if (allComplete) {
+      console.log('All targets met! Showing celebration...');
+      // Small delay to ensure the UI has updated
+      setTimeout(() => {
+        setShowCelebration(true);
+        saveCelebrationShownToday(selectedDate);
+      }, 300);
+    }
+  };
+
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
     if (!profile || !datePortions) {
       console.log('Cannot toggle portion: missing profile or datePortions');
@@ -199,6 +250,9 @@ export default function HomeScreen() {
       await saveDailyPortions(dailyData);
       const records = await getAllDailyPortions();
       setAllRecords(Array.isArray(records) ? records : []);
+      
+      // Check if we should show celebration
+      await checkAndShowCelebration(updatedPortions);
     } catch (error) {
       console.error('Error saving portion toggle:', error);
     }
@@ -231,6 +285,11 @@ export default function HomeScreen() {
     console.log('Dismissing info hint');
     setShowInfoHint(false);
     await saveInfoHintSeen();
+  };
+
+  const handleDismissCelebration = () => {
+    console.log('Dismissing celebration');
+    setShowCelebration(false);
   };
 
   if (loading) {
@@ -342,6 +401,11 @@ export default function HomeScreen() {
           onDismiss={handleDismissInfoHint}
         />
       )}
+
+      <DailyCompletionCelebration
+        visible={showCelebration}
+        onDismiss={handleDismissCelebration}
+      />
     </View>
   );
 }
