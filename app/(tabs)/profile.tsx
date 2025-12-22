@@ -171,6 +171,7 @@ export default function ProfileScreen() {
       healthyCarbs: 'Healthy Carbs',
       fats: 'Fats',
       nuts: 'Nuts',
+      water: 'Water',
       alcohol: 'Alcohol',
     };
     return labels[key] || key;
