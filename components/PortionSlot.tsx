@@ -9,6 +9,7 @@ interface PortionSlotProps {
   onPress: () => void;
   slotIndex?: number;
   target?: number;
+  foodGroup?: string;
 }
 
 export default function PortionSlot({ 
@@ -17,12 +18,18 @@ export default function PortionSlot({
   onPress,
   slotIndex = 0,
   target = 0,
+  foodGroup = '',
 }: PortionSlotProps) {
   
   // Determine the color based on position relative to target
   const getSlotColor = () => {
     if (!completed) {
       return null; // Empty slot
+    }
+    
+    // For vegetables and water, always show green when completed
+    if (foodGroup === 'veggies' || foodGroup === 'water') {
+      return '#4CAF50'; // Always green
     }
     
     if (slotIndex < target) {

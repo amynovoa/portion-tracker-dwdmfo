@@ -88,6 +88,7 @@ export default function FoodGroupRow({
               isExtra={index >= target}
               slotIndex={index}
               target={target}
+              foodGroup={foodGroup}
               onPress={() => {
                 // If clicking on a completed slot, decrement
                 // If clicking on an empty slot, increment

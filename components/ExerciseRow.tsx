@@ -138,8 +138,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
   },
   checkmark: {
     color: '#FFFFFF',
