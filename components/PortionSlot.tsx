@@ -27,25 +27,30 @@ export default function PortionSlot({
       return null; // Empty slot
     }
     
+    console.log(`PortionSlot: foodGroup=${foodGroup}, slotIndex=${slotIndex}, target=${target}, completed=${completed}`);
+    
     // For vegetables and water, always show green when completed
     if (foodGroup === 'veggies' || foodGroup === 'water') {
+      console.log(`PortionSlot: ${foodGroup} - returning green`);
       return '#4CAF50'; // Always green
     }
     
     if (slotIndex < target) {
       // On track - Green
+      console.log(`PortionSlot: ${foodGroup} - on track (green)`);
       return '#4CAF50';
     } else if (slotIndex === target) {
       // Going over by 1 - Yellow
+      console.log(`PortionSlot: ${foodGroup} - going over (yellow)`);
       return '#FFC107';
     } else {
       // Past the target - Red
+      console.log(`PortionSlot: ${foodGroup} - past target (red)`);
       return '#F44336';
     }
   };
 
   const slotColor = getSlotColor();
-  const isOnTrack = slotIndex < target;
 
   return (
     <TouchableOpacity

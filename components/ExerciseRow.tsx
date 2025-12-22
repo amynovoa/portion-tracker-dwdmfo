@@ -47,6 +47,8 @@ Strength/Resistance options:
 - Pilates or reformer
 - Functional movements (step-ups, carries, glute bridges)`;
 
+  console.log(`ExerciseRow: completed=${completed}`);
+
   return (
     <>
       <View style={styles.container}>
