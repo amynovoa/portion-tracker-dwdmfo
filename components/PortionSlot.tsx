@@ -7,24 +7,52 @@ interface PortionSlotProps {
   completed: boolean;
   isExtra?: boolean;
   onPress: () => void;
+  slotIndex?: number;
+  target?: number;
 }
 
-export default function PortionSlot({ completed, isExtra = false, onPress }: PortionSlotProps) {
+export default function PortionSlot({ 
+  completed, 
+  isExtra = false, 
+  onPress,
+  slotIndex = 0,
+  target = 0,
+}: PortionSlotProps) {
+  
+  // Determine the color based on position relative to target
+  const getSlotColor = () => {
+    if (!completed) {
+      return null; // Empty slot
+    }
+    
+    if (slotIndex < target) {
+      // On track - Green
+      return '#4CAF50';
+    } else if (slotIndex === target) {
+      // Going over by 1 - Yellow
+      return '#FFC107';
+    } else {
+      // Past the target - Red
+      return '#F44336';
+    }
+  };
+
+  const slotColor = getSlotColor();
+  const isOnTrack = slotIndex < target;
+
   return (
     <TouchableOpacity
       style={[
         styles.slot,
-        isExtra && styles.slotExtra,
-        completed && !isExtra && styles.slotCompleted,
-        completed && isExtra && styles.slotExtraCompleted,
+        isExtra && !completed && styles.slotExtra,
+        completed && slotColor && { backgroundColor: slotColor, borderColor: slotColor },
       ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       <Text style={[
         styles.checkmark,
-        completed && !isExtra && styles.checkmarkCompleted,
-        completed && isExtra && styles.checkmarkExtra,
+        completed && styles.checkmarkCompleted,
       ]}>
         {completed ? '✓' : ''}
       </Text>
@@ -50,24 +78,12 @@ const styles = StyleSheet.create({
     borderColor: colors.textSecondary,
     opacity: 0.6,
   },
-  slotCompleted: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  slotExtraCompleted: {
-    backgroundColor: colors.secondary,
-    borderColor: colors.secondary,
-    opacity: 1,
-  },
   checkmark: {
     fontSize: 20,
     color: 'transparent',
     fontWeight: '700',
   },
   checkmarkCompleted: {
-    color: colors.card,
-  },
-  checkmarkExtra: {
-    color: colors.text,
+    color: '#FFFFFF',
   },
 });
