@@ -55,13 +55,15 @@ Strength/Resistance options:
         <View style={styles.header}>
           <Text style={styles.icon}>💪</Text>
           <Text style={styles.label}>Exercise</Text>
-          <TouchableOpacity 
-            onPress={handleInfoPress}
-            style={styles.infoButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Text style={styles.infoIcon}>ℹ️</Text>
-          </TouchableOpacity>
+          <View style={styles.infoButtonContainer}>
+            <TouchableOpacity 
+              onPress={handleInfoPress}
+              style={styles.infoButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={styles.infoIcon}>ℹ️</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity 
@@ -116,8 +118,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     flex: 1,
   },
-  infoButton: {
+  infoButtonContainer: {
+    position: 'relative',
     marginRight: 8,
+  },
+  infoButton: {
     padding: 4,
   },
   infoIcon: {
