@@ -6,7 +6,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
-import { shouldShowWeightLossGuardrail, getWeightLossGuardrailMessage } from '@/utils/portionCalculator';
+
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
@@ -327,7 +327,6 @@ export default function HomeScreen() {
   }
 
   const isToday = selectedDate === getTodayString();
-  const showGuardrail = shouldShowWeightLossGuardrail(profile.goal, profile.activityLevel || 'sedentary');
 
   return (
     <View style={commonStyles.container}>
@@ -358,15 +357,6 @@ export default function HomeScreen() {
           <View style={styles.pastDayNotice}>
             <Text style={styles.pastDayNoticeText}>
               📅 Editing {formatDisplayDate(selectedDate)}
-            </Text>
-          </View>
-        )}
-
-        {showGuardrail && (
-          <View style={styles.guardrailBox}>
-            <Text style={styles.guardrailTitle}>💪 Fuel Matters When You&apos;re Active</Text>
-            <Text style={styles.guardrailText}>
-              {getWeightLossGuardrailMessage()}
             </Text>
           </View>
         )}
@@ -447,26 +437,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
-  },
-  guardrailBox: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#FF9800',
-  },
-  guardrailTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  guardrailText: {
-    fontSize: 13,
-    color: colors.text,
-    lineHeight: 20,
   },
   portionsSection: {
     marginBottom: 16,
