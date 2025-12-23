@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 28,
     height: 28,
-    borderRadius: 6,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: colors.textSecondary,
     justifyContent: 'center',
