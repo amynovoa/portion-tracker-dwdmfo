@@ -64,6 +64,7 @@ Strength/Resistance options:
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </View>
+          <View style={styles.countSpacer} />
         </View>
 
         <View style={styles.slotContainer}>
@@ -133,6 +134,10 @@ const styles = StyleSheet.create({
   infoIcon: {
     fontSize: 18,
     opacity: 0.6,
+  },
+  countSpacer: {
+    width: 32,
+    height: 14,
   },
   slotContainer: {
     flexDirection: 'row',
