@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Switch } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, UserProfile, PortionTargets, ActivityLevel, ACTIVITY_LEVELS } from '@/types';
-import { calculateRecommendedTargets, shouldShowWeightLossGuardrail, getWeightLossGuardrailMessage } from '@/utils/portionCalculator';
+import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile, loadProfile } from '@/utils/storage';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import PortionDropdown from '@/components/PortionDropdown';
@@ -207,8 +207,6 @@ export default function ProfileScreen() {
     return labels[key] || key;
   };
 
-  const showGuardrail = shouldShowWeightLossGuardrail(goal, activityLevel);
-
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -313,15 +311,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {showGuardrail && (
-          <View style={styles.guardrailBox}>
-            <Text style={styles.guardrailTitle}>💪 Fuel Matters When You&apos;re Active</Text>
-            <Text style={styles.guardrailText}>
-              {getWeightLossGuardrailMessage()}
-            </Text>
-          </View>
-        )}
-
         <View style={styles.section}>
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Include alcohol in my daily plan</Text>
@@ -367,6 +356,7 @@ export default function ProfileScreen() {
           <>
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Your Daily Portion Targets</Text>
+              <Text style={styles.customizeHint}>✏️ You Can Customize These!</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
@@ -502,26 +492,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '500',
   },
-  guardrailBox: {
-    marginHorizontal: 16,
-    marginBottom: 24,
-    padding: 18,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#FF9800',
-  },
-  guardrailTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 10,
-  },
-  guardrailText: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 22,
-  },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -579,7 +549,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
+    marginBottom: 8,
+  },
+  customizeHint: {
+    fontSize: 14,
+    color: colors.primary,
     marginBottom: 16,
+    fontWeight: '600',
   },
   targetRow: {
     flexDirection: 'row',
