@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import { colors } from '../styles/commonStyles';
 
@@ -64,7 +64,7 @@ Strength/Resistance options:
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.countSpacer} />
+          <Text style={styles.countSpacer}>0/0</Text>
         </View>
 
         <View style={styles.slotContainer}>
@@ -106,8 +106,20 @@ const styles = StyleSheet.create({
     padding: 16,
     marginVertical: 6,
     marginHorizontal: 16,
-    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+      web: {
+        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
+      },
+    }),
   },
   header: {
     flexDirection: 'row',
@@ -136,8 +148,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   countSpacer: {
-    width: 32,
-    height: 14,
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'transparent',
   },
   slotContainer: {
     flexDirection: 'row',
