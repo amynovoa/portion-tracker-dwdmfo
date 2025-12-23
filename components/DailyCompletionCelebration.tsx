@@ -94,7 +94,7 @@ export default function DailyCompletionCelebration({ visible, onDismiss }: Daily
           <Text style={styles.starIcon}>⭐</Text>
 
           {/* Message */}
-          <Text style={styles.message}>You did it.</Text>
+          <Text style={styles.message}>You did it!</Text>
           <Text style={styles.submessage}>Today&apos;s tracking is complete.</Text>
         </Animated.View>
       </TouchableOpacity>
