@@ -22,7 +22,6 @@ export default function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
 
-  // Load profile when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       console.log('Profile screen (iOS) focused, loading profile');
@@ -30,14 +29,12 @@ export default function ProfileScreen() {
     }, [])
   );
 
-  // Listen for custom targets returned from setup-targets screen
   useEffect(() => {
     if (params.customTargets) {
       try {
         const parsedTargets = JSON.parse(params.customTargets as string);
         setTargets(parsedTargets);
         setIsEditing(true);
-        // Clear the param to avoid re-triggering
         router.setParams({ customTargets: undefined });
       } catch (error) {
         console.error('Error parsing custom targets:', error);
@@ -45,7 +42,6 @@ export default function ProfileScreen() {
     }
   }, [params.customTargets]);
 
-  // Recalculate targets when activity level or alcohol settings change
   useEffect(() => {
     if (targets && currentWeight && goalWeight) {
       console.log('Activity level or alcohol settings changed, recalculating targets...');
@@ -77,7 +73,6 @@ export default function ProfileScreen() {
       setIsEditing(false);
     } else {
       console.log('No profile found - resetting to clean state');
-      // Reset all state to ensure clean setup
       setSex('female');
       setCurrentWeight('');
       setGoalWeight('');
@@ -131,7 +126,6 @@ export default function ProfileScreen() {
       return;
     }
 
-    // Navigate to the custom targets setup screen
     router.push('/setup-targets');
   };
 
@@ -160,7 +154,6 @@ export default function ProfileScreen() {
       return;
     }
 
-    // Calculate size category for storage
     const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings, activityLevel);
 
     const profile: UserProfile = {
@@ -178,18 +171,14 @@ export default function ProfileScreen() {
     console.log('Saving profile:', profile);
     await saveProfile(profile);
     
-    // Verify the profile was saved
     const savedProfile = await loadProfile();
     console.log('Profile saved and verified:', savedProfile);
     
-    // Update local state
     setHasProfile(true);
     setIsEditing(false);
     
-    // Navigate to Track screen
     console.log('Navigating to Track screen...');
     
-    // Use push to navigate to the home tab with reload parameter
     router.push({
       pathname: '/(tabs)/(home)',
       params: { reload: Date.now().toString() }
@@ -376,16 +365,8 @@ export default function ProfileScreen() {
 
         {targets && (
           <>
-            <View style={styles.customizeCallout}>
-              <Text style={styles.customizeTitle}>✏️ You Can Customize These!</Text>
-              <Text style={styles.customizeText}>
-                These are recommended targets based on your profile. Tap the dropdown for any food group to easily adjust your portions. Make them work for YOU!
-              </Text>
-            </View>
-
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Your Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>Tap any dropdown to select your preferred portions</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
@@ -569,28 +550,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
   },
-  customizeCallout: {
-    marginHorizontal: 16,
-    marginBottom: 20,
-    marginTop: 8,
-    padding: 20,
-    backgroundColor: colors.highlight,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  customizeTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  customizeText: {
-    fontSize: 15,
-    color: colors.text,
-    lineHeight: 22,
-    fontWeight: '500',
-  },
   saveInfoBox: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -620,14 +579,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 15,
-    color: colors.primary,
     marginBottom: 16,
-    lineHeight: 20,
-    fontWeight: '600',
   },
   targetRow: {
     flexDirection: 'row',

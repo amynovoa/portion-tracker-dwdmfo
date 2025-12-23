@@ -339,16 +339,8 @@ export default function ProfileScreen() {
 
         {targets && (
           <>
-            <View style={styles.customizeCallout}>
-              <Text style={styles.customizeTitle}>✏️ You Can Customize These!</Text>
-              <Text style={styles.customizeText}>
-                These are recommended targets based on your profile. Tap the dropdown for any food group to easily adjust your portions. Make them work for YOU!
-              </Text>
-            </View>
-
             <View style={styles.targetsSection}>
               <Text style={styles.sectionTitle}>Your Daily Portion Targets</Text>
-              <Text style={styles.sectionSubtitle}>Tap any dropdown to select your preferred portions</Text>
 
               {Object.entries(targets).map(([key, value]) => (
                 <View key={key} style={styles.targetRow}>
@@ -536,28 +528,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
   },
-  customizeCallout: {
-    marginHorizontal: 16,
-    marginBottom: 20,
-    marginTop: 8,
-    padding: 20,
-    backgroundColor: colors.highlight,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  customizeTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  customizeText: {
-    fontSize: 15,
-    color: colors.text,
-    lineHeight: 22,
-    fontWeight: '500',
-  },
   saveInfoBox: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -587,14 +557,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 15,
-    color: colors.primary,
     marginBottom: 16,
-    lineHeight: 20,
-    fontWeight: '600',
   },
   targetRow: {
     flexDirection: 'row',
