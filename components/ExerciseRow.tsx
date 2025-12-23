@@ -66,18 +66,23 @@ Strength/Resistance options:
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={styles.checkboxContainer}
-          onPress={onToggle}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.checkbox, completed && styles.checkboxChecked]}>
-            {completed && <Text style={styles.checkmark}>✓</Text>}
-          </View>
-          <Text style={styles.checkboxLabel}>
-            {completed ? 'Completed today!' : 'Tap to mark as complete'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.slotContainer}>
+          <TouchableOpacity 
+            style={[
+              styles.slot,
+              completed && styles.slotCompleted,
+            ]}
+            onPress={onToggle}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.checkmark,
+              completed && styles.checkmarkCompleted,
+            ]}>
+              {completed ? '✓' : ''}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FoodGroupInfoModal
@@ -129,33 +134,33 @@ const styles = StyleSheet.create({
     fontSize: 18,
     opacity: 0.6,
   },
-  checkboxContainer: {
+  slotContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
-  checkbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  slot: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 2,
-    borderColor: colors.textSecondary,
-    justifyContent: 'center',
+    borderColor: colors.border,
+    backgroundColor: colors.card,
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
+    marginHorizontal: 4,
+    marginVertical: 4,
   },
-  checkboxChecked: {
+  slotCompleted: {
     backgroundColor: '#4CAF50',
     borderColor: '#4CAF50',
   },
   checkmark: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 20,
+    color: 'transparent',
     fontWeight: '700',
   },
-  checkboxLabel: {
-    fontSize: 15,
-    color: colors.text,
-    flex: 1,
+  checkmarkCompleted: {
+    color: '#FFFFFF',
   },
 });
