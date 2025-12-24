@@ -21,6 +21,7 @@ export default function ProfileScreen() {
   const [targets, setTargets] = useState<PortionTargets | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -100,6 +101,11 @@ export default function ProfileScreen() {
   };
 
   const handleSaveProfile = async () => {
+    if (isSaving) {
+      console.log('Save already in progress, ignoring duplicate call');
+      return;
+    }
+
     if (!targets) {
       Alert.alert('Error', 'Please calculate targets first.');
       return;
@@ -124,35 +130,45 @@ export default function ProfileScreen() {
       return;
     }
 
-    const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings, activityLevel);
+    setIsSaving(true);
+    console.log('Starting profile save...');
 
-    const profile: UserProfile = {
-      sex,
-      currentWeight: weight,
-      goalWeight: goalWt,
-      goal,
-      activityLevel,
-      includeAlcohol,
-      alcoholServings: servings,
-      sizeCategory: result.sizeCategory,
-      targets,
-    };
+    try {
+      const result = calculateRecommendedTargets(sex, weight, goal, includeAlcohol, servings, activityLevel);
 
-    console.log('Saving profile:', profile);
-    await saveProfile(profile);
-    
-    const savedProfile = await loadProfile();
-    console.log('Profile saved and verified:', savedProfile);
-    
-    setHasProfile(true);
-    setIsEditing(false);
-    
-    console.log('Navigating to Track screen...');
-    
-    router.push({
-      pathname: '/(tabs)/(home)',
-      params: { reload: Date.now().toString() }
-    });
+      const profile: UserProfile = {
+        sex,
+        currentWeight: weight,
+        goalWeight: goalWt,
+        goal,
+        activityLevel,
+        includeAlcohol,
+        alcoholServings: servings,
+        sizeCategory: result.sizeCategory,
+        targets,
+      };
+
+      console.log('Saving profile:', profile);
+      await saveProfile(profile);
+      
+      console.log('Profile saved successfully, verifying...');
+      const savedProfile = await loadProfile();
+      console.log('Profile verified:', savedProfile);
+      
+      setHasProfile(true);
+      setIsEditing(false);
+      
+      console.log('Navigating to Track screen...');
+      
+      // Use replace instead of push to avoid navigation stack issues
+      router.replace('/(tabs)/(home)');
+      
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: number) => {
@@ -195,12 +211,14 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={[styles.optionButton, sex === 'female' && styles.optionButtonActive]}
               onPress={() => setSex('female')}
+              disabled={isSaving}
             >
               <Text style={[styles.optionText, sex === 'female' && styles.optionTextActive]}>Female</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.optionButton, sex === 'male' && styles.optionButtonActive]}
               onPress={() => setSex('male')}
+              disabled={isSaving}
             >
               <Text style={[styles.optionText, sex === 'male' && styles.optionTextActive]}>Male</Text>
             </TouchableOpacity>
@@ -216,6 +234,7 @@ export default function ProfileScreen() {
             keyboardType="numeric"
             placeholder="Enter current weight"
             placeholderTextColor={colors.textSecondary}
+            editable={!isSaving}
           />
         </View>
 
@@ -228,6 +247,7 @@ export default function ProfileScreen() {
             keyboardType="numeric"
             placeholder="Enter goal weight"
             placeholderTextColor={colors.textSecondary}
+            editable={!isSaving}
           />
         </View>
 
@@ -237,18 +257,21 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={[styles.optionButton, goal === 'lose' && styles.optionButtonActive]}
               onPress={() => setGoal('lose')}
+              disabled={isSaving}
             >
               <Text style={[styles.optionText, goal === 'lose' && styles.optionTextActive]}>Lose Weight</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.optionButton, goal === 'maintain' && styles.optionButtonActive]}
               onPress={() => setGoal('maintain')}
+              disabled={isSaving}
             >
               <Text style={[styles.optionText, goal === 'maintain' && styles.optionTextActive]}>Maintain Weight</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.optionButton, goal === 'build' && styles.optionButtonActive]}
               onPress={() => setGoal('build')}
+              disabled={isSaving}
             >
               <Text style={[styles.optionText, goal === 'build' && styles.optionTextActive]}>Build Muscle</Text>
             </TouchableOpacity>
@@ -267,6 +290,7 @@ export default function ProfileScreen() {
                   activityLevel === level.key && styles.activityLevelButtonActive
                 ]}
                 onPress={() => setActivityLevel(level.key)}
+                disabled={isSaving}
               >
                 <Text style={[
                   styles.activityLevelLabel,
@@ -293,6 +317,7 @@ export default function ProfileScreen() {
               onValueChange={setIncludeAlcohol}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.card}
+              disabled={isSaving}
             />
           </View>
         </View>
@@ -308,6 +333,7 @@ export default function ProfileScreen() {
               keyboardType="numeric"
               placeholder="Enter number of drinks"
               placeholderTextColor={colors.textSecondary}
+              editable={!isSaving}
             />
           </View>
         )}
@@ -320,7 +346,11 @@ export default function ProfileScreen() {
               </Text>
             </View>
 
-            <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={calculateTargets}>
+            <TouchableOpacity 
+              style={[buttonStyles.primary, styles.button]} 
+              onPress={calculateTargets}
+              disabled={isSaving}
+            >
               <Text style={commonStyles.buttonText}>Calculate My Portions</Text>
             </TouchableOpacity>
           </>
@@ -353,8 +383,14 @@ export default function ProfileScreen() {
               </Text>
             </View>
 
-            <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={handleSaveProfile}>
-              <Text style={commonStyles.buttonText}>Save Profile & Go to Track</Text>
+            <TouchableOpacity 
+              style={[buttonStyles.primary, styles.button, isSaving && styles.buttonDisabled]} 
+              onPress={handleSaveProfile}
+              disabled={isSaving}
+            >
+              <Text style={commonStyles.buttonText}>
+                {isSaving ? 'Saving...' : 'Save Profile & Go to Track'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -363,6 +399,7 @@ export default function ProfileScreen() {
                 setTargets(null);
                 setIsEditing(false);
               }}
+              disabled={isSaving}
             >
               <Text style={commonStyles.buttonTextOutline}>Start Over</Text>
             </TouchableOpacity>
@@ -517,6 +554,9 @@ const styles = StyleSheet.create({
   button: {
     marginHorizontal: 16,
     marginVertical: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   targetsSection: {
     paddingHorizontal: 16,

@@ -10,11 +10,19 @@ const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
 const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 
-// Add a lock mechanism to prevent race conditions
+// Simplified lock mechanism with timeout
 let saveLock = false;
+const LOCK_TIMEOUT = 5000; // 5 seconds max wait
 
 async function acquireLock(): Promise<void> {
+  const startTime = Date.now();
+  
   while (saveLock) {
+    if (Date.now() - startTime > LOCK_TIMEOUT) {
+      console.warn('Lock timeout exceeded, forcing lock release');
+      saveLock = false;
+      break;
+    }
     await new Promise(resolve => setTimeout(resolve, 50));
   }
   saveLock = true;
@@ -27,7 +35,8 @@ function releaseLock(): void {
 export async function saveProfile(profile: UserProfile): Promise<void> {
   await acquireLock();
   try {
-    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    const jsonString = JSON.stringify(profile);
+    await AsyncStorage.setItem(PROFILE_KEY, jsonString);
     console.log('Profile saved successfully');
   } catch (error) {
     console.error('Error saving profile:', error);
@@ -46,6 +55,8 @@ export async function loadProfile(): Promise<UserProfile | null> {
       
       // Migration: Handle old profile structure
       if (profile.targets) {
+        let needsSave = false;
+        
         // If old structure exists, migrate to new structure
         if (typeof profile.targets.wholeGrains !== 'undefined') {
           console.log('Migrating old profile structure to new structure');
@@ -67,20 +78,24 @@ export async function loadProfile(): Promise<UserProfile | null> {
             profile.sizeCategory = 'medium';
           }
           
-          await saveProfile(profile);
+          needsSave = true;
         }
         
         // Migration: Add goalWeight if missing
         if (typeof profile.goalWeight === 'undefined') {
           console.log('Adding goalWeight field to existing profile');
           profile.goalWeight = profile.currentWeight || 150;
-          await saveProfile(profile);
+          needsSave = true;
         }
         
         // Migration: Add activityLevel if missing (default to sedentary)
         if (typeof profile.activityLevel === 'undefined') {
           console.log('Adding activityLevel field to existing profile');
           profile.activityLevel = 'sedentary';
+          needsSave = true;
+        }
+        
+        if (needsSave) {
           await saveProfile(profile);
         }
       }
@@ -98,7 +113,8 @@ export async function saveDailyPortions(daily: DailyPortions): Promise<void> {
   await acquireLock();
   try {
     const key = `${DAILY_PORTIONS_KEY}${daily.date}`;
-    await AsyncStorage.setItem(key, JSON.stringify(daily));
+    const jsonString = JSON.stringify(daily);
+    await AsyncStorage.setItem(key, jsonString);
     console.log('Daily portions saved for', daily.date);
   } catch (error) {
     console.error('Error saving daily portions:', error);

@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
-import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
@@ -19,7 +19,6 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
   const { subscriptionStatus, shouldShowPaywall: shouldShowPaywallGlobal, startFreeTrial, refreshSubscriptionStatus } = useSubscription();
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -33,8 +32,18 @@ export default function HomeScreen() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasShownInitialPaywall, setHasShownInitialPaywall] = useState(false);
+  
+  // Use ref to prevent multiple simultaneous loads
+  const isLoadingRef = useRef(false);
 
   const loadData = async () => {
+    if (isLoadingRef.current) {
+      console.log('Load already in progress, skipping...');
+      return;
+    }
+
+    isLoadingRef.current = true;
+
     try {
       console.log('Home: Loading data...');
       
@@ -46,6 +55,7 @@ export default function HomeScreen() {
         setProfile(null);
         setDatePortions(null);
         setExerciseCompleted(false);
+        isLoadingRef.current = false;
         return;
       }
 
@@ -54,6 +64,7 @@ export default function HomeScreen() {
       if (!userProfile.targets) {
         console.error('Profile has no targets!');
         setLoading(false);
+        isLoadingRef.current = false;
         return;
       }
 
@@ -89,6 +100,8 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error loading data:', error);
       setLoading(false);
+    } finally {
+      isLoadingRef.current = false;
     }
   };
 
@@ -138,23 +151,8 @@ export default function HomeScreen() {
     React.useCallback(() => {
       console.log('Home screen focused, loading data');
       loadData();
-      
-      // Check if we should show paywall on focus
-      if (!hasShownInitialPaywall && shouldShowPaywallGlobal && profile) {
-        console.log('Showing paywall on focus');
-        setShowPaywall(true);
-        setHasShownInitialPaywall(true);
-      }
-    }, [shouldShowPaywallGlobal, hasShownInitialPaywall, profile])
+    }, [])
   );
-
-  useEffect(() => {
-    if (params.reload) {
-      console.log('Reload param detected, reloading data:', params.reload);
-      loadData();
-      router.setParams({ reload: undefined });
-    }
-  }, [params.reload]);
 
   useEffect(() => {
     if (profile) {
@@ -170,15 +168,16 @@ export default function HomeScreen() {
     }
   }, [selectedDate]);
 
-  // Show paywall after profile is set up
+  // Show paywall after profile is set up - only once
   useEffect(() => {
     if (profile && !hasShownInitialPaywall && shouldShowPaywallGlobal) {
       console.log('Profile loaded, checking if should show paywall');
-      // Small delay to let the UI settle
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setShowPaywall(true);
         setHasShownInitialPaywall(true);
       }, 500);
+      
+      return () => clearTimeout(timer);
     }
   }, [profile, shouldShowPaywallGlobal, hasShownInitialPaywall]);
 
