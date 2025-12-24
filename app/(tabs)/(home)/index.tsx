@@ -14,10 +14,14 @@ import AppLogo from '@/components/AppLogo';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import DaySelector from '@/components/DaySelector';
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
+import PaywallScreen from '@/components/PaywallScreen';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function HomeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { subscriptionStatus, shouldShowPaywall: shouldShowPaywallGlobal, startFreeTrial, refreshSubscriptionStatus } = useSubscription();
+  
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
   const [datePortions, setDatePortions] = useState<PortionTargets | null>(null);
@@ -27,6 +31,8 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [hasShownInitialPaywall, setHasShownInitialPaywall] = useState(false);
 
   const loadData = async () => {
     try {
@@ -132,7 +138,14 @@ export default function HomeScreen() {
     React.useCallback(() => {
       console.log('Home screen focused, loading data');
       loadData();
-    }, [])
+      
+      // Check if we should show paywall on focus
+      if (!hasShownInitialPaywall && shouldShowPaywallGlobal && profile) {
+        console.log('Showing paywall on focus');
+        setShowPaywall(true);
+        setHasShownInitialPaywall(true);
+      }
+    }, [shouldShowPaywallGlobal, hasShownInitialPaywall, profile])
   );
 
   useEffect(() => {
@@ -157,9 +170,22 @@ export default function HomeScreen() {
     }
   }, [selectedDate]);
 
+  // Show paywall after profile is set up
+  useEffect(() => {
+    if (profile && !hasShownInitialPaywall && shouldShowPaywallGlobal) {
+      console.log('Profile loaded, checking if should show paywall');
+      // Small delay to let the UI settle
+      setTimeout(() => {
+        setShowPaywall(true);
+        setHasShownInitialPaywall(true);
+      }, 500);
+    }
+  }, [profile, shouldShowPaywallGlobal, hasShownInitialPaywall]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
+    await refreshSubscriptionStatus();
     setRefreshing(false);
   };
 
@@ -292,6 +318,23 @@ export default function HomeScreen() {
     setShowCelebration(false);
   };
 
+  const handlePaywallDismiss = async () => {
+    console.log('Paywall dismissed');
+    setShowPaywall(false);
+    
+    // Start trial if available
+    if (subscriptionStatus?.isInTrial === false && subscriptionStatus?.trialDaysRemaining > 0) {
+      try {
+        await startFreeTrial();
+        console.log('Free trial started');
+      } catch (error) {
+        console.error('Error starting free trial:', error);
+      }
+    }
+    
+    await refreshSubscriptionStatus();
+  };
+
   if (loading) {
     return (
       <View style={commonStyles.container}>
@@ -327,6 +370,7 @@ export default function HomeScreen() {
   }
 
   const isToday = selectedDate === getTodayString();
+  const isTrialAvailable = subscriptionStatus?.isInTrial === false && (subscriptionStatus?.trialDaysRemaining || 0) > 0;
 
   return (
     <View style={commonStyles.container}>
@@ -347,6 +391,22 @@ export default function HomeScreen() {
             {isToday ? 'Today' : formatDisplayDate(selectedDate)}
           </Text>
         </View>
+
+        {subscriptionStatus?.isTestFlight && (
+          <View style={styles.testFlightBanner}>
+            <Text style={styles.testFlightText}>
+              🧪 TestFlight Build - Full Access Enabled
+            </Text>
+          </View>
+        )}
+
+        {subscriptionStatus?.isInTrial && !subscriptionStatus?.isTestFlight && (
+          <View style={styles.trialBanner}>
+            <Text style={styles.trialText}>
+              ✨ Free Trial - {subscriptionStatus.trialDaysRemaining} days remaining
+            </Text>
+          </View>
+        )}
 
         <DaySelector 
           selectedDate={selectedDate}
@@ -396,6 +456,14 @@ export default function HomeScreen() {
         visible={showCelebration}
         onDismiss={handleDismissCelebration}
       />
+
+      <PaywallScreen
+        visible={showPaywall}
+        onDismiss={handlePaywallDismiss}
+        isTrialAvailable={isTrialAvailable}
+        trialDaysRemaining={subscriptionStatus?.trialDaysRemaining || 7}
+        canDismiss={subscriptionStatus?.isInTrial || subscriptionStatus?.isSubscribed || false}
+      />
     </View>
   );
 }
@@ -422,6 +490,36 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: colors.textSecondary,
+  },
+  testFlightBanner: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#2196F3',
+  },
+  testFlightText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1976D2',
+    textAlign: 'center',
+  },
+  trialBanner: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: colors.highlight,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  trialText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
   },
   pastDayNotice: {
     marginHorizontal: 16,

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Modal, Switch, Platform } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Modal, Switch, Platform, Linking } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
@@ -11,16 +11,21 @@ import { ActivityLevel, ACTIVITY_LEVELS } from '@/types';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { IconSymbol } from '@/components/IconSymbol';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import PaywallScreen from '@/components/PaywallScreen';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { subscriptionStatus, refreshSubscriptionStatus } = useSubscription();
   const [showResetModal, setShowResetModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [currentActivityLevel, setCurrentActivityLevel] = useState<ActivityLevel>('sedentary');
   const [celebrationEnabled, setCelebrationEnabled] = useState(true);
+  const [showPaywall, setShowPaywall] = useState(false);
   
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
+    subscription: false,
     profile: false,
     activityLevel: false,
     celebrations: false,
@@ -271,6 +276,27 @@ export default function SettingsScreen() {
     return found ? found.label : 'Sedentary';
   };
 
+  const handleManageSubscription = () => {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('https://apps.apple.com/account/subscriptions');
+    } else if (Platform.OS === 'android') {
+      Linking.openURL('https://play.google.com/store/account/subscriptions');
+    }
+  };
+
+  const handlePaywallDismiss = async () => {
+    setShowPaywall(false);
+    await refreshSubscriptionStatus();
+  };
+
+  const getSubscriptionStatusText = (): string => {
+    if (!subscriptionStatus) return 'Loading...';
+    if (subscriptionStatus.isTestFlight) return 'TestFlight - Full Access';
+    if (subscriptionStatus.isInTrial) return `Free Trial (${subscriptionStatus.trialDaysRemaining} days left)`;
+    if (subscriptionStatus.isSubscribed) return 'Active Subscription';
+    return 'No Active Subscription';
+  };
+
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -281,6 +307,68 @@ export default function SettingsScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
           <Text style={styles.subtitle}>Manage your preferences</Text>
+        </View>
+
+        <View style={styles.collapsibleSection}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('subscription')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionHeaderIcon}>💳</Text>
+              <Text style={styles.sectionHeaderTitle}>Subscription</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name={expandedSections.subscription ? "chevron.up" : "chevron.down"}
+              android_material_icon_name={expandedSections.subscription ? "expand_less" : "expand_more"}
+              size={24}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+          
+          {expandedSections.subscription && (
+            <View style={styles.sectionContent}>
+              <Text style={styles.sectionDescription}>
+                Manage your Portion Track subscription
+              </Text>
+              
+              <View style={styles.subscriptionStatusBox}>
+                <Text style={styles.subscriptionStatusLabel}>Status:</Text>
+                <Text style={styles.subscriptionStatusValue}>
+                  {getSubscriptionStatusText()}
+                </Text>
+              </View>
+
+              {!subscriptionStatus?.isTestFlight && !subscriptionStatus?.isSubscribed && (
+                <TouchableOpacity
+                  style={[buttonStyles.primary, styles.button]}
+                  onPress={() => setShowPaywall(true)}
+                >
+                  <Text style={commonStyles.buttonText}>
+                    {subscriptionStatus?.isInTrial ? 'View Plans' : 'Start Free Trial'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {subscriptionStatus?.isSubscribed && !subscriptionStatus?.isTestFlight && (
+                <TouchableOpacity
+                  style={[buttonStyles.outline, styles.button]}
+                  onPress={handleManageSubscription}
+                >
+                  <Text style={commonStyles.buttonTextOutline}>Manage Subscription</Text>
+                </TouchableOpacity>
+              )}
+
+              {subscriptionStatus?.isTestFlight && (
+                <View style={styles.testFlightNote}>
+                  <Text style={styles.testFlightNoteText}>
+                    🧪 You&apos;re using a TestFlight build with full access enabled for testing.
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.collapsibleSection}>
@@ -556,6 +644,14 @@ export default function SettingsScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
+
+      <PaywallScreen
+        visible={showPaywall}
+        onDismiss={handlePaywallDismiss}
+        isTrialAvailable={subscriptionStatus?.isInTrial === false && (subscriptionStatus?.trialDaysRemaining || 0) > 0}
+        trialDaysRemaining={subscriptionStatus?.trialDaysRemaining || 7}
+        canDismiss={true}
+      />
 
       {showTimePicker && (
         Platform.OS === 'ios' ? (
@@ -1051,5 +1147,36 @@ const styles = StyleSheet.create({
   },
   activityModalButton: {
     marginTop: 8,
+  },
+  subscriptionStatusBox: {
+    backgroundColor: colors.highlight,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  subscriptionStatusLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  subscriptionStatusValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  testFlightNote: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+  testFlightNoteText: {
+    fontSize: 13,
+    color: '#1976D2',
+    lineHeight: 18,
   },
 });

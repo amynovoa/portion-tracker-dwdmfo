@@ -14,6 +14,7 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { checkAndPerformDailyReset } from "@/utils/dailyReset";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -237,11 +238,13 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <StatusBar style="auto" animated />
-      <WidgetProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <RootLayoutNav />
-        </GestureHandlerRootView>
-      </WidgetProvider>
+      <SubscriptionProvider>
+        <WidgetProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
+        </WidgetProvider>
+      </SubscriptionProvider>
     </ErrorBoundary>
   );
 }
