@@ -84,14 +84,17 @@ export default function PaywallScreen({
     }
   };
 
-  const handlePrivacyPolicy = () => {
-    // TODO: Add your privacy policy URL
-    Linking.openURL('https://yourapp.com/privacy');
-  };
-
-  const handleTermsOfUse = () => {
-    // TODO: Add your terms of use URL
-    Linking.openURL('https://yourapp.com/terms');
+  // Get dynamic button text based on selected plan
+  const getButtonText = () => {
+    if (!isTrialAvailable) {
+      return 'Subscribe Now';
+    }
+    
+    if (selectedPlan === 'annual') {
+      return `Start ${trialDaysRemaining}-Day Free Trial — Then $24.99/year`;
+    } else {
+      return `Start ${trialDaysRemaining}-Day Free Trial — Then $2.99/month`;
+    }
   };
 
   return (
@@ -248,9 +251,7 @@ export default function PaywallScreen({
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={commonStyles.buttonText}>
-                {isTrialAvailable
-                  ? `Start ${trialDaysRemaining}-Day Free Trial`
-                  : 'Subscribe Now'}
+                {getButtonText()}
               </Text>
             )}
           </TouchableOpacity>
@@ -269,16 +270,6 @@ export default function PaywallScreen({
               onPress={handleManageSubscription}
             >
               <Text style={styles.linkText}>Manage Subscription</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.legalLinksContainer}>
-            <TouchableOpacity onPress={handlePrivacyPolicy}>
-              <Text style={styles.legalLinkText}>Privacy Policy</Text>
-            </TouchableOpacity>
-            <Text style={styles.legalSeparator}>•</Text>
-            <TouchableOpacity onPress={handleTermsOfUse}>
-              <Text style={styles.legalLinkText}>Terms of Use</Text>
             </TouchableOpacity>
           </View>
 
@@ -450,22 +441,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.primary,
-  },
-  legalLinksContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 24,
-  },
-  legalLinkText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textDecorationLine: 'underline',
-  },
-  legalSeparator: {
-    fontSize: 14,
-    color: colors.textSecondary,
   },
   disclosureContainer: {
     paddingHorizontal: 8,
