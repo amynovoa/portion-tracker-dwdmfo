@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import AppLogo from '@/components/AppLogo';
 import {
   View,
   Text,
@@ -11,9 +12,8 @@ import {
   Linking,
   Platform,
 } from 'react-native';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import AppLogo from '@/components/AppLogo';
 import { IconSymbol } from '@/components/IconSymbol';
+import React, { useState, useEffect } from 'react';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -27,166 +27,94 @@ export default function PaywallScreen({
   visible,
   onDismiss,
   isTrialAvailable,
-  trialDaysRemaining = 7,
-  canDismiss = false,
+  trialDaysRemaining,
+  canDismiss = true,
 }: PaywallScreenProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
 
-  const handleSubscribe = async () => {
-    setIsLoading(true);
-    
-    try {
-      // TODO: Integrate with Superwall
-      // For now, this is a placeholder
-      console.log('Subscribe to plan:', selectedPlan);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // After successful subscription, dismiss the paywall
-      if (onDismiss) {
-        onDismiss();
-      }
-    } catch (error) {
-      console.error('Error subscribing:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSubscribe = () => {
+    console.log('Subscribe button pressed');
+    // Subscription logic handled by native module
   };
 
-  const handleRestorePurchases = async () => {
-    setIsLoading(true);
-    
-    try {
-      // TODO: Integrate with Superwall restore purchases
-      console.log('Restoring purchases...');
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // After successful restore, dismiss the paywall
-      if (onDismiss) {
-        onDismiss();
-      }
-    } catch (error) {
-      console.error('Error restoring purchases:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRestorePurchases = () => {
+    console.log('Restore purchases pressed');
+    // Restore logic handled by native module
   };
 
   const handleManageSubscription = () => {
-    if (Platform.OS === 'ios') {
-      Linking.openURL('https://apps.apple.com/account/subscriptions');
-    } else if (Platform.OS === 'android') {
-      Linking.openURL('https://play.google.com/store/account/subscriptions');
-    }
+    const url = Platform.select({
+      ios: 'https://apps.apple.com/account/subscriptions',
+      android: 'https://play.google.com/store/account/subscriptions',
+      default: 'https://apps.apple.com/account/subscriptions',
+    });
+    Linking.openURL(url);
   };
 
-  // Get dynamic button text based on selected plan
   const getButtonText = () => {
     if (!isTrialAvailable) {
-      return 'Subscribe Now';
+      return selectedPlan === 'annual' ? 'Subscribe for $24.99/year' : 'Subscribe for $2.99/month';
     }
-    
-    if (selectedPlan === 'annual') {
-      return `Start ${trialDaysRemaining}-Day Free Trial — Then $24.99/year`;
-    } else {
-      return `Start ${trialDaysRemaining}-Day Free Trial — Then $2.99/month`;
-    }
+    return selectedPlan === 'annual'
+      ? 'Start 7-Day Free Trial — Then $24.99/year'
+      : 'Start 7-Day Free Trial — Then $2.99/month';
   };
 
   return (
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="fullScreen"
+      presentationStyle="pageSheet"
       onRequestClose={canDismiss ? onDismiss : undefined}
     >
       <View style={styles.container}>
+        {canDismiss && onDismiss && (
+          <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
+            <IconSymbol ios_icon_name="xmark" android_material_icon_name="close" size={24} color={colors.text} />
+          </TouchableOpacity>
+        )}
+
         <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {canDismiss && onDismiss && (
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onDismiss}
-              activeOpacity={0.7}
-            >
-              <IconSymbol
-                ios_icon_name="xmark"
-                android_material_icon_name="close"
-                size={24}
-                color={colors.text}
-              />
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.logoContainer}>
-            <AppLogo size={80} />
+          <View style={styles.header}>
+            <AppLogo size={60} />
+            <Text style={styles.title}>Unlock Premium</Text>
+            <Text style={styles.subtitle}>
+              Get unlimited access to all features
+            </Text>
           </View>
-
-          <Text style={styles.title}>Unlock Portion Track</Text>
-          <Text style={styles.subtitle}>
-            Simple portions. Real-life flexibility.
-          </Text>
-
-          {isTrialAvailable && (
-            <View style={styles.trialBadge}>
-              <Text style={styles.trialBadgeText}>
-                ✨ {trialDaysRemaining}-Day Free Trial
-              </Text>
-            </View>
-          )}
 
           <View style={styles.featuresContainer}>
             <View style={styles.featureRow}>
-              <IconSymbol
-                ios_icon_name="checkmark.circle.fill"
-                android_material_icon_name="check_circle"
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={styles.featureText}>
-                Track portions from 8 key food groups
-              </Text>
+              <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.success} />
+              <Text style={styles.featureText}>Unlimited portion tracking</Text>
             </View>
             <View style={styles.featureRow}>
-              <IconSymbol
-                ios_icon_name="checkmark.circle.fill"
-                android_material_icon_name="check_circle"
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={styles.featureText}>
-                Personalized targets based on your goals
-              </Text>
+              <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.success} />
+              <Text style={styles.featureText}>Weight tracking & charts</Text>
             </View>
             <View style={styles.featureRow}>
-              <IconSymbol
-                ios_icon_name="checkmark.circle.fill"
-                android_material_icon_name="check_circle"
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={styles.featureText}>
-                Track adherence and progress over time
-              </Text>
+              <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.success} />
+              <Text style={styles.featureText}>Adherence insights</Text>
             </View>
             <View style={styles.featureRow}>
-              <IconSymbol
-                ios_icon_name="checkmark.circle.fill"
-                android_material_icon_name="check_circle"
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={styles.featureText}>
-                No calorie counting or rigid rules
-              </Text>
+              <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.success} />
+              <Text style={styles.featureText}>Custom daily targets</Text>
+            </View>
+            <View style={styles.featureRow}>
+              <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.success} />
+              <Text style={styles.featureText}>Activity level adjustments</Text>
             </View>
           </View>
+
+          {isTrialAvailable && (
+            <View style={styles.trialBadge}>
+              <Text style={styles.trialText}>7-day free trial</Text>
+            </View>
+          )}
 
           <View style={styles.plansContainer}>
             <TouchableOpacity
@@ -195,25 +123,17 @@ export default function PaywallScreen({
                 selectedPlan === 'annual' && styles.planCardSelected,
               ]}
               onPress={() => setSelectedPlan('annual')}
-              activeOpacity={0.7}
             >
               <View style={styles.planHeader}>
-                <View style={styles.planRadio}>
-                  {selectedPlan === 'annual' && (
-                    <View style={styles.planRadioSelected} />
-                  )}
-                </View>
-                <View style={styles.planInfo}>
-                  <Text style={styles.planName}>Annual</Text>
-                  <Text style={styles.planPrice}>$24.99/year</Text>
-                </View>
-                <View style={styles.bestValueBadge}>
-                  <Text style={styles.bestValueText}>Best Value</Text>
-                </View>
+                <Text style={styles.planName}>Annual</Text>
+                {selectedPlan === 'annual' && (
+                  <View style={styles.popularBadge}>
+                    <Text style={styles.popularText}>Best Value</Text>
+                  </View>
+                )}
               </View>
-              <Text style={styles.planDescription}>
-                Just $2.08/month • Save 30%
-              </Text>
+              <Text style={styles.planPrice}>$24.99/year</Text>
+              <Text style={styles.planDetail}>$2.08/month</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -222,69 +142,62 @@ export default function PaywallScreen({
                 selectedPlan === 'monthly' && styles.planCardSelected,
               ]}
               onPress={() => setSelectedPlan('monthly')}
-              activeOpacity={0.7}
             >
               <View style={styles.planHeader}>
-                <View style={styles.planRadio}>
-                  {selectedPlan === 'monthly' && (
-                    <View style={styles.planRadioSelected} />
-                  )}
-                </View>
-                <View style={styles.planInfo}>
-                  <Text style={styles.planName}>Monthly</Text>
-                  <Text style={styles.planPrice}>$2.99/month</Text>
-                </View>
+                <Text style={styles.planName}>Monthly</Text>
               </View>
-              <Text style={styles.planDescription}>
-                Billed monthly
-              </Text>
+              <Text style={styles.planPrice}>$2.99/month</Text>
+              <Text style={styles.planDetail}>Billed monthly</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
             style={[buttonStyles.primary, styles.subscribeButton]}
             onPress={handleSubscribe}
-            disabled={isLoading}
-            activeOpacity={0.7}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={commonStyles.buttonText}>
-                {getButtonText()}
-              </Text>
-            )}
+            <Text style={buttonStyles.primaryText}>{getButtonText()}</Text>
           </TouchableOpacity>
 
-          <View style={styles.linksContainer}>
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={handleRestorePurchases}
-              disabled={isLoading}
-            >
-              <Text style={styles.linkText}>Restore Purchases</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.restoreButton}
+            onPress={handleRestorePurchases}
+          >
+            <Text style={styles.restoreText}>Restore Purchases</Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={handleManageSubscription}
-            >
-              <Text style={styles.linkText}>Manage Subscription</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.disclosureContainer}>
-            <Text style={styles.disclosureText}>
-              Payment will be charged to your Apple ID at confirmation of purchase.
-              Subscription automatically renews unless cancelled at least 24 hours
-              before the end of the current period. Your account will be charged for
-              renewal within 24 hours prior to the end of the current period. You can
-              manage and cancel your subscriptions by going to your App Store account
-              settings after purchase.
+          <View style={styles.legalContainer}>
+            <Text style={styles.legalText}>
+              By continuing, you agree to our{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() =>
+                  Linking.openURL(
+                    'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+                  )
+                }
+              >
+                Terms of Use
+              </Text>{' '}
+              and{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() =>
+                  Linking.openURL('https://portiontrack.com/privacy-policy')
+                }
+              >
+                Privacy Policy
+              </Text>
+              .
             </Text>
           </View>
 
-          <View style={styles.bottomPadding} />
+          {isTrialAvailable && (
+            <Text style={styles.disclaimer}>
+              Your subscription will automatically renew unless cancelled at least 24
+              hours before the end of the current period. You can manage your
+              subscription in your App Store account settings.
+            </Text>
+          )}
         </ScrollView>
       </View>
     </Modal>
@@ -296,162 +209,149 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.cardBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...commonStyles.shadow,
+  },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-    justifyContent: 'center',
+  header: {
     alignItems: 'center',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    elevation: 2,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
     color: colors.text,
-    textAlign: 'center',
+    marginTop: 16,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 17,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  trialBadge: {
-    backgroundColor: colors.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    alignSelf: 'center',
-    marginBottom: 32,
-  },
-  trialBadgeText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
   },
   featuresContainer: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    gap: 12,
   },
   featureText: {
-    fontSize: 16,
+    fontSize: 17,
     color: colors.text,
-    marginLeft: 12,
     flex: 1,
+  },
+  trialBadge: {
+    backgroundColor: colors.primaryLight,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  trialText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.primary,
   },
   plansContainer: {
     marginBottom: 24,
+    gap: 12,
   },
   planCard: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     borderWidth: 2,
     borderColor: colors.border,
   },
   planCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: colors.highlight,
+    backgroundColor: colors.primaryLight,
   },
   planHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
-  planRadio: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  planRadioSelected: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  planInfo: {
-    flex: 1,
-  },
   planName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  planPrice: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
-    color: colors.primary,
+    color: colors.text,
   },
-  bestValueBadge: {
+  popularBadge: {
     backgroundColor: colors.primary,
     paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    borderRadius: 6,
   },
-  bestValueText: {
+  popularText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
-  planDescription: {
+  planPrice: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  planDetail: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginLeft: 36,
   },
   subscribeButton: {
+    marginBottom: 16,
+  },
+  restoreButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
     marginBottom: 24,
   },
-  linksContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 24,
-  },
-  linkButton: {
-    paddingVertical: 8,
-  },
-  linkText: {
-    fontSize: 15,
-    fontWeight: '600',
+  restoreText: {
+    fontSize: 16,
     color: colors.primary,
+    fontWeight: '600',
   },
-  disclosureContainer: {
+  legalContainer: {
+    marginBottom: 16,
     paddingHorizontal: 8,
   },
-  disclosureText: {
+  legalText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
+  disclaimer: {
     fontSize: 11,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 16,
-  },
-  bottomPadding: {
-    height: 20,
+    paddingHorizontal: 8,
   },
 });
