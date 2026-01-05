@@ -441,15 +441,15 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Reset App Section */}
+        {/* Reset App Data Section */}
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.sectionHeader}
-            onPress={() => toggleSection('danger')}
+            onPress={() => toggleSection('resetAppData')}
           >
             <View style={styles.sectionHeaderLeft}>
               <IconSymbol ios_icon_name="exclamationmark.triangle" android_material_icon_name="warning" size={20} color={colors.error} />
-              <Text style={[styles.sectionTitle, { color: colors.error }]}>Danger Zone</Text>
+              <Text style={[styles.sectionTitle, { color: colors.error }]}>Reset App Data</Text>
             </View>
             <IconSymbol
               ios_icon_name="chevron.right"
@@ -457,12 +457,12 @@ export default function SettingsScreen() {
               size={20}
               color={colors.textSecondary}
               style={{
-                transform: [{ rotate: expandedSection === 'danger' ? '90deg' : '0deg' }],
+                transform: [{ rotate: expandedSection === 'resetAppData' ? '90deg' : '0deg' }],
               }}
             />
           </TouchableOpacity>
 
-          {expandedSection === 'danger' && (
+          {expandedSection === 'resetAppData' && (
             <View style={styles.sectionContent}>
               <Text style={styles.settingDescription}>
                 This will permanently delete all your data. This action cannot be undone.
