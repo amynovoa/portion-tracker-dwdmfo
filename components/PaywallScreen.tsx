@@ -73,7 +73,12 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({
       <View style={styles.container}>
         {canDismiss && onDismiss && (
           <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
-            <IconSymbol name="xmark" size={24} color={colors.text} />
+            <IconSymbol 
+              ios_icon_name="xmark.circle.fill" 
+              android_material_icon_name="close" 
+              size={32} 
+              color={colors.text} 
+            />
           </TouchableOpacity>
         )}
 
@@ -183,6 +188,8 @@ const styles = StyleSheet.create({
     right: 16,
     zIndex: 10,
     padding: 8,
+    backgroundColor: colors.cardBackground,
+    borderRadius: 20,
   },
   content: {
     padding: 24,
