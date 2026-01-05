@@ -147,14 +147,24 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.legalLinks}>
-            <TouchableOpacity onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
-              <Text style={styles.legalText}>Terms of Use</Text>
-            </TouchableOpacity>
-            <Text style={styles.legalSeparator}>•</Text>
-            <TouchableOpacity onPress={() => Linking.openURL('https://portiontrack.com/privacy-policy')}>
-              <Text style={styles.legalText}>Privacy Policy</Text>
-            </TouchableOpacity>
+          <View style={styles.legalContainer}>
+            <Text style={styles.legalDisclaimerText}>
+              By continuing, you agree to our{' '}
+              <Text
+                style={styles.legalLinkText}
+                onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
+              >
+                Terms of Use
+              </Text>
+              {' '}and{' '}
+              <Text
+                style={styles.legalLinkText}
+                onPress={() => Linking.openURL('https://portiontrack.com/privacy-policy')}
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
           </View>
         </ScrollView>
       </View>
@@ -273,20 +283,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  legalLinks: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+  legalContainer: {
     marginTop: 16,
+    paddingHorizontal: 16,
   },
-  legalText: {
+  legalDisclaimerText: {
     color: colors.textSecondary,
     fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
   },
-  legalSeparator: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginHorizontal: 8,
+  legalLinkText: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
 });
 
