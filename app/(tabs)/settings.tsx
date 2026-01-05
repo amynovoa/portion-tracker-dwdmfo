@@ -449,7 +449,7 @@ export default function SettingsScreen() {
           >
             <View style={styles.sectionHeaderLeft}>
               <IconSymbol ios_icon_name="exclamationmark.triangle" android_material_icon_name="warning" size={20} color={colors.error} />
-              <Text style={[styles.sectionTitle, { color: colors.error }]}>Reset App Data</Text>
+              <Text style={styles.sectionTitle}>Reset App Data</Text>
             </View>
             <IconSymbol
               ios_icon_name="chevron.right"
