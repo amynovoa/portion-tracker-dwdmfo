@@ -1,7 +1,9 @@
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../styles/commonStyles';
+import { IconSymbol } from './IconSymbol';
 
 interface InfoHintTooltipProps {
   visible: boolean;
@@ -58,33 +60,54 @@ export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipP
         },
       ]}
     >
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        <View style={styles.tooltip}>
-          <View style={styles.iconContainer}>
-            <Text style={styles.infoEmoji}>ℹ️</Text>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <View style={styles.tooltip}>
+            {/* X Button in top-right corner */}
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={onDismiss}
+              activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel="Close"
+              accessibilityRole="button"
+            >
+              <IconSymbol 
+                ios_icon_name="xmark" 
+                android_material_icon_name="close" 
+                size={22} 
+                color={colors.textSecondary} 
+              />
+            </TouchableOpacity>
+
+            <View style={styles.iconContainer}>
+              <Text style={styles.infoEmoji}>ℹ️</Text>
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.title}>Portion Tips Available</Text>
+              <Text style={styles.text}>
+                Tap the ℹ️ icon next to any food group to see examples and portion sizes.{'\n\n'}More tips can be found in the FAQs.
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.okButton}
+              onPress={onDismiss}
+              activeOpacity={0.7}
+              accessibilityLabel="Got It"
+              accessibilityRole="button"
+            >
+              <Text style={styles.okButtonText}>Got It</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.title}>Portion Tips Available</Text>
-            <Text style={styles.text}>
-              Tap the ℹ️ icon next to any food group to see examples and portion sizes.{'\n\n'}More tips can be found in the FAQs.
-            </Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.okButton}
-            onPress={onDismiss}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.okButtonText}>Got It</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+        </Animated.View>
+      </SafeAreaView>
     </Animated.View>
   );
 }
@@ -98,6 +121,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     zIndex: 9999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  safeArea: {
+    width: '100%',
+    maxHeight: '75%',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -122,9 +151,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primary,
   },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
   iconContainer: {
     alignItems: 'center',
     marginBottom: 16,
+    marginTop: 8,
   },
   infoEmoji: {
     fontSize: 48,
@@ -152,6 +191,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 4,
   },
   okButtonText: {
     color: '#FFFFFF',

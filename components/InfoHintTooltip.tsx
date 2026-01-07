@@ -1,7 +1,17 @@
 
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { colors } from '../styles/commonStyles';
+import React from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, buttonStyles } from '@/styles/commonStyles';
+import { IconSymbol } from './IconSymbol';
 
 interface InfoHintTooltipProps {
   visible: boolean;
@@ -9,147 +19,127 @@ interface InfoHintTooltipProps {
 }
 
 export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipProps) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(-20)).current;
-
-  useEffect(() => {
-    if (visible) {
-      // Fade in and slide down
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Fade out and slide up
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: -20,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible, fadeAnim, slideAnim]);
-
-  if (!visible) {
-    return null;
-  }
-
   return (
-    <Animated.View
-      style={[
-        styles.overlay,
-        {
-          opacity: fadeAnim,
-        },
-      ]}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onDismiss}
     >
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        <View style={styles.tooltip}>
-          <View style={styles.iconContainer}>
-            <Text style={styles.infoEmoji}>ℹ️</Text>
+      <View style={styles.overlay}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          <View style={styles.container}>
+            {/* X Button in top-right corner */}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onDismiss}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel="Close"
+              accessibilityRole="button"
+            >
+              <IconSymbol 
+                ios_icon_name="xmark" 
+                android_material_icon_name="close" 
+                size={24} 
+                color={colors.textSecondary} 
+              />
+            </TouchableOpacity>
+
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+            >
+              <Text style={styles.title}>Portion Tips Available! 🎉</Text>
+              <Text style={styles.message}>
+                Tap the info icon (ⓘ) next to any food group to see helpful portion examples and serving sizes.
+              </Text>
+            </ScrollView>
+
+            {/* Got It Button with safe spacing */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[buttonStyles.primary, styles.button]}
+                onPress={onDismiss}
+                accessibilityLabel="Got It"
+                accessibilityRole="button"
+              >
+                <Text style={buttonStyles.primaryText}>Got It</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.title}>Portion Tips Available</Text>
-            <Text style={styles.text}>
-              Tap the ℹ️ icon next to any food group to see examples and portion sizes.{'\n\n'}More tips can be found in the FAQs.
-            </Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.okButton}
-            onPress={onDismiss}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.okButtonText}>Got It</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </Animated.View>
+        </SafeAreaView>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    zIndex: 9999,
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  safeArea: {
+    width: '100%',
+    maxHeight: '75%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   container: {
+    backgroundColor: 'white',
+    borderRadius: 16,
     width: '100%',
     maxWidth: 400,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
-  tooltip: {
-    backgroundColor: colors.card,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    borderRadius: 16,
-    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.3)',
-    elevation: 8,
-    borderWidth: 2,
-    borderColor: colors.primary,
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
-  iconContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  infoEmoji: {
-    fontSize: 48,
-  },
-  textContainer: {
-    marginBottom: 20,
+  scrollContent: {
+    paddingRight: 40, // Space for X button
+    paddingTop: 8,
   },
   title: {
+    fontSize: 22,
+    fontWeight: '700',
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '700',
+    marginBottom: 16,
     textAlign: 'center',
-    marginBottom: 12,
   },
-  text: {
-    color: colors.textSecondary,
+  message: {
     fontSize: 16,
-    textAlign: 'center',
     lineHeight: 24,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
   },
-  okButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonContainer: {
+    paddingTop: 8,
+    width: '100%',
   },
-  okButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
+  button: {
+    width: '100%',
   },
 });
