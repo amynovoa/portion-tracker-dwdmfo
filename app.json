@@ -1,7 +1,8 @@
+
 {
   "expo": {
     "name": "Portion Tracker",
-    "slug": "Portion Tracker",
+    "slug": "portion-tracker",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
@@ -16,7 +17,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.portiontracker.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "This app uses the camera to take photos of your meals for tracking purposes.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library.",
+        "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized content and improve your experience."
       },
       "buildNumber": "4"
     },
@@ -27,7 +32,12 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.portiontracker.app",
-      "versionCode": 4
+      "versionCode": 4,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
@@ -36,7 +46,14 @@
     "plugins": [
       "expo-font",
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app needs access to your photo library to select meal photos.",
+          "cameraPermission": "This app uses the camera to take photos of your meals for tracking purposes."
+        }
+      ]
     ],
     "scheme": "portiontracker",
     "experiments": {
@@ -48,6 +65,5 @@
         "projectId": "your-project-id-here"
       }
     }
-  },
-  "scheme": "Portion Tracker"
+  }
 }
