@@ -125,7 +125,7 @@ export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipP
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   tooltip: {
-    backgroundColor: colors.card,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
     paddingVertical: 24,
     paddingTop: 48,
