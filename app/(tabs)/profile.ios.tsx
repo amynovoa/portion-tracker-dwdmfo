@@ -15,7 +15,7 @@ export default function ProfileScreen() {
   const [goal, setGoal] = useState<Goal>('maintain');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
   const [alcoholServings, setAlcoholServings] = useState(2);
-  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderatelyActive');
   const [targets, setTargets] = useState<PortionTargets>({
     protein: 0,
     veggies: 0,
@@ -62,7 +62,13 @@ export default function ProfileScreen() {
       setIncludeAlcohol(profile.includeAlcohol);
       setAlcoholServings(profile.alcoholServings);
       // Ensure activityLevel is a valid string
-      setActivityLevel(typeof profile.activityLevel === 'string' ? profile.activityLevel as ActivityLevel : 'moderate');
+      const loadedActivityLevel = profile.activityLevel;
+      if (typeof loadedActivityLevel === 'string' && ACTIVITY_LEVELS.includes(loadedActivityLevel as ActivityLevel)) {
+        setActivityLevel(loadedActivityLevel as ActivityLevel);
+      } else {
+        console.log('Invalid activity level loaded, defaulting to moderatelyActive:', loadedActivityLevel);
+        setActivityLevel('moderatelyActive');
+      }
       setTargets(profile.dailyTargets);
     }
   };
@@ -137,6 +143,11 @@ export default function ProfileScreen() {
     return labels[key] || key;
   };
 
+  const formatActivityLevel = (level: ActivityLevel): string => {
+    const formatted = level.replace(/([A-Z])/g, ' $1').trim();
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Profile Setup</Text>
@@ -207,7 +218,7 @@ export default function ProfileScreen() {
               onPress={() => setActivityLevel(level)}
             >
               <Text style={[styles.optionText, activityLevel === level && styles.optionTextActive]}>
-                {level.charAt(0).toUpperCase() + level.slice(1)}
+                {formatActivityLevel(level)}
               </Text>
             </TouchableOpacity>
           ))}

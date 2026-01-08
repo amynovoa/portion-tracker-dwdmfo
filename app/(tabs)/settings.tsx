@@ -1,7 +1,7 @@
 
 import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig, loadProfile, saveProfile } from '@/utils/storage';
 import { formatResetTime } from '@/utils/dailyReset';
-import { ActivityLevel, ACTIVITY_LEVELS } from '@/types';
+import { ActivityLevel, ACTIVITY_LEVELS, ACTIVITY_LEVEL_INFO } from '@/types';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import PaywallScreen from '@/components/PaywallScreen';
 import AppLogo from '@/components/AppLogo';
@@ -21,7 +21,7 @@ export default function SettingsScreen() {
   const [resetEnabled, setResetEnabled] = useState(false);
   const [resetTime, setResetTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderatelyActive');
   const [showPaywall, setShowPaywall] = useState(false);
   const router = useRouter();
 
@@ -95,7 +95,6 @@ export default function SettingsScreen() {
     const profile = await loadProfile();
     if (profile) {
       const updatedProfile = { ...profile, activityLevel: newLevel };
-      await saveProfile(updatedProfile);
       
       const newTargets = calculateRecommendedTargets(
         profile.sex,
@@ -106,7 +105,7 @@ export default function SettingsScreen() {
         newLevel
       );
       
-      updatedProfile.targets = newTargets;
+      updatedProfile.dailyTargets = newTargets;
       await saveProfile(updatedProfile);
       
       Alert.alert(
@@ -131,7 +130,7 @@ export default function SettingsScreen() {
   const confirmReset = async () => {
     await clearAllData();
     Alert.alert('Data Cleared', 'All app data has been reset.', [
-      { text: 'OK', onPress: () => router.replace('/profile') }
+      { text: 'OK', onPress: () => router.replace('/(tabs)/profile') }
     ]);
   };
 
@@ -140,8 +139,7 @@ export default function SettingsScreen() {
   };
 
   const getActivityLevelLabel = (level: ActivityLevel): string => {
-    const activityLevel = ACTIVITY_LEVELS.find(a => a.value === level);
-    return activityLevel ? activityLevel.label : 'Moderate';
+    return ACTIVITY_LEVEL_INFO[level]?.label || 'Moderately Active';
   };
 
   const handleManageSubscription = () => {
@@ -246,32 +244,32 @@ export default function SettingsScreen() {
               </Text>
               {ACTIVITY_LEVELS.map((level) => (
                 <TouchableOpacity
-                  key={level.value}
+                  key={level}
                   style={[
                     styles.activityOption,
-                    activityLevel === level.value && styles.activityOptionSelected,
+                    activityLevel === level && styles.activityOptionSelected,
                   ]}
-                  onPress={() => handleUpdateActivityLevel(level.value)}
+                  onPress={() => handleUpdateActivityLevel(level)}
                 >
                   <View style={styles.activityOptionContent}>
                     <Text
                       style={[
                         styles.activityOptionLabel,
-                        activityLevel === level.value && styles.activityOptionLabelSelected,
+                        activityLevel === level && styles.activityOptionLabelSelected,
                       ]}
                     >
-                      {level.label}
+                      {ACTIVITY_LEVEL_INFO[level].label}
                     </Text>
                     <Text
                       style={[
                         styles.activityOptionDescription,
-                        activityLevel === level.value && styles.activityOptionDescriptionSelected,
+                        activityLevel === level && styles.activityOptionDescriptionSelected,
                       ]}
                     >
-                      {level.description}
+                      {ACTIVITY_LEVEL_INFO[level].description}
                     </Text>
                   </View>
-                  {activityLevel === level.value && (
+                  {activityLevel === level && (
                     <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.primary} />
                   )}
                 </TouchableOpacity>
