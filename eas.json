@@ -1,43 +1,30 @@
+
 {
-  "cli": {
-    "version": ">= 5.0.0"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "ios": {
-        "buildConfiguration": "Debug",
-        "autoIncrement": true
-      },
-      "android": {
-        "buildType": "apk",
-        "autoIncrement": true
-      }
+    "build": {
+        "development": {
+            "developmentClient": true,
+            "distribution": "internal",
+            "autoIncrement": true
+        },
+        "preview": {
+            "distribution": "internal",
+            "autoIncrement": true
+        },
+        "production": {
+            "autoIncrement": true
+        }
     },
-    "preview": {
-      "distribution": "internal",
-      "ios": {
-        "buildConfiguration": "Release",
-        "autoIncrement": true
-      },
-      "android": {
-        "buildType": "apk",
-        "autoIncrement": true
-      }
-    },
-    "production": {
-      "ios": {
-        "buildConfiguration": "Release",
-        "autoIncrement": true
-      },
-      "android": {
-        "buildType": "app-bundle",
-        "autoIncrement": true
-      }
+    "submit": {
+        "production": {
+            "ios": {
+                "appleId": "your-apple-id@example.com",
+                "ascAppId": "your-app-store-connect-id",
+                "appleTeamId": "your-team-id"
+            },
+            "android": {
+                "serviceAccountKeyPath": "./path-to-your-service-account-key.json",
+                "track": "internal"
+            }
+        }
     }
-  },
-  "submit": {
-    "production": {}
-  }
 }
