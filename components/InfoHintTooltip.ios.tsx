@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Modal, View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../styles/commonStyles';
 import { IconSymbol } from './IconSymbol';
 
@@ -10,9 +10,12 @@ interface InfoHintTooltipProps {
   onDismiss: () => void;
 }
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (visible) {
@@ -31,114 +34,126 @@ export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipP
         }),
       ]).start();
     } else {
-      // Fade out and slide up
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: -20,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      // Reset animations when not visible
+      fadeAnim.setValue(0);
+      slideAnim.setValue(-20);
     }
   }, [visible, fadeAnim, slideAnim]);
 
-  if (!visible) {
-    return null;
-  }
-
   return (
-    <Animated.View
-      style={[
-        styles.overlay,
-        {
-          opacity: fadeAnim,
-        },
-      ]}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onDismiss}
+      statusBarTranslucent
     >
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <Animated.View
-          style={[
-            styles.container,
-            {
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+      <Animated.View
+        style={[
+          styles.overlay,
+          {
+            opacity: fadeAnim,
+          },
+        ]}
+      >
+        <TouchableOpacity 
+          style={styles.overlayTouchable}
+          activeOpacity={1}
+          onPress={onDismiss}
         >
-          <View style={styles.tooltip}>
-            {/* X Button in top-right corner */}
+          <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
             <TouchableOpacity 
-              style={styles.closeButton}
-              onPress={onDismiss}
-              activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              accessibilityLabel="Close"
-              accessibilityRole="button"
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+              style={styles.containerWrapper}
             >
-              <IconSymbol 
-                ios_icon_name="xmark" 
-                android_material_icon_name="close" 
-                size={22} 
-                color={colors.textSecondary} 
-              />
-            </TouchableOpacity>
+              <Animated.View
+                style={[
+                  styles.container,
+                  {
+                    transform: [{ translateY: slideAnim }],
+                    marginTop: Math.max(insets.top, 20),
+                  },
+                ]}
+              >
+                <View style={styles.tooltip}>
+                  {/* X Button in top-right corner */}
+                  <TouchableOpacity 
+                    style={styles.closeButton}
+                    onPress={onDismiss}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                    accessibilityLabel="Close"
+                    accessibilityRole="button"
+                  >
+                    <IconSymbol 
+                      ios_icon_name="xmark" 
+                      android_material_icon_name="close" 
+                      size={22} 
+                      color={colors.textSecondary} 
+                    />
+                  </TouchableOpacity>
 
-            <View style={styles.iconContainer}>
-              <Text style={styles.infoEmoji}>ℹ️</Text>
-            </View>
-            <View style={styles.textContainer}>
-              <Text style={styles.title}>Portion Tips Available</Text>
-              <Text style={styles.text}>
-                Tap the ℹ️ icon next to any food group to see examples and portion sizes.{'\n\n'}More tips can be found in the FAQs.
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.okButton}
-              onPress={onDismiss}
-              activeOpacity={0.7}
-              accessibilityLabel="Got It"
-              accessibilityRole="button"
-            >
-              <Text style={styles.okButtonText}>Got It</Text>
+                  <View style={styles.iconContainer}>
+                    <Text style={styles.infoEmoji}>ℹ️</Text>
+                  </View>
+                  <View style={styles.textContainer}>
+                    <Text style={styles.title}>Portion Tips Available</Text>
+                    <Text style={styles.text}>
+                      Tap the ℹ️ icon next to any food group to see examples and portion sizes.{'\n\n'}More tips can be found in the FAQs.
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.okButton}
+                    onPress={onDismiss}
+                    activeOpacity={0.7}
+                    accessibilityLabel="Got It"
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.okButtonText}>Got It</Text>
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
             </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </SafeAreaView>
-    </Animated.View>
+          </SafeAreaView>
+        </TouchableOpacity>
+      </Animated.View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    zIndex: 9999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayTouchable: {
+    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
   safeArea: {
+    flex: 1,
     width: '100%',
-    maxHeight: '75%',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  container: {
+  containerWrapper: {
     width: '100%',
     maxWidth: 400,
+  },
+  container: {
+    width: '100%',
   },
   tooltip: {
     backgroundColor: colors.card,
     paddingHorizontal: 20,
     paddingVertical: 24,
+    paddingTop: 48,
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: {
@@ -156,14 +171,13 @@ const styles = StyleSheet.create({
     top: 12,
     right: 12,
     zIndex: 10,
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   iconContainer: {
     alignItems: 'center',
     marginBottom: 16,
-    marginTop: 8,
   },
   infoEmoji: {
     fontSize: 48,

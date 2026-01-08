@@ -1,15 +1,7 @@
 
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions, Platform } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { IconSymbol } from './IconSymbol';
 
@@ -18,58 +10,61 @@ interface InfoHintTooltipProps {
   onDismiss: () => void;
 }
 
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipProps) {
+  const insets = useSafeAreaInsets();
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
       onRequestClose={onDismiss}
+      statusBarTranslucent
     >
-      <View style={styles.overlay}>
+      <TouchableOpacity 
+        style={styles.overlay}
+        activeOpacity={1}
+        onPress={onDismiss}
+      >
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          <View style={styles.container}>
-            {/* X Button in top-right corner */}
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onDismiss}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              accessibilityLabel="Close"
-              accessibilityRole="button"
-            >
-              <IconSymbol 
-                ios_icon_name="xmark" 
-                android_material_icon_name="close" 
-                size={24} 
-                color={colors.textSecondary} 
-              />
-            </TouchableOpacity>
+          <TouchableOpacity 
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={styles.containerWrapper}
+          >
+            <View style={[styles.container, { marginTop: Math.max(insets.top, 20) }]}>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={onDismiss}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                activeOpacity={0.7}
+              >
+                <IconSymbol 
+                  ios_icon_name="xmark" 
+                  android_material_icon_name="close" 
+                  size={24} 
+                  color={colors.text} 
+                />
+              </TouchableOpacity>
 
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-            >
-              <Text style={styles.title}>Portion Tips Available! 🎉</Text>
+              <Text style={styles.title}>Portion Tips Available!</Text>
               <Text style={styles.message}>
-                Tap the info icon (ⓘ) next to any food group to see helpful portion examples and serving sizes.
+                Tap the info icon (i) next to any food group to see helpful portion examples and tips.
               </Text>
-            </ScrollView>
 
-            {/* Got It Button with safe spacing */}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={[buttonStyles.primary, styles.button]}
                 onPress={onDismiss}
-                accessibilityLabel="Got It"
-                accessibilityRole="button"
+                activeOpacity={0.8}
               >
                 <Text style={buttonStyles.primaryText}>Got It</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         </SafeAreaView>
-      </View>
+      </TouchableOpacity>
     </Modal>
   );
 }
@@ -80,46 +75,39 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
   safeArea: {
+    flex: 1,
     width: '100%',
-    maxHeight: '75%',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  containerWrapper: {
+    width: '100%',
+    maxWidth: 400,
     alignItems: 'center',
   },
   container: {
-    backgroundColor: 'white',
+    backgroundColor: colors.cardBackground,
     borderRadius: 16,
+    padding: 24,
+    paddingTop: 56,
     width: '100%',
-    maxWidth: 400,
-    paddingTop: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   closeButton: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 16,
+    right: 16,
     zIndex: 10,
     padding: 8,
-    borderRadius: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  scrollContent: {
-    paddingRight: 40, // Space for X button
-    paddingTop: 8,
+    borderRadius: 20,
   },
   title: {
     fontSize: 22,
@@ -130,16 +118,12 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    lineHeight: 24,
     color: colors.textSecondary,
-    textAlign: 'center',
+    lineHeight: 24,
     marginBottom: 24,
-  },
-  buttonContainer: {
-    paddingTop: 8,
-    width: '100%',
+    textAlign: 'center',
   },
   button: {
-    width: '100%',
+    marginTop: 8,
   },
 });
