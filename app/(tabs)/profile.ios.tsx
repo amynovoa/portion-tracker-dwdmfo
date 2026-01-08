@@ -2,119 +2,32 @@
 import { Sex, Goal, UserProfile, PortionTargets, ActivityLevel, ACTIVITY_LEVELS } from '@/types';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Switch } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import React, { useState, useEffect } from 'react';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import PortionDropdown from '@/components/PortionDropdown';
 import { saveProfile, loadProfile } from '@/utils/storage';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  optionButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-  },
-  optionButtonSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-  },
-  optionButtonText: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  optionButtonTextSelected: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  targetsContainer: {
-    gap: 12,
-  },
-  targetRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  targetLabel: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  alcoholToggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 12,
-  },
-  alcoholToggleLabel: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-  },
-});
-
 export default function ProfileScreen() {
-  const [sex, setSex] = useState<Sex>('female');
+  const [sex, setSex] = useState<Sex>('prefer_not_to_say');
   const [currentWeight, setCurrentWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
   const [alcoholServings, setAlcoholServings] = useState(2);
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
-  const [customTargets, setCustomTargets] = useState<PortionTargets | null>(null);
-  const [isNewUser, setIsNewUser] = useState(true);
+  const [targets, setTargets] = useState<PortionTargets>({
+    protein: 0,
+    veggies: 0,
+    fruit: 0,
+    wholeGrains: 0,
+    legumes: 0,
+    nutsSeeds: 0,
+    fats: 0,
+    water: 0,
+    alcohol: 0,
+  });
+
   const router = useRouter();
   const params = useLocalSearchParams();
 
@@ -127,8 +40,8 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (params.customTargets) {
       try {
-        const targets = JSON.parse(params.customTargets as string);
-        setCustomTargets(targets);
+        const custom = JSON.parse(params.customTargets as string);
+        setTargets(custom);
       } catch (e) {
         console.error('Failed to parse custom targets:', e);
       }
@@ -136,81 +49,77 @@ export default function ProfileScreen() {
   }, [params.customTargets]);
 
   useEffect(() => {
-    if (includeAlcohol || alcoholServings !== 2 || activityLevel !== 'moderate') {
-      calculateTargets();
-    }
-  }, [includeAlcohol, alcoholServings, activityLevel]);
+    calculateTargets();
+  }, [sex, currentWeight, goal, includeAlcohol, alcoholServings, activityLevel]);
 
   const loadExistingProfile = async () => {
     const profile = await loadProfile();
     if (profile) {
-      setIsNewUser(false);
       setSex(profile.sex);
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight.toString());
       setGoal(profile.goal);
-      setIncludeAlcohol(profile.includeAlcohol || false);
-      setAlcoholServings(profile.alcoholServings || 2);
-      setActivityLevel(profile.activityLevel || 'moderate');
-      setCustomTargets(profile.targets);
+      setIncludeAlcohol(profile.includeAlcohol);
+      setAlcoholServings(profile.alcoholServings);
+      // Ensure activityLevel is a valid string
+      setActivityLevel(typeof profile.activityLevel === 'string' ? profile.activityLevel as ActivityLevel : 'moderate');
+      setTargets(profile.dailyTargets);
     }
   };
 
   const calculateTargets = () => {
-    if (!currentWeight || !goalWeight) return;
-
     const weight = parseFloat(currentWeight);
-    const targets = calculateRecommendedTargets(
-      sex,
-      weight,
-      goal,
-      includeAlcohol,
-      alcoholServings,
-      activityLevel
-    );
-    setCustomTargets(targets);
+    if (!isNaN(weight) && weight > 0) {
+      const recommended = calculateRecommendedTargets(
+        sex,
+        weight,
+        goal,
+        includeAlcohol,
+        alcoholServings,
+        activityLevel
+      );
+      setTargets(recommended);
+    }
   };
 
   const handleSetupCustomTargets = () => {
-    if (!customTargets) {
-      Alert.alert('Error', 'Please calculate targets first');
-      return;
-    }
     router.push({
       pathname: '/setup-targets',
-      params: { targets: JSON.stringify(customTargets) },
+      params: { targets: JSON.stringify(targets) },
     });
   };
 
   const handleSaveProfile = async () => {
-    if (!currentWeight || !goalWeight || !customTargets) {
-      Alert.alert('Error', 'Please fill in all fields and calculate targets');
+    const weight = parseFloat(currentWeight);
+    const gWeight = parseFloat(goalWeight);
+
+    if (isNaN(weight) || weight <= 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid current weight.');
+      return;
+    }
+    if (isNaN(gWeight) || gWeight <= 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid goal weight.');
       return;
     }
 
     const profile: UserProfile = {
       sex,
-      currentWeight: parseFloat(currentWeight),
-      goalWeight: parseFloat(goalWeight),
+      currentWeight: weight,
+      goalWeight: gWeight,
       goal,
       includeAlcohol,
       alcoholServings,
       activityLevel,
-      targets: customTargets,
+      dailyTargets: targets,
     };
 
     await saveProfile(profile);
-    Alert.alert('Success', 'Profile saved successfully');
-    router.push({
-      pathname: '/(tabs)/(home)',
-      params: { reload: Date.now().toString() },
-    });
+    Alert.alert('Success', 'Profile saved successfully!');
+    router.push('/(tabs)/(home)');
   };
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: number) => {
-    if (customTargets) {
-      setCustomTargets({ ...customTargets, [key]: value });
-    }
+    setTargets(prev => ({ ...prev, [key]: value }));
   };
 
   const formatTargetLabel = (key: string): string => {
@@ -218,9 +127,10 @@ export default function ProfileScreen() {
       protein: 'Protein',
       veggies: 'Veggies',
       fruit: 'Fruit',
-      healthyCarbs: 'Whole Grains',
+      wholeGrains: 'Whole Grains',
+      legumes: 'Legumes',
+      nutsSeeds: 'Nuts & Seeds',
       fats: 'Fats',
-      nuts: 'Nuts & Seeds',
       water: 'Water',
       alcohol: 'Alcohol',
     };
@@ -228,162 +138,184 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollContent}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sex</Text>
-          <View style={styles.buttonGroup}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Profile Setup</Text>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Sex</Text>
+        <View style={styles.buttonGroup}>
+          {(['male', 'female', 'prefer_not_to_say'] as Sex[]).map((s) => (
             <TouchableOpacity
-              style={[styles.optionButton, sex === 'female' && styles.optionButtonSelected]}
-              onPress={() => setSex('female')}
+              key={s}
+              style={[styles.optionButton, sex === s && styles.optionButtonActive]}
+              onPress={() => setSex(s)}
             >
-              <Text style={[styles.optionButtonText, sex === 'female' && styles.optionButtonTextSelected]}>
-                Female
+              <Text style={[styles.optionText, sex === s && styles.optionTextActive]}>
+                {s === 'prefer_not_to_say' ? 'Prefer not to say' : s.charAt(0).toUpperCase() + s.slice(1)}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, sex === 'male' && styles.optionButtonSelected]}
-              onPress={() => setSex('male')}
-            >
-              <Text style={[styles.optionButtonText, sex === 'male' && styles.optionButtonTextSelected]}>
-                Male
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, sex === 'other' && styles.optionButtonSelected]}
-              onPress={() => setSex('other')}
-            >
-              <Text style={[styles.optionButtonText, sex === 'other' && styles.optionButtonTextSelected]}>
-                Other
-              </Text>
-            </TouchableOpacity>
-          </View>
+          ))}
         </View>
+      </View>
 
-        <View style={styles.section}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Current Weight (lbs)</Text>
-            <TextInput
-              style={styles.input}
-              value={currentWeight}
-              onChangeText={setCurrentWeight}
-              keyboardType="numeric"
-              placeholder="Enter current weight"
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
+      <View style={styles.section}>
+        <Text style={styles.label}>Current Weight (lbs)</Text>
+        <TextInput
+          style={styles.input}
+          value={currentWeight}
+          onChangeText={setCurrentWeight}
+          keyboardType="numeric"
+          placeholder="Enter weight"
+        />
+      </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Goal Weight (lbs)</Text>
-            <TextInput
-              style={styles.input}
-              value={goalWeight}
-              onChangeText={setGoalWeight}
-              keyboardType="numeric"
-              placeholder="Enter goal weight"
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
-        </View>
+      <View style={styles.section}>
+        <Text style={styles.label}>Goal Weight (lbs)</Text>
+        <TextInput
+          style={styles.input}
+          value={goalWeight}
+          onChangeText={setGoalWeight}
+          keyboardType="numeric"
+          placeholder="Enter goal weight"
+        />
+      </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Goal</Text>
-          <View style={styles.buttonGroup}>
+      <View style={styles.section}>
+        <Text style={styles.label}>Goal</Text>
+        <View style={styles.buttonGroup}>
+          {(['lose', 'maintain', 'build'] as Goal[]).map((g) => (
             <TouchableOpacity
-              style={[styles.optionButton, goal === 'lose' && styles.optionButtonSelected]}
-              onPress={() => setGoal('lose')}
+              key={g}
+              style={[styles.optionButton, goal === g && styles.optionButtonActive]}
+              onPress={() => setGoal(g)}
             >
-              <Text style={[styles.optionButtonText, goal === 'lose' && styles.optionButtonTextSelected]}>
-                Lose Weight
+              <Text style={[styles.optionText, goal === g && styles.optionTextActive]}>
+                {g === 'lose' ? 'Lose Weight' : g === 'maintain' ? 'Maintain' : 'Build Muscle'}
               </Text>
             </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Activity Level</Text>
+        <View style={styles.buttonGroup}>
+          {ACTIVITY_LEVELS.map((level) => (
             <TouchableOpacity
-              style={[styles.optionButton, goal === 'maintain' && styles.optionButtonSelected]}
-              onPress={() => setGoal('maintain')}
+              key={level}
+              style={[styles.optionButton, activityLevel === level && styles.optionButtonActive]}
+              onPress={() => setActivityLevel(level)}
             >
-              <Text style={[styles.optionButtonText, goal === 'maintain' && styles.optionButtonTextSelected]}>
-                Maintain
+              <Text style={[styles.optionText, activityLevel === level && styles.optionTextActive]}>
+                {level.charAt(0).toUpperCase() + level.slice(1)}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, goal === 'build' && styles.optionButtonSelected]}
-              onPress={() => setGoal('build')}
-            >
-              <Text style={[styles.optionButtonText, goal === 'build' && styles.optionButtonTextSelected]}>
-                Build Muscle
-              </Text>
-            </TouchableOpacity>
-          </View>
+          ))}
         </View>
+      </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Activity Level</Text>
-          <View style={styles.buttonGroup}>
-            {ACTIVITY_LEVELS.map((level) => (
-              <TouchableOpacity
-                key={level}
-                style={[styles.optionButton, activityLevel === level && styles.optionButtonSelected]}
-                onPress={() => setActivityLevel(level)}
-              >
-                <Text style={[styles.optionButtonText, activityLevel === level && styles.optionButtonTextSelected]}>
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <View style={styles.section}>
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>Include Alcohol</Text>
+          <Switch value={includeAlcohol} onValueChange={setIncludeAlcohol} />
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Alcohol</Text>
-          <View style={styles.alcoholToggleContainer}>
-            <Text style={styles.alcoholToggleLabel}>Include Alcohol Tracking</Text>
-            <Switch
-              value={includeAlcohol}
-              onValueChange={setIncludeAlcohol}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.surface}
-            />
-          </View>
-          {includeAlcohol && (
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Daily Alcohol Servings (max 2 recommended)</Text>
-              <TextInput
-                style={styles.input}
-                value={alcoholServings.toString()}
-                onChangeText={(text) => setAlcoholServings(Math.min(parseInt(text) || 0, 2))}
-                keyboardType="numeric"
-                placeholder="Enter servings"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
-          )}
-        </View>
-
-        <TouchableOpacity style={[buttonStyles.primary, { marginBottom: 16 }]} onPress={calculateTargets}>
-          <Text style={buttonStyles.primaryText}>Calculate Targets</Text>
-        </TouchableOpacity>
-
-        {customTargets && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
-            <View style={styles.targetsContainer}>
-              {Object.entries(customTargets).map(([key, value]) => (
-                <View key={key} style={styles.targetRow}>
-                  <Text style={styles.targetLabel}>{formatTargetLabel(key)}</Text>
-                  <PortionDropdown
-                    value={value}
-                    onChange={(newValue) => handleUpdateTargets(key as keyof PortionTargets, newValue)}
-                  />
-                </View>
-              ))}
-            </View>
-          </View>
+        {includeAlcohol && (
+          <PortionDropdown
+            label="Daily Alcohol Servings"
+            value={alcoholServings}
+            onChange={setAlcoholServings}
+            min={0}
+            max={2}
+          />
         )}
+      </View>
 
-        <TouchableOpacity style={buttonStyles.primary} onPress={handleSaveProfile}>
-          <Text style={buttonStyles.primaryText}>Save Profile</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Daily Targets</Text>
+        {Object.entries(targets).map(([key, value]) => (
+          <PortionDropdown
+            key={key}
+            label={formatTargetLabel(key)}
+            value={value}
+            onChange={(v) => handleUpdateTargets(key as keyof PortionTargets, v)}
+            min={0}
+            max={15}
+          />
+        ))}
+      </View>
+
+      <TouchableOpacity style={[buttonStyles.primary, styles.saveButton]} onPress={handleSaveProfile}>
+        <Text style={buttonStyles.primaryText}>Save Profile</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 24,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  input: {
+    ...commonStyles.input,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  optionButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.cardBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  optionButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  optionText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  optionTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  saveButton: {
+    marginTop: 12,
+    marginBottom: 40,
+  },
+});
