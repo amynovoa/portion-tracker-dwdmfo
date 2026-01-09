@@ -1,8 +1,6 @@
 
 import { IconSymbol } from '@/components/IconSymbol';
 import { useRouter } from 'expo-router';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import PaywallScreen from '@/components/PaywallScreen';
 import {
   ScrollView,
   StyleSheet,
@@ -63,12 +61,6 @@ const styles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { showPaywall, paywallVisible, hidePaywall } = useSubscription();
-
-  const handleSubscription = () => {
-    // Show the paywall modal
-    showPaywall();
-  };
 
   const handleCelebration = () => {
     router.push('/celebration-settings');
@@ -108,21 +100,11 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={{ fontSize: 32 }}>🍎</Text>
+        <Text style={{ fontSize: 32 }}>⚙️</Text>
         <Text style={styles.headerTitle}>Settings</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.menuItem} onPress={handleSubscription}>
-          <View style={styles.iconContainer}>
-            <IconSymbol ios_icon_name="creditcard.fill" android_material_icon_name="credit-card" size={24} color="#FF6B6B" />
-          </View>
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemTitle}>Subscription</Text>
-          </View>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={24} color={colors.textSecondary} />
-        </TouchableOpacity>
-
         <TouchableOpacity style={styles.menuItem} onPress={handleCelebration}>
           <View style={styles.iconContainer}>
             <IconSymbol ios_icon_name="party.popper.fill" android_material_icon_name="celebration" size={24} color="#FF6B6B" />
@@ -165,12 +147,6 @@ export default function SettingsScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      <PaywallScreen
-        visible={paywallVisible}
-        onDismiss={hidePaywall}
-        canDismiss={true}
-      />
     </View>
   );
 }

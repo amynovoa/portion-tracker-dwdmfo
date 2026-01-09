@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadProfile } from '@/utils/storage';
+import { loadProfile, saveProfile } from '@/utils/storage';
 import { UserProfile } from '@/types';
-import { useRouter, useFocusEffect } from 'expo-router';
-import AppLogo from '@/components/AppLogo';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -19,146 +19,120 @@ export default function ProfileScreen() {
   );
 
   const loadData = async () => {
-    console.log('Loading profile data...');
     const loadedProfile = await loadProfile();
-    console.log('Profile loaded:', loadedProfile);
     setProfile(loadedProfile);
+  };
+
+  const handleEditProfile = () => {
+    router.push('/setup-profile');
+  };
+
+  const handleEditTargets = () => {
+    router.push('/setup-targets');
   };
 
   if (!profile) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.container}>
-          <Text style={styles.loadingText}>Loading profile...</Text>
-          <TouchableOpacity
-            style={[buttonStyles.primary, { marginTop: 20 }]}
-            onPress={() => router.push('/setup-profile')}
-          >
-            <Text style={buttonStyles.primaryText}>Set Up Profile</Text>
-          </TouchableOpacity>
-        </View>
+      <SafeAreaView style={styles.container}>
+        <Text>Loading...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView 
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <View style={styles.header}>
-          <AppLogo size={60} />
-          <Text style={styles.title}>My Profile</Text>
-        </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Profile & Settings</Text>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <Text style={styles.sectionTitle}>Your Profile</Text>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Sex:</Text>
-            <Text style={styles.value}>{profile.sex === 'prefer-not-to-say' ? 'Prefer not to say' : profile.sex.charAt(0).toUpperCase() + profile.sex.slice(1)}</Text>
+            <Text style={styles.value}>{profile.sex}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Current Weight:</Text>
             <Text style={styles.value}>{profile.currentWeight} lbs</Text>
           </View>
-          {profile.goalWeight && (
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Goal Weight:</Text>
-              <Text style={styles.value}>{profile.goalWeight} lbs</Text>
-            </View>
-          )}
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Goal Weight:</Text>
+            <Text style={styles.value}>{profile.goalWeight} lbs</Text>
+          </View>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Goal:</Text>
-            <Text style={styles.value}>
-              {profile.goal === 'lose' ? 'Lose Weight' : profile.goal === 'maintain' ? 'Maintain Weight' : 'Build Muscle'}
-            </Text>
+            <Text style={styles.value}>{profile.goal}</Text>
           </View>
-          {profile.activityLevel && (
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Activity Level:</Text>
-              <Text style={styles.value}>
-                {profile.activityLevel.charAt(0).toUpperCase() + profile.activityLevel.slice(1).replace(/([A-Z])/g, ' $1')}
-              </Text>
-            </View>
-          )}
+          <TouchableOpacity style={buttonStyles.primary} onPress={handleEditProfile}>
+            <Text style={buttonStyles.primaryText}>Edit Profile</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
+          <Text style={styles.sectionTitle}>Daily Targets</Text>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Protein:</Text>
-            <Text style={styles.value}>{profile.portionTargets.protein}</Text>
+            <Text style={styles.label}>🍗 Protein:</Text>
+            <Text style={styles.value}>{profile.targets.protein}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Vegetables:</Text>
-            <Text style={styles.value}>{profile.portionTargets.veggies}</Text>
+            <Text style={styles.label}>🥦 Veggies:</Text>
+            <Text style={styles.value}>{profile.targets.veggies}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Fruit:</Text>
-            <Text style={styles.value}>{profile.portionTargets.fruits}</Text>
+            <Text style={styles.label}>🍎 Fruit:</Text>
+            <Text style={styles.value}>{profile.targets.fruits}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Whole Grains:</Text>
-            <Text style={styles.value}>{profile.portionTargets.wholeGrains}</Text>
+            <Text style={styles.label}>🌾 Whole Grains:</Text>
+            <Text style={styles.value}>{profile.targets.wholeGrains}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Nuts & Seeds:</Text>
-            <Text style={styles.value}>{profile.portionTargets.nutsSeeds}</Text>
+            <Text style={styles.label}>🫘 Legumes:</Text>
+            <Text style={styles.value}>{profile.targets.legumes}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Fats:</Text>
-            <Text style={styles.value}>{profile.portionTargets.fats}</Text>
+            <Text style={styles.label}>🥜 Nuts & Seeds:</Text>
+            <Text style={styles.value}>{profile.targets.nutsSeeds}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Water:</Text>
-            <Text style={styles.value}>{profile.portionTargets.water}</Text>
+            <Text style={styles.label}>🥑 Fats:</Text>
+            <Text style={styles.value}>{profile.targets.fats}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Exercise:</Text>
-            <Text style={styles.value}>{profile.portionTargets.exercise || 0}</Text>
+            <Text style={styles.label}>💧 Water:</Text>
+            <Text style={styles.value}>{profile.targets.water}</Text>
           </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>🍷 Alcohol:</Text>
+            <Text style={styles.value}>{profile.targets.alcohol}</Text>
+          </View>
+          <TouchableOpacity style={buttonStyles.primary} onPress={handleEditTargets}>
+            <Text style={buttonStyles.primaryText}>Edit Targets</Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={[buttonStyles.primary, styles.editButton]}
-          onPress={() => router.push('/setup-profile')}
-        >
-          <Text style={buttonStyles.primaryText}>Edit Profile</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
+  scrollContent: {
     padding: 20,
-    paddingBottom: 140, // Extra padding for tab bar
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 30,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
-    marginTop: 12,
+    marginBottom: 24,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    ...commonStyles.shadow,
   },
   sectionTitle: {
     fontSize: 18,
@@ -171,25 +145,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: colors.border,
   },
   label: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: colors.secondaryText,
   },
   value: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-  },
-  editButton: {
-    marginTop: 20,
-    marginBottom: 40,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 40,
   },
 });
