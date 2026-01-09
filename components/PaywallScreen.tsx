@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -14,6 +12,8 @@ import {
   Linking,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -22,6 +22,7 @@ interface PaywallScreenProps {
 }
 
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubscribe = async () => {
@@ -35,15 +36,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const handleRestorePurchases = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      Alert.alert('Restore', 'No previous purchases found.');
-    }, 1500);
+    Alert.alert('Restore Purchases', 'No previous purchases found.');
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onDismiss}>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         {canDismiss && (
           <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
@@ -52,23 +49,45 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         )}
 
         <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.title}>Upgrade to Premium</Text>
-          <Text style={styles.subtitle}>Unlock all features and support development</Text>
+          <Text style={styles.title}>Unlock Premium</Text>
+          <Text style={styles.subtitle}>Get unlimited access to all features</Text>
 
           <View style={styles.featuresContainer}>
             <FeatureItem text="Unlimited portion tracking" />
-            <FeatureItem text="Advanced analytics & insights" />
-            <FeatureItem text="Custom food group targets" />
+            <FeatureItem text="Advanced adherence analytics" />
+            <FeatureItem text="Custom portion targets" />
+            <FeatureItem text="Weight tracking & charts" />
             <FeatureItem text="Export your data" />
             <FeatureItem text="Priority support" />
-            <FeatureItem text="Ad-free experience" />
           </View>
 
-          <View style={styles.pricingContainer}>
-            <View style={styles.priceCard}>
-              <Text style={styles.priceAmount}>$4.99</Text>
-              <Text style={styles.pricePeriod}>per month</Text>
-            </View>
+          <View style={styles.plansContainer}>
+            <TouchableOpacity
+              style={[styles.planCard, selectedPlan === 'yearly' && styles.planCardSelected]}
+              onPress={() => setSelectedPlan('yearly')}
+            >
+              <View style={styles.planHeader}>
+                <Text style={styles.planName}>Yearly</Text>
+                {selectedPlan === 'yearly' && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>BEST VALUE</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.planPrice}>$29.99/year</Text>
+              <Text style={styles.planDetail}>$2.50/month</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
+              onPress={() => setSelectedPlan('monthly')}
+            >
+              <View style={styles.planHeader}>
+                <Text style={styles.planName}>Monthly</Text>
+              </View>
+              <Text style={styles.planPrice}>$4.99/month</Text>
+              <Text style={styles.planDetail}>Billed monthly</Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -79,7 +98,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             {isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={buttonStyles.primaryText}>Subscribe Now</Text>
+              <Text style={buttonStyles.primaryText}>
+                Subscribe {selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'}
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -112,15 +133,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
+    top: 50,
+    right: 20,
     zIndex: 10,
     padding: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 20,
   },
   content: {
-    padding: 24,
+    padding: 20,
     paddingTop: 60,
   },
   title: {
@@ -132,7 +151,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -143,33 +162,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-    gap: 12,
   },
   featureText: {
     fontSize: 16,
     color: colors.text,
-    flex: 1,
+    marginLeft: 12,
   },
-  pricingContainer: {
-    alignItems: 'center',
+  plansContainer: {
     marginBottom: 24,
   },
-  priceCard: {
-    backgroundColor: '#f8f8f8',
+  planCard: {
+    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 24,
+    padding: 20,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  planCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: '#f0f8ff',
+  },
+  planHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    minWidth: 200,
+    marginBottom: 8,
   },
-  priceAmount: {
-    fontSize: 48,
+  planName: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: colors.primary,
+    color: colors.text,
   },
-  pricePeriod: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
+  badge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  planPrice: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  planDetail: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   subscribeButton: {
     marginBottom: 16,
@@ -179,14 +223,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   restoreText: {
-    fontSize: 16,
     color: colors.primary,
+    fontSize: 16,
   },
   disclaimer: {
     fontSize: 12,
-    color: '#999',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 16,
-    lineHeight: 18,
   },
 });

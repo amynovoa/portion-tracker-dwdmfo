@@ -1,25 +1,35 @@
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, commonStyles } from '@/styles/commonStyles';
-import { MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { loadProfile, saveProfile, loadResetTime, saveResetTime } from '@/utils/storage';
 import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
-import { loadResetTime, saveResetTime } from '@/utils/storage';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Switch } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import PaywallScreen from '@/components/PaywallScreen';
+import { Picker } from '@react-native-picker/picker';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const [celebrationEnabled, setCelebrationEnabled] = useState(true);
-  const [showPaywall, setShowPaywall] = useState(false);
+  const [resetHour, setResetHour] = useState(0);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadSettings();
+    }, [])
+  );
 
   const loadSettings = async () => {
-    const celebration = await loadCelebrationEnabled();
-    setCelebrationEnabled(celebration);
+    const enabled = await loadCelebrationEnabled();
+    setCelebrationEnabled(enabled);
+
+    const resetConfig = await loadResetTime();
+    if (resetConfig) {
+      setResetHour(resetConfig.hour);
+    }
   };
 
   const handleCelebrationToggle = async (value: boolean) => {
@@ -27,17 +37,9 @@ export default function SettingsScreen() {
     await saveCelebrationEnabled(value);
   };
 
-  const handleSubscription = () => {
-    console.log('Subscription button pressed - opening paywall');
-    setShowPaywall(true);
-  };
-
-  const handleDailyReset = () => {
-    Alert.alert('Daily Reset', 'Reset time: Midnight (12:00 AM)');
-  };
-
-  const handlePrivacyPolicy = () => {
-    Linking.openURL('https://yourapp.com/privacy');
+  const handleResetHourChange = async (hour: number) => {
+    setResetHour(hour);
+    await saveResetTime({ hour, minute: 0 });
   };
 
   const handleResetAppData = () => {
@@ -51,75 +53,73 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
-            Alert.alert('Success', 'App data has been reset. Please restart the app.');
+            router.replace('/welcome');
           },
         },
       ]
     );
   };
 
-  const handleDismissPaywall = () => {
-    console.log('Paywall dismissed');
-    setShowPaywall(false);
+  const handlePrivacyPolicy = () => {
+    Alert.alert('Privacy Policy', 'Privacy policy content will be displayed here.');
   };
-
-  console.log('Settings screen render - showPaywall:', showPaywall);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScrollView style={styles.container}>
         <Text style={styles.header}>Settings</Text>
 
         <View style={styles.section}>
-          <TouchableOpacity style={styles.row} onPress={handleSubscription}>
-            <View style={styles.rowLeft}>
-              <MaterialIcons name="star" size={24} color={colors.primary} />
-              <Text style={styles.rowText}>Subscription</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color="#999" />
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={() => setPaywallVisible(true)}
+          >
+            <Text style={styles.settingLabel}>Subscriptions</Text>
+            <Text style={styles.settingValue}>›</Text>
           </TouchableOpacity>
 
-          <View style={styles.row}>
-            <View style={styles.rowLeft}>
-              <MaterialIcons name="celebration" size={24} color={colors.primary} />
-              <Text style={styles.rowText}>Celebration</Text>
-            </View>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Celebration</Text>
             <Switch
               value={celebrationEnabled}
               onValueChange={handleCelebrationToggle}
               trackColor={{ false: '#767577', true: colors.primary }}
+              thumbColor="#fff"
             />
           </View>
 
-          <TouchableOpacity style={styles.row} onPress={handleDailyReset}>
-            <View style={styles.rowLeft}>
-              <MaterialIcons name="schedule" size={24} color={colors.primary} />
-              <Text style={styles.rowText}>Daily Reset</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color="#999" />
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Daily Reset</Text>
+            <Picker
+              selectedValue={resetHour}
+              onValueChange={handleResetHourChange}
+              style={styles.picker}
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <Picker.Item
+                  key={i}
+                  label={`${i.toString().padStart(2, '0')}:00`}
+                  value={i}
+                />
+              ))}
+            </Picker>
+          </View>
+
+          <TouchableOpacity style={styles.settingRow} onPress={handlePrivacyPolicy}>
+            <Text style={styles.settingLabel}>Privacy Policy</Text>
+            <Text style={styles.settingValue}>›</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.row} onPress={handlePrivacyPolicy}>
-            <View style={styles.rowLeft}>
-              <MaterialIcons name="privacy-tip" size={24} color={colors.primary} />
-              <Text style={styles.rowText}>Privacy Policy</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.row} onPress={handleResetAppData}>
-            <View style={styles.rowLeft}>
-              <MaterialIcons name="delete-forever" size={24} color="#FF3B30" />
-              <Text style={[styles.rowText, { color: '#FF3B30' }]}>Reset App Data</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color="#999" />
+          <TouchableOpacity style={styles.settingRow} onPress={handleResetAppData}>
+            <Text style={[styles.settingLabel, styles.dangerText]}>Reset App Data</Text>
+            <Text style={styles.settingValue}>›</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
       <PaywallScreen
-        visible={showPaywall}
-        onDismiss={handleDismissPaywall}
+        visible={paywallVisible}
+        onDismiss={() => setPaywallVisible(false)}
         canDismiss={true}
       />
     </SafeAreaView>
@@ -134,35 +134,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  contentContainer: {
-    padding: 20,
-  },
   header: {
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 24,
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 20,
   },
   section: {
     backgroundColor: '#fff',
+    marginHorizontal: 20,
     borderRadius: 12,
     overflow: 'hidden',
   },
-  row: {
+  settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  rowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  rowText: {
+  settingLabel: {
     fontSize: 16,
     color: colors.text,
+  },
+  settingValue: {
+    fontSize: 18,
+    color: colors.textSecondary,
+  },
+  dangerText: {
+    color: '#FF3B30',
+  },
+  picker: {
+    width: 120,
   },
 });
