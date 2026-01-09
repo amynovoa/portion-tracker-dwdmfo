@@ -168,6 +168,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 4,
+    marginVertical: 4,
   },
   slotCompleted: {
     backgroundColor: '#4CAF50',
