@@ -1,67 +1,34 @@
 
 import React from 'react';
-import { Tabs } from 'expo-router';
-import FloatingTabBar from '@/components/FloatingTabBar';
-import { colors } from '@/styles/commonStyles';
+import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-      }}
-      tabBar={(props) => (
-        <FloatingTabBar
-          tabs={[
-            {
-              name: '(home)',
-              title: 'Track',
-              icon: 'check-circle',
-              route: '/(tabs)/(home)',
-            },
-            {
-              name: 'history',
-              title: 'History',
-              icon: 'history',
-              route: '/(tabs)/history',
-            },
-            {
-              name: 'weight',
-              title: 'Weight',
-              icon: 'monitor-weight',
-              route: '/(tabs)/weight',
-            },
-            {
-              name: 'faq',
-              title: 'FAQs',
-              icon: 'help',
-              route: '/(tabs)/faq',
-            },
-            {
-              name: 'profile',
-              title: 'Profile',
-              icon: 'person',
-              route: '/(tabs)/profile',
-            },
-            {
-              name: 'settings',
-              title: 'Settings',
-              icon: 'settings',
-              route: '/(tabs)/settings',
-            },
-          ]}
-          useFullWidth={true}
-        />
-      )}
-    >
-      <Tabs.Screen name="(home)" options={{ title: 'Track' }} />
-      <Tabs.Screen name="history" options={{ title: 'History' }} />
-      <Tabs.Screen name="weight" options={{ title: 'Weight' }} />
-      <Tabs.Screen name="faq" options={{ title: 'FAQs' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
-      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
-    </Tabs>
+    <NativeTabs>
+      <NativeTabs.Trigger key="home" name="(home)">
+        <Icon sf="checkmark.square.fill" />
+        <Label>Track</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="history" name="history">
+        <Icon sf="clock.fill" />
+        <Label>History</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="weight" name="weight">
+        <Icon sf="scalemass.fill" />
+        <Label>Weight</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="faq" name="faq">
+        <Icon sf="questionmark.circle.fill" />
+        <Label>FAQs</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="profile" name="profile">
+        <Icon sf="person.fill" />
+        <Label>Profile</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="settings" name="settings">
+        <Icon sf="gearshape.fill" />
+        <Label>Settings</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

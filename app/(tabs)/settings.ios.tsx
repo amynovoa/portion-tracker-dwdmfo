@@ -1,65 +1,83 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Switch,
+  Linking,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { useRouter } from 'expo-router';
-import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
-import { loadResetTime, saveResetTime } from '@/utils/storage';
+import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
+import { loadResetTime } from '@/utils/storage';
+import PaywallScreen from '@/components/PaywallScreen';
+import AppLogo from '@/components/AppLogo';
 
 export default function SettingsScreen() {
-  const router = useRouter();
-  const [isCelebrationEnabled, setIsCelebrationEnabled] = useState(false);
-  const [resetHour, setResetHour] = useState(0);
+  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
+  const [resetTime, setResetTime] = useState('12:00 AM');
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
-    try {
-      const celebrationEnabled = await loadCelebrationEnabled();
-      setIsCelebrationEnabled(celebrationEnabled);
-      
-      const resetTime = await loadResetTime();
-      if (resetTime) {
-        setResetHour(resetTime.hour);
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
+    const celebration = await loadCelebrationEnabled();
+    setCelebrationEnabled(celebration);
+
+    const time = await loadResetTime();
+    if (time) {
+      setResetTime(formatResetTime(time.hour, time.minute));
     }
+  };
+
+  const formatResetTime = (hour: number, minute: number) => {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const displayMinute = minute.toString().padStart(2, '0');
+    return `${displayHour}:${displayMinute} ${period}`;
   };
 
   const handleCelebrationToggle = async (value: boolean) => {
-    try {
-      setIsCelebrationEnabled(value);
-      await saveCelebrationEnabled(value);
-    } catch (error) {
-      console.error('Error saving celebration setting:', error);
-      Alert.alert('Error', 'Failed to save celebration setting');
-    }
+    setCelebrationEnabled(value);
+    await saveCelebrationEnabled(value);
   };
 
-  const handleResetData = () => {
+  const handleSubscription = () => {
+    setShowPaywall(true);
+  };
+
+  const handleDailyReset = () => {
     Alert.alert(
-      'Reset All Data',
-      'Are you sure you want to reset all app data? This cannot be undone.',
+      'Daily Reset Time',
+      `Current reset time: ${resetTime}\n\nThis feature allows you to customize when your daily portions reset.`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handlePrivacyPolicy = () => {
+    Linking.openURL('https://yourapp.com/privacy');
+  };
+
+  const handleResetAppData = () => {
+    Alert.alert(
+      'Reset App Data',
+      'Are you sure you want to reset all app data? This will delete your profile, tracking history, and all settings. This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reset',
           style: 'destructive',
           onPress: async () => {
-            try {
-              await AsyncStorage.clear();
-              Alert.alert('Success', 'All data has been reset', [
-                { text: 'OK', onPress: () => router.replace('/welcome') }
-              ]);
-            } catch (error) {
-              console.error('Error resetting data:', error);
-              Alert.alert('Error', 'Failed to reset data');
-            }
+            await AsyncStorage.clear();
+            Alert.alert('Success', 'All app data has been reset. Please restart the app.');
           },
         },
       ]
@@ -67,96 +85,116 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.header}>Settings</Text>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Daily Completion Celebration</Text>
-              <Text style={styles.settingDescription}>
-                Show celebration when you complete all portions
-              </Text>
-            </View>
-            <Switch
-              value={isCelebrationEnabled}
-              onValueChange={handleCelebrationToggle}
-              trackColor={{ false: '#767577', true: colors.primary }}
-              thumbColor={isCelebrationEnabled ? '#fff' : '#f4f3f4'}
-            />
-          </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
+          <AppLogo size={40} />
+          <Text style={styles.title}>Settings</Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data</Text>
-          
-          <TouchableOpacity style={styles.settingRow} onPress={handleResetData}>
-            <View style={styles.settingInfo}>
-              <Text style={[styles.settingLabel, styles.dangerText]}>Reset All Data</Text>
-              <Text style={styles.settingDescription}>
-                Clear all app data and start over
-              </Text>
+        <View style={styles.settingsContainer}>
+          {/* Subscription */}
+          <TouchableOpacity style={styles.settingRow} onPress={handleSubscription}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="credit-card" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>Subscription</Text>
             </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Celebration */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="celebration" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>Celebration</Text>
+            </View>
+            <Switch
+              value={celebrationEnabled}
+              onValueChange={handleCelebrationToggle}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          {/* Daily Reset */}
+          <TouchableOpacity style={styles.settingRow} onPress={handleDailyReset}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="access-time" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>Daily Reset</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Privacy Policy */}
+          <TouchableOpacity style={styles.settingRow} onPress={handlePrivacyPolicy}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="shield" size={24} color={colors.primary} />
+              <Text style={styles.settingLabel}>Privacy Policy</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Reset App Data */}
+          <TouchableOpacity style={styles.settingRow} onPress={handleResetAppData}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="warning" size={24} color={colors.error} />
+              <Text style={[styles.settingLabel, { color: colors.error }]}>Reset App Data</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <PaywallScreen
+        visible={showPaywall}
+        onDismiss={() => setShowPaywall(false)}
+        canDismiss={true}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
+  scrollView: {
     flex: 1,
   },
-  contentContainer: {
-    padding: 20,
-  },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+  title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 24,
+    marginLeft: 12,
   },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
+  settingsContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.cardBackground,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  settingInfo: {
-    flex: 1,
-    marginRight: 12,
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   settingLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 18,
+    fontWeight: '600',
     color: colors.text,
-    marginBottom: 4,
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  dangerText: {
-    color: '#FF3B30',
   },
 });
