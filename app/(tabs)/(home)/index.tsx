@@ -60,9 +60,20 @@ export default function HomeScreen() {
     if (!profile) return;
     
     const portions = await loadDailyPortions(date);
-    if (portions) {
-      setDailyPortions(portions.portions);
+    if (portions && portions.portions) {
+      // Ensure all properties exist with fallback to 0
+      setDailyPortions({
+        wholeGrains: portions.portions.wholeGrains || 0,
+        protein: portions.portions.protein || 0,
+        veggies: portions.portions.veggies || 0,
+        fruits: portions.portions.fruits || 0,
+        dairy: portions.portions.dairy || 0,
+        water: portions.portions.water || 0,
+        nutsSeeds: portions.portions.nutsSeeds || 0,
+        exercise: portions.portions.exercise || 0,
+      });
     } else {
+      // Initialize with all zeros if no data exists
       setDailyPortions({
         wholeGrains: 0,
         protein: 0,
@@ -97,8 +108,8 @@ export default function HomeScreen() {
     
     const allComplete = FOOD_GROUPS.every(fg => {
       if (fg.key === 'exercise') return true;
-      const target = profile.portionTargets[fg.key];
-      const completed = updatedPortions[fg.key];
+      const target = profile.portionTargets[fg.key] || 0;
+      const completed = updatedPortions[fg.key] || 0;
       return completed >= target;
     });
     
@@ -112,10 +123,12 @@ export default function HomeScreen() {
     if (!profile) return;
     
     const newPortions = { ...dailyPortions };
+    const currentValue = newPortions[foodGroup] || 0;
+    
     if (increment) {
-      newPortions[foodGroup] += 1;
+      newPortions[foodGroup] = currentValue + 1;
     } else {
-      newPortions[foodGroup] = Math.max(0, newPortions[foodGroup] - 1);
+      newPortions[foodGroup] = Math.max(0, currentValue - 1);
     }
     
     setDailyPortions(newPortions);
@@ -154,20 +167,25 @@ export default function HomeScreen() {
           onDateSelect={handleDateSelect}
         />
         
-        {FOOD_GROUPS.map((fg, index) => (
-          <FoodGroupRow
-            key={fg.key}
-            foodGroup={fg.key}
-            label={fg.label}
-            icon={fg.icon}
-            completed={dailyPortions[fg.key] || 0}
-            target={profile.portionTargets[fg.key]}
-            onTogglePortion={(increment) => handleTogglePortion(fg.key, increment)}
-            hideCount={fg.key === 'exercise'}
-            showInfoHint={index === 0 && showInfoHint}
-            isFirstRow={index === 0}
-          />
-        ))}
+        {FOOD_GROUPS.map((fg, index) => {
+          const completed = dailyPortions[fg.key] || 0;
+          const target = profile.portionTargets[fg.key] || 0;
+          
+          return (
+            <FoodGroupRow
+              key={fg.key}
+              foodGroup={fg.key}
+              label={fg.label}
+              icon={fg.icon}
+              completed={completed}
+              target={target}
+              onTogglePortion={(increment) => handleTogglePortion(fg.key, increment)}
+              hideCount={fg.key === 'exercise'}
+              showInfoHint={index === 0 && showInfoHint}
+              isFirstRow={index === 0}
+            />
+          );
+        })}
       </ScrollView>
       
       <InfoHintTooltip

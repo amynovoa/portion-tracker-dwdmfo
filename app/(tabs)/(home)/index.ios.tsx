@@ -75,23 +75,36 @@ export default function HomeScreen() {
       let portions = await loadDailyPortions(date);
       console.log('Portions loaded:', portions ? 'Found' : 'Creating new');
       
-      // If no portions exist for this date, create default empty portions
+      // If no portions exist for this date, create default empty portions with ALL required properties
       if (!portions && profile) {
         portions = {
           date: date,
           portions: {
+            wholeGrains: 0,
             protein: 0,
             veggies: 0,
-            fruit: 0,
-            wholeGrains: 0,
-            nutsSeeds: 0,
-            fats: 0,
+            fruits: 0,
+            dairy: 0,
             water: 0,
-            alcohol: 0,
+            nutsSeeds: 0,
             exercise: 0,
           },
         };
         await saveDailyPortions(portions);
+      }
+      
+      // Ensure all properties exist even if loaded from storage (for backward compatibility)
+      if (portions) {
+        portions.portions = {
+          wholeGrains: portions.portions.wholeGrains || 0,
+          protein: portions.portions.protein || 0,
+          veggies: portions.portions.veggies || 0,
+          fruits: portions.portions.fruits || 0,
+          dairy: portions.portions.dairy || 0,
+          water: portions.portions.water || 0,
+          nutsSeeds: portions.portions.nutsSeeds || 0,
+          exercise: portions.portions.exercise || 0,
+        };
       }
       
       setDailyPortions(portions);
@@ -141,8 +154,8 @@ export default function HomeScreen() {
       return;
     }
 
-    const currentValue = dailyPortions.portions[foodGroup];
-    const targetValue = profile.portionTargets[foodGroup];
+    const currentValue = dailyPortions.portions[foodGroup] || 0;
+    const targetValue = profile.portionTargets[foodGroup] || 0;
     
     console.log(`Current value: ${currentValue}, Target value: ${targetValue}`);
     
@@ -222,6 +235,8 @@ export default function HomeScreen() {
         <View style={styles.portionsContainer}>
           {FOOD_GROUPS.map((foodGroupItem, index) => {
             const hideCount = foodGroupItem.key === 'exercise';
+            const completed = dailyPortions.portions[foodGroupItem.key] || 0;
+            const target = profile.portionTargets[foodGroupItem.key] || 0;
             
             return (
               <FoodGroupRow
@@ -229,8 +244,8 @@ export default function HomeScreen() {
                 foodGroup={foodGroupItem.key}
                 label={foodGroupItem.label}
                 icon={foodGroupItem.icon}
-                completed={dailyPortions.portions[foodGroupItem.key]}
-                target={profile.portionTargets[foodGroupItem.key]}
+                completed={completed}
+                target={target}
                 onTogglePortion={(increment) => handleTogglePortion(foodGroupItem.key, increment)}
                 showInfoHint={showInfoHint && index === 0}
                 isFirstRow={index === 0}
