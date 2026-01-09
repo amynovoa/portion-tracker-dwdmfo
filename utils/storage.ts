@@ -7,6 +7,7 @@ const DAILY_PORTIONS_PREFIX = '@portion_tracker_daily_';
 const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
 const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
+const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
 
 export interface ResetTimeConfig {
   hour: number;
@@ -50,7 +51,24 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
     const key = `${DAILY_PORTIONS_PREFIX}${date}`;
     const data = await AsyncStorage.getItem(key);
     if (data) {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      
+      // Ensure all properties exist with fallback to 0 for backward compatibility
+      if (parsed && parsed.portions) {
+        return {
+          date: parsed.date || date,
+          portions: {
+            wholeGrains: parsed.portions.wholeGrains || 0,
+            protein: parsed.portions.protein || 0,
+            veggies: parsed.portions.veggies || 0,
+            fruits: parsed.portions.fruits || 0,
+            dairy: parsed.portions.dairy || 0,
+            water: parsed.portions.water || 0,
+            nutsSeeds: parsed.portions.nutsSeeds || 0,
+            exercise: parsed.portions.exercise || 0,
+          },
+        };
+      }
     }
   } catch (error) {
     console.error('Error loading daily portions:', error);
@@ -68,7 +86,23 @@ export async function getAllDailyPortions(): Promise<DailyPortions[]> {
       .map(([key, value]) => {
         if (value) {
           try {
-            return JSON.parse(value) as DailyPortions;
+            const parsed = JSON.parse(value);
+            // Ensure all properties exist with fallback to 0
+            if (parsed && parsed.portions) {
+              return {
+                date: parsed.date,
+                portions: {
+                  wholeGrains: parsed.portions.wholeGrains || 0,
+                  protein: parsed.portions.protein || 0,
+                  veggies: parsed.portions.veggies || 0,
+                  fruits: parsed.portions.fruits || 0,
+                  dairy: parsed.portions.dairy || 0,
+                  water: parsed.portions.water || 0,
+                  nutsSeeds: parsed.portions.nutsSeeds || 0,
+                  exercise: parsed.portions.exercise || 0,
+                },
+              } as DailyPortions;
+            }
           } catch (e) {
             console.error('Error parsing daily portions:', e);
             return null;
@@ -165,8 +199,6 @@ export async function loadLastResetDate(): Promise<string | null> {
 }
 
 // Info hint functions
-const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
-
 export async function hasSeenInfoHint(): Promise<boolean> {
   try {
     const data = await AsyncStorage.getItem(INFO_HINT_SEEN_KEY);

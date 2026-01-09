@@ -16,16 +16,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [dailyPortions, setDailyPortions] = useState<PortionTargets>({
-    wholeGrains: 0,
-    protein: 0,
-    veggies: 0,
-    fruits: 0,
-    dairy: 0,
-    water: 0,
-    nutsSeeds: 0,
-    exercise: 0,
-  });
+  const [dailyPortions, setDailyPortions] = useState<DailyPortions | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -37,53 +29,79 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-    loadDateData(selectedDate);
+    if (profile) {
+      loadDateData(selectedDate);
+    }
   }, [selectedDate, profile]);
 
   const loadData = async () => {
-    const prof = await loadProfile();
-    if (!prof) {
-      router.replace('/setup-profile');
-      return;
+    console.log('Loading track screen data...');
+    try {
+      setLoading(true);
+      const userProfile = await loadProfile();
+      console.log('Profile loaded:', userProfile ? 'Found' : 'Not found');
+      
+      if (!userProfile) {
+        console.log('No profile found, redirecting to setup...');
+        router.replace('/setup-profile');
+        return;
+      }
+      
+      setProfile(userProfile);
+      await loadDateData(selectedDate);
+      
+      const hasSeenHint = await hasSeenInfoHint();
+      if (!hasSeenHint) {
+        setShowInfoHint(true);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
     }
-    setProfile(prof);
-    
-    const hintSeen = await hasSeenInfoHint();
-    if (!hintSeen) {
-      setShowInfoHint(true);
-    }
-    
-    await loadDateData(selectedDate);
   };
 
   const loadDateData = async (date: string) => {
-    if (!profile) return;
-    
-    const portions = await loadDailyPortions(date);
-    if (portions && portions.portions) {
-      // Ensure all properties exist with fallback to 0
-      setDailyPortions({
-        wholeGrains: portions.portions.wholeGrains || 0,
-        protein: portions.portions.protein || 0,
-        veggies: portions.portions.veggies || 0,
-        fruits: portions.portions.fruits || 0,
-        dairy: portions.portions.dairy || 0,
-        water: portions.portions.water || 0,
-        nutsSeeds: portions.portions.nutsSeeds || 0,
-        exercise: portions.portions.exercise || 0,
-      });
-    } else {
-      // Initialize with all zeros if no data exists
-      setDailyPortions({
-        wholeGrains: 0,
-        protein: 0,
-        veggies: 0,
-        fruits: 0,
-        dairy: 0,
-        water: 0,
-        nutsSeeds: 0,
-        exercise: 0,
-      });
+    console.log('Loading date data for:', date);
+    try {
+      let portions = await loadDailyPortions(date);
+      console.log('Portions loaded:', portions ? 'Found' : 'Creating new');
+      
+      // If no portions exist for this date, create default empty portions with ALL required properties
+      if (!portions && profile) {
+        portions = {
+          date: date,
+          portions: {
+            wholeGrains: 0,
+            protein: 0,
+            veggies: 0,
+            fruits: 0,
+            dairy: 0,
+            water: 0,
+            nutsSeeds: 0,
+            exercise: 0,
+          },
+        };
+        await saveDailyPortions(portions);
+      }
+      
+      // Ensure all properties exist even if loaded from storage (for backward compatibility)
+      if (portions) {
+        portions.portions = {
+          wholeGrains: portions.portions.wholeGrains || 0,
+          protein: portions.portions.protein || 0,
+          veggies: portions.portions.veggies || 0,
+          fruits: portions.portions.fruits || 0,
+          dairy: portions.portions.dairy || 0,
+          water: portions.portions.water || 0,
+          nutsSeeds: portions.portions.nutsSeeds || 0,
+          exercise: portions.portions.exercise || 0,
+        };
+      }
+      
+      setDailyPortions(portions);
+    } catch (error) {
+      console.error('Error loading date data:', error);
     }
   };
 
@@ -120,25 +138,37 @@ export default function HomeScreen() {
   };
 
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
-    if (!profile) return;
-    
-    const newPortions = { ...dailyPortions };
-    const currentValue = newPortions[foodGroup] || 0;
-    
-    if (increment) {
-      newPortions[foodGroup] = currentValue + 1;
-    } else {
-      newPortions[foodGroup] = Math.max(0, currentValue - 1);
+    console.log(`handleTogglePortion called: foodGroup=${foodGroup}, increment=${increment}`);
+    if (!profile || !dailyPortions) {
+      console.log('Cannot toggle portion: profile or dailyPortions is null');
+      return;
     }
+
+    const currentValue = dailyPortions.portions[foodGroup] || 0;
+    console.log(`Current value for ${foodGroup}: ${currentValue}`);
     
-    setDailyPortions(newPortions);
-    
-    await saveDailyPortions({
-      date: selectedDate,
-      portions: newPortions,
-    });
-    
-    await checkAndShowCelebration(newPortions);
+    let newValue = currentValue;
+    if (increment) {
+      newValue = currentValue + 1;
+    } else if (!increment && currentValue > 0) {
+      newValue = currentValue - 1;
+    }
+
+    console.log(`New value for ${foodGroup}: ${newValue}`);
+
+    const updatedPortions = {
+      ...dailyPortions.portions,
+      [foodGroup]: newValue,
+    };
+
+    const updatedDailyPortions: DailyPortions = {
+      ...dailyPortions,
+      portions: updatedPortions,
+    };
+
+    setDailyPortions(updatedDailyPortions);
+    await saveDailyPortions(updatedDailyPortions);
+    await checkAndShowCelebration(updatedPortions);
   };
 
   const handleDismissInfoHint = async () => {
@@ -150,8 +180,26 @@ export default function HomeScreen() {
     setShowCelebration(false);
   };
 
-  if (!profile) {
-    return null;
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={commonStyles.bodyText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!profile || !dailyPortions) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={commonStyles.bodyText}>No data available</Text>
+        <TouchableOpacity 
+          style={[buttonStyles.primary, { marginTop: 20 }]}
+          onPress={() => router.push('/setup-profile')}
+        >
+          <Text style={buttonStyles.primaryText}>Set Up Profile</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
@@ -167,8 +215,12 @@ export default function HomeScreen() {
           onDateSelect={handleDateSelect}
         />
         
+        <View style={styles.dateHeader}>
+          <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
+        </View>
+        
         {FOOD_GROUPS.map((fg, index) => {
-          const completed = dailyPortions[fg.key] || 0;
+          const completed = dailyPortions.portions[fg.key] || 0;
           const target = profile.portionTargets[fg.key] || 0;
           
           return (
@@ -208,5 +260,19 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 120,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dateHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
   },
 });
