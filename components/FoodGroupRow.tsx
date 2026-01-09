@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from '@/styles/commonStyles';
-import { FoodGroup, FOOD_GROUPS } from '@/types';
+import { FoodGroup } from '@/types';
 import { FOOD_GROUP_INFO } from '@/constants/foodGroupInfo';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import PortionSlot from './PortionSlot';
@@ -26,7 +26,9 @@ export default function FoodGroupRow({
   completed, 
   target, 
   onTogglePortion, 
-  hideCount 
+  hideCount,
+  showInfoHint,
+  isFirstRow
 }: FoodGroupRowProps) {
   const [showInfo, setShowInfo] = useState(false);
   const info = FOOD_GROUP_INFO[foodGroup];

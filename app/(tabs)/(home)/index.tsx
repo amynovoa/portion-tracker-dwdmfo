@@ -80,7 +80,7 @@ export default function HomeScreen() {
             fats: 0,
             water: 0,
             alcohol: 0,
-            exercise: 0, // Exercise starts at 0
+            exercise: 0,
           },
         };
         await saveDailyPortions(portions);
@@ -140,7 +140,6 @@ export default function HomeScreen() {
     
     let newValue = currentValue;
     if (increment) {
-      // Allow going beyond target
       newValue = currentValue + 1;
     } else if (!increment && currentValue > 0) {
       newValue = currentValue - 1;
@@ -214,7 +213,6 @@ export default function HomeScreen() {
 
         <View style={styles.portionsContainer}>
           {FOOD_GROUPS.map((foodGroupItem, index) => {
-            // Hide the count for exercise (it's always 1)
             const hideCount = foodGroupItem.key === 'exercise';
             
             return (
