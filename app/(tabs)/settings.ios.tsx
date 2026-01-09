@@ -7,6 +7,8 @@ import {
   Text,
   TouchableOpacity,
   Switch,
+  Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -14,11 +16,16 @@ import { GlassView } from 'expo-glass-effect';
 import { useTheme } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { saveResetTime, loadResetTime, ResetTimeConfig } from '@/utils/storage';
+import { saveCelebrationEnabled, loadCelebrationEnabled } from '@/utils/celebrationStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const [resetTimeEnabled, setResetTimeEnabled] = useState(false);
   const [resetTime, setResetTime] = useState(new Date());
+  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -30,6 +37,9 @@ export default function SettingsScreen() {
     const date = new Date();
     date.setHours(config.hour, config.minute, 0, 0);
     setResetTime(date);
+
+    const celebrationSetting = await loadCelebrationEnabled();
+    setCelebrationEnabled(celebrationSetting);
   }
 
   async function handleResetToggle(value: boolean) {
@@ -54,6 +64,45 @@ export default function SettingsScreen() {
     }
   }
 
+  async function handleCelebrationToggle(value: boolean) {
+    setCelebrationEnabled(value);
+    await saveCelebrationEnabled(value);
+  }
+
+  function handleActivityLevel() {
+    router.push('/activity-level');
+  }
+
+  function handlePrivacyPolicy() {
+    Linking.openURL('https://www.portiontracker.app/privacy');
+  }
+
+  function handleResetAppData() {
+    Alert.alert(
+      'Reset App Data',
+      'This will delete all your data including profile, daily tracking, weight entries, and settings. This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              Alert.alert('Success', 'All app data has been reset. Please restart the app.');
+            } catch (error) {
+              console.error('Error resetting app data:', error);
+              Alert.alert('Error', 'Failed to reset app data. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  }
+
   function formatTime(date: Date): string {
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -68,6 +117,37 @@ export default function SettingsScreen() {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
       >
+        {/* Preferences Section */}
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Preferences</Text>
+        
+        <GlassView style={styles.section} glassEffectStyle="regular">
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="party.popper.fill" android_material_icon_name="celebration" size={20} color={theme.dark ? '#98989D' : '#666'} />
+              <Text style={[styles.settingText, { color: theme.colors.text }]}>Daily Celebrations</Text>
+            </View>
+            <Switch
+              value={celebrationEnabled}
+              onValueChange={handleCelebrationToggle}
+              trackColor={{ false: '#767577', true: theme.colors.primary }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          <View style={styles.divider} />
+
+          <TouchableOpacity style={styles.settingRow} onPress={handleActivityLevel}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="figure.run" android_material_icon_name="directions-run" size={20} color={theme.dark ? '#98989D' : '#666'} />
+              <Text style={[styles.settingText, { color: theme.colors.text }]}>Activity Level</Text>
+            </View>
+            <View style={styles.settingRight}>
+              <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={16} color={theme.dark ? '#98989D' : '#666'} />
+            </View>
+          </TouchableOpacity>
+        </GlassView>
+
+        {/* Daily Reset Section */}
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Daily Reset</Text>
         
         <GlassView style={styles.section} glassEffectStyle="regular">
@@ -109,6 +189,36 @@ export default function SettingsScreen() {
               />
             </>
           )}
+        </GlassView>
+
+        {/* About Section */}
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>About</Text>
+        
+        <GlassView style={styles.section} glassEffectStyle="regular">
+          <TouchableOpacity style={styles.settingRow} onPress={handlePrivacyPolicy}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="hand.raised.fill" android_material_icon_name="privacy-tip" size={20} color={theme.dark ? '#98989D' : '#666'} />
+              <Text style={[styles.settingText, { color: theme.colors.text }]}>Privacy Policy</Text>
+            </View>
+            <View style={styles.settingRight}>
+              <IconSymbol ios_icon_name="arrow.up.right" android_material_icon_name="open-in-new" size={16} color={theme.dark ? '#98989D' : '#666'} />
+            </View>
+          </TouchableOpacity>
+        </GlassView>
+
+        {/* Danger Zone Section */}
+        <Text style={[styles.sectionTitle, { color: '#FF3B30' }]}>Danger Zone</Text>
+        
+        <GlassView style={styles.section} glassEffectStyle="regular">
+          <TouchableOpacity style={styles.settingRow} onPress={handleResetAppData}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="trash.fill" android_material_icon_name="delete" size={20} color="#FF3B30" />
+              <Text style={[styles.settingText, { color: '#FF3B30' }]}>Reset App Data</Text>
+            </View>
+            <View style={styles.settingRight}>
+              <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={16} color={theme.dark ? '#98989D' : '#666'} />
+            </View>
+          </TouchableOpacity>
         </GlassView>
       </ScrollView>
     </SafeAreaView>
