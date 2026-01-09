@@ -16,6 +16,8 @@ import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { checkAndPerformDailyReset } from "@/utils/dailyReset";
+import { SuperwallProvider, SuperwallLoading, SuperwallLoaded } from "expo-superwall";
+import { ActivityIndicator } from "react-native";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -23,6 +25,9 @@ SplashScreen.preventAutoHideAsync();
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
+
+// Replace with your actual Superwall API key from the Superwall dashboard
+const SUPERWALL_API_KEY = "pk_d4f8c8e7e8f8e8f8e8f8e8f8e8f8e8f8"; // TODO: Replace with your actual API key
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<
@@ -238,13 +243,27 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <StatusBar style="auto" animated />
-      <SubscriptionProvider>
-        <WidgetProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </WidgetProvider>
-      </SubscriptionProvider>
+      <SuperwallProvider 
+        apiKeys={{ ios: SUPERWALL_API_KEY }}
+        onConfigurationError={(error) => {
+          console.error("Superwall configuration error:", error);
+        }}
+      >
+        <SuperwallLoading>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+            <ActivityIndicator size="large" color="#FF6B6B" />
+          </View>
+        </SuperwallLoading>
+        <SuperwallLoaded>
+          <SubscriptionProvider>
+            <WidgetProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <RootLayoutNav />
+              </GestureHandlerRootView>
+            </WidgetProvider>
+          </SubscriptionProvider>
+        </SuperwallLoaded>
+      </SuperwallProvider>
     </ErrorBoundary>
   );
 }

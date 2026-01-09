@@ -1,67 +1,64 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import {
-  getSubscriptionStatus,
-  startTrial,
-  shouldShowPaywall,
-  SubscriptionStatus,
-} from '@/utils/subscriptionManager';
+import { useUser, usePlacement } from 'expo-superwall';
 
 interface SubscriptionContextType {
-  subscriptionStatus: SubscriptionStatus | null;
+  isSubscribed: boolean;
   isLoading: boolean;
-  refreshSubscriptionStatus: () => Promise<void>;
-  shouldShowPaywall: boolean;
-  startFreeTrial: () => Promise<void>;
+  showPaywall: (placement?: string) => Promise<void>;
+  subscriptionStatus: 'UNKNOWN' | 'INACTIVE' | 'ACTIVE';
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [shouldShowPaywallState, setShouldShowPaywallState] = useState(false);
+  const { subscriptionStatus, user } = useUser();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { registerPlacement } = usePlacement({
+    onPresent: (info) => {
+      console.log('Paywall presented:', info);
+    },
+    onDismiss: (info, result) => {
+      console.log('Paywall dismissed:', info, 'Result:', result);
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      console.error('Paywall error:', error);
+      setIsLoading(false);
+    },
+  });
 
-  const refreshSubscriptionStatus = async () => {
+  const isSubscribed = subscriptionStatus?.status === 'ACTIVE';
+
+  const showPaywall = async (placement: string = 'settings_paywall') => {
     try {
       setIsLoading(true);
-      const status = await getSubscriptionStatus();
-      setSubscriptionStatus(status);
-      
-      const showPaywall = await shouldShowPaywall();
-      setShouldShowPaywallState(showPaywall);
-      
-      console.log('Subscription status updated:', status);
-      console.log('Should show paywall:', showPaywall);
+      await registerPlacement({
+        placement,
+        feature: () => {
+          console.log('User has access to feature');
+          setIsLoading(false);
+        },
+      });
     } catch (error) {
-      console.error('Error refreshing subscription status:', error);
-    } finally {
+      console.error('Error showing paywall:', error);
       setIsLoading(false);
     }
   };
 
-  const startFreeTrial = async () => {
-    try {
-      await startTrial();
-      await refreshSubscriptionStatus();
-    } catch (error) {
-      console.error('Error starting free trial:', error);
-      throw error;
-    }
-  };
-
   useEffect(() => {
-    refreshSubscriptionStatus();
-  }, []);
+    console.log('Subscription status:', subscriptionStatus?.status);
+    console.log('User:', user);
+  }, [subscriptionStatus, user]);
 
   return (
     <SubscriptionContext.Provider
       value={{
-        subscriptionStatus,
+        isSubscribed,
         isLoading,
-        refreshSubscriptionStatus,
-        shouldShowPaywall: shouldShowPaywallState,
-        startFreeTrial,
+        showPaywall,
+        subscriptionStatus: subscriptionStatus?.status || 'UNKNOWN',
       }}
     >
       {children}

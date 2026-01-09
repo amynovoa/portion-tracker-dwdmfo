@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { clearAllData } from '@/utils/storage';
 import AppLogo from '@/components/AppLogo';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -52,15 +53,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  subscriptionBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  subscriptionBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
 });
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { isSubscribed, showPaywall, subscriptionStatus } = useSubscription();
 
-  const handleSubscription = () => {
+  const handleSubscription = async () => {
     if (Platform.OS === 'ios') {
-      Linking.openURL('https://apps.apple.com/account/subscriptions');
+      // Show Superwall paywall for iOS
+      await showPaywall('settings_paywall');
     } else {
+      // For Android, open Play Store subscriptions (when Android support is added)
       Linking.openURL('https://play.google.com/store/account/subscriptions');
     }
   };
@@ -113,6 +129,11 @@ export default function SettingsScreen() {
             <IconSymbol ios_icon_name="creditcard.fill" android_material_icon_name="credit-card" size={24} color="#FF6B6B" />
           </View>
           <Text style={styles.settingLabel}>Subscription</Text>
+          {isSubscribed && (
+            <View style={styles.subscriptionBadge}>
+              <Text style={styles.subscriptionBadgeText}>Active</Text>
+            </View>
+          )}
           <View style={styles.chevronContainer}>
             <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={colors.textSecondary} />
           </View>
