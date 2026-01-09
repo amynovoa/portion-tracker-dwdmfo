@@ -7,6 +7,7 @@ import PortionDropdown from '@/components/PortionDropdown';
 import { Sex, Goal, UserProfile, PortionTargets, ActivityLevel, ACTIVITY_LEVELS } from '@/types';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { IconSymbol } from '@/components/IconSymbol';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -154,6 +155,21 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={[commonStyles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => router.push('/(tabs)/settings')}
+        >
+          <IconSymbol 
+            ios_icon_name="gearshape.fill" 
+            android_material_icon_name="settings" 
+            size={24} 
+            color={colors.text} 
+          />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your Information</Text>
 
@@ -270,11 +286,30 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       )}
+      
+      {/* Add bottom padding to ensure content is not hidden by tab bar */}
+      <View style={{ height: 100 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  settingsButton: {
+    padding: 8,
+  },
   section: {
     padding: 20,
   },
