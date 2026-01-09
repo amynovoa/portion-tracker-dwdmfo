@@ -238,6 +238,7 @@ export default function HomeScreen() {
               completed={completed}
               target={target}
               onTogglePortion={(increment) => handleTogglePortion(fg.key, increment)}
+              hideCount={fg.key === 'exercise'}
               showInfoHint={index === 0 && showInfoHint}
               isFirstRow={index === 0}
             />

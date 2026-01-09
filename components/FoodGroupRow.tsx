@@ -56,8 +56,9 @@ export default function FoodGroupRow({
     }
   };
 
-  // Show enough slots to accommodate completed portions, with extra slots for adding more
-  const maxSlots = Math.max(target, completed + 3);
+  // For exercise, always show only 1 circle
+  // For other food groups, show enough slots to accommodate completed portions, with extra slots for adding more
+  const maxSlots = foodGroup === 'exercise' ? 1 : Math.max(target, completed + 3);
 
   return (
     <View style={styles.container}>
