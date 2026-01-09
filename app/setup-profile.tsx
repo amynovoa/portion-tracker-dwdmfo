@@ -40,7 +40,7 @@ export default function SetupProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Let's Set Up Your Profile</Text>
+        <Text style={styles.title}>Let&apos;s Set Up Your Profile</Text>
 
         <View style={styles.section}>
           <Text style={styles.label}>Sex</Text>
@@ -123,22 +123,26 @@ export default function SetupProfileScreen() {
               <Text style={styles.toggleText}>{includeAlcohol ? 'Yes' : 'No'}</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.label}>Daily Alcohol Servings</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={alcoholServings}
-              onValueChange={(value) => setAlcoholServings(value)}
-              style={styles.picker}
-            >
-              {[0, 1, 2].map((num) => (
-                <Picker.Item key={num} label={num.toString()} value={num} />
-              ))}
-            </Picker>
-          </View>
+          {includeAlcohol && (
+            <>
+              <Text style={styles.label}>Daily Alcohol Servings</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={alcoholServings}
+                  onValueChange={(value) => setAlcoholServings(value)}
+                  style={styles.picker}
+                >
+                  {[0, 1, 2].map((num) => (
+                    <Picker.Item key={num} label={num.toString()} value={num} />
+                  ))}
+                </Picker>
+              </View>
+            </>
+          )}
         </View>
 
-        <TouchableOpacity style={buttonStyles.primary} onPress={handleContinue}>
-          <Text style={buttonStyles.primaryText}>Continue</Text>
+        <TouchableOpacity style={buttonStyles.primaryButton} onPress={handleContinue}>
+          <Text style={buttonStyles.primaryButtonText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -152,6 +156,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 28,

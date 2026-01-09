@@ -98,6 +98,13 @@ function RootLayoutNav() {
               }}
             />
             <Stack.Screen
+              name="setup-profile"
+              options={{
+                presentation: "modal",
+                title: "Set Up Profile",
+              }}
+            />
+            <Stack.Screen
               name="setup-targets"
               options={{
                 presentation: "modal",

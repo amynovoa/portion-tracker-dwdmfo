@@ -1,168 +1,56 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
-import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
-import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
-import FoodGroupRow from '@/components/FoodGroupRow';
-import ExerciseRow from '@/components/ExerciseRow';
-import AppLogo from '@/components/AppLogo';
-import InfoHintTooltip from '@/components/InfoHintTooltip';
 import DaySelector from '@/components/DaySelector';
+import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
+import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { useRouter, useFocusEffect } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
+import FoodGroupRow from '@/components/FoodGroupRow';
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
-import { useSubscription } from '@/contexts/SubscriptionContext';
+import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
+import ExerciseRow from '@/components/ExerciseRow';
+import InfoHintTooltip from '@/components/InfoHintTooltip';
 
 export default function HomeScreen() {
-  const router = useRouter();
-  const { isSubscribed } = useSubscription();
-  
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
-  const [datePortions, setDatePortions] = useState<PortionTargets | null>(null);
-  const [exerciseCompleted, setExerciseCompleted] = useState(false);
-  const [allRecords, setAllRecords] = useState<DailyPortions[]>([]);
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
+  const [dailyPortions, setDailyPortions] = useState<DailyPortions | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  
-  // Use ref to prevent multiple simultaneous loads
-  const isLoadingRef = useRef(false);
-
-  const loadData = async () => {
-    if (isLoadingRef.current) {
-      console.log('Load already in progress, skipping...');
-      return;
-    }
-
-    isLoadingRef.current = true;
-
-    try {
-      console.log('Home: Loading data...');
-      
-      const userProfile = await loadProfile();
-      
-      if (!userProfile) {
-        console.log('Home: No profile found');
-        setLoading(false);
-        setProfile(null);
-        setDatePortions(null);
-        setExerciseCompleted(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      console.log('Home: Profile found, loading portions');
-      
-      if (!userProfile.portionTargets) {
-        console.error('Profile has no targets!');
-        setLoading(false);
-        isLoadingRef.current = false;
-        return;
-      }
-
-      const safeTargets: PortionTargets = {
-        protein: userProfile.portionTargets.protein || 0,
-        veggies: userProfile.portionTargets.veggies || 0,
-        fruit: userProfile.portionTargets.fruit || 0,
-        wholeGrains: userProfile.portionTargets.wholeGrains || 0,
-        nutsSeeds: userProfile.portionTargets.nutsSeeds || 0,
-        fats: userProfile.portionTargets.fats || 0,
-        water: userProfile.portionTargets.water || 8,
-        alcohol: userProfile.portionTargets.alcohol || 0,
-      };
-
-      userProfile.portionTargets = safeTargets;
-      setProfile(userProfile);
-
-      await loadDateData(selectedDate);
-
-      const records = await getAllDailyPortions();
-      console.log('All records loaded:', records ? records.length : 0);
-      setAllRecords(Array.isArray(records) ? records : []);
-      
-      if (selectedDate === getTodayString()) {
-        const seenHint = await hasSeenInfoHint();
-        console.log('Has seen info hint:', seenHint);
-        setShowInfoHint(!seenHint);
-      } else {
-        setShowInfoHint(false);
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      setLoading(false);
-    } finally {
-      isLoadingRef.current = false;
-    }
-  };
-
-  const loadDateData = async (date: string) => {
-    try {
-      console.log('Loading data for date:', date);
-      
-      const dailyData = await loadDailyPortions(date);
-
-      if (dailyData && dailyData.portions) {
-        console.log('Daily data found:', dailyData);
-        
-        const portions: PortionTargets = {
-          protein: dailyData.portions.protein || 0,
-          veggies: dailyData.portions.veggies || 0,
-          fruit: dailyData.portions.fruit || 0,
-          wholeGrains: dailyData.portions.wholeGrains || 0,
-          nutsSeeds: dailyData.portions.nutsSeeds || 0,
-          fats: dailyData.portions.fats || 0,
-          water: dailyData.portions.water || 0,
-          alcohol: dailyData.portions.alcohol || 0,
-        };
-        
-        setDatePortions(portions);
-        setExerciseCompleted(dailyData.exercise || false);
-      } else {
-        console.log('No daily data, creating empty portions');
-        const emptyPortions: PortionTargets = {
-          protein: 0,
-          veggies: 0,
-          fruit: 0,
-          wholeGrains: 0,
-          nutsSeeds: 0,
-          fats: 0,
-          water: 0,
-          alcohol: 0,
-        };
-        setDatePortions(emptyPortions);
-        setExerciseCompleted(false);
-      }
-    } catch (error) {
-      console.error('Error loading date data:', error);
-    }
-  };
+  const [showInfoHint, setShowInfoHint] = useState(false);
+  const router = useRouter();
 
   useFocusEffect(
     React.useCallback(() => {
-      console.log('Home screen focused, loading data');
       loadData();
     }, [])
   );
 
   useEffect(() => {
-    if (profile) {
-      loadDateData(selectedDate);
-      
-      if (selectedDate === getTodayString()) {
-        hasSeenInfoHint().then(seenHint => {
-          setShowInfoHint(!seenHint);
-        });
-      } else {
-        setShowInfoHint(false);
-      }
-    }
+    loadDateData(selectedDate);
   }, [selectedDate]);
+
+  const loadData = async () => {
+    const userProfile = await loadProfile();
+    setProfile(userProfile);
+    
+    if (!userProfile) {
+      router.replace('/setup-profile');
+      return;
+    }
+
+    await loadDateData(selectedDate);
+    
+    const hintSeen = await hasSeenInfoHint();
+    setShowInfoHint(!hintSeen);
+  };
+
+  const loadDateData = async (date: string) => {
+    const portions = await loadDailyPortions(date);
+    setDailyPortions(portions);
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -171,255 +59,125 @@ export default function HomeScreen() {
   };
 
   const handleDateSelect = (date: string) => {
-    console.log('Date selected:', date);
     setSelectedDate(date);
   };
 
   const checkAndShowCelebration = async (updatedPortions: PortionTargets) => {
-    if (!profile) return;
+    if (!profile || selectedDate !== getTodayString()) return;
 
-    // Only check for today
-    if (selectedDate !== getTodayString()) return;
-
-    // Check if celebration is enabled
     const celebrationEnabled = await loadCelebrationEnabled();
-    if (!celebrationEnabled) {
-      console.log('Celebration is disabled');
-      return;
-    }
+    if (!celebrationEnabled) return;
 
-    // Check if celebration was already shown today
     const alreadyShown = await hasCelebrationBeenShownToday(selectedDate);
-    if (alreadyShown) {
-      console.log('Celebration already shown today');
-      return;
-    }
+    if (alreadyShown) return;
 
-    // Check if all targets are met (100% completion)
-    const targets = profile.portionTargets;
-    let allComplete = true;
-
-    // Check each food group
-    for (const group of FOOD_GROUPS) {
-      const target = targets[group.key] || 0;
-      const completed = updatedPortions[group.key] || 0;
-      
-      // Skip if target is 0 (not tracking this food group)
-      if (target === 0) continue;
-      
-      if (completed < target) {
-        allComplete = false;
-        break;
-      }
-    }
+    const allComplete = FOOD_GROUPS.every(group => {
+      const target = profile.portionTargets[group];
+      const completed = updatedPortions[group] || 0;
+      return completed >= target;
+    });
 
     if (allComplete) {
-      console.log('All targets met! Showing celebration...');
-      // Small delay to ensure the UI has updated
-      setTimeout(() => {
-        setShowCelebration(true);
-        saveCelebrationShownToday(selectedDate);
-      }, 300);
+      setShowCelebration(true);
+      await saveCelebrationShownToday(selectedDate);
     }
   };
 
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
-    if (!profile || !datePortions) {
-      console.log('Cannot toggle portion: missing profile or datePortions');
-      return;
+    if (!profile || !dailyPortions) return;
+
+    const currentValue = dailyPortions.portions[foodGroup] || 0;
+    const targetValue = profile.portionTargets[foodGroup];
+    
+    let newValue = currentValue;
+    if (increment && currentValue < targetValue) {
+      newValue = currentValue + 1;
+    } else if (!increment && currentValue > 0) {
+      newValue = currentValue - 1;
     }
-
-    const current = datePortions[foodGroup] || 0;
-
-    let newValue: number;
-    if (increment) {
-      newValue = current + 1;
-    } else {
-      newValue = Math.max(0, current - 1);
-    }
-
-    console.log(`Toggling ${foodGroup} for ${selectedDate}: ${current} -> ${newValue}`);
 
     const updatedPortions = {
-      ...datePortions,
+      ...dailyPortions.portions,
       [foodGroup]: newValue,
     };
 
-    setDatePortions(updatedPortions);
-
-    const dailyData: DailyPortions = {
-      date: selectedDate,
+    const updatedDailyPortions: DailyPortions = {
+      ...dailyPortions,
       portions: updatedPortions,
-      exercise: exerciseCompleted,
     };
 
-    try {
-      await saveDailyPortions(dailyData);
-      const records = await getAllDailyPortions();
-      setAllRecords(Array.isArray(records) ? records : []);
-      
-      // Check if we should show celebration
-      await checkAndShowCelebration(updatedPortions);
-    } catch (error) {
-      console.error('Error saving portion toggle:', error);
-    }
+    setDailyPortions(updatedDailyPortions);
+    await saveDailyPortions(updatedDailyPortions);
+    await checkAndShowCelebration(updatedPortions);
   };
 
   const handleToggleExercise = async () => {
-    if (!datePortions) {
-      console.log('Cannot toggle exercise: missing datePortions');
-      return;
-    }
+    if (!dailyPortions) return;
 
-    const newExerciseState = !exerciseCompleted;
-    setExerciseCompleted(newExerciseState);
-
-    const dailyData: DailyPortions = {
-      date: selectedDate,
-      portions: datePortions,
-      exercise: newExerciseState,
+    const updatedDailyPortions: DailyPortions = {
+      ...dailyPortions,
+      exerciseCompleted: !dailyPortions.exerciseCompleted,
     };
 
-    try {
-      await saveDailyPortions(dailyData);
-      console.log('Exercise toggled for', selectedDate, ':', newExerciseState);
-    } catch (error) {
-      console.error('Error saving exercise toggle:', error);
-    }
+    setDailyPortions(updatedDailyPortions);
+    await saveDailyPortions(updatedDailyPortions);
   };
 
   const handleDismissInfoHint = async () => {
-    console.log('Dismissing info hint');
     setShowInfoHint(false);
     await saveInfoHintSeen();
   };
 
   const handleDismissCelebration = () => {
-    console.log('Dismissing celebration');
     setShowCelebration(false);
   };
 
-  if (loading) {
+  if (!profile) {
     return (
-      <View style={commonStyles.container}>
-        <View style={styles.loadingContainer}>
-          <AppLogo size={80} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
+      <View style={[commonStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={commonStyles.title}>Loading...</Text>
       </View>
     );
   }
-
-  if (!profile || !datePortions) {
-    return (
-      <View style={commonStyles.container}>
-        <ScrollView contentContainerStyle={styles.welcomeScrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.emptyContainer}>
-            <AppLogo size={80} />
-            <Text style={styles.emptyTitle}>Welcome to Portion Track</Text>
-            <Text style={styles.emptyTagline}>Simple portions. Real-life flexibility.</Text>
-            <Text style={styles.emptyMessage}>
-              Track what you eat using portions instead of calories—and adjust them to fit your goals with ease.
-            </Text>
-            <TouchableOpacity 
-              style={[buttonStyles.primary, styles.setupButton]} 
-              onPress={() => router.push('/(tabs)/profile')}
-            >
-              <Text style={commonStyles.buttonText}>Set Up My Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  const isToday = selectedDate === getTodayString();
 
   return (
     <View style={commonStyles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.logoContainer}>
-          <AppLogo size={60} />
-        </View>
-
         <View style={styles.header}>
-          <Text style={styles.title}>Track</Text>
-          <Text style={styles.subtitle}>
-            {isToday ? 'Today' : formatDisplayDate(selectedDate)}
-          </Text>
+          <Text style={commonStyles.title}>Portion Tracker</Text>
+          <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
         </View>
 
-        {isSubscribed && (
-          <View style={styles.subscribedBanner}>
-            <Text style={styles.subscribedText}>
-              ✨ Premium Active
-            </Text>
-          </View>
-        )}
+        <DaySelector selectedDate={selectedDate} onDateSelect={handleDateSelect} />
 
-        <DaySelector 
-          selectedDate={selectedDate}
-          onDateSelect={handleDateSelect}
-        />
-
-        {!isToday && (
-          <View style={styles.pastDayNotice}>
-            <Text style={styles.pastDayNoticeText}>
-              📅 Editing {formatDisplayDate(selectedDate)}
-            </Text>
-          </View>
-        )}
-
-        {/* Tip moved above portions */}
         {showInfoHint && (
-          <View style={styles.tipContainer}>
-            <View style={styles.tipBox}>
-              <Text style={styles.tipIcon}>💡</Text>
-              <View style={styles.tipTextContainer}>
-                <Text style={styles.tipTitle}>Portion Tips Available</Text>
-                <Text style={styles.tipText}>
-                  Tap the ℹ️ icon next to any food group to see examples and portion sizes.
-                </Text>
-              </View>
-              <TouchableOpacity 
-                style={styles.tipCloseButton}
-                onPress={handleDismissInfoHint}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Text style={styles.tipCloseText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <InfoHintTooltip
+            message="Tap the ℹ️ icon on any food group to learn more about portion sizes and examples!"
+            onDismiss={handleDismissInfoHint}
+          />
         )}
 
-        <View style={styles.portionsSection}>
-          {FOOD_GROUPS && Array.isArray(FOOD_GROUPS) && FOOD_GROUPS.map((group, index) => (
+        <View style={styles.portionsContainer}>
+          {FOOD_GROUPS.map((foodGroup) => (
             <FoodGroupRow
-              key={group.key}
-              icon={group.icon}
-              label={group.label}
-              foodGroup={group.key}
-              target={profile.portionTargets[group.key] || 0}
-              completed={datePortions[group.key] || 0}
-              onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
-              showInfoHint={false}
-              isFirstRow={index === 0}
+              key={foodGroup}
+              foodGroup={foodGroup}
+              completed={dailyPortions?.portions[foodGroup] || 0}
+              target={profile.portionTargets[foodGroup]}
+              onToggle={(increment) => handleTogglePortion(foodGroup, increment)}
             />
           ))}
-          
-          <ExerciseRow 
-            completed={exerciseCompleted}
-            onToggle={handleToggleExercise}
-          />
         </View>
 
-        <View style={styles.bottomPadding} />
+        <ExerciseRow
+          completed={dailyPortions?.exerciseCompleted || false}
+          onToggle={handleToggleExercise}
+        />
       </ScrollView>
 
       <DailyCompletionCelebration
@@ -432,150 +190,19 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingTop: 48,
-    paddingBottom: 120,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
+    padding: 20,
+    paddingBottom: 100,
   },
   header: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  subscribedBanner: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: colors.highlight,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  subscribedText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
-    textAlign: 'center',
-  },
-  pastDayNotice: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: colors.highlight,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  pastDayNoticeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  tipContainer: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  tipBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFF9E6',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#FFD700',
-  },
-  tipIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  tipTextContainer: {
-    flex: 1,
-  },
-  tipTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  tipText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  tipCloseButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  tipCloseText: {
-    fontSize: 20,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  portionsSection: {
-    marginBottom: 16,
-  },
-  bottomPadding: {
-    height: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    marginBottom: 20,
     alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 16,
+  dateText: {
     fontSize: 16,
     color: colors.textSecondary,
+    marginTop: 4,
   },
-  welcomeScrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingBottom: 120,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    marginTop: 24,
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  emptyTagline: {
-    marginTop: 12,
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.primary,
-    textAlign: 'center',
-    lineHeight: 26,
-  },
-  emptyMessage: {
-    marginTop: 16,
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    maxWidth: 400,
-  },
-  setupButton: {
-    marginTop: 32,
-    paddingHorizontal: 32,
+  portionsContainer: {
+    marginTop: 20,
   },
 });
