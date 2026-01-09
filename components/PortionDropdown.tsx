@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   pickerItem: {
-    fontSize: 18,
+    fontSize: 24,
     color: colors.text,
     height: 120,
   },
