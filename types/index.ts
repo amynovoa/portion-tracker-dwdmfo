@@ -1,5 +1,5 @@
 
-export type Sex = 'male' | 'female' | 'prefer_not_to_say';
+export type Sex = 'male' | 'female' | 'prefer-not-to-say';
 export type Goal = 'lose' | 'maintain' | 'build';
 export type SizeCategory = 'small' | 'medium' | 'large';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive';
@@ -7,12 +7,12 @@ export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'ver
 export interface UserProfile {
   sex: Sex;
   currentWeight: number;
-  goalWeight: number;
+  goalWeight?: number;
   goal: Goal;
-  includeAlcohol: boolean;
-  alcoholServings: number;
-  activityLevel: ActivityLevel;
-  targets: PortionTargets;
+  includeAlcohol?: boolean;
+  alcoholServings?: number;
+  activityLevel?: ActivityLevel;
+  portionTargets: PortionTargets;
 }
 
 export interface PortionTargets {
@@ -54,35 +54,31 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
 ];
 
-// Activity levels as simple array of strings for easy mapping
-export const ACTIVITY_LEVELS: ActivityLevel[] = [
-  'sedentary',
-  'light',
-  'moderate',
-  'active',
-  'veryActive',
-];
-
-// Activity level details for display
-export const ACTIVITY_LEVEL_INFO: Record<ActivityLevel, { label: string; description: string }> = {
-  sedentary: {
+// Activity levels with full details for display
+export const ACTIVITY_LEVELS: Array<{ value: ActivityLevel; label: string; description: string }> = [
+  {
+    value: 'sedentary',
     label: 'Sedentary',
     description: 'Little to no exercise',
   },
-  light: {
+  {
+    value: 'light',
     label: 'Light',
     description: 'Light workouts 1-3x/week or ~6k-9k steps/day',
   },
-  moderate: {
+  {
+    value: 'moderate',
     label: 'Moderate',
     description: 'Workouts 3-5x/week or ~9k-12k steps/day',
   },
-  active: {
+  {
+    value: 'active',
     label: 'Active',
     description: 'Hard training most days or ~12k-15k+ steps/day',
   },
-  veryActive: {
+  {
+    value: 'veryActive',
     label: 'Very Active',
     description: 'Very high daily activity or double sessions',
   },
-};
+];
