@@ -9,25 +9,25 @@ export default function TabLayout() {
     {
       name: '(home)',
       route: '/(tabs)/(home)/',
-      icon: 'home',
+      icon: 'check-box',
       label: 'Track',
     },
     {
       name: 'history',
       route: '/(tabs)/history',
-      icon: 'calendar-today',
+      icon: 'history',
       label: 'History',
     },
     {
       name: 'weight',
       route: '/(tabs)/weight',
-      icon: 'monitor-weight',
+      icon: 'show-chart',
       label: 'Weight',
     },
     {
-      name: 'faqs',
-      route: '/(tabs)/faqs',
-      icon: 'help-outline',
+      name: 'faq',
+      route: '/(tabs)/faq',
+      icon: 'help',
       label: 'FAQs',
     },
     {
@@ -35,12 +35,6 @@ export default function TabLayout() {
       route: '/(tabs)/profile',
       icon: 'person',
       label: 'Profile',
-    },
-    {
-      name: 'settings',
-      route: '/(tabs)/settings',
-      icon: 'settings',
-      label: 'Settings',
     },
   ];
 
@@ -50,17 +44,17 @@ export default function TabLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'none', // Remove fade animation to prevent black screen flash
+          animation: 'none',
         }}
       >
         <Stack.Screen key="home" name="(home)" />
         <Stack.Screen key="history" name="history" />
         <Stack.Screen key="weight" name="weight" />
-        <Stack.Screen key="faqs" name="faqs" />
+        <Stack.Screen key="faq" name="faq" />
         <Stack.Screen key="profile" name="profile" />
-        <Stack.Screen key="settings" name="settings" />
+        <Stack.Screen key="settings" name="settings" options={{ href: null }} />
       </Stack>
-      <FloatingTabBar tabs={tabs} />
+      <FloatingTabBar tabs={tabs} useFullWidth={true} />
     </>
   );
 }

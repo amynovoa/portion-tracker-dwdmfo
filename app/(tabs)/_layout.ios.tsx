@@ -6,11 +6,11 @@ export default function TabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger key="home" name="(home)">
-        <Icon sf="house.fill" />
+        <Icon sf="checkmark.square.fill" />
         <Label>Track</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="history" name="history">
-        <Icon sf="clock.fill" />
+        <Icon sf="calendar" />
         <Label>History</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="weight" name="weight">
@@ -22,12 +22,8 @@ export default function TabLayout() {
         <Label>FAQs</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="profile" name="profile">
-        <Icon sf="person.circle.fill" />
+        <Icon sf="person.fill" />
         <Label>Profile</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="settings" name="settings">
-        <Icon sf="gearshape.fill" />
-        <Label>Settings</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
