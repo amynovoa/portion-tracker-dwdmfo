@@ -161,10 +161,12 @@ const styles = StyleSheet.create({
   },
   hiddenCount: {
     opacity: 0,
+    width: 0,
   },
   slotsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginLeft: -4,
   },
 });
