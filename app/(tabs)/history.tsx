@@ -1,63 +1,45 @@
 
+import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets } from '@/types';
+import AppLogo from '@/components/AppLogo';
 import React, { useState, useEffect } from 'react';
+import AdherenceCard from '@/components/AdherenceCard';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } from 'react-native';
+import { getAllDailyPortions, loadProfile, loadDailyPortions } from '@/utils/storage';
 import { useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { getAllDailyPortions, loadProfile, loadDailyPortions } from '@/utils/storage';
-import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets } from '@/types';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
 import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
-import AppLogo from '@/components/AppLogo';
-import AdherenceCard from '@/components/AdherenceCard';
 
 export default function HistoryScreen() {
-  const [records, setRecords] = useState<DailyPortions[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [expandedDate, setExpandedDate] = useState<string | null>(null);
-  const [todayPortions, setTodayPortions] = useState<PortionTargets | null>(null);
+  const [allPortions, setAllPortions] = useState<DailyPortions[]>([]);
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = async () => {
-    try {
-      console.log('History: Loading data...');
-      const allRecords = await getAllDailyPortions();
-      setRecords(allRecords);
-      
-      const userProfile = await loadProfile();
-      setProfile(userProfile);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [])
+  );
 
-      // Load today's portions for adherence calculation
-      const today = getTodayString();
-      const dailyData = await loadDailyPortions(today);
+  const loadData = async () => {
+    console.log('Loading history data...');
+    try {
+      const userProfile = await loadProfile();
+      const portions = await getAllDailyPortions();
       
-      if (dailyData && dailyData.portions) {
-        setTodayPortions(dailyData.portions);
-      } else {
-        // Create empty portions if no data exists
-        const emptyPortions: PortionTargets = {
-          protein: 0,
-          veggies: 0,
-          fruit: 0,
-          healthyCarbs: 0,
-          fats: 0,
-          nuts: 0,
-          water: 0,
-          alcohol: 0,
-        };
-        setTodayPortions(emptyPortions);
-      }
+      console.log('Profile loaded:', userProfile ? 'Found' : 'Not found');
+      console.log('Portions loaded:', portions.length, 'days');
+      
+      setProfile(userProfile);
+      
+      // Sort by date descending (most recent first)
+      const sortedPortions = portions.sort((a, b) => b.date.localeCompare(a.date));
+      setAllPortions(sortedPortions);
     } catch (error) {
       console.error('Error loading history data:', error);
     }
   };
-
-  // Load data when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log('History screen focused, loading data');
-      loadData();
-    }, [])
-  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -66,173 +48,159 @@ export default function HistoryScreen() {
   };
 
   const toggleExpand = (date: string) => {
-    setExpandedDate(expandedDate === date ? null : date);
+    const newExpanded = new Set(expandedDates);
+    if (newExpanded.has(date)) {
+      newExpanded.delete(date);
+    } else {
+      newExpanded.add(date);
+    }
+    setExpandedDates(newExpanded);
   };
 
   if (!profile) {
     return (
       <View style={[commonStyles.container, styles.centerContent]}>
-        <AppLogo size={80} />
-        <Text style={styles.emptyTitle}>No profile found</Text>
-        <Text style={styles.emptySubtext}>Please create your profile in the Profile tab</Text>
+        <Text style={commonStyles.bodyText}>No profile data available</Text>
       </View>
     );
   }
 
-  // Calculate adherence with error handling
-  let todayAdherence = 0;
-  let weekAdherence = 0;
-  let monthAdherence = 0;
-
-  try {
-    if (profile && profile.targets && todayPortions) {
-      todayAdherence = calculateDailyAdherence(todayPortions, profile.targets);
-      weekAdherence = calculateWeeklyAdherence(records, profile.targets);
-      monthAdherence = calculateMonthlyAdherence(records, profile.targets);
-      
-      console.log('History adherence calculated:', { todayAdherence, weekAdherence, monthAdherence });
-    }
-  } catch (error) {
-    console.error('Error calculating adherence in history:', error);
-  }
+  const todayString = getTodayString();
+  const dailyAdherence = calculateDailyAdherence(allPortions, profile.portionTargets, todayString);
+  const weeklyAdherence = calculateWeeklyAdherence(allPortions, profile.portionTargets);
+  const monthlyAdherence = calculateMonthlyAdherence(allPortions, profile.portionTargets);
 
   return (
     <View style={commonStyles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent} 
-        showsVerticalScrollIndicator={false}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.logoContainer}>
-          <AppLogo size={60} />
-        </View>
-
         <View style={styles.header}>
-          <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>Your tracking history</Text>
+          <AppLogo size={32} />
+          <Text style={styles.title}>History & Adherence</Text>
         </View>
 
         <View style={styles.adherenceSection}>
-          <AdherenceCard title="Today" percentage={todayAdherence} />
-          <AdherenceCard title="This Week" percentage={weekAdherence} />
-          <AdherenceCard title="This Month" percentage={monthAdherence} />
+          <AdherenceCard
+            title="Today"
+            percentage={dailyAdherence}
+            subtitle={formatDisplayDate(todayString)}
+          />
+          <AdherenceCard
+            title="This Week"
+            percentage={weeklyAdherence}
+            subtitle="Last 7 days"
+          />
+          <AdherenceCard
+            title="This Month"
+            percentage={monthlyAdherence}
+            subtitle="Last 30 days"
+          />
         </View>
 
-        {records.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No history yet</Text>
-            <Text style={styles.emptySubtext}>Start tracking your portions to see your history here</Text>
-          </View>
-        ) : (
-          records.map((record) => {
-            const adherence = calculateDailyAdherence(record.portions, profile.targets);
-            const isExpanded = expandedDate === record.date;
-            const hasExercise = record.exercise === true;
-
-            return (
-              <TouchableOpacity
-                key={record.date}
-                style={styles.recordCard}
-                onPress={() => toggleExpand(record.date)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.recordHeader}>
-                  <View style={styles.recordHeaderLeft}>
-                    <Text style={styles.recordDate}>{formatDisplayDate(record.date)}</Text>
-                    <View style={styles.recordSubtextRow}>
-                      <Text style={styles.recordSubtext}>{record.date}</Text>
-                      {hasExercise && (
-                        <View style={styles.exerciseBadge}>
-                          <Text style={styles.exerciseBadgeText}>💪 Exercise</Text>
-                        </View>
-                      )}
+        <View style={styles.historySection}>
+          <Text style={styles.sectionTitle}>Daily History</Text>
+          {allPortions.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No tracking data yet</Text>
+              <Text style={styles.emptySubtext}>Start tracking your portions to see your history here</Text>
+            </View>
+          ) : (
+            allPortions.map((dayData) => {
+              const isExpanded = expandedDates.has(dayData.date);
+              const adherence = calculateDailyAdherence([dayData], profile.portionTargets, dayData.date);
+              
+              return (
+                <View key={dayData.date} style={styles.dayCard}>
+                  <TouchableOpacity
+                    style={styles.dayHeader}
+                    onPress={() => toggleExpand(dayData.date)}
+                  >
+                    <View style={styles.dayHeaderLeft}>
+                      <Text style={styles.dayDate}>{formatDisplayDate(dayData.date)}</Text>
+                      <Text style={styles.dayAdherence}>{adherence}% adherence</Text>
                     </View>
-                  </View>
-                  <View style={styles.adherenceBadge}>
-                    <Text style={styles.adherenceText}>{adherence}%</Text>
-                  </View>
+                    <Text style={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</Text>
+                  </TouchableOpacity>
+                  
+                  {isExpanded && (
+                    <View style={styles.dayDetails}>
+                      {FOOD_GROUPS.map((fg) => {
+                        const completed = dayData.portions[fg.key];
+                        const target = profile.portionTargets[fg.key];
+                        
+                        return (
+                          <View key={fg.key} style={styles.portionRow}>
+                            <Text style={styles.portionIcon}>{fg.icon}</Text>
+                            <Text style={styles.portionLabel}>{fg.label}</Text>
+                            <Text style={styles.portionCount}>
+                              {completed}/{target}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
                 </View>
-
-                {isExpanded && (
-                  <View style={styles.recordDetails}>
-                    {FOOD_GROUPS.map((group) => {
-                      const completed = record.portions[group.key];
-                      const target = profile.targets[group.key];
-                      
-                      return (
-                        <View key={group.key} style={styles.detailRow}>
-                          <Text style={styles.detailIcon}>{group.icon}</Text>
-                          <Text style={styles.detailLabel}>{group.label}</Text>
-                          <Text style={styles.detailValue}>
-                            {completed}/{target}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                    
-                    {/* Exercise row in expanded view */}
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailIcon}>💪</Text>
-                      <Text style={styles.detailLabel}>Exercise</Text>
-                      <Text style={[styles.detailValue, hasExercise && styles.detailValueCompleted]}>
-                        {hasExercise ? '✓ Completed' : '— Not logged'}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })
-        )}
-
-        <View style={styles.bottomPadding} />
+              );
+            })
+          )}
+        </View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
-    paddingTop: 48,
-    paddingBottom: 120,
+    paddingBottom: 100,
   },
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   header: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
+    marginLeft: 12,
   },
   adherenceSection: {
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 32,
+  historySection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  emptyText: {
+  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 12,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   emptySubtext: {
@@ -240,98 +208,60 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
-  emptyTitle: {
-    marginTop: 24,
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  recordCard: {
+  dayCard: {
     backgroundColor: colors.card,
     borderRadius: 12,
-    padding: 16,
-    marginVertical: 6,
-    marginHorizontal: 16,
-    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-    elevation: 1,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
-  recordHeader: {
+  dayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 16,
   },
-  recordHeaderLeft: {
+  dayHeaderLeft: {
     flex: 1,
-    marginRight: 12,
   },
-  recordDate: {
+  dayDate: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 4,
   },
-  recordSubtextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-    flexWrap: 'wrap',
-  },
-  recordSubtext: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginRight: 8,
-  },
-  exerciseBadge: {
-    backgroundColor: colors.primary,
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-  },
-  exerciseBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  adherenceBadge: {
-    backgroundColor: colors.highlight,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-  },
-  adherenceText: {
+  dayAdherence: {
     fontSize: 14,
-    fontWeight: '700',
-    color: colors.primary,
+    color: colors.textSecondary,
   },
-  recordDetails: {
-    marginTop: 16,
-    paddingTop: 16,
+  expandIcon: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginLeft: 12,
+  },
+  dayDetails: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    padding: 16,
+    paddingTop: 12,
   },
-  detailRow: {
+  portionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
   },
-  detailIcon: {
+  portionIcon: {
     fontSize: 20,
     marginRight: 12,
+    width: 24,
   },
-  detailLabel: {
+  portionLabel: {
     fontSize: 14,
     color: colors.text,
     flex: 1,
   },
-  detailValue: {
+  portionCount: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.textSecondary,
-  },
-  detailValueCompleted: {
-    color: colors.primary,
-  },
-  bottomPadding: {
-    height: 20,
   },
 });

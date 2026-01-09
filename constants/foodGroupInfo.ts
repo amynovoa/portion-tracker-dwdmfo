@@ -1,111 +1,213 @@
 
-import { FoodGroup } from '@/types';
+import { FoodGroup } from '../types';
 
-export interface FoodGroupInfo {
+interface FoodGroupInfo {
   benefit: string;
   avoid: string;
   examples: string;
-  portionSize: string;
+  portionSize?: string;
 }
 
 export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
   protein: {
-    benefit: 'Supports muscle repair, keeps you full longer, and helps stabilize blood sugar.',
-    avoid: 'Processed meats high in sodium, fillers, added sugars.',
-    examples: 'Chicken, turkey, lean beef, salmon, tuna, shrimp, white fish, tofu, tempeh, lentils, edamame, Greek yogurt (plain), cottage cheese, skyr, high-protein yogurt, soy yogurt (plain, high-protein), eggs, egg whites, protein powder.',
-    portionSize: `About 20–25 grams of protein, such as:
-- 3–4 oz cooked chicken, fish, or meat
-- 2 eggs
-- ¾ cup Greek yogurt or cottage cheese
-- 1 scoop protein powder`,
+    benefit: `Protein supports muscle repair, satiety, and metabolism. It helps you feel full longer and preserves lean mass during weight loss.
+
+Aim to include a protein source at most meals.
+
+Quality matters — choose lean, minimally processed options when possible.`,
+    avoid: `Avoid heavily processed meats (hot dogs, deli meats with nitrates).
+
+Limit fried or breaded proteins.
+
+Watch portion sizes on higher-fat cuts if you're trying to lose weight.`,
+    examples: `Animal sources:
+- Chicken breast
+- Turkey
+- Lean beef or pork
+- Fish (salmon, tuna, cod)
+- Eggs
+- Greek yogurt
+- Cottage cheese
+
+Plant sources:
+- Tofu or tempeh
+- Edamame
+- Seitan`,
+    portionSize: 'About the size of your palm (3-4 oz cooked meat, 1 cup Greek yogurt, 2 eggs, etc.)',
   },
   veggies: {
-    benefit: 'Packed with fiber, vitamins, minerals, and antioxidants that support digestion and metabolic health.',
-    avoid: 'Vegetables covered in heavy sauces, cheeses, fried coatings.',
-    examples: 'Spinach, kale, romaine, broccoli, cauliflower, Brussels sprouts, peppers, carrots, squash, beets, cucumbers, zucchini, mushrooms.',
-    portionSize: `- 1 cup raw vegetables
-- ½ cup cooked vegetables
+    benefit: `Vegetables are packed with fiber, vitamins, and minerals. They support digestion, immunity, and overall health while being low in calories.
 
-(Non-starchy vegetables like greens, broccoli, peppers, zucchini)`,
+The more variety, the better — aim for different colors throughout the week.
+
+Non-starchy veggies can be eaten freely and help with satiety.`,
+    avoid: `Avoid deep-fried vegetables or those loaded with heavy sauces.
+
+Watch portion sizes on starchy vegetables like potatoes (count those as whole grains instead).`,
+    examples: `Leafy greens:
+- Spinach, kale, arugula, lettuce
+
+Cruciferous:
+- Broccoli, cauliflower, Brussels sprouts, cabbage
+
+Other favorites:
+- Bell peppers, tomatoes, cucumbers, zucchini, carrots, green beans, asparagus, mushrooms`,
+    portionSize: 'About 1 cup raw or ½ cup cooked',
   },
   fruit: {
-    benefit: 'Provide natural energy, fiber, and antioxidants that support digestion and reduce inflammation.',
-    avoid: 'Fruit juices, canned fruit in syrup, sugary dried fruit.',
-    examples: 'Berries, apples, pears, peaches, oranges, grapefruit, melons, pineapple, mango.',
-    portionSize: `- 1 medium piece of fruit
-- 1 cup cut fruit`,
+    benefit: `Fruit provides natural sugars, fiber, vitamins, and antioxidants. It's a great way to satisfy a sweet tooth while nourishing your body.
+
+Whole fruit is always better than juice — the fiber slows sugar absorption.
+
+Berries are especially nutrient-dense and lower in sugar.`,
+    avoid: `Avoid fruit juices and dried fruit in large amounts (they're concentrated in sugar and calories).
+
+Limit canned fruit in heavy syrup.`,
+    examples: `Berries:
+- Strawberries, blueberries, raspberries, blackberries
+
+Tree fruit:
+- Apples, pears, peaches, plums
+
+Tropical:
+- Bananas, oranges, pineapple, mango, kiwi
+
+Melons:
+- Watermelon, cantaloupe, honeydew`,
+    portionSize: 'About 1 medium piece of fruit or 1 cup berries/melon',
   },
   wholeGrains: {
-    benefit: 'Whole Grains include nutrient-dense carbohydrate foods that provide steady energy, fiber, and vitamins. These foods help support digestion, blood sugar balance, and long-term health. This category now includes legumes (beans and lentils) which are excellent sources of both carbohydrates and protein.',
-    avoid: 'White bread, white pasta, white rice, pastries, donuts, cakes, cookies, breakfast cereals made from refined grains, chips, fries, processed snacks, sugary drinks, juices, candy, granola bars.',
-    examples: `Whole Grains:
-- Oats
-- Quinoa
-- Brown rice
-- Farro
-- Barley
-- Whole-wheat pasta
-- Whole-grain bread
+    benefit: `Whole grains provide sustained energy, fiber, and B vitamins. They support digestion and help stabilize blood sugar.
 
-Beans & Lentils (Legumes):
-- Black beans
-- Pinto beans
-- Kidney beans
-- Chickpeas
-- Lentils
-- Split peas
-- Edamame / soybeans
+Choose whole grains over refined grains whenever possible.
 
-Starchy Vegetables:
-- Sweet potatoes
-- Potatoes
-- Winter squash (butternut, acorn, kabocha)
-- Corn
+Pair with protein and veggies for balanced meals.`,
+    avoid: `Avoid refined grains (white bread, white rice, pastries).
 
-Dairy & Dairy Alternatives:
-- Milk (cow's milk)
-- Plant-based milk (unsweetened)
-- Sweetened or flavored milk
-- Sweetened yogurt
-- Flavored yogurt
-- Kefir`,
-    portionSize: `- ½ cup cooked grains, beans, or starchy vegetables (rice, quinoa, oats, potatoes, lentils, beans)
-- 1 slice bread
-- 1 small tortilla
-- 1 cup milk or kefir`,
+Limit sugary cereals and baked goods.
+
+Watch portion sizes — grains are calorie-dense.`,
+    examples: `Grains:
+- Oats, quinoa, brown rice, farro, barley
+
+Bread & pasta:
+- Whole wheat bread, whole grain pasta, whole grain tortillas
+
+Starchy vegetables (count as grains):
+- Sweet potatoes, white potatoes, corn, peas`,
+    portionSize: 'About ½ cup cooked grains, 1 slice bread, or 1 small potato',
   },
   nutsSeeds: {
-    benefit: 'Deliver protein, fiber, and omega fats that support heart health and satiety.',
-    avoid: 'Candied nuts, nuts roasted in heavy oils, overly salted nuts.',
-    examples: 'Almonds, walnuts, pecans, pistachios, chia, flax, hemp seeds, natural nut butters.',
-    portionSize: `- ¼ cup nuts or seeds
-- 2 tablespoons seeds`,
+    benefit: `Nuts and seeds provide healthy fats, protein, fiber, and important minerals like magnesium and zinc.
+
+They support heart health and help with satiety.
+
+A little goes a long way — they're calorie-dense but nutrient-rich.`,
+    avoid: `Avoid heavily salted or candied nuts.
+
+Watch portion sizes — it's easy to overeat nuts.
+
+Limit nut butters with added sugar or oils.`,
+    examples: `Nuts:
+- Almonds, walnuts, cashews, pecans, pistachios
+
+Seeds:
+- Chia seeds, flaxseeds, pumpkin seeds, sunflower seeds, hemp seeds
+
+Nut butters:
+- Almond butter, peanut butter (natural, no added sugar)`,
+    portionSize: 'About ¼ cup nuts or 2 tablespoons nut butter',
   },
   fats: {
-    benefit: 'Support hormones, brain function, and satiety.',
-    avoid: 'Trans fats, processed oils, fried foods, sugary nut spreads.',
-    examples: 'Avocado, olive oil, avocado oil, chia, flax, hemp seeds, salmon, sardines, cheese (all types), cream cheese, butter, heavy cream / half-and-half, sour cream, full-fat yogurt, plant-based cheese, coconut or nut-based creamers.',
-    portionSize: `- 1 tablespoon oil or butter
-- ¼ avocado
-- 1 tablespoon nut butter
-- 1 oz cheese
-- 2 tablespoons cream cheese or sour cream`,
+    benefit: `Healthy fats support hormone production, brain function, and nutrient absorption (especially vitamins A, D, E, and K).
+
+They add flavor and help you feel satisfied.
+
+Focus on unsaturated fats from whole food sources.`,
+    avoid: `Avoid trans fats (partially hydrogenated oils).
+
+Limit saturated fats from processed foods.
+
+Watch portion sizes — fats are calorie-dense.`,
+    examples: `Oils:
+- Olive oil, avocado oil, coconut oil (in moderation)
+
+Whole food sources:
+- Avocado, olives, fatty fish (salmon, mackerel)
+
+Other:
+- Full-fat dairy (cheese, butter) in moderation`,
+    portionSize: 'About 1 tablespoon oil, ¼ avocado, or 1 oz cheese',
   },
   water: {
-    benefit: 'Essential for hydration, digestion, nutrient transport, and overall health. Proper hydration supports energy levels, cognitive function, and helps regulate body temperature.',
-    avoid: 'Sugary drinks, sodas, excessive caffeine that can dehydrate.',
-    examples: 'Plain water, sparkling water, herbal tea, water with lemon or cucumber.',
-    portionSize: `- 8 oz glass of water
-- 1 cup (8 fl oz)
+    benefit: `Water is essential for every bodily function — digestion, circulation, temperature regulation, and more.
 
-Aim for 7-10 glasses per day depending on your size and activity level.`,
+Staying hydrated supports energy, focus, and physical performance.
+
+It can also help with appetite control and reduce unnecessary snacking.`,
+    avoid: `Avoid sugary drinks (soda, sweetened coffee drinks, energy drinks).
+
+Limit fruit juices — they're high in sugar and low in fiber.
+
+Watch caffeine intake — it can be dehydrating in excess.`,
+    examples: `Best choices:
+- Plain water
+- Sparkling water (unsweetened)
+- Herbal tea
+- Water with lemon, cucumber, or mint
+
+Okay in moderation:
+- Black coffee, unsweetened tea`,
+    portionSize: 'About 8 oz (1 cup) per serving — aim for 7-10+ servings per day',
   },
   alcohol: {
-    benefit: 'Tracking alcohol helps keep intake mindful and reduces empty calories.',
-    avoid: 'Sugary mixers and high-calorie cocktails.',
-    examples: '5 oz wine, 1.5 oz spirits, light beer.',
-    portionSize: `- 5 oz wine
-- 12 oz beer
-- 1.5 oz spirits`,
+    benefit: `Moderate alcohol consumption (if you choose to drink) can be part of a balanced lifestyle.
+
+The key is moderation — no more than 1-2 servings per day.
+
+Some research suggests red wine may have heart health benefits, but the evidence is mixed.`,
+    avoid: `Avoid binge drinking or drinking daily in excess.
+
+Watch sugary mixers and high-calorie cocktails.
+
+Alcohol can interfere with sleep, recovery, and weight loss goals.`,
+    examples: `Lower-calorie options:
+- Wine (red or white): 5 oz
+- Light beer: 12 oz
+- Spirits (vodka, gin, tequila, whiskey): 1.5 oz
+
+Higher-calorie options to limit:
+- Regular beer, sweet cocktails, creamy drinks`,
+    portionSize: '1 serving = 5 oz wine, 12 oz beer, or 1.5 oz spirits',
+  },
+  exercise: {
+    benefit: `Regular movement supports metabolism, energy, mood, and long-term health. Aim for a mix of cardio and strength training throughout the week.
+
+Even 20–30 minutes counts — you don't need long sessions to benefit.
+
+Aim for 2–4 days per week of resistance training to support lean muscle and metabolism.
+
+Consistency matters more than perfection — every bit of movement helps.`,
+    avoid: `Don't overdo it — rest and recovery are just as important as the workout itself.
+
+Avoid exercising through pain or injury.
+
+Don't skip warm-ups or cool-downs.`,
+    examples: `Cardio options:
+- Brisk walking
+- Cycling (indoors or outdoors)
+- Swimming
+- Elliptical
+- Rowing
+- Light jogging
+- Dance or group fitness classes
+
+Strength/Resistance options:
+- Bodyweight exercises (squats, lunges, push-ups, planks)
+- Dumbbells or resistance bands
+- Machines or cable workouts
+- Pilates or reformer
+- Functional movements (step-ups, carries, glute bridges)`,
+    portionSize: 'Aim for at least 20-30 minutes of movement most days',
   },
 };

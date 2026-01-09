@@ -1,270 +1,160 @@
 
 import { Sex, Goal, PortionTargets, SizeCategory, ActivityLevel } from '../types';
 
-// Size classification based on gender and weight
 export function classifySize(sex: Sex, weight: number): SizeCategory {
   if (sex === 'female') {
     if (weight < 150) return 'small';
     if (weight < 190) return 'medium';
     return 'large';
-  } else { // male, prefer_not_to_say, or other
+  } else {
+    // male or prefer-not-to-say
     if (weight < 170) return 'small';
     if (weight < 210) return 'medium';
     return 'large';
   }
 }
 
-// Get baseline daily portions based on sex and goal (for Medium size)
-// NOTE: Legume servings have been merged into wholeGrains
-function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
-  if (sex === 'female') {
-    if (goal === 'lose') {
-      return {
-        protein: 4,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 4, // Was 3 wholeGrains + 1 legumes
-        nutsSeeds: 1,
-        fats: 2,
-        water: 8,
-        alcohol: 0,
-      };
-    } else if (goal === 'maintain') {
-      return {
-        protein: 5,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 4, // Was 3 wholeGrains + 1 legumes
-        nutsSeeds: 1,
-        fats: 2,
-        water: 8,
-        alcohol: 0,
-      };
-    } else { // build
-      return {
-        protein: 6,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 6, // Was 4 wholeGrains + 2 legumes
-        nutsSeeds: 1,
-        fats: 2,
-        water: 8,
-        alcohol: 0,
-      };
-    }
-  } else { // male, prefer_not_to_say, or other
-    if (goal === 'lose') {
-      return {
-        protein: 5,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 4, // Was 3 wholeGrains + 1 legumes
-        nutsSeeds: 1,
-        fats: 2,
-        water: 8,
-        alcohol: 0,
-      };
-    } else if (goal === 'maintain') {
-      return {
-        protein: 6,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 5, // Was 3 wholeGrains + 2 legumes
-        nutsSeeds: 1,
-        fats: 2,
-        water: 8,
-        alcohol: 0,
-      };
-    } else { // build
-      return {
-        protein: 7,
-        veggies: 4,
-        fruit: 2,
-        wholeGrains: 6, // Was 4 wholeGrains + 2 legumes
-        nutsSeeds: 1,
-        fats: 2,
-        water: 8,
-        alcohol: 0,
-      };
-    }
-  }
+export function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
+  // Start with baseline portions for a medium-sized person
+  const baseline: PortionTargets = {
+    protein: 3,
+    veggies: 4,
+    fruit: 2,
+    wholeGrains: 2,
+    nutsSeeds: 2,
+    fats: 2,
+    water: 8,
+    alcohol: 0,
+    exercise: 1, // Default exercise target is always 1
+  };
+
+  return baseline;
 }
 
-// Apply size adjustment (affects Whole Grains and Water)
-function applySizeAdjustment(portions: PortionTargets, size: SizeCategory): PortionTargets {
+export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory): PortionTargets {
   const adjusted = { ...portions };
-  
+
   if (size === 'small') {
-    adjusted.wholeGrains = Math.max(0, adjusted.wholeGrains - 1);
-    adjusted.water = 7;
+    adjusted.protein = Math.max(2, adjusted.protein - 1);
+    adjusted.veggies = Math.max(3, adjusted.veggies - 1);
+    adjusted.fruit = Math.max(2, adjusted.fruit);
+    adjusted.wholeGrains = Math.max(1, adjusted.wholeGrains - 1);
+    adjusted.nutsSeeds = Math.max(1, adjusted.nutsSeeds - 1);
+    adjusted.fats = Math.max(1, adjusted.fats - 1);
+    adjusted.water = Math.max(7, adjusted.water - 1);
   } else if (size === 'large') {
-    adjusted.wholeGrains = adjusted.wholeGrains + 1;
-    adjusted.water = 10;
+    adjusted.protein = Math.min(5, adjusted.protein + 1);
+    adjusted.veggies = Math.min(6, adjusted.veggies + 1);
+    adjusted.fruit = Math.min(4, adjusted.fruit + 1);
+    adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
+    adjusted.nutsSeeds = Math.min(3, adjusted.nutsSeeds + 1);
+    adjusted.fats = Math.min(4, adjusted.fats + 1);
+    adjusted.water = Math.min(12, adjusted.water + 2);
   }
-  
+
+  // Exercise target is always 1, regardless of size
+  adjusted.exercise = 1;
+
   return adjusted;
 }
 
-// Apply alcohol adjustment with specific rule:
-// For 2 drinks: reduce Whole Grains by 1 and Fats by 1
-// Only adjust for a maximum of 2 drinks (if user selects more, we don't adjust more)
-function applyAlcoholAdjustment(
+export function applyAlcoholAdjustment(
   portions: PortionTargets,
   includeAlcohol: boolean,
   alcoholServings: number
 ): PortionTargets {
   const adjusted = { ...portions };
   
-  if (!includeAlcohol) {
+  if (includeAlcohol) {
+    // Cap at 2 as recommended max
+    adjusted.alcohol = Math.min(2, Math.max(0, alcoholServings));
+  } else {
     adjusted.alcohol = 0;
-    return adjusted;
   }
-  
-  adjusted.alcohol = alcoholServings;
-  
-  const drinksToAdjustFor = Math.min(2, alcoholServings);
-  
-  console.log('Alcohol adjustment - Drinks to adjust for:', drinksToAdjustFor);
-  console.log('Initial portions:', { 
-    wholeGrains: adjusted.wholeGrains, 
-    fats: adjusted.fats, 
-    nutsSeeds: adjusted.nutsSeeds 
-  });
-  
-  if (drinksToAdjustFor === 2) {
-    if (adjusted.wholeGrains > 0) {
-      adjusted.wholeGrains -= 1;
-      console.log('Reduced Whole Grains by 1');
-    }
-    
-    if (adjusted.fats > 0) {
-      adjusted.fats -= 1;
-      console.log('Reduced Fats by 1');
-    }
-    
-    console.log('Nuts & Seeds remain unchanged');
-  } else if (drinksToAdjustFor === 1) {
-    if (adjusted.wholeGrains > 0) {
-      adjusted.wholeGrains -= 1;
-      console.log('Reduced Whole Grains by 1 (for 1 drink)');
-    }
-  }
-  
-  console.log('Final portions after alcohol adjustment:', { 
-    wholeGrains: adjusted.wholeGrains, 
-    fats: adjusted.fats, 
-    nutsSeeds: adjusted.nutsSeeds 
-  });
-  
-  if (alcoholServings > 2) {
-    console.log(`Note: User selected ${alcoholServings} drinks, but only adjusted portions for 2 drinks (max)`);
-  }
-  
+
   return adjusted;
 }
 
-// Apply activity level adjustment (AFTER base portions are calculated)
-// This is the adjustment layer that increases daily targets for active users
 export function applyActivityAdjustment(
   portions: PortionTargets,
-  activityLevel: ActivityLevel,
-  goal?: Goal
+  activityLevel: ActivityLevel
 ): PortionTargets {
   const adjusted = { ...portions };
-  
-  console.log('Applying activity adjustment for level:', activityLevel);
-  console.log('Base portions before activity adjustment:', adjusted);
-  
+
   switch (activityLevel) {
     case 'sedentary':
-      // No adjustment
-      console.log('Sedentary: No adjustment');
+      // No adjustment needed
       break;
-      
     case 'light':
-      // Add 1 Whole Grain
-      adjusted.wholeGrains += 1;
-      console.log('Light: +1 Whole Grain');
+      adjusted.protein = Math.min(6, adjusted.protein + 1);
+      adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
       break;
-      
     case 'moderate':
-      // Add 1 Whole Grain
-      adjusted.wholeGrains += 1;
-      console.log('Moderate: +1 Whole Grain');
+      adjusted.protein = Math.min(6, adjusted.protein + 1);
+      adjusted.wholeGrains = Math.min(5, adjusted.wholeGrains + 1);
+      adjusted.fats = Math.min(4, adjusted.fats + 1);
       break;
-      
     case 'active':
-      // Add 2 Whole Grains and 1 Protein
-      adjusted.wholeGrains += 2;
-      adjusted.protein += 1;
-      console.log('Active: +2 Whole Grains, +1 Protein');
+      adjusted.protein = Math.min(6, adjusted.protein + 2);
+      adjusted.wholeGrains = Math.min(6, adjusted.wholeGrains + 2);
+      adjusted.fats = Math.min(5, adjusted.fats + 1);
       break;
-      
     case 'veryActive':
-      // Add 3 Whole Grains and 1 Protein
-      adjusted.wholeGrains += 3;
-      adjusted.protein += 1;
-      console.log('Very Active: +3 Whole Grains, +1 Protein');
+      adjusted.protein = Math.min(7, adjusted.protein + 2);
+      adjusted.wholeGrains = Math.min(7, adjusted.wholeGrains + 3);
+      adjusted.fats = Math.min(5, adjusted.fats + 2);
+      adjusted.nutsSeeds = Math.min(4, adjusted.nutsSeeds + 1);
       break;
   }
-  
-  // Goal-based protein priority check
-  if (goal === 'build' && (activityLevel === 'active' || activityLevel === 'veryActive')) {
-    console.log('Build goal + high activity: Protein priority ensured');
-  }
-  
-  console.log('Final portions after activity adjustment:', adjusted);
-  
+
+  // Exercise target is always 1, regardless of activity level
+  adjusted.exercise = 1;
+
   return adjusted;
 }
 
-// Calculate recommended targets based on all profile inputs
 export function calculateRecommendedTargets(
   sex: Sex,
   weight: number,
   goal: Goal,
-  includeAlcohol: boolean,
-  alcoholServings: number,
+  includeAlcohol: boolean = false,
+  alcoholServings: number = 0,
   activityLevel: ActivityLevel = 'sedentary'
 ): PortionTargets {
-  // Step 1: Determine size category
-  const sizeCategory = classifySize(sex, weight);
-  
-  // Step 2: Get baseline portions for Medium size (legumes already merged into wholeGrains)
+  const size = classifySize(sex, weight);
   let portions = getBaselinePortions(sex, goal);
-  
-  // Step 3: Apply size adjustment (affects Whole Grains and Water)
-  portions = applySizeAdjustment(portions, sizeCategory);
-  
-  // Step 4: Apply alcohol adjustment
+
+  // Apply size adjustment
+  portions = applySizeAdjustment(portions, size);
+
+  // Apply goal-specific adjustments
+  if (goal === 'lose') {
+    portions.wholeGrains = Math.max(0, portions.wholeGrains - 1);
+    portions.fats = Math.max(0, portions.fats - 1);
+    portions.veggies = Math.min(6, portions.veggies + 1);
+  } else if (goal === 'build') {
+    portions.protein = Math.min(6, portions.protein + 1);
+    portions.nutsSeeds = Math.min(4, portions.nutsSeeds + 1);
+  }
+
+  // Apply activity level adjustment
+  portions = applyActivityAdjustment(portions, activityLevel);
+
+  // Apply alcohol adjustment
   portions = applyAlcoholAdjustment(portions, includeAlcohol, alcoholServings);
-  
-  // Step 5: Apply activity level adjustment (AFTER all base calculations)
-  portions = applyActivityAdjustment(portions, activityLevel, goal);
-  
-  console.log('Calculated targets:', {
-    sex,
-    weight,
-    goal,
-    sizeCategory,
-    includeAlcohol,
-    alcoholServings,
-    activityLevel,
-    finalPortions: portions,
-  });
-  
+
+  // Ensure exercise is always 1
+  portions.exercise = 1;
+
   return portions;
 }
 
-// Check if weight loss guardrail should be shown
-export function shouldShowWeightLossGuardrail(
-  goal: Goal,
-  activityLevel: ActivityLevel
-): boolean {
-  return goal === 'lose' && activityLevel !== 'sedentary';
+export function shouldShowWeightLossGuardrail(goal: Goal, activityLevel: ActivityLevel): boolean {
+  return goal === 'lose' && activityLevel === 'sedentary';
 }
 
-// Get the weight loss guardrail message
 export function getWeightLossGuardrailMessage(): string {
-  return "Fuel matters when you're active.\nOn training days, it's okay to use your extra Whole Grain portions.";
+  return `For sustainable weight loss, we recommend adding some physical activity to your routine. Even light movement (like walking) can make a big difference in your results and overall health.
+
+Would you like to update your activity level?`;
 }

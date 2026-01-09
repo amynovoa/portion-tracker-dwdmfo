@@ -16,6 +16,7 @@ interface FoodGroupRowProps {
   onTogglePortion: (increment: boolean) => void;
   showInfoHint?: boolean;
   isFirstRow?: boolean;
+  hideCount?: boolean; // New prop to hide the count display
 }
 
 export default function FoodGroupRow({
@@ -27,6 +28,7 @@ export default function FoodGroupRow({
   onTogglePortion,
   showInfoHint = false,
   isFirstRow = false,
+  hideCount = false,
 }: FoodGroupRowProps) {
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   
@@ -74,7 +76,8 @@ export default function FoodGroupRow({
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.count}>
+          {/* Hide count if hideCount is true, but keep the space for alignment */}
+          <Text style={[styles.count, hideCount && { opacity: 0 }]}>
             {completed}/{target}
           </Text>
         </View>

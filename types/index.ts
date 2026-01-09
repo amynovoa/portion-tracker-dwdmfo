@@ -24,13 +24,13 @@ export interface PortionTargets {
   fats: number;
   water: number;
   alcohol: number;
+  exercise: number; // Added exercise as a portion type
 }
 
 // Daily portions - simplified (no S/M/L serving sizes)
 export interface DailyPortions {
   date: string; // YYYY-MM-DD format
   portions: PortionTargets;
-  exercise?: boolean; // Track if exercise was completed
 }
 
 export interface WeightEntry {
@@ -50,6 +50,7 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'fats', label: 'Fats', icon: '🥑' },
   { key: 'water', label: 'Water', icon: '💧' },
   { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
+  { key: 'exercise', label: 'Exercise', icon: '💪' }, // Added exercise to food groups
 ];
 
 // Activity levels with full details for display

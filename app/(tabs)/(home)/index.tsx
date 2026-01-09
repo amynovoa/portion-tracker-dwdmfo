@@ -9,7 +9,6 @@ import DailyCompletionCelebration from '@/components/DailyCompletionCelebration'
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
-import ExerciseRow from '@/components/ExerciseRow';
 import React, { useState, useEffect } from 'react';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 
@@ -81,8 +80,8 @@ export default function HomeScreen() {
             fats: 0,
             water: 0,
             alcohol: 0,
+            exercise: 0, // Exercise starts at 0
           },
-          exercise: false,
         };
         await saveDailyPortions(portions);
       }
@@ -164,18 +163,6 @@ export default function HomeScreen() {
     await checkAndShowCelebration(updatedPortions);
   };
 
-  const handleToggleExercise = async () => {
-    if (!dailyPortions) return;
-
-    const updatedDailyPortions: DailyPortions = {
-      ...dailyPortions,
-      exercise: !dailyPortions.exercise,
-    };
-
-    setDailyPortions(updatedDailyPortions);
-    await saveDailyPortions(updatedDailyPortions);
-  };
-
   const handleDismissInfoHint = async () => {
     setShowInfoHint(false);
     await saveInfoHintSeen();
@@ -226,25 +213,26 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.portionsContainer}>
-          {FOOD_GROUPS.map((foodGroupItem, index) => (
-            <FoodGroupRow
-              key={foodGroupItem.key}
-              foodGroup={foodGroupItem.key}
-              label={foodGroupItem.label}
-              icon={foodGroupItem.icon}
-              completed={dailyPortions.portions[foodGroupItem.key]}
-              target={profile.portionTargets[foodGroupItem.key]}
-              onTogglePortion={(increment) => handleTogglePortion(foodGroupItem.key, increment)}
-              showInfoHint={showInfoHint && index === 0}
-              isFirstRow={index === 0}
-            />
-          ))}
+          {FOOD_GROUPS.map((foodGroupItem, index) => {
+            // Hide the count for exercise (it's always 1)
+            const hideCount = foodGroupItem.key === 'exercise';
+            
+            return (
+              <FoodGroupRow
+                key={foodGroupItem.key}
+                foodGroup={foodGroupItem.key}
+                label={foodGroupItem.label}
+                icon={foodGroupItem.icon}
+                completed={dailyPortions.portions[foodGroupItem.key]}
+                target={profile.portionTargets[foodGroupItem.key]}
+                onTogglePortion={(increment) => handleTogglePortion(foodGroupItem.key, increment)}
+                showInfoHint={showInfoHint && index === 0}
+                isFirstRow={index === 0}
+                hideCount={hideCount}
+              />
+            );
+          })}
         </View>
-
-        <ExerciseRow
-          completed={dailyPortions.exercise || false}
-          onToggle={handleToggleExercise}
-        />
       </ScrollView>
 
       <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
