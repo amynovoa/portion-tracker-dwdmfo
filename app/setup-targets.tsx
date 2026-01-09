@@ -24,10 +24,10 @@ export default function SetupTargetsScreen() {
     veggies: 4,
     fruits: 2,
     wholeGrains: 2,
-    dairy: 2,
+    legumes: 2,
     nutsSeeds: 2,
+    fats: 2,
     water: 8,
-    exercise: 1,
   });
 
   useEffect(() => {
@@ -88,9 +88,9 @@ export default function SetupTargetsScreen() {
             onChange={(val) => updateTarget('wholeGrains', val)}
           />
           <TargetRow
-            label="🥛 Dairy"
-            value={targets.dairy}
-            onChange={(val) => updateTarget('dairy', val)}
+            label="🫘 Legumes"
+            value={targets.legumes}
+            onChange={(val) => updateTarget('legumes', val)}
           />
           <TargetRow
             label="🥜 Nuts & Seeds"
@@ -98,14 +98,14 @@ export default function SetupTargetsScreen() {
             onChange={(val) => updateTarget('nutsSeeds', val)}
           />
           <TargetRow
+            label="🥑 Fats"
+            value={targets.fats}
+            onChange={(val) => updateTarget('fats', val)}
+          />
+          <TargetRow
             label="💧 Water"
             value={targets.water}
             onChange={(val) => updateTarget('water', val)}
-          />
-          <TargetRow
-            label="💪 Exercise"
-            value={targets.exercise}
-            onChange={(val) => updateTarget('exercise', val)}
           />
         </View>
 
@@ -127,7 +127,7 @@ function TargetRow({ label, value, onChange }: { label: string; value: number; o
           onValueChange={onChange}
           style={styles.targetPicker}
         >
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
             <Picker.Item key={num} label={`${num}`} value={num} />
           ))}
         </Picker>

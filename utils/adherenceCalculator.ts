@@ -20,11 +20,12 @@ export function calculateDailyAdherence(
     const foodGroups: (keyof PortionTargets)[] = [
       'protein',
       'veggies',
-      'fruit',
-      'healthyCarbs',
+      'fruits',
+      'wholeGrains',
+      'legumes',
+      'nutsSeeds',
       'fats',
-      'nuts',
-      'alcohol',
+      'water',
     ];
 
     foodGroups.forEach((group) => {

@@ -20,10 +20,10 @@ export interface PortionTargets {
   protein: number;
   veggies: number;
   fruits: number;
-  dairy: number;
   water: number;
   nutsSeeds: number;
-  exercise: number;
+  fats: number;
+  legumes: number;
 }
 
 // Daily portions - simplified (no S/M/L serving sizes)
@@ -41,14 +41,14 @@ export interface WeightEntry {
 export type FoodGroup = keyof PortionTargets;
 
 export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
-  { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
   { key: 'protein', label: 'Protein', icon: '🍗' },
   { key: 'veggies', label: 'Vegetables', icon: '🥦' },
   { key: 'fruits', label: 'Fruit', icon: '🍎' },
-  { key: 'dairy', label: 'Dairy', icon: '🥛' },
-  { key: 'water', label: 'Water', icon: '💧' },
+  { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
+  { key: 'legumes', label: 'Legumes', icon: '🫘' },
   { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
-  { key: 'exercise', label: 'Exercise', icon: '💪' },
+  { key: 'fats', label: 'Fats', icon: '🥑' },
+  { key: 'water', label: 'Water', icon: '💧' },
 ];
 
 // Activity levels with full details for display

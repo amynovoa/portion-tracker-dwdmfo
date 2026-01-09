@@ -76,10 +76,10 @@ export default function HomeScreen() {
             protein: 0,
             veggies: 0,
             fruits: 0,
-            dairy: 0,
             water: 0,
             nutsSeeds: 0,
-            exercise: 0,
+            fats: 0,
+            legumes: 0,
           },
         };
         await saveDailyPortions(portions);
@@ -92,10 +92,10 @@ export default function HomeScreen() {
           protein: portions.portions.protein || 0,
           veggies: portions.portions.veggies || 0,
           fruits: portions.portions.fruits || 0,
-          dairy: portions.portions.dairy || 0,
           water: portions.portions.water || 0,
           nutsSeeds: portions.portions.nutsSeeds || 0,
-          exercise: portions.portions.exercise || 0,
+          fats: portions.portions.fats || 0,
+          legumes: portions.portions.legumes || 0,
         };
       }
       
@@ -125,7 +125,6 @@ export default function HomeScreen() {
     if (alreadyShown) return;
     
     const allComplete = FOOD_GROUPS.every(fg => {
-      if (fg.key === 'exercise') return true;
       const target = profile.portionTargets[fg.key] || 0;
       const completed = updatedPortions[fg.key] || 0;
       return completed >= target;
@@ -232,7 +231,6 @@ export default function HomeScreen() {
               completed={completed}
               target={target}
               onTogglePortion={(increment) => handleTogglePortion(fg.key, increment)}
-              hideCount={fg.key === 'exercise'}
               showInfoHint={index === 0 && showInfoHint}
               isFirstRow={index === 0}
             />

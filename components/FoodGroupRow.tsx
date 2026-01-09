@@ -32,23 +32,32 @@ export default function FoodGroupRow({
   const [modalVisible, setModalVisible] = useState(false);
   const info = foodGroupInfo[foodGroup];
 
-  const getSlotColor = (index: number) => {
-    // Water and veggies are always green
-    if (foodGroup === 'water' || foodGroup === 'veggies') {
-      return colors.success;
+  const getSlotColor = (index: number, isFilled: boolean) => {
+    // Only show color if the slot is filled
+    if (!isFilled) {
+      return 'transparent';
     }
 
+    // Water and veggies are always green (no yellow/red)
+    if (foodGroup === 'water' || foodGroup === 'veggies') {
+      return '#4CAF50'; // Bright green
+    }
+
+    // For other food groups:
     if (index < target) {
-      return colors.success; // Green for assigned portions
+      // Within target: green
+      return '#4CAF50'; // Bright green
     } else if (index === target) {
-      return '#FFA500'; // Yellow for one over
+      // One over target: yellow-green
+      return '#9ACD32'; // Yellow-green
     } else {
-      return '#FF4444'; // Red for two or more over
+      // Two or more over target: red
+      return '#FF4444'; // Bright red
     }
   };
 
-  // For exercise, show only 1 slot. For others, show at least target slots, or more if user has logged more
-  const maxSlots = foodGroup === 'exercise' ? 1 : Math.max(target, completed, target + 2);
+  // Show enough slots to accommodate completed portions, with extra slots for adding more
+  const maxSlots = Math.max(target, completed + 3);
 
   return (
     <View style={styles.container}>
@@ -78,7 +87,7 @@ export default function FoodGroupRow({
       <View style={styles.slotsContainer}>
         {Array.from({ length: maxSlots }).map((_, index) => {
           const isFilled = index < completed;
-          const slotColor = getSlotColor(index);
+          const slotColor = getSlotColor(index, isFilled);
 
           return (
             <TouchableOpacity
@@ -86,7 +95,7 @@ export default function FoodGroupRow({
               onPress={() => onTogglePortion(index >= completed)}
               style={[
                 styles.slot,
-                isFilled && { backgroundColor: slotColor },
+                isFilled && { backgroundColor: slotColor, borderColor: slotColor },
               ]}
             />
           );

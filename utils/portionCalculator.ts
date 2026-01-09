@@ -21,10 +21,10 @@ export function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
     veggies: 4,
     fruits: 2,
     wholeGrains: 2,
+    legumes: 2,
     nutsSeeds: 2,
-    dairy: 2,
+    fats: 2,
     water: 8,
-    exercise: 1, // Default exercise target is always 1
   };
 
   return baseline;
@@ -38,21 +38,20 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
     adjusted.veggies = Math.max(3, adjusted.veggies - 1);
     adjusted.fruits = Math.max(2, adjusted.fruits);
     adjusted.wholeGrains = Math.max(1, adjusted.wholeGrains - 1);
+    adjusted.legumes = Math.max(1, adjusted.legumes - 1);
     adjusted.nutsSeeds = Math.max(1, adjusted.nutsSeeds - 1);
-    adjusted.dairy = Math.max(1, adjusted.dairy - 1);
+    adjusted.fats = Math.max(1, adjusted.fats - 1);
     adjusted.water = Math.max(7, adjusted.water - 1);
   } else if (size === 'large') {
     adjusted.protein = Math.min(5, adjusted.protein + 1);
     adjusted.veggies = Math.min(6, adjusted.veggies + 1);
     adjusted.fruits = Math.min(4, adjusted.fruits + 1);
     adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
+    adjusted.legumes = Math.min(3, adjusted.legumes + 1);
     adjusted.nutsSeeds = Math.min(3, adjusted.nutsSeeds + 1);
-    adjusted.dairy = Math.min(4, adjusted.dairy + 1);
+    adjusted.fats = Math.min(3, adjusted.fats + 1);
     adjusted.water = Math.min(12, adjusted.water + 2);
   }
-
-  // Exercise target is always 1, regardless of size
-  adjusted.exercise = 1;
 
   return adjusted;
 }
@@ -74,23 +73,20 @@ export function applyActivityAdjustment(
     case 'moderate':
       adjusted.protein = Math.min(6, adjusted.protein + 1);
       adjusted.wholeGrains = Math.min(5, adjusted.wholeGrains + 1);
-      adjusted.dairy = Math.min(4, adjusted.dairy + 1);
+      adjusted.legumes = Math.min(4, adjusted.legumes + 1);
       break;
     case 'active':
       adjusted.protein = Math.min(6, adjusted.protein + 2);
       adjusted.wholeGrains = Math.min(6, adjusted.wholeGrains + 2);
-      adjusted.dairy = Math.min(5, adjusted.dairy + 1);
+      adjusted.legumes = Math.min(5, adjusted.legumes + 1);
       break;
     case 'veryActive':
       adjusted.protein = Math.min(7, adjusted.protein + 2);
       adjusted.wholeGrains = Math.min(7, adjusted.wholeGrains + 3);
-      adjusted.dairy = Math.min(5, adjusted.dairy + 2);
+      adjusted.legumes = Math.min(5, adjusted.legumes + 2);
       adjusted.nutsSeeds = Math.min(4, adjusted.nutsSeeds + 1);
       break;
   }
-
-  // Exercise target is always 1, regardless of activity level
-  adjusted.exercise = 1;
 
   return adjusted;
 }
@@ -110,18 +106,16 @@ export function calculateRecommendedTargets(
   // Apply goal-specific adjustments
   if (goal === 'lose') {
     portions.wholeGrains = Math.max(0, portions.wholeGrains - 1);
-    portions.dairy = Math.max(0, portions.dairy - 1);
+    portions.fats = Math.max(0, portions.fats - 1);
     portions.veggies = Math.min(6, portions.veggies + 1);
   } else if (goal === 'build') {
     portions.protein = Math.min(6, portions.protein + 1);
     portions.nutsSeeds = Math.min(4, portions.nutsSeeds + 1);
+    portions.fats = Math.min(4, portions.fats + 1);
   }
 
   // Apply activity level adjustment
   portions = applyActivityAdjustment(portions, activityLevel);
-
-  // Ensure exercise is always 1
-  portions.exercise = 1;
 
   return portions;
 }

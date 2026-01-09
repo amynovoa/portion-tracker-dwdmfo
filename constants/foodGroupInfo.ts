@@ -97,6 +97,31 @@ Starchy vegetables (count as grains):
 - Sweet potatoes, white potatoes, corn, peas`,
     portionSize: 'About ½ cup cooked grains, 1 slice bread, or 1 small potato',
   },
+  legumes: {
+    benefit: `Legumes are an excellent source of plant-based protein, fiber, and complex carbohydrates. They support digestive health, help stabilize blood sugar, and keep you feeling full.
+
+They're budget-friendly and versatile in many dishes.
+
+Great for both vegetarians and meat-eaters looking to diversify protein sources.`,
+    avoid: `Avoid canned legumes with added sugar or excessive sodium (or rinse them well).
+
+Limit refried beans made with lard or excess oil.
+
+Watch portion sizes if you're sensitive to fiber or have digestive issues.`,
+    examples: `Common legumes:
+- Black beans, kidney beans, pinto beans
+- Chickpeas (garbanzo beans)
+- Lentils (red, green, brown)
+- Split peas
+- White beans (cannellini, navy)
+
+Prepared dishes:
+- Hummus
+- Bean soups and stews
+- Lentil curry
+- Three-bean salad`,
+    portionSize: 'About ½ cup cooked legumes',
+  },
   nutsSeeds: {
     benefit: `Nuts and seeds provide healthy fats, protein, fiber, and important minerals like magnesium and zinc.
 
@@ -118,28 +143,29 @@ Nut butters:
 - Almond butter, peanut butter (natural, no added sugar)`,
     portionSize: 'About ¼ cup nuts or 2 tablespoons nut butter',
   },
-  dairy: {
-    benefit: `Dairy provides calcium, protein, and vitamin D for bone health and muscle function.
+  fats: {
+    benefit: `Healthy fats support hormone production, brain function, and nutrient absorption. They help you feel satisfied and add flavor to meals.
 
-Choose lower-fat options if you're trying to lose weight.
+Focus on unsaturated fats from plant sources and fatty fish.
 
-Greek yogurt and cottage cheese are especially high in protein.`,
-    avoid: `Avoid heavily sweetened yogurts and flavored milk.
+Fats are essential but calorie-dense, so portion control matters.`,
+    avoid: `Avoid trans fats (partially hydrogenated oils) found in some processed foods.
 
-Limit full-fat dairy if you're watching calories.
+Limit saturated fats from butter, cream, and fatty meats.
 
-Watch portion sizes on cheese — it's calorie-dense.`,
-    examples: `Best choices:
-- Greek yogurt (plain)
-- Cottage cheese
-- Milk (skim or 1%)
-- Cheese (in moderation)
+Watch portion sizes — fats are 9 calories per gram.`,
+    examples: `Healthy fat sources:
+- Olive oil, avocado oil
+- Avocados
+- Fatty fish (salmon, mackerel, sardines)
+- Olives
+- Dark chocolate (70%+ cacao, in moderation)
 
-Plant-based alternatives:
-- Fortified almond milk
-- Fortified soy milk
-- Fortified oat milk`,
-    portionSize: 'About 1 cup milk/yogurt or 1 oz cheese',
+Cooking fats:
+- Extra virgin olive oil
+- Coconut oil (in moderation)
+- Grass-fed butter (small amounts)`,
+    portionSize: 'About 1 tablespoon oil, ¼ avocado, or 1 oz fatty fish',
   },
   water: {
     benefit: `Water is essential for every bodily function — digestion, circulation, temperature regulation, and more.
@@ -161,35 +187,5 @@ Watch caffeine intake — it can be dehydrating in excess.`,
 Okay in moderation:
 - Black coffee, unsweetened tea`,
     portionSize: 'About 8 oz (1 cup) per serving — aim for 7-10+ servings per day',
-  },
-  exercise: {
-    benefit: `Regular movement supports metabolism, energy, mood, and long-term health. Aim for a mix of cardio and strength training throughout the week.
-
-Even 20–30 minutes counts — you don't need long sessions to benefit.
-
-Aim for 2–4 days per week of resistance training to support lean muscle and metabolism.
-
-Consistency matters more than perfection — every bit of movement helps.`,
-    avoid: `Don't overdo it — rest and recovery are just as important as the workout itself.
-
-Avoid exercising through pain or injury.
-
-Don't skip warm-ups or cool-downs.`,
-    examples: `Cardio options:
-- Brisk walking
-- Cycling (indoors or outdoors)
-- Swimming
-- Elliptical
-- Rowing
-- Light jogging
-- Dance or group fitness classes
-
-Strength/Resistance options:
-- Bodyweight exercises (squats, lunges, push-ups, planks)
-- Dumbbells or resistance bands
-- Machines or cable workouts
-- Pilates or reformer
-- Functional movements (step-ups, carries, glute bridges)`,
-    portionSize: 'Aim for at least 20-30 minutes of movement most days',
   },
 };

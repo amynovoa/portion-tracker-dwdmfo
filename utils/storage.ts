@@ -62,10 +62,10 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
             protein: parsed.portions.protein || 0,
             veggies: parsed.portions.veggies || 0,
             fruits: parsed.portions.fruits || 0,
-            dairy: parsed.portions.dairy || 0,
             water: parsed.portions.water || 0,
             nutsSeeds: parsed.portions.nutsSeeds || 0,
-            exercise: parsed.portions.exercise || 0,
+            fats: parsed.portions.fats || 0,
+            legumes: parsed.portions.legumes || 0,
           },
         };
       }
@@ -96,10 +96,10 @@ export async function getAllDailyPortions(): Promise<DailyPortions[]> {
                   protein: parsed.portions.protein || 0,
                   veggies: parsed.portions.veggies || 0,
                   fruits: parsed.portions.fruits || 0,
-                  dairy: parsed.portions.dairy || 0,
                   water: parsed.portions.water || 0,
                   nutsSeeds: parsed.portions.nutsSeeds || 0,
-                  exercise: parsed.portions.exercise || 0,
+                  fats: parsed.portions.fats || 0,
+                  legumes: parsed.portions.legumes || 0,
                 },
               } as DailyPortions;
             }
