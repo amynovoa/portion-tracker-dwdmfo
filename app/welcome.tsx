@@ -1,34 +1,16 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
-import { loadProfile } from '@/utils/storage';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if user already has a profile
-    checkExistingProfile();
-  }, []);
-
-  const checkExistingProfile = async () => {
-    try {
-      const profile = await loadProfile();
-      if (profile && profile.portionTargets) {
-        console.log('Profile found on welcome screen, redirecting to home');
-        router.replace('/(tabs)/(home)');
-      }
-    } catch (error) {
-      console.error('Error checking profile on welcome screen:', error);
-    }
-  };
-
   const handleGetStarted = () => {
-    console.log('User clicked Set Up My Profile');
+    console.log('Welcome: User clicked Set Up My Profile');
     router.push('/setup-profile');
   };
 
