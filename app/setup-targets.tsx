@@ -137,6 +137,11 @@ export default function SetupTargetsScreen() {
           </Text>
         </View>
 
+        {/* Portions Title */}
+        <View style={styles.portionsTitleContainer}>
+          <Text style={styles.portionsTitle}>Portions</Text>
+        </View>
+
         <View style={styles.targetsSection}>
           {foodGroupLabels.map((group) => (
             <View key={group.key} style={styles.targetRow}>
@@ -210,6 +215,15 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
     fontWeight: '600',
+  },
+  portionsTitleContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  portionsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
   },
   targetsSection: {
     paddingHorizontal: 16,
