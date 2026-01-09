@@ -25,16 +25,16 @@ export default function TabLayout() {
       label: 'Weight',
     },
     {
-      name: 'faq',
-      route: '/(tabs)/faq',
-      icon: 'help',
-      label: 'FAQs',
-    },
-    {
       name: 'profile',
       route: '/(tabs)/profile',
       icon: 'person',
       label: 'Profile',
+    },
+    {
+      name: 'settings',
+      route: '/(tabs)/settings',
+      icon: 'settings',
+      label: 'Settings',
     },
   ];
 
@@ -50,9 +50,8 @@ export default function TabLayout() {
         <Stack.Screen key="home" name="(home)" />
         <Stack.Screen key="history" name="history" />
         <Stack.Screen key="weight" name="weight" />
-        <Stack.Screen key="faq" name="faq" />
         <Stack.Screen key="profile" name="profile" />
-        <Stack.Screen key="settings" name="settings" options={{ href: null }} />
+        <Stack.Screen key="settings" name="settings" />
       </Stack>
       <FloatingTabBar tabs={tabs} useFullWidth={true} />
     </>

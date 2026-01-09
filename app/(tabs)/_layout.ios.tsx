@@ -10,20 +10,20 @@ export default function TabLayout() {
         <Label>Track</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="history" name="history">
-        <Icon sf="calendar" />
+        <Icon sf="clock.fill" />
         <Label>History</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="weight" name="weight">
         <Icon sf="chart.line.uptrend.xyaxis" />
         <Label>Weight</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="faq" name="faq">
-        <Icon sf="questionmark.circle.fill" />
-        <Label>FAQs</Label>
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger key="profile" name="profile">
         <Icon sf="person.fill" />
         <Label>Profile</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="settings" name="settings">
+        <Icon sf="gearshape.fill" />
+        <Label>Settings</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
