@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { PortionTargets, Sex, Goal, ActivityLevel, UserProfile } from '@/types';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { saveProfile } from '@/utils/storage';
 import AppLogo from '@/components/AppLogo';
+import PortionDropdown from '@/components/PortionDropdown';
 
 export default function SetupTargetsScreen() {
   const router = useRouter();
@@ -56,11 +57,10 @@ export default function SetupTargetsScreen() {
     }
   }, [params]);
 
-  const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
-    const numValue = parseInt(value) || 0;
+  const handleUpdateTargets = (key: keyof PortionTargets, value: number) => {
     setTargets({
       ...targets,
-      [key]: Math.max(0, numValue),
+      [key]: Math.max(0, value),
     });
   };
 
@@ -144,15 +144,13 @@ export default function SetupTargetsScreen() {
                 <Text style={styles.targetIcon}>{group.icon}</Text>
                 <Text style={styles.targetLabel}>{group.label}</Text>
               </View>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.targetInput}
-                  value={targets[group.key].toString()}
-                  onChangeText={(text) => handleUpdateTargets(group.key, text)}
-                  keyboardType="numeric"
-                  maxLength={2}
+              <View style={styles.dropdownWrapper}>
+                <PortionDropdown
+                  label=""
+                  value={targets[group.key]}
+                  onValueChange={(value) => handleUpdateTargets(group.key, value)}
+                  maxValue={group.key === 'water' ? 15 : 10}
                 />
-                <Text style={styles.portionsText}>portions</Text>
               </View>
             </View>
           ))}
@@ -221,7 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -239,27 +237,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  targetInput: {
-    width: 60,
-    height: 44,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
-    backgroundColor: colors.highlight,
-  },
-  portionsText: {
-    fontSize: 14,
-    color: colors.textSecondary,
+  dropdownWrapper: {
+    width: 120,
   },
   button: {
     marginHorizontal: 16,
