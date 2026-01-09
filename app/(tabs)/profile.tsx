@@ -93,6 +93,7 @@ export default function ProfileScreen() {
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
   const [alcoholServings, setAlcoholServings] = useState('2');
   const [calculatedTargets, setCalculatedTargets] = useState<PortionTargets | null>(null);
+  const [hasExistingProfile, setHasExistingProfile] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -109,6 +110,7 @@ export default function ProfileScreen() {
   async function loadExistingProfile() {
     const profile = await loadProfile();
     if (profile) {
+      setHasExistingProfile(true);
       setSex(profile.sex);
       setCurrentWeight(profile.currentWeight.toString());
       setGoalWeight(profile.goalWeight?.toString() || '');
@@ -136,6 +138,35 @@ export default function ProfileScreen() {
     );
     
     setCalculatedTargets(targets);
+  }
+
+  function handleReviewTargets() {
+    const weight = parseFloat(currentWeight);
+    
+    if (!weight || weight <= 0) {
+      Alert.alert('Error', 'Please enter a valid current weight');
+      return;
+    }
+    
+    if (!calculatedTargets) {
+      Alert.alert('Error', 'Please wait while we calculate your targets');
+      return;
+    }
+
+    // Navigate to setup-targets with all profile data
+    router.push({
+      pathname: '/setup-targets',
+      params: { 
+        targets: JSON.stringify(calculatedTargets),
+        sex,
+        currentWeight,
+        goalWeight: goalWeight || '',
+        goal,
+        activityLevel,
+        includeAlcohol: includeAlcohol.toString(),
+        alcoholServings,
+      }
+    });
   }
 
   async function handleSaveProfile() {
@@ -299,22 +330,25 @@ export default function ProfileScreen() {
         )}
       </View>
       
-      {/* Calculate & Save */}
+      {/* Review & Customize Button - Only show this for new profiles or when editing */}
       {calculatedTargets && (
         <TouchableOpacity
           style={styles.calculateButton}
-          onPress={() => router.push({
-            pathname: '/setup-targets',
-            params: { targets: JSON.stringify(calculatedTargets) }
-          })}
+          onPress={handleReviewTargets}
         >
           <Text style={styles.calculateButtonText}>Review & Customize Targets</Text>
         </TouchableOpacity>
       )}
       
-      <TouchableOpacity style={[styles.calculateButton, { marginTop: 12 }]} onPress={handleSaveProfile}>
-        <Text style={styles.calculateButtonText}>Save Profile</Text>
-      </TouchableOpacity>
+      {/* Save Profile Button - Only show for existing profiles that want to save without customizing */}
+      {hasExistingProfile && calculatedTargets && (
+        <TouchableOpacity 
+          style={[styles.calculateButton, { marginTop: 12, backgroundColor: colors.textSecondary }]} 
+          onPress={handleSaveProfile}
+        >
+          <Text style={styles.calculateButtonText}>Save Profile Without Customizing</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }

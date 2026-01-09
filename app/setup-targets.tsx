@@ -2,13 +2,23 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { PortionTargets } from '@/types';
+import { PortionTargets, Sex, Goal, ActivityLevel, UserProfile } from '@/types';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { saveProfile } from '@/utils/storage';
 import AppLogo from '@/components/AppLogo';
 
 export default function SetupTargetsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  
+  // Profile data from params
+  const [sex, setSex] = useState<Sex>('prefer-not-to-say');
+  const [currentWeight, setCurrentWeight] = useState<number>(0);
+  const [goalWeight, setGoalWeight] = useState<number | undefined>(undefined);
+  const [goal, setGoal] = useState<Goal>('maintain');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
+  const [includeAlcohol, setIncludeAlcohol] = useState(false);
+  const [alcoholServings, setAlcoholServings] = useState<number>(2);
   
   // Initialize with default values or passed values
   const [targets, setTargets] = useState<PortionTargets>({
@@ -16,15 +26,27 @@ export default function SetupTargetsScreen() {
     veggies: 4,
     fruit: 2,
     wholeGrains: 2,
+    legumes: 1,
     nutsSeeds: 2,
     fats: 2,
-    dairy: 2,
     water: 8,
     alcohol: 0,
   });
 
   useEffect(() => {
-    // If targets were passed as params, parse and use them
+    // Parse all profile data from params
+    if (params.sex) setSex(params.sex as Sex);
+    if (params.currentWeight) setCurrentWeight(parseFloat(params.currentWeight as string));
+    if (params.goalWeight) {
+      const gw = parseFloat(params.goalWeight as string);
+      if (!isNaN(gw)) setGoalWeight(gw);
+    }
+    if (params.goal) setGoal(params.goal as Goal);
+    if (params.activityLevel) setActivityLevel(params.activityLevel as ActivityLevel);
+    if (params.includeAlcohol) setIncludeAlcohol(params.includeAlcohol === 'true');
+    if (params.alcoholServings) setAlcoholServings(parseInt(params.alcoholServings as string));
+    
+    // Parse targets if provided
     if (params.targets) {
       try {
         const parsedTargets = JSON.parse(params.targets as string);
@@ -33,7 +55,7 @@ export default function SetupTargetsScreen() {
         console.error('Error parsing targets:', error);
       }
     }
-  }, [params.targets]);
+  }, [params]);
 
   const handleUpdateTargets = (key: keyof PortionTargets, value: string) => {
     const numValue = parseInt(value) || 0;
@@ -43,7 +65,7 @@ export default function SetupTargetsScreen() {
     });
   };
 
-  const handleSaveTargets = () => {
+  const handleSaveTargets = async () => {
     // Validate that at least some targets are set
     const hasTargets = Object.values(targets).some(val => val > 0);
     
@@ -52,14 +74,37 @@ export default function SetupTargetsScreen() {
       return;
     }
 
-    // Navigate back to profile with the targets
-    router.back();
-    // Pass the targets back via router state
-    if (router.canGoBack()) {
-      // Use a timeout to ensure navigation completes before passing data
-      setTimeout(() => {
-        router.setParams({ customTargets: JSON.stringify(targets) });
-      }, 100);
+    if (!currentWeight || currentWeight <= 0) {
+      Alert.alert('Error', 'Invalid profile data. Please go back and check your inputs.');
+      return;
+    }
+
+    // Create the complete profile with customized targets
+    const profile: UserProfile = {
+      sex,
+      currentWeight,
+      goalWeight,
+      goal,
+      activityLevel,
+      includeAlcohol,
+      alcoholServings: includeAlcohol ? alcoholServings : undefined,
+      portionTargets: targets,
+    };
+
+    try {
+      await saveProfile(profile);
+      Alert.alert('Success', 'Your profile and targets have been saved!', [
+        { 
+          text: 'OK', 
+          onPress: () => {
+            // Navigate to home screen
+            router.replace('/(tabs)/(home)');
+          }
+        }
+      ]);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
     }
   };
 
@@ -67,10 +112,10 @@ export default function SetupTargetsScreen() {
     { key: 'protein', label: 'Protein', icon: '🥩' },
     { key: 'veggies', label: 'Veggies', icon: '🥦' },
     { key: 'fruit', label: 'Fruit', icon: '🍎' },
-    { key: 'wholeGrains', label: 'Healthy Carbs', icon: '🌾' },
+    { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
+    { key: 'legumes', label: 'Legumes', icon: '🫘' },
     { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
     { key: 'fats', label: 'Fats', icon: '🥑' },
-    { key: 'dairy', label: 'Dairy', icon: '🥛' },
     { key: 'water', label: 'Water', icon: '💧' },
     { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
   ];
@@ -83,8 +128,8 @@ export default function SetupTargetsScreen() {
         </View>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Set Your Portion Targets</Text>
-          <Text style={styles.subtitle}>Customize your daily goals for each food group</Text>
+          <Text style={styles.title}>Customize Your Targets</Text>
+          <Text style={styles.subtitle}>Review and adjust your daily portion goals</Text>
         </View>
 
         <View style={styles.targetsSection}>
@@ -110,19 +155,19 @@ export default function SetupTargetsScreen() {
 
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            💡 Tip: Start with moderate targets and adjust as you track your progress. You can always update these later in your profile.
+            💡 Tip: These targets are personalized based on your profile. Adjust them to match your preferences and lifestyle.
           </Text>
         </View>
 
         <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={handleSaveTargets}>
-          <Text style={commonStyles.buttonText}>Save Targets</Text>
+          <Text style={commonStyles.buttonText}>Save Profile & Targets</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[buttonStyles.outline, styles.button]}
           onPress={() => router.back()}
         >
-          <Text style={commonStyles.buttonTextOutline}>Cancel</Text>
+          <Text style={commonStyles.buttonTextOutline}>Go Back</Text>
         </TouchableOpacity>
 
         <View style={styles.bottomPadding} />
