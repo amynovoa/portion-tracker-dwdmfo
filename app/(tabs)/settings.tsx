@@ -1,6 +1,8 @@
 
 import { IconSymbol } from '@/components/IconSymbol';
 import { useRouter } from 'expo-router';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import PaywallScreen from '@/components/PaywallScreen';
 import {
   ScrollView,
   StyleSheet,
@@ -61,10 +63,11 @@ const styles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { showPaywall, paywallVisible, hidePaywall } = useSubscription();
 
   const handleSubscription = () => {
-    // Navigate to subscription/paywall
-    Alert.alert('Subscription', 'Subscription management coming soon');
+    // Show the paywall modal
+    showPaywall();
   };
 
   const handleActivityLevel = () => {
@@ -80,7 +83,7 @@ export default function SettingsScreen() {
   };
 
   const handlePrivacyPolicy = () => {
-    Linking.openURL('https://www.portiontracker.app/privacy');
+    Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const handleResetAppData = () => {
@@ -97,6 +100,7 @@ export default function SettingsScreen() {
               await AsyncStorage.clear();
               Alert.alert('Success', 'All app data has been reset. Please restart the app.');
             } catch (error) {
+              console.error('Error resetting app data:', error);
               Alert.alert('Error', 'Failed to reset app data');
             }
           },
@@ -175,6 +179,12 @@ export default function SettingsScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      <PaywallScreen
+        visible={paywallVisible}
+        onDismiss={hidePaywall}
+        canDismiss={true}
+      />
     </View>
   );
 }

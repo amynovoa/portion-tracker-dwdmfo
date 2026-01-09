@@ -27,7 +27,8 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
 
   const handleSubscribe = async () => {
     setIsLoading(true);
-    // TODO: Implement actual subscription logic with RevenueCat or Apple IAP
+    // TODO: Backend Integration - Implement actual subscription logic with Superwall
+    // This should trigger the Superwall paywall and handle the purchase flow
     setTimeout(() => {
       setIsLoading(false);
       Alert.alert('Subscription', `${selectedPlan} subscription initiated`);
@@ -36,7 +37,8 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
 
   const handleRestorePurchases = async () => {
     setIsLoading(true);
-    // TODO: Implement restore purchases logic
+    // TODO: Backend Integration - Implement restore purchases logic
+    // This should check with Apple/Google for existing purchases
     setTimeout(() => {
       setIsLoading(false);
       Alert.alert('Restore', 'No purchases to restore');
@@ -136,7 +138,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
               <Text style={styles.linkText}>Terms of Use</Text>
             </TouchableOpacity>
             <Text style={styles.linkSeparator}>•</Text>
-            <TouchableOpacity onPress={() => Linking.openURL('https://portiontrack.com/privacy-policy')}>
+            <TouchableOpacity onPress={() => Linking.openURL('https://www.portiontrack.com/privacy-policy')}>
               <Text style={styles.linkText}>Privacy Policy</Text>
             </TouchableOpacity>
           </View>

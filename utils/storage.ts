@@ -1,6 +1,10 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { UserProfile, DailyPortions, WeightEntry } from '@/types';
 
+const PROFILE_KEY = '@portion_tracker_profile';
+const DAILY_PORTIONS_PREFIX = '@portion_tracker_daily_';
+const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
 const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 
@@ -10,6 +14,118 @@ export interface ResetTimeConfig {
   enabled: boolean;
 }
 
+// Profile functions
+export async function saveProfile(profile: UserProfile): Promise<void> {
+  try {
+    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  } catch (error) {
+    console.error('Error saving profile:', error);
+  }
+}
+
+export async function loadProfile(): Promise<UserProfile | null> {
+  try {
+    const data = await AsyncStorage.getItem(PROFILE_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading profile:', error);
+  }
+  return null;
+}
+
+// Daily portions functions
+export async function saveDailyPortions(dailyPortions: DailyPortions): Promise<void> {
+  try {
+    const key = `${DAILY_PORTIONS_PREFIX}${dailyPortions.date}`;
+    await AsyncStorage.setItem(key, JSON.stringify(dailyPortions));
+  } catch (error) {
+    console.error('Error saving daily portions:', error);
+  }
+}
+
+export async function loadDailyPortions(date: string): Promise<DailyPortions | null> {
+  try {
+    const key = `${DAILY_PORTIONS_PREFIX}${date}`;
+    const data = await AsyncStorage.getItem(key);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading daily portions:', error);
+  }
+  return null;
+}
+
+export async function getAllDailyPortions(): Promise<DailyPortions[]> {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const dailyKeys = keys.filter(key => key.startsWith(DAILY_PORTIONS_PREFIX));
+    const items = await AsyncStorage.multiGet(dailyKeys);
+    
+    return items
+      .map(([key, value]) => {
+        if (value) {
+          try {
+            return JSON.parse(value) as DailyPortions;
+          } catch (e) {
+            console.error('Error parsing daily portions:', e);
+            return null;
+          }
+        }
+        return null;
+      })
+      .filter((item): item is DailyPortions => item !== null)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  } catch (error) {
+    console.error('Error loading all daily portions:', error);
+    return [];
+  }
+}
+
+// Weight entries functions
+export async function saveWeightEntry(entry: WeightEntry): Promise<void> {
+  try {
+    const entries = await loadWeightEntries();
+    const existingIndex = entries.findIndex(e => e.date === entry.date);
+    
+    if (existingIndex >= 0) {
+      entries[existingIndex] = entry;
+    } else {
+      entries.push(entry);
+    }
+    
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+    await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error('Error saving weight entry:', error);
+  }
+}
+
+export async function loadWeightEntries(): Promise<WeightEntry[]> {
+  try {
+    const data = await AsyncStorage.getItem(WEIGHT_ENTRIES_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading weight entries:', error);
+  }
+  return [];
+}
+
+export async function deleteWeightEntry(date: string): Promise<void> {
+  try {
+    const entries = await loadWeightEntries();
+    const filtered = entries.filter(e => e.date !== date);
+    await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Error deleting weight entry:', error);
+  }
+}
+
+// Reset time functions
 export async function saveResetTime(config: ResetTimeConfig): Promise<void> {
   try {
     await AsyncStorage.setItem(RESET_TIME_KEY, JSON.stringify(config));
@@ -45,5 +161,26 @@ export async function loadLastResetDate(): Promise<string | null> {
   } catch (error) {
     console.error('Error loading last reset date:', error);
     return null;
+  }
+}
+
+// Info hint functions
+const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
+
+export async function hasSeenInfoHint(): Promise<boolean> {
+  try {
+    const data = await AsyncStorage.getItem(INFO_HINT_SEEN_KEY);
+    return data === 'true';
+  } catch (error) {
+    console.error('Error checking info hint:', error);
+    return false;
+  }
+}
+
+export async function saveInfoHintSeen(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(INFO_HINT_SEEN_KEY, 'true');
+  } catch (error) {
+    console.error('Error saving info hint seen:', error);
   }
 }
