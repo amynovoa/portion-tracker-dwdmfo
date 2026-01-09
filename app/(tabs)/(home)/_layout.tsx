@@ -1,22 +1,8 @@
 
-import React, { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
-import { loadProfile } from '@/utils/storage';
+import React from 'react';
+import { Stack } from 'expo-router';
 
 export default function HomeLayout() {
-  const router = useRouter();
-
-  useEffect(() => {
-    checkProfile();
-  }, []);
-
-  const checkProfile = async () => {
-    const profile = await loadProfile();
-    if (!profile) {
-      router.replace('/welcome');
-    }
-  };
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />

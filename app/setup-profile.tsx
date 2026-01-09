@@ -16,17 +16,35 @@ export default function SetupProfileScreen() {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
 
   const handleContinue = () => {
+    console.log('Setup profile - Continue clicked');
+    
     if (!weight || !goalWeight) {
       alert('Please enter your current and goal weight');
       return;
     }
 
+    const weightNum = parseFloat(weight);
+    const goalWeightNum = parseFloat(goalWeight);
+
+    if (isNaN(weightNum) || isNaN(goalWeightNum) || weightNum <= 0 || goalWeightNum <= 0) {
+      alert('Please enter valid weight values');
+      return;
+    }
+
+    console.log('Navigating to setup-targets with params:', {
+      sex,
+      weight: weightNum,
+      goalWeight: goalWeightNum,
+      goal,
+      activityLevel,
+    });
+
     router.push({
       pathname: '/setup-targets',
       params: {
         sex,
-        weight,
-        goalWeight,
+        weight: weight,
+        goalWeight: goalWeight,
         goal,
         activityLevel,
       },
@@ -100,11 +118,11 @@ export default function SetupProfileScreen() {
               onValueChange={(value) => setActivityLevel(value)}
               style={styles.picker}
             >
-              <Picker.Item label="Sedentary" value="sedentary" />
-              <Picker.Item label="Light" value="light" />
-              <Picker.Item label="Moderate" value="moderate" />
-              <Picker.Item label="Active" value="active" />
-              <Picker.Item label="Very Active" value="veryActive" />
+              <Picker.Item label="Sedentary - Little to no exercise" value="sedentary" />
+              <Picker.Item label="Light - 1-3x/week or 6k-9k steps/day" value="light" />
+              <Picker.Item label="Moderate - 3-5x/week or 9k-12k steps/day" value="moderate" />
+              <Picker.Item label="Active - Most days or 12k-15k+ steps/day" value="active" />
+              <Picker.Item label="Very Active - High daily activity" value="veryActive" />
             </Picker>
           </View>
         </View>

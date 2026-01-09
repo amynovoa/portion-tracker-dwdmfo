@@ -32,41 +32,48 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
     async function checkProfile() {
       try {
+        console.log('Checking profile...');
         const profile = await loadProfile();
-        console.log('Profile check:', profile ? 'Profile exists' : 'No profile found');
+        console.log('Profile loaded:', profile ? 'Profile exists' : 'No profile found');
         
-        if (loaded) {
+        if (loaded && !hasNavigated) {
           await SplashScreen.hideAsync();
+          setHasNavigated(true);
           
-          // Navigate based on profile existence
-          if (profile && profile.portionTargets) {
-            // User has completed setup, go to main app
-            console.log('Navigating to main app (tabs)');
-            router.replace('/(tabs)/(home)');
-          } else {
-            // No profile, show welcome screen
-            console.log('Navigating to welcome screen');
-            router.replace('/welcome');
-          }
-          
-          setIsCheckingProfile(false);
+          // Small delay to ensure navigation is ready
+          setTimeout(() => {
+            if (profile && profile.portionTargets) {
+              // User has completed setup, go to main app
+              console.log('Navigating to main app (tabs)');
+              router.replace('/(tabs)/(home)');
+            } else {
+              // No profile, show welcome screen
+              console.log('Navigating to welcome screen');
+              router.replace('/welcome');
+            }
+            setIsCheckingProfile(false);
+          }, 100);
         }
       } catch (error) {
         console.error('Error checking profile:', error);
-        if (loaded) {
+        if (loaded && !hasNavigated) {
           await SplashScreen.hideAsync();
-          router.replace('/welcome');
-          setIsCheckingProfile(false);
+          setHasNavigated(true);
+          setTimeout(() => {
+            router.replace('/welcome');
+            setIsCheckingProfile(false);
+          }, 100);
         }
       }
     }
 
     checkProfile();
-  }, [loaded]);
+  }, [loaded, hasNavigated]);
 
   React.useEffect(() => {
     if (
@@ -117,8 +124,8 @@ export default function RootLayout() {
         >
           <SubscriptionProvider>
             <WidgetProvider>
-              <GestureHandlerRootView>
-              <Stack>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+              <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="welcome" options={{ headerShown: false }} />
                 <Stack.Screen name="setup-profile" options={{ headerShown: false }} />
                 <Stack.Screen name="setup-targets" options={{ headerShown: false }} />
