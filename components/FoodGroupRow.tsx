@@ -142,32 +142,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    minHeight: 32,
   },
   icon: {
     fontSize: 24,
     marginRight: 12,
+    lineHeight: 32,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
     flex: 1,
+    lineHeight: 32,
   },
   infoButtonContainer: {
-    position: 'relative',
     marginRight: 8,
+    height: 32,
+    justifyContent: 'center',
   },
   infoButton: {
     padding: 4,
+    height: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   infoIcon: {
     fontSize: 18,
     opacity: 0.6,
+    lineHeight: 18,
   },
   count: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.textSecondary,
+    lineHeight: 32,
   },
   slotsContainer: {
     flexDirection: 'row',
