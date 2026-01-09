@@ -29,8 +29,8 @@ export default function PortionSlot({
     
     console.log(`PortionSlot: foodGroup=${foodGroup}, slotIndex=${slotIndex}, target=${target}, completed=${completed}`);
     
-    // For vegetables and water, always show green when completed
-    if (foodGroup === 'veggies' || foodGroup === 'water') {
+    // For vegetables, water, and exercise, always show green when completed
+    if (foodGroup === 'veggies' || foodGroup === 'water' || foodGroup === 'exercise') {
       console.log(`PortionSlot: ${foodGroup} - returning green`);
       return '#4CAF50'; // Always green
     }
