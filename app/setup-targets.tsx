@@ -1,196 +1,202 @@
 
-import { saveProfile, loadProfile } from '@/utils/storage';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import PortionDropdown from '@/components/PortionDropdown';
 import React, { useState, useEffect } from 'react';
-import { PortionTargets, Sex, Goal, ActivityLevel, UserProfile, FOOD_GROUPS } from '@/types';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
-import { IconSymbol } from '@/components/IconSymbol';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Picker } from '@react-native-picker/picker';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { Sex, Goal, ActivityLevel, PortionTargets } from '@/types';
+import { calculateRecommendedTargets } from '@/utils/portionCalculator';
+import { saveProfile } from '@/utils/storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function SetupTargetsScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  
+  const sex = (params.sex as Sex) || 'female';
+  const weight = parseFloat(params.weight as string) || 150;
+  const goalWeight = parseFloat(params.goalWeight as string) || 150;
+  const goal = (params.goal as Goal) || 'maintain';
+  const activityLevel = (params.activityLevel as ActivityLevel) || 'moderate';
+  const includeAlcohol = params.includeAlcohol === 'true';
+  const alcoholServings = parseInt(params.alcoholServings as string) || 0;
+
+  const [targets, setTargets] = useState<PortionTargets>({
+    protein: 3,
+    veggies: 4,
+    fruit: 2,
+    wholeGrains: 2,
+    fats: 2,
+    nutsSeeds: 2,
+    water: 8,
+    alcohol: 0,
+  });
+
+  useEffect(() => {
+    const recommended = calculateRecommendedTargets(
+      sex,
+      weight,
+      goal,
+      includeAlcohol,
+      alcoholServings,
+      activityLevel
+    );
+    setTargets(recommended);
+  }, []);
+
+  const handleSave = async () => {
+    await saveProfile({
+      sex,
+      currentWeight: weight,
+      goalWeight,
+      goal,
+      activityLevel,
+      includeAlcohol,
+      alcoholServings,
+      portionTargets: targets,
+    });
+    router.replace('/(tabs)/(home)/');
+  };
+
+  const updateTarget = (key: keyof PortionTargets, value: number) => {
+    setTargets({ ...targets, [key]: value });
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>👍 You Can Customize These:</Text>
+
+        <View style={styles.targetsList}>
+          <TargetRow
+            label="🥩 Protein"
+            value={targets.protein}
+            onChange={(val) => updateTarget('protein', val)}
+          />
+          <TargetRow
+            label="🥦 Vegetables"
+            value={targets.veggies}
+            onChange={(val) => updateTarget('veggies', val)}
+          />
+          <TargetRow
+            label="🍎 Fruit"
+            value={targets.fruit}
+            onChange={(val) => updateTarget('fruit', val)}
+          />
+          <TargetRow
+            label="🌾 Whole Grains"
+            value={targets.wholeGrains}
+            onChange={(val) => updateTarget('wholeGrains', val)}
+          />
+          <TargetRow
+            label="🥑 Fats"
+            value={targets.fats}
+            onChange={(val) => updateTarget('fats', val)}
+          />
+          <TargetRow
+            label="🥜 Nuts & Seeds"
+            value={targets.nutsSeeds}
+            onChange={(val) => updateTarget('nutsSeeds', val)}
+          />
+          <TargetRow
+            label="💧 Water"
+            value={targets.water}
+            onChange={(val) => updateTarget('water', val)}
+          />
+          <TargetRow
+            label="🍷 Alcohol"
+            value={targets.alcohol}
+            onChange={(val) => updateTarget('alcohol', val)}
+          />
+        </View>
+
+        <View style={styles.callout}>
+          <Text style={styles.calloutText}>
+            💡 These targets are based on your profile. You can adjust them anytime in Settings.
+          </Text>
+        </View>
+
+        <TouchableOpacity style={buttonStyles.primary} onPress={handleSave}>
+          <Text style={buttonStyles.primaryText}>Save & Start Tracking</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function TargetRow({ label, value, onChange }: { label: string; value: number; onChange: (val: number) => void }) {
+  return (
+    <View style={styles.targetRow}>
+      <Text style={styles.targetLabel}>{label}</Text>
+      <View style={styles.targetPickerContainer}>
+        <Picker
+          selectedValue={value}
+          onValueChange={onChange}
+          style={styles.targetPicker}
+        >
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+            <Picker.Item key={num} label={`${num}`} value={num} />
+          ))}
+        </Picker>
+        <Text style={styles.portionsText}>portions</Text>
+      </View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
+  scrollContent: {
     padding: 20,
-    paddingTop: Platform.OS === 'android' ? 48 : 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 24,
+    textAlign: 'center',
   },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
+  targetsList: {
     marginBottom: 24,
   },
-  portionsHeader: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 8,
+  targetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  customizeHint: {
+  targetLabel: {
+    fontSize: 18,
+    color: colors.text,
+    flex: 1,
+  },
+  targetPickerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 16,
+    gap: 8,
   },
-  hintText: {
-    fontSize: 14,
+  targetPicker: {
+    width: 80,
+    height: 40,
+  },
+  portionsText: {
+    fontSize: 16,
     color: colors.textSecondary,
   },
-  dropdownsContainer: {
-    backgroundColor: colors.card,
+  callout: {
+    backgroundColor: colors.primaryLight,
     borderRadius: 12,
-    overflow: 'hidden',
+    padding: 16,
     marginBottom: 24,
   },
-  buttonContainer: {
-    marginTop: 20,
-    marginBottom: 40,
+  calloutText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
   },
 });
-
-function SetupTargetsScreen() {
-  const params = useLocalSearchParams();
-  const router = useRouter();
-  const [targets, setTargets] = useState<PortionTargets>({
-    protein: 0,
-    veggies: 0,
-    fruit: 0,
-    wholeGrains: 0,
-    nutsSeeds: 0,
-    fats: 0,
-    water: 0,
-    alcohol: 0,
-  });
-
-  const [profileData, setProfileData] = useState<{
-    sex: Sex;
-    currentWeight: number;
-    goalWeight?: number;
-    goal: Goal;
-    includeAlcohol: boolean;
-    alcoholServings: number;
-    activityLevel: ActivityLevel;
-  } | null>(null);
-
-  useEffect(() => {
-    // Load targets from params
-    if (params.targets) {
-      try {
-        const parsedTargets = JSON.parse(params.targets as string);
-        setTargets(parsedTargets);
-      } catch (error) {
-        console.log('Error parsing targets:', error);
-      }
-    }
-
-    // Load profile data from params
-    if (params.sex && params.currentWeight && params.goal) {
-      setProfileData({
-        sex: params.sex as Sex,
-        currentWeight: Number(params.currentWeight),
-        goalWeight: params.goalWeight ? Number(params.goalWeight) : undefined,
-        goal: params.goal as Goal,
-        includeAlcohol: params.includeAlcohol === 'true',
-        alcoholServings: params.alcoholServings ? Number(params.alcoholServings) : 0,
-        activityLevel: (params.activityLevel as ActivityLevel) || 'moderate',
-      });
-    }
-  }, [params]);
-
-  const handleUpdateTargets = (key: keyof PortionTargets, value: number) => {
-    setTargets(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleSaveTargets = async () => {
-    if (!profileData) {
-      Alert.alert('Error', 'Profile data is missing');
-      return;
-    }
-
-    try {
-      const profile: UserProfile = {
-        sex: profileData.sex,
-        currentWeight: profileData.currentWeight,
-        goalWeight: profileData.goalWeight,
-        goal: profileData.goal,
-        includeAlcohol: profileData.includeAlcohol,
-        alcoholServings: profileData.alcoholServings,
-        activityLevel: profileData.activityLevel,
-        portionTargets: targets,
-      };
-
-      await saveProfile(profile);
-      
-      // Navigate to home with reload param
-      if (Platform.OS === 'ios') {
-        router.replace('/(tabs)/(home)/?reload=true');
-      } else {
-        router.replace('/(tabs)/(home)/');
-      }
-    } catch (error) {
-      console.log('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to save profile. Please try again.');
-    }
-  };
-
-  // Filter out alcohol if not included
-  const visibleFoodGroups = FOOD_GROUPS.filter(group => {
-    if (group.key === 'alcohol' && profileData && !profileData.includeAlcohol) {
-      return false;
-    }
-    return true;
-  });
-
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Review & Customize Targets</Text>
-        <Text style={styles.subtitle}>
-          These are your recommended daily portion targets. You can adjust them to fit your needs.
-        </Text>
-
-        <Text style={styles.portionsHeader}>Portions</Text>
-        <View style={styles.customizeHint}>
-          <IconSymbol 
-            ios_icon_name="pencil" 
-            android_material_icon_name="edit" 
-            size={16} 
-            color={colors.textSecondary} 
-          />
-          <Text style={styles.hintText}>You can customize these</Text>
-        </View>
-
-        <View style={styles.dropdownsContainer}>
-          {visibleFoodGroups.map((group, index) => (
-            <PortionDropdown
-              key={group.key}
-              label={`${group.icon} ${group.label}`}
-              value={targets[group.key]}
-              onValueChange={(value) => handleUpdateTargets(group.key, value)}
-              maxValue={group.key === 'water' ? 15 : 10}
-            />
-          ))}
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[buttonStyles.primary, commonStyles.button]}
-            onPress={handleSaveTargets}
-          >
-            <Text style={buttonStyles.primaryText}>Save Profile & Targets</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
-  );
-}
-
-export default SetupTargetsScreen;
