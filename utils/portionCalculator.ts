@@ -19,12 +19,11 @@ export function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
   const baseline: PortionTargets = {
     protein: 3,
     veggies: 4,
-    fruit: 2,
+    fruits: 2,
     wholeGrains: 2,
     nutsSeeds: 2,
-    fats: 2,
+    dairy: 2,
     water: 8,
-    alcohol: 0,
     exercise: 1, // Default exercise target is always 1
   };
 
@@ -37,40 +36,23 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
   if (size === 'small') {
     adjusted.protein = Math.max(2, adjusted.protein - 1);
     adjusted.veggies = Math.max(3, adjusted.veggies - 1);
-    adjusted.fruit = Math.max(2, adjusted.fruit);
+    adjusted.fruits = Math.max(2, adjusted.fruits);
     adjusted.wholeGrains = Math.max(1, adjusted.wholeGrains - 1);
     adjusted.nutsSeeds = Math.max(1, adjusted.nutsSeeds - 1);
-    adjusted.fats = Math.max(1, adjusted.fats - 1);
+    adjusted.dairy = Math.max(1, adjusted.dairy - 1);
     adjusted.water = Math.max(7, adjusted.water - 1);
   } else if (size === 'large') {
     adjusted.protein = Math.min(5, adjusted.protein + 1);
     adjusted.veggies = Math.min(6, adjusted.veggies + 1);
-    adjusted.fruit = Math.min(4, adjusted.fruit + 1);
+    adjusted.fruits = Math.min(4, adjusted.fruits + 1);
     adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
     adjusted.nutsSeeds = Math.min(3, adjusted.nutsSeeds + 1);
-    adjusted.fats = Math.min(4, adjusted.fats + 1);
+    adjusted.dairy = Math.min(4, adjusted.dairy + 1);
     adjusted.water = Math.min(12, adjusted.water + 2);
   }
 
   // Exercise target is always 1, regardless of size
   adjusted.exercise = 1;
-
-  return adjusted;
-}
-
-export function applyAlcoholAdjustment(
-  portions: PortionTargets,
-  includeAlcohol: boolean,
-  alcoholServings: number
-): PortionTargets {
-  const adjusted = { ...portions };
-  
-  if (includeAlcohol) {
-    // Cap at 2 as recommended max
-    adjusted.alcohol = Math.min(2, Math.max(0, alcoholServings));
-  } else {
-    adjusted.alcohol = 0;
-  }
 
   return adjusted;
 }
@@ -92,17 +74,17 @@ export function applyActivityAdjustment(
     case 'moderate':
       adjusted.protein = Math.min(6, adjusted.protein + 1);
       adjusted.wholeGrains = Math.min(5, adjusted.wholeGrains + 1);
-      adjusted.fats = Math.min(4, adjusted.fats + 1);
+      adjusted.dairy = Math.min(4, adjusted.dairy + 1);
       break;
     case 'active':
       adjusted.protein = Math.min(6, adjusted.protein + 2);
       adjusted.wholeGrains = Math.min(6, adjusted.wholeGrains + 2);
-      adjusted.fats = Math.min(5, adjusted.fats + 1);
+      adjusted.dairy = Math.min(5, adjusted.dairy + 1);
       break;
     case 'veryActive':
       adjusted.protein = Math.min(7, adjusted.protein + 2);
       adjusted.wholeGrains = Math.min(7, adjusted.wholeGrains + 3);
-      adjusted.fats = Math.min(5, adjusted.fats + 2);
+      adjusted.dairy = Math.min(5, adjusted.dairy + 2);
       adjusted.nutsSeeds = Math.min(4, adjusted.nutsSeeds + 1);
       break;
   }
@@ -117,8 +99,6 @@ export function calculateRecommendedTargets(
   sex: Sex,
   weight: number,
   goal: Goal,
-  includeAlcohol: boolean = false,
-  alcoholServings: number = 0,
   activityLevel: ActivityLevel = 'sedentary'
 ): PortionTargets {
   const size = classifySize(sex, weight);
@@ -130,7 +110,7 @@ export function calculateRecommendedTargets(
   // Apply goal-specific adjustments
   if (goal === 'lose') {
     portions.wholeGrains = Math.max(0, portions.wholeGrains - 1);
-    portions.fats = Math.max(0, portions.fats - 1);
+    portions.dairy = Math.max(0, portions.dairy - 1);
     portions.veggies = Math.min(6, portions.veggies + 1);
   } else if (goal === 'build') {
     portions.protein = Math.min(6, portions.protein + 1);
@@ -139,9 +119,6 @@ export function calculateRecommendedTargets(
 
   // Apply activity level adjustment
   portions = applyActivityAdjustment(portions, activityLevel);
-
-  // Apply alcohol adjustment
-  portions = applyAlcoholAdjustment(portions, includeAlcohol, alcoholServings);
 
   // Ensure exercise is always 1
   portions.exercise = 1;

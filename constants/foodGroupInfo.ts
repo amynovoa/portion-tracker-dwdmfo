@@ -8,7 +8,7 @@ interface FoodGroupInfo {
   portionSize?: string;
 }
 
-export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
+export const foodGroupInfo: Record<FoodGroup, FoodGroupInfo> = {
   protein: {
     benefit: `Protein supports muscle repair, satiety, and metabolism. It helps you feel full longer and preserves lean mass during weight loss.
 
@@ -54,7 +54,7 @@ Other favorites:
 - Bell peppers, tomatoes, cucumbers, zucchini, carrots, green beans, asparagus, mushrooms`,
     portionSize: 'About 1 cup raw or ½ cup cooked',
   },
-  fruit: {
+  fruits: {
     benefit: `Fruit provides natural sugars, fiber, vitamins, and antioxidants. It's a great way to satisfy a sweet tooth while nourishing your body.
 
 Whole fruit is always better than juice — the fiber slows sugar absorption.
@@ -118,26 +118,28 @@ Nut butters:
 - Almond butter, peanut butter (natural, no added sugar)`,
     portionSize: 'About ¼ cup nuts or 2 tablespoons nut butter',
   },
-  fats: {
-    benefit: `Healthy fats support hormone production, brain function, and nutrient absorption (especially vitamins A, D, E, and K).
+  dairy: {
+    benefit: `Dairy provides calcium, protein, and vitamin D for bone health and muscle function.
 
-They add flavor and help you feel satisfied.
+Choose lower-fat options if you're trying to lose weight.
 
-Focus on unsaturated fats from whole food sources.`,
-    avoid: `Avoid trans fats (partially hydrogenated oils).
+Greek yogurt and cottage cheese are especially high in protein.`,
+    avoid: `Avoid heavily sweetened yogurts and flavored milk.
 
-Limit saturated fats from processed foods.
+Limit full-fat dairy if you're watching calories.
 
-Watch portion sizes — fats are calorie-dense.`,
-    examples: `Oils:
-- Olive oil, avocado oil, coconut oil (in moderation)
+Watch portion sizes on cheese — it's calorie-dense.`,
+    examples: `Best choices:
+- Greek yogurt (plain)
+- Cottage cheese
+- Milk (skim or 1%)
+- Cheese (in moderation)
 
-Whole food sources:
-- Avocado, olives, fatty fish (salmon, mackerel)
-
-Other:
-- Full-fat dairy (cheese, butter) in moderation`,
-    portionSize: 'About 1 tablespoon oil, ¼ avocado, or 1 oz cheese',
+Plant-based alternatives:
+- Fortified almond milk
+- Fortified soy milk
+- Fortified oat milk`,
+    portionSize: 'About 1 cup milk/yogurt or 1 oz cheese',
   },
   water: {
     benefit: `Water is essential for every bodily function — digestion, circulation, temperature regulation, and more.
@@ -159,26 +161,6 @@ Watch caffeine intake — it can be dehydrating in excess.`,
 Okay in moderation:
 - Black coffee, unsweetened tea`,
     portionSize: 'About 8 oz (1 cup) per serving — aim for 7-10+ servings per day',
-  },
-  alcohol: {
-    benefit: `Moderate alcohol consumption (if you choose to drink) can be part of a balanced lifestyle.
-
-The key is moderation — no more than 1-2 servings per day.
-
-Some research suggests red wine may have heart health benefits, but the evidence is mixed.`,
-    avoid: `Avoid binge drinking or drinking daily in excess.
-
-Watch sugary mixers and high-calorie cocktails.
-
-Alcohol can interfere with sleep, recovery, and weight loss goals.`,
-    examples: `Lower-calorie options:
-- Wine (red or white): 5 oz
-- Light beer: 12 oz
-- Spirits (vodka, gin, tequila, whiskey): 1.5 oz
-
-Higher-calorie options to limit:
-- Regular beer, sweet cocktails, creamy drinks`,
-    portionSize: '1 serving = 5 oz wine, 12 oz beer, or 1.5 oz spirits',
   },
   exercise: {
     benefit: `Regular movement supports metabolism, energy, mood, and long-term health. Aim for a mix of cardio and strength training throughout the week.

@@ -18,18 +18,16 @@ export default function SetupTargetsScreen() {
   const goalWeight = parseFloat(params.goalWeight as string) || 150;
   const goal = (params.goal as Goal) || 'maintain';
   const activityLevel = (params.activityLevel as ActivityLevel) || 'moderate';
-  const includeAlcohol = params.includeAlcohol === 'true';
-  const alcoholServings = parseInt(params.alcoholServings as string) || 0;
 
   const [targets, setTargets] = useState<PortionTargets>({
     protein: 3,
     veggies: 4,
-    fruit: 2,
+    fruits: 2,
     wholeGrains: 2,
-    fats: 2,
+    dairy: 2,
     nutsSeeds: 2,
     water: 8,
-    alcohol: 0,
+    exercise: 1,
   });
 
   useEffect(() => {
@@ -37,8 +35,6 @@ export default function SetupTargetsScreen() {
       sex,
       weight,
       goal,
-      includeAlcohol,
-      alcoholServings,
       activityLevel
     );
     setTargets(recommended);
@@ -51,8 +47,6 @@ export default function SetupTargetsScreen() {
       goalWeight,
       goal,
       activityLevel,
-      includeAlcohol,
-      alcoholServings,
       portionTargets: targets,
     });
     router.replace('/(tabs)/(home)/');
@@ -70,11 +64,11 @@ export default function SetupTargetsScreen() {
           These targets are based on your profile. You can adjust them anytime.
         </Text>
 
-        <Text style={styles.title}>Portions</Text>
+        <Text style={styles.title}>Daily Portion Targets</Text>
 
         <View style={styles.targetsList}>
           <TargetRow
-            label="🥩 Protein"
+            label="🍗 Protein"
             value={targets.protein}
             onChange={(val) => updateTarget('protein', val)}
           />
@@ -85,8 +79,8 @@ export default function SetupTargetsScreen() {
           />
           <TargetRow
             label="🍎 Fruit"
-            value={targets.fruit}
-            onChange={(val) => updateTarget('fruit', val)}
+            value={targets.fruits}
+            onChange={(val) => updateTarget('fruits', val)}
           />
           <TargetRow
             label="🌾 Whole Grains"
@@ -94,9 +88,9 @@ export default function SetupTargetsScreen() {
             onChange={(val) => updateTarget('wholeGrains', val)}
           />
           <TargetRow
-            label="🥑 Fats"
-            value={targets.fats}
-            onChange={(val) => updateTarget('fats', val)}
+            label="🥛 Dairy"
+            value={targets.dairy}
+            onChange={(val) => updateTarget('dairy', val)}
           />
           <TargetRow
             label="🥜 Nuts & Seeds"
@@ -108,17 +102,15 @@ export default function SetupTargetsScreen() {
             value={targets.water}
             onChange={(val) => updateTarget('water', val)}
           />
-          {includeAlcohol && (
-            <TargetRow
-              label="🍷 Alcohol"
-              value={targets.alcohol}
-              onChange={(val) => updateTarget('alcohol', val)}
-            />
-          )}
+          <TargetRow
+            label="💪 Exercise"
+            value={targets.exercise}
+            onChange={(val) => updateTarget('exercise', val)}
+          />
         </View>
 
-        <TouchableOpacity style={buttonStyles.primaryButton} onPress={handleSave}>
-          <Text style={buttonStyles.primaryButtonText}>Continue</Text>
+        <TouchableOpacity style={buttonStyles.primary} onPress={handleSave}>
+          <Text style={buttonStyles.primaryText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

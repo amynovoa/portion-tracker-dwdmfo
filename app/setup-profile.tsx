@@ -14,8 +14,6 @@ export default function SetupProfileScreen() {
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
-  const [includeAlcohol, setIncludeAlcohol] = useState(false);
-  const [alcoholServings, setAlcoholServings] = useState(0);
 
   const handleContinue = () => {
     if (!weight || !goalWeight) {
@@ -31,8 +29,6 @@ export default function SetupProfileScreen() {
         goalWeight,
         goal,
         activityLevel,
-        includeAlcohol: includeAlcohol.toString(),
-        alcoholServings: alcoholServings.toString(),
       },
     });
   };
@@ -113,36 +109,8 @@ export default function SetupProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.alcoholHeader}>
-            <Text style={styles.label}>Include Alcohol Tracking</Text>
-            <TouchableOpacity
-              style={[styles.toggle, includeAlcohol && styles.toggleActive]}
-              onPress={() => setIncludeAlcohol(!includeAlcohol)}
-            >
-              <Text style={styles.toggleText}>{includeAlcohol ? 'Yes' : 'No'}</Text>
-            </TouchableOpacity>
-          </View>
-          {includeAlcohol && (
-            <>
-              <Text style={styles.subLabel}>Daily Alcohol Servings</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={alcoholServings}
-                  onValueChange={(value) => setAlcoholServings(value)}
-                  style={styles.picker}
-                >
-                  {[0, 1, 2].map((num) => (
-                    <Picker.Item key={num} label={num.toString()} value={num} />
-                  ))}
-                </Picker>
-              </View>
-            </>
-          )}
-        </View>
-
-        <TouchableOpacity style={buttonStyles.primaryButton} onPress={handleContinue}>
-          <Text style={buttonStyles.primaryButtonText}>Continue</Text>
+        <TouchableOpacity style={buttonStyles.primary} onPress={handleContinue}>
+          <Text style={buttonStyles.primaryText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -174,13 +142,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 8,
   },
-  subLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-    marginTop: 12,
-  },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 12,
@@ -199,24 +160,5 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
-  },
-  alcoholHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  toggle: {
-    backgroundColor: colors.border,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  toggleActive: {
-    backgroundColor: colors.primary,
-  },
-  toggleText: {
-    color: colors.white,
-    fontWeight: '600',
   },
 });

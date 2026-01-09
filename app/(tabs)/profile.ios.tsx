@@ -31,10 +31,10 @@ export default function ProfileScreen() {
         <View style={styles.container}>
           <Text style={styles.loadingText}>Loading profile...</Text>
           <TouchableOpacity
-            style={[buttonStyles.primaryButton, { marginTop: 20 }]}
+            style={[buttonStyles.primary, { marginTop: 20 }]}
             onPress={() => router.push('/setup-profile')}
           >
-            <Text style={buttonStyles.primaryButtonText}>Set Up Profile</Text>
+            <Text style={buttonStyles.primaryText}>Set Up Profile</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -96,15 +96,15 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Fruit:</Text>
-            <Text style={styles.value}>{profile.portionTargets.fruit}</Text>
+            <Text style={styles.value}>{profile.portionTargets.fruits}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Whole Grains:</Text>
             <Text style={styles.value}>{profile.portionTargets.wholeGrains}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Fats:</Text>
-            <Text style={styles.value}>{profile.portionTargets.fats}</Text>
+            <Text style={styles.label}>Dairy:</Text>
+            <Text style={styles.value}>{profile.portionTargets.dairy}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Nuts & Seeds:</Text>
@@ -114,19 +114,17 @@ export default function ProfileScreen() {
             <Text style={styles.label}>Water:</Text>
             <Text style={styles.value}>{profile.portionTargets.water}</Text>
           </View>
-          {profile.includeAlcohol && (
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Alcohol:</Text>
-              <Text style={styles.value}>{profile.alcoholServings || 0}</Text>
-            </View>
-          )}
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Exercise:</Text>
+            <Text style={styles.value}>{profile.portionTargets.exercise}</Text>
+          </View>
         </View>
 
         <TouchableOpacity
-          style={[buttonStyles.primaryButton, styles.editButton]}
+          style={[buttonStyles.primary, styles.editButton]}
           onPress={() => router.push('/setup-profile')}
         >
-          <Text style={buttonStyles.primaryButtonText}>Edit Profile</Text>
+          <Text style={buttonStyles.primaryText}>Edit Profile</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
