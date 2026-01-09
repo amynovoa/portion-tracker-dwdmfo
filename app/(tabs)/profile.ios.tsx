@@ -82,7 +82,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   
-  const [sex, setSex] = useState<Sex>('prefer-not-to-say');
+  const [sex, setSex] = useState<Sex>('female');
   const [currentWeight, setCurrentWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
@@ -218,16 +218,16 @@ export default function ProfileScreen() {
         <Text style={styles.label}>Sex</Text>
         <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={[styles.optionButton, sex === 'male' && styles.optionButtonSelected]}
-            onPress={() => setSex('male')}
-          >
-            <Text style={[styles.optionText, sex === 'male' && styles.optionTextSelected]}>Male</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             style={[styles.optionButton, sex === 'female' && styles.optionButtonSelected]}
             onPress={() => setSex('female')}
           >
             <Text style={[styles.optionText, sex === 'female' && styles.optionTextSelected]}>Female</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.optionButton, sex === 'male' && styles.optionButtonSelected]}
+            onPress={() => setSex('male')}
+          >
+            <Text style={[styles.optionText, sex === 'male' && styles.optionTextSelected]}>Male</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity
