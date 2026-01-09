@@ -1,5 +1,8 @@
 
 import React, { useState } from 'react';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { MaterialIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -11,8 +14,6 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { IconSymbol } from '@/components/IconSymbol';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -28,7 +29,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     // Simulate subscription process
     setTimeout(() => {
       setIsLoading(false);
-      Alert.alert('Success', 'Thank you for subscribing to Premium!');
+      Alert.alert('Success', 'Subscription activated!');
       onDismiss?.();
     }, 2000);
   };
@@ -42,32 +43,32 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View style={styles.container}>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onDismiss}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         {canDismiss && (
           <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
-            <IconSymbol ios_icon_name="xmark" android_material_icon_name="close" size={24} color={colors.text} />
+            <MaterialIcons name="close" size={28} color={colors.text} />
           </TouchableOpacity>
         )}
 
         <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <IconSymbol ios_icon_name="star.fill" android_material_icon_name="star" size={60} color="#FFD700" />
-            <Text style={styles.title}>Upgrade to Premium</Text>
-            <Text style={styles.subtitle}>Unlock all features and support development</Text>
-          </View>
+          <Text style={styles.title}>Upgrade to Premium</Text>
+          <Text style={styles.subtitle}>Unlock all features and support development</Text>
 
           <View style={styles.featuresContainer}>
-            <FeatureItem text="Advanced analytics and insights" />
-            <FeatureItem text="Custom portion targets" />
+            <FeatureItem text="Unlimited portion tracking" />
+            <FeatureItem text="Advanced analytics & insights" />
+            <FeatureItem text="Custom food group targets" />
             <FeatureItem text="Export your data" />
             <FeatureItem text="Priority support" />
             <FeatureItem text="Ad-free experience" />
           </View>
 
           <View style={styles.pricingContainer}>
-            <Text style={styles.price}>$4.99/month</Text>
-            <Text style={styles.priceSubtext}>Cancel anytime</Text>
+            <View style={styles.priceCard}>
+              <Text style={styles.priceAmount}>$4.99</Text>
+              <Text style={styles.pricePeriod}>per month</Text>
+            </View>
           </View>
 
           <TouchableOpacity
@@ -86,20 +87,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             <Text style={styles.restoreText}>Restore Purchases</Text>
           </TouchableOpacity>
 
-          <View style={styles.legalContainer}>
-            <Text style={styles.legalText}>
-              By subscribing, you agree to our{' '}
-              <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/terms')}>
-                Terms of Service
-              </Text>{' '}
-              and{' '}
-              <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/privacy')}>
-                Privacy Policy
-              </Text>
-            </Text>
-          </View>
+          <Text style={styles.disclaimer}>
+            Subscription automatically renews unless auto-renew is turned off at least 24 hours before the end of the current period.
+          </Text>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -107,7 +99,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 function FeatureItem({ text }: { text: string }) {
   return (
     <View style={styles.featureItem}>
-      <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.primary} />
+      <MaterialIcons name="check-circle" size={24} color={colors.primary} />
       <Text style={styles.featureText}>{text}</Text>
     </View>
   );
@@ -120,30 +112,29 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 50,
-    right: 20,
+    top: 16,
+    right: 16,
     zIndex: 10,
     padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
   },
   content: {
     padding: 24,
-    paddingTop: 80,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
+    paddingTop: 60,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginTop: 16,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: colors.textSecondary,
-    marginTop: 8,
+    color: '#666',
     textAlign: 'center',
+    marginBottom: 32,
   },
   featuresContainer: {
     marginBottom: 32,
@@ -152,24 +143,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    gap: 12,
   },
   featureText: {
     fontSize: 16,
     color: colors.text,
-    marginLeft: 12,
+    flex: 1,
   },
   pricingContainer: {
     alignItems: 'center',
     marginBottom: 24,
   },
-  price: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.text,
+  priceCard: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    minWidth: 200,
   },
-  priceSubtext: {
-    fontSize: 14,
-    color: colors.textSecondary,
+  priceAmount: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  pricePeriod: {
+    fontSize: 16,
+    color: '#666',
     marginTop: 4,
   },
   subscribeButton: {
@@ -183,20 +182,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
   },
-  legalContainer: {
-    marginTop: 24,
-    paddingTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  legalText: {
+  disclaimer: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: '#999',
     textAlign: 'center',
+    marginTop: 16,
     lineHeight: 18,
-  },
-  link: {
-    color: colors.primary,
-    textDecorationLine: 'underline',
   },
 });

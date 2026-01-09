@@ -1,65 +1,72 @@
 
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity, Alert, Switch, Linking } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { IconSymbol } from "@/components/IconSymbol";
-import { GlassView } from "expo-glass-effect";
-import { useTheme } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors } from "@/styles/commonStyles";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, commonStyles } from '@/styles/commonStyles';
+import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
+import { loadResetTime, saveResetTime } from '@/utils/storage';
+import PaywallScreen from '@/components/PaywallScreen';
 
 export default function SettingsScreen() {
-  const theme = useTheme();
   const [celebrationEnabled, setCelebrationEnabled] = useState(true);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
-    try {
-      const celebration = await AsyncStorage.getItem('celebration_enabled');
-      if (celebration !== null) {
-        setCelebrationEnabled(celebration === 'true');
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    }
+    const celebration = await loadCelebrationEnabled();
+    setCelebrationEnabled(celebration);
   };
 
   const handleCelebrationToggle = async (value: boolean) => {
     setCelebrationEnabled(value);
-    await AsyncStorage.setItem('celebration_enabled', value.toString());
+    await saveCelebrationEnabled(value);
+  };
+
+  const handleSubscription = () => {
+    console.log('Subscription button pressed - opening paywall');
+    setShowPaywall(true);
+  };
+
+  const handleDailyReset = () => {
+    Alert.alert('Daily Reset', 'Reset time: Midnight (12:00 AM)');
+  };
+
+  const handlePrivacyPolicy = () => {
+    Linking.openURL('https://yourapp.com/privacy');
   };
 
   const handleResetAppData = () => {
     Alert.alert(
-      "Reset App Data",
-      "This will delete all your data including portions, weight entries, and settings. This action cannot be undone.",
+      'Reset App Data',
+      'Are you sure you want to reset all app data? This cannot be undone.',
       [
-        { text: "Cancel", style: "cancel" },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "Reset",
-          style: "destructive",
+          text: 'Reset',
+          style: 'destructive',
           onPress: async () => {
-            try {
-              await AsyncStorage.clear();
-              Alert.alert("Success", "All app data has been reset.");
-            } catch (error) {
-              Alert.alert("Error", "Failed to reset app data.");
-            }
+            await AsyncStorage.clear();
+            Alert.alert('Success', 'App data has been reset. Please restart the app.');
           },
         },
       ]
     );
   };
 
-  const handlePrivacyPolicy = () => {
-    Linking.openURL("https://yourapp.com/privacy");
+  const handleDismissPaywall = () => {
+    console.log('Paywall dismissed');
+    setShowPaywall(false);
   };
 
+  console.log('Settings screen render - showPaywall:', showPaywall);
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={[
@@ -67,83 +74,60 @@ export default function SettingsScreen() {
           Platform.OS !== 'ios' && styles.contentContainerWithTabBar
         ]}
       >
-        <Text style={[styles.header, { color: theme.colors.text }]}>Settings</Text>
+        <Text style={styles.header}>Settings</Text>
 
-        {/* Subscriptions */}
-        <GlassView style={[
-          styles.section,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <TouchableOpacity style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <IconSymbol ios_icon_name="crown.fill" android_material_icon_name="workspace-premium" size={24} color={colors.primary} />
-              <Text style={[styles.settingText, { color: theme.colors.text }]}>Subscriptions</Text>
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.row} onPress={handleSubscription}>
+            <View style={styles.rowLeft}>
+              <MaterialIcons name="star" size={24} color={colors.primary} />
+              <Text style={styles.rowText}>Subscription</Text>
             </View>
-            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
+            <MaterialIcons name="chevron-right" size={24} color="#999" />
           </TouchableOpacity>
-        </GlassView>
 
-        {/* Celebration */}
-        <GlassView style={[
-          styles.section,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <IconSymbol ios_icon_name="party.popper.fill" android_material_icon_name="celebration" size={24} color={colors.primary} />
-              <Text style={[styles.settingText, { color: theme.colors.text }]}>Celebration</Text>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <MaterialIcons name="celebration" size={24} color={colors.primary} />
+              <Text style={styles.rowText}>Celebration</Text>
             </View>
             <Switch
               value={celebrationEnabled}
               onValueChange={handleCelebrationToggle}
               trackColor={{ false: '#767577', true: colors.primary }}
-              thumbColor="#fff"
             />
           </View>
-        </GlassView>
 
-        {/* Daily Reset */}
-        <GlassView style={[
-          styles.section,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <TouchableOpacity style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <IconSymbol ios_icon_name="clock.fill" android_material_icon_name="schedule" size={24} color={colors.primary} />
-              <Text style={[styles.settingText, { color: theme.colors.text }]}>Daily Reset</Text>
+          <TouchableOpacity style={styles.row} onPress={handleDailyReset}>
+            <View style={styles.rowLeft}>
+              <MaterialIcons name="schedule" size={24} color={colors.primary} />
+              <Text style={styles.rowText}>Daily Reset</Text>
             </View>
-            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
+            <MaterialIcons name="chevron-right" size={24} color="#999" />
           </TouchableOpacity>
-        </GlassView>
 
-        {/* Privacy Policy */}
-        <GlassView style={[
-          styles.section,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <TouchableOpacity style={styles.settingRow} onPress={handlePrivacyPolicy}>
-            <View style={styles.settingLeft}>
-              <IconSymbol ios_icon_name="lock.shield.fill" android_material_icon_name="privacy-tip" size={24} color={colors.primary} />
-              <Text style={[styles.settingText, { color: theme.colors.text }]}>Privacy Policy</Text>
+          <TouchableOpacity style={styles.row} onPress={handlePrivacyPolicy}>
+            <View style={styles.rowLeft}>
+              <MaterialIcons name="privacy-tip" size={24} color={colors.primary} />
+              <Text style={styles.rowText}>Privacy Policy</Text>
             </View>
-            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
+            <MaterialIcons name="chevron-right" size={24} color="#999" />
           </TouchableOpacity>
-        </GlassView>
 
-        {/* Reset App Data */}
-        <GlassView style={[
-          styles.section,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <TouchableOpacity style={styles.settingRow} onPress={handleResetAppData}>
-            <View style={styles.settingLeft}>
-              <IconSymbol ios_icon_name="trash.fill" android_material_icon_name="delete" size={24} color="#FF3B30" />
-              <Text style={[styles.settingText, { color: '#FF3B30' }]}>Reset App Data</Text>
+          <TouchableOpacity style={styles.row} onPress={handleResetAppData}>
+            <View style={styles.rowLeft}>
+              <MaterialIcons name="delete-forever" size={24} color="#FF3B30" />
+              <Text style={[styles.rowText, { color: '#FF3B30' }]}>Reset App Data</Text>
             </View>
-            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
+            <MaterialIcons name="chevron-right" size={24} color="#999" />
           </TouchableOpacity>
-        </GlassView>
+        </View>
       </ScrollView>
+
+      <PaywallScreen
+        visible={showPaywall}
+        onDismiss={handleDismissPaywall}
+        canDismiss={true}
+      />
     </SafeAreaView>
   );
 }
@@ -151,6 +135,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -164,24 +149,29 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 32,
     fontWeight: 'bold',
+    color: colors.text,
     marginBottom: 24,
   },
   section: {
+    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    overflow: 'hidden',
   },
-  settingRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  settingLeft: {
+  rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  settingText: {
+  rowText: {
     fontSize: 16,
+    color: colors.text,
   },
 });
