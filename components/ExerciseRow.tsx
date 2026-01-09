@@ -65,7 +65,7 @@ Strength/Resistance options:
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </View>
-          {/* Hidden count text to maintain exact same layout as FoodGroupRow */}
+          {/* Hidden count text - takes up space but invisible to match FoodGroupRow layout exactly */}
           <Text style={[styles.count, styles.hiddenCount]}>
             1/1
           </Text>
@@ -161,7 +161,6 @@ const styles = StyleSheet.create({
   },
   hiddenCount: {
     opacity: 0,
-    width: 0,
   },
   slotsContainer: {
     flexDirection: 'row',
