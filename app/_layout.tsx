@@ -16,6 +16,7 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -83,17 +84,19 @@ export default function RootLayout() {
         <ThemeProvider
           value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
         >
-          <WidgetProvider>
-            <GestureHandlerRootView>
-            <Stack>
-              <Stack.Screen name="welcome" options={{ headerShown: false }} />
-              <Stack.Screen name="setup-profile" options={{ headerShown: false }} />
-              <Stack.Screen name="setup-targets" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            </Stack>
-            <SystemBars style={"auto"} />
-            </GestureHandlerRootView>
-          </WidgetProvider>
+          <SubscriptionProvider>
+            <WidgetProvider>
+              <GestureHandlerRootView>
+              <Stack>
+                <Stack.Screen name="welcome" options={{ headerShown: false }} />
+                <Stack.Screen name="setup-profile" options={{ headerShown: false }} />
+                <Stack.Screen name="setup-targets" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+              <SystemBars style={"auto"} />
+              </GestureHandlerRootView>
+            </WidgetProvider>
+          </SubscriptionProvider>
         </ThemeProvider>
     </>
   );
