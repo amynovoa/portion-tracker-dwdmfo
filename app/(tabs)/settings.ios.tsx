@@ -1,48 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Switch,
-  Linking,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, commonStyles } from '@/styles/commonStyles';
 import { MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
-import { loadResetTime } from '@/utils/storage';
+import { colors, commonStyles } from '@/styles/commonStyles';
 import PaywallScreen from '@/components/PaywallScreen';
-import AppLogo from '@/components/AppLogo';
+import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
+import { loadResetTime, saveResetTime } from '@/utils/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
 
 export default function SettingsScreen() {
-  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
-  const [resetTime, setResetTime] = useState('12:00 AM');
   const [showPaywall, setShowPaywall] = useState(false);
+  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
+  const [resetHour, setResetHour] = useState(0);
+  const [resetMinute, setResetMinute] = useState(0);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
-    const celebration = await loadCelebrationEnabled();
-    setCelebrationEnabled(celebration);
+    const enabled = await loadCelebrationEnabled();
+    setCelebrationEnabled(enabled);
 
-    const time = await loadResetTime();
-    if (time) {
-      setResetTime(formatResetTime(time.hour, time.minute));
+    const resetTime = await loadResetTime();
+    if (resetTime) {
+      setResetHour(resetTime.hour);
+      setResetMinute(resetTime.minute);
     }
-  };
-
-  const formatResetTime = (hour: number, minute: number) => {
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    const displayMinute = minute.toString().padStart(2, '0');
-    return `${displayHour}:${displayMinute} ${period}`;
   };
 
   const handleCelebrationToggle = async (value: boolean) => {
@@ -50,95 +36,130 @@ export default function SettingsScreen() {
     await saveCelebrationEnabled(value);
   };
 
-  const handleSubscription = () => {
-    setShowPaywall(true);
+  const handleResetTimeChange = async () => {
+    await saveResetTime({ hour: resetHour, minute: resetMinute });
+    Alert.alert('Success', 'Daily reset time updated');
   };
 
-  const handleDailyReset = () => {
+  const handleResetAllData = () => {
     Alert.alert(
-      'Daily Reset Time',
-      `Current reset time: ${resetTime}\n\nThis feature allows you to customize when your daily portions reset.`,
-      [{ text: 'OK' }]
-    );
-  };
-
-  const handlePrivacyPolicy = () => {
-    Linking.openURL('https://yourapp.com/privacy');
-  };
-
-  const handleResetAppData = () => {
-    Alert.alert(
-      'Reset App Data',
-      'Are you sure you want to reset all app data? This will delete your profile, tracking history, and all settings. This action cannot be undone.',
+      'Reset All Data',
+      'Are you sure you want to delete all your data? This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reset',
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
-            Alert.alert('Success', 'All app data has been reset. Please restart the app.');
+            Alert.alert('Success', 'All data has been deleted. Please restart the app.');
           },
         },
       ]
     );
   };
 
+  const openPrivacyPolicy = () => {
+    // TODO: Open privacy policy URL
+    Alert.alert('Privacy Policy', 'Opening privacy policy...');
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.header}>
-          <AppLogo size={40} />
-          <Text style={styles.title}>Settings</Text>
-        </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.header}>Settings</Text>
 
-        <View style={styles.settingsContainer}>
-          {/* Subscription */}
-          <TouchableOpacity style={styles.settingRow} onPress={handleSubscription}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Subscription</Text>
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={() => setShowPaywall(true)}
+          >
             <View style={styles.settingLeft}>
-              <MaterialIcons name="credit-card" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>Subscription</Text>
+              <MaterialIcons name="star" size={24} color={colors.primary} />
+              <Text style={styles.settingText}>Manage Subscription</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
+        </View>
 
-          {/* Celebration */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          
           <View style={styles.settingRow}>
             <View style={styles.settingLeft}>
               <MaterialIcons name="celebration" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>Celebration</Text>
+              <Text style={styles.settingText}>Daily Completion Celebration</Text>
             </View>
             <Switch
               value={celebrationEnabled}
               onValueChange={handleCelebrationToggle}
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor="#fff"
             />
           </View>
 
-          {/* Daily Reset */}
-          <TouchableOpacity style={styles.settingRow} onPress={handleDailyReset}>
+          <View style={styles.settingColumn}>
             <View style={styles.settingLeft}>
-              <MaterialIcons name="access-time" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>Daily Reset</Text>
+              <MaterialIcons name="schedule" size={24} color={colors.primary} />
+              <Text style={styles.settingText}>Daily Reset Time</Text>
+            </View>
+            <View style={styles.timePickerContainer}>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={resetHour}
+                  onValueChange={(value) => setResetHour(value)}
+                  style={styles.picker}
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <Picker.Item key={i} label={`${i}`.padStart(2, '0')} value={i} />
+                  ))}
+                </Picker>
+              </View>
+              <Text style={styles.timeSeparator}>:</Text>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={resetMinute}
+                  onValueChange={(value) => setResetMinute(value)}
+                  style={styles.picker}
+                >
+                  {Array.from({ length: 60 }, (_, i) => (
+                    <Picker.Item key={i} label={`${i}`.padStart(2, '0')} value={i} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleResetTimeChange}
+            >
+              <Text style={styles.saveButtonText}>Save Reset Time</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legal</Text>
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={openPrivacyPolicy}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialIcons name="privacy-tip" size={24} color={colors.primary} />
+              <Text style={styles.settingText}>Privacy Policy</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
+        </View>
 
-          {/* Privacy Policy */}
-          <TouchableOpacity style={styles.settingRow} onPress={handlePrivacyPolicy}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Data</Text>
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={handleResetAllData}
+          >
             <View style={styles.settingLeft}>
-              <MaterialIcons name="shield" size={24} color={colors.primary} />
-              <Text style={styles.settingLabel}>Privacy Policy</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
-          </TouchableOpacity>
-
-          {/* Reset App Data */}
-          <TouchableOpacity style={styles.settingRow} onPress={handleResetAppData}>
-            <View style={styles.settingLeft}>
-              <MaterialIcons name="warning" size={24} color={colors.error} />
-              <Text style={[styles.settingLabel, { color: colors.error }]}>Reset App Data</Text>
+              <MaterialIcons name="delete-forever" size={24} color="#ff4444" />
+              <Text style={[styles.settingText, { color: '#ff4444' }]}>Reset All Data</Text>
             </View>
             <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
@@ -159,42 +180,80 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollView: {
-    flex: 1,
+  scrollContent: {
+    padding: 20,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginLeft: 12,
+    marginBottom: 24,
   },
-  settingsContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+    letterSpacing: 0.5,
   },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.cardBackground,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  settingColumn: {
+    backgroundColor: colors.cardBackground,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
   },
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    flex: 1,
   },
-  settingLabel: {
-    fontSize: 18,
-    fontWeight: '600',
+  settingText: {
+    fontSize: 16,
     color: colors.text,
+    marginLeft: 12,
+  },
+  timePickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  pickerWrapper: {
+    flex: 1,
+    maxWidth: 100,
+  },
+  picker: {
+    height: 120,
+  },
+  timeSeparator: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginHorizontal: 8,
+  },
+  saveButton: {
+    backgroundColor: colors.primary,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

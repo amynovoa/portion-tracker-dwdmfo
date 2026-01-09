@@ -6,7 +6,7 @@ export default function TabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger key="home" name="(home)">
-        <Icon sf="checkmark.square.fill" />
+        <Icon sf="fork.knife" />
         <Label>Track</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="history" name="history">
@@ -17,7 +17,7 @@ export default function TabLayout() {
         <Icon sf="scalemass.fill" />
         <Label>Weight</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="faq" name="faq">
+      <NativeTabs.Trigger key="faqs" name="faqs">
         <Icon sf="questionmark.circle.fill" />
         <Label>FAQs</Label>
       </NativeTabs.Trigger>

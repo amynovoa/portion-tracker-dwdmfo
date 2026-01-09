@@ -28,13 +28,12 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      // TODO: Backend Integration - Implement actual subscription logic with RevenueCat or App Store
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      Alert.alert('Success', 'Subscription activated!');
-      onDismiss?.();
+      // TODO: Backend Integration - Implement actual subscription logic with RevenueCat or similar
+      Alert.alert('Subscription', `Subscribing to ${selectedPlan} plan...`);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
-      console.log('Subscription error:', error);
-      Alert.alert('Error', 'Failed to process subscription. Please try again.');
+      Alert.alert('Error', 'Failed to process subscription');
     } finally {
       setLoading(false);
     }
@@ -44,81 +43,81 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
     setLoading(true);
     try {
       // TODO: Backend Integration - Implement restore purchases logic
+      Alert.alert('Restore', 'Checking for previous purchases...');
       await new Promise(resolve => setTimeout(resolve, 1000));
-      Alert.alert('Restore Complete', 'Your purchases have been restored.');
     } catch (error) {
-      console.log('Restore error:', error);
-      Alert.alert('Error', 'Failed to restore purchases.');
+      Alert.alert('Error', 'Failed to restore purchases');
     } finally {
       setLoading(false);
     }
   };
 
   const openPrivacyPolicy = () => {
-    // TODO: Replace with your actual privacy policy URL
     Linking.openURL('https://yourapp.com/privacy');
   };
 
   const openTermsOfService = () => {
-    Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+    Linking.openURL('https://yourapp.com/terms');
   };
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        {canDismiss && (
+        {canDismiss && onDismiss && (
           <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
             <MaterialIcons name="close" size={28} color={colors.text} />
           </TouchableOpacity>
         )}
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Unlock Premium</Text>
-          <Text style={styles.subtitle}>Get full access to all features</Text>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Text style={styles.title}>Unlock Premium Features</Text>
+          <Text style={styles.subtitle}>
+            Get full access to all features and track your health journey
+          </Text>
 
           <View style={styles.featuresContainer}>
-            <FeatureItem text="Track unlimited portions daily" />
-            <FeatureItem text="View detailed adherence history" />
-            <FeatureItem text="Monitor weight progress with charts" />
-            <FeatureItem text="Customize all portion targets" />
-            <FeatureItem text="Daily reminders and celebrations" />
-            <FeatureItem text="Ad-free experience" />
+            <FeatureItem text="Unlimited portion tracking" />
+            <FeatureItem text="Detailed adherence analytics" />
+            <FeatureItem text="Weight tracking & charts" />
+            <FeatureItem text="Custom portion targets" />
+            <FeatureItem text="Daily reminders" />
+            <FeatureItem text="Export your data" />
           </View>
 
           <View style={styles.plansContainer}>
             <TouchableOpacity
-              style={[styles.planCard, selectedPlan === 'annual' && styles.planCardSelected]}
+              style={[
+                styles.planCard,
+                selectedPlan === 'annual' && styles.planCardSelected,
+              ]}
               onPress={() => setSelectedPlan('annual')}
             >
               <View style={styles.planHeader}>
-                <View style={styles.radioButton}>
-                  {selectedPlan === 'annual' && <View style={styles.radioButtonInner} />}
-                </View>
-                <View style={styles.planInfo}>
-                  <Text style={styles.planTitle}>Annual Plan</Text>
-                  <Text style={styles.planPrice}>$24.99/year</Text>
-                  <Text style={styles.planDetail}>7-day free trial</Text>
-                </View>
-                <View style={styles.bestValueBadge}>
-                  <Text style={styles.bestValueText}>BEST VALUE</Text>
-                </View>
+                <Text style={styles.planTitle}>Annual</Text>
+                {selectedPlan === 'annual' && (
+                  <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                )}
               </View>
+              <Text style={styles.planPrice}>$24.99/year</Text>
+              <Text style={styles.planDetail}>7-day free trial</Text>
+              <Text style={styles.planSavings}>Best Value - Save 65%</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
+              style={[
+                styles.planCard,
+                selectedPlan === 'monthly' && styles.planCardSelected,
+              ]}
               onPress={() => setSelectedPlan('monthly')}
             >
               <View style={styles.planHeader}>
-                <View style={styles.radioButton}>
-                  {selectedPlan === 'monthly' && <View style={styles.radioButtonInner} />}
-                </View>
-                <View style={styles.planInfo}>
-                  <Text style={styles.planTitle}>Monthly Plan</Text>
-                  <Text style={styles.planPrice}>$2.99/month</Text>
-                  <Text style={styles.planDetail}>7-day free trial</Text>
-                </View>
+                <Text style={styles.planTitle}>Monthly</Text>
+                {selectedPlan === 'monthly' && (
+                  <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                )}
               </View>
+              <Text style={styles.planPrice}>$2.99/month</Text>
+              <Text style={styles.planDetail}>7-day free trial</Text>
             </TouchableOpacity>
           </View>
 
@@ -137,10 +136,10 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
           </TouchableOpacity>
 
           <Text style={styles.trialNote}>
-            Your {selectedPlan === 'annual' ? '$24.99 annual' : '$2.99 monthly'} subscription will begin after the 7-day free trial. Cancel anytime.
+            Cancel anytime during trial. No charge until trial ends.
           </Text>
 
-          <TouchableOpacity onPress={handleRestorePurchases} disabled={loading}>
+          <TouchableOpacity onPress={handleRestorePurchases} style={styles.restoreButton}>
             <Text style={styles.restoreText}>Restore Purchases</Text>
           </TouchableOpacity>
 
@@ -173,8 +172,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
+    top: 50,
+    right: 20,
     zIndex: 10,
     padding: 8,
   },
@@ -187,7 +186,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
@@ -207,7 +206,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     marginLeft: 12,
-    flex: 1,
   },
   plansContainer: {
     marginBottom: 24,
@@ -215,7 +213,7 @@ const styles = StyleSheet.create({
   planCard: {
     backgroundColor: colors.cardBackground,
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
     marginBottom: 12,
     borderWidth: 2,
     borderColor: 'transparent',
@@ -225,80 +223,58 @@ const styles = StyleSheet.create({
   },
   planHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  radioButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  radioButtonInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  planInfo: {
-    flex: 1,
+    marginBottom: 8,
   },
   planTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 4,
   },
   planPrice: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 2,
+    color: colors.text,
+    marginBottom: 4,
   },
   planDetail: {
     fontSize: 14,
     color: colors.textSecondary,
+    marginBottom: 4,
   },
-  bestValueBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  bestValueText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#fff',
+  planSavings: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
   },
   subscribeButton: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   trialNote: {
     fontSize: 12,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
-    lineHeight: 18,
+  },
+  restoreButton: {
+    padding: 12,
+    alignItems: 'center',
   },
   restoreText: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.primary,
-    textAlign: 'center',
-    marginBottom: 24,
     fontWeight: '600',
   },
   linksContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 16,
   },
   linkText: {
     fontSize: 12,
-    color: colors.primary,
+    color: colors.textSecondary,
     textDecorationLine: 'underline',
   },
   linkSeparator: {
