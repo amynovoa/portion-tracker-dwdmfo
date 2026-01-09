@@ -10,7 +10,7 @@ export default function TabLayout() {
         <Label>Track</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="history" name="history">
-        <Icon sf="clock.fill" />
+        <Icon sf="calendar" />
         <Label>History</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="weight" name="weight">

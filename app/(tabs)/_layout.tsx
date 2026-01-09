@@ -14,7 +14,7 @@ export default function TabLayout() {
     {
       name: 'history',
       route: '/(tabs)/history',
-      icon: 'history',
+      icon: 'calendar-today',
       label: 'History',
     },
     {
