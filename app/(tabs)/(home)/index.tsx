@@ -1,26 +1,34 @@
 
-import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
-import DaySelector from '@/components/DaySelector';
-import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { useRouter, useFocusEffect } from 'expo-router';
-import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
-import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
-import FoodGroupRow from '@/components/FoodGroupRow';
-import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import React, { useState, useEffect } from 'react';
+import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
+import { useRouter, useFocusEffect } from 'expo-router';
+import DaySelector from '@/components/DaySelector';
+import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
+import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
+import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
+import FoodGroupRow from '@/components/FoodGroupRow';
+import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [dailyPortions, setDailyPortions] = useState<DailyPortions | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dailyPortions, setDailyPortions] = useState<PortionTargets>({
+    wholeGrains: 0,
+    protein: 0,
+    veggies: 0,
+    fruits: 0,
+    dairy: 0,
+    water: 0,
+    nutsSeeds: 0,
+    exercise: 0,
+  });
   const [refreshing, setRefreshing] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -29,66 +37,42 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-    if (profile) {
-      loadDateData(selectedDate);
-    }
+    loadDateData(selectedDate);
   }, [selectedDate, profile]);
 
   const loadData = async () => {
-    console.log('Loading track screen data...');
-    try {
-      setLoading(true);
-      const userProfile = await loadProfile();
-      console.log('Profile loaded:', userProfile ? 'Found' : 'Not found');
-      
-      if (!userProfile) {
-        console.log('No profile found, redirecting to setup...');
-        router.replace('/setup-profile');
-        return;
-      }
-      
-      setProfile(userProfile);
-      await loadDateData(selectedDate);
-      
-      const hasSeenHint = await hasSeenInfoHint();
-      if (!hasSeenHint) {
-        setShowInfoHint(true);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
+    const prof = await loadProfile();
+    if (!prof) {
+      router.replace('/setup-profile');
+      return;
     }
+    setProfile(prof);
+    
+    const hintSeen = await hasSeenInfoHint();
+    if (!hintSeen) {
+      setShowInfoHint(true);
+    }
+    
+    await loadDateData(selectedDate);
   };
 
   const loadDateData = async (date: string) => {
-    console.log('Loading date data for:', date);
-    try {
-      let portions = await loadDailyPortions(date);
-      console.log('Portions loaded:', portions ? 'Found' : 'Creating new');
-      
-      // If no portions exist for this date, create default empty portions
-      if (!portions && profile) {
-        portions = {
-          date: date,
-          portions: {
-            protein: 0,
-            veggies: 0,
-            fruit: 0,
-            wholeGrains: 0,
-            nutsSeeds: 0,
-            fats: 0,
-            water: 0,
-            alcohol: 0,
-            exercise: 0,
-          },
-        };
-        await saveDailyPortions(portions);
-      }
-      
-      setDailyPortions(portions);
-    } catch (error) {
-      console.error('Error loading date data:', error);
+    if (!profile) return;
+    
+    const portions = await loadDailyPortions(date);
+    if (portions) {
+      setDailyPortions(portions.portions);
+    } else {
+      setDailyPortions({
+        wholeGrains: 0,
+        protein: 0,
+        veggies: 0,
+        fruits: 0,
+        dairy: 0,
+        water: 0,
+        nutsSeeds: 0,
+        exercise: 0,
+      });
     }
   };
 
@@ -103,63 +87,45 @@ export default function HomeScreen() {
   };
 
   const checkAndShowCelebration = async (updatedPortions: PortionTargets) => {
-    if (!profile) return;
-
+    if (!profile || selectedDate !== getTodayString()) return;
+    
     const celebrationEnabled = await loadCelebrationEnabled();
     if (!celebrationEnabled) return;
-
-    const alreadyShown = await hasCelebrationBeenShownToday(selectedDate);
+    
+    const alreadyShown = await hasCelebrationBeenShownToday();
     if (alreadyShown) return;
-
-    const isToday = selectedDate === getTodayString();
-    if (!isToday) return;
-
+    
     const allComplete = FOOD_GROUPS.every(fg => {
+      if (fg.key === 'exercise') return true;
       const target = profile.portionTargets[fg.key];
       const completed = updatedPortions[fg.key];
       return completed >= target;
     });
-
+    
     if (allComplete) {
       setShowCelebration(true);
-      await saveCelebrationShownToday(selectedDate);
+      await saveCelebrationShownToday();
     }
   };
 
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
-    console.log(`handleTogglePortion called: foodGroup=${foodGroup}, increment=${increment}`);
-    if (!profile || !dailyPortions) {
-      console.log('Cannot toggle portion: profile or dailyPortions is null');
-      return;
-    }
-
-    const currentValue = dailyPortions.portions[foodGroup];
-    const targetValue = profile.portionTargets[foodGroup];
+    if (!profile) return;
     
-    console.log(`Current value: ${currentValue}, Target value: ${targetValue}`);
-    
-    let newValue = currentValue;
+    const newPortions = { ...dailyPortions };
     if (increment) {
-      newValue = currentValue + 1;
-    } else if (!increment && currentValue > 0) {
-      newValue = currentValue - 1;
+      newPortions[foodGroup] += 1;
+    } else {
+      newPortions[foodGroup] = Math.max(0, newPortions[foodGroup] - 1);
     }
-
-    console.log(`New value: ${newValue}`);
-
-    const updatedPortions = {
-      ...dailyPortions.portions,
-      [foodGroup]: newValue,
-    };
-
-    const updatedDailyPortions: DailyPortions = {
-      ...dailyPortions,
-      portions: updatedPortions,
-    };
-
-    setDailyPortions(updatedDailyPortions);
-    await saveDailyPortions(updatedDailyPortions);
-    await checkAndShowCelebration(updatedPortions);
+    
+    setDailyPortions(newPortions);
+    
+    await saveDailyPortions({
+      date: selectedDate,
+      portions: newPortions,
+    });
+    
+    await checkAndShowCelebration(newPortions);
   };
 
   const handleDismissInfoHint = async () => {
@@ -171,32 +137,13 @@ export default function HomeScreen() {
     setShowCelebration(false);
   };
 
-  if (loading) {
-    return (
-      <View style={[commonStyles.container, styles.centerContent]}>
-        <Text style={commonStyles.bodyText}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (!profile || !dailyPortions) {
-    return (
-      <View style={[commonStyles.container, styles.centerContent]}>
-        <Text style={commonStyles.bodyText}>No data available</Text>
-        <TouchableOpacity 
-          style={[buttonStyles.primary, { marginTop: 20 }]}
-          onPress={() => router.push('/setup-profile')}
-        >
-          <Text style={buttonStyles.primaryText}>Set Up Profile</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  if (!profile) {
+    return null;
   }
 
   return (
-    <View style={commonStyles.container}>
+    <View style={styles.container}>
       <ScrollView
-        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -206,34 +153,27 @@ export default function HomeScreen() {
           selectedDate={selectedDate}
           onDateSelect={handleDateSelect}
         />
-
-        <View style={styles.dateHeader}>
-          <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
-        </View>
-
-        <View style={styles.portionsContainer}>
-          {FOOD_GROUPS.map((foodGroupItem, index) => {
-            const hideCount = foodGroupItem.key === 'exercise';
-            
-            return (
-              <FoodGroupRow
-                key={foodGroupItem.key}
-                foodGroup={foodGroupItem.key}
-                label={foodGroupItem.label}
-                icon={foodGroupItem.icon}
-                completed={dailyPortions.portions[foodGroupItem.key]}
-                target={profile.portionTargets[foodGroupItem.key]}
-                onTogglePortion={(increment) => handleTogglePortion(foodGroupItem.key, increment)}
-                showInfoHint={showInfoHint && index === 0}
-                isFirstRow={index === 0}
-                hideCount={hideCount}
-              />
-            );
-          })}
-        </View>
+        
+        {FOOD_GROUPS.map((fg, index) => (
+          <FoodGroupRow
+            key={fg.key}
+            foodGroup={fg.key}
+            label={fg.label}
+            icon={fg.icon}
+            completed={dailyPortions[fg.key] || 0}
+            target={profile.portionTargets[fg.key]}
+            onTogglePortion={(increment) => handleTogglePortion(fg.key, increment)}
+            hideCount={fg.key === 'exercise'}
+            showInfoHint={index === 0 && showInfoHint}
+            isFirstRow={index === 0}
+          />
+        ))}
       </ScrollView>
-
-      <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
+      
+      <InfoHintTooltip
+        visible={showInfoHint}
+        onDismiss={handleDismissInfoHint}
+      />
       
       <DailyCompletionCelebration
         visible={showCelebration}
@@ -244,27 +184,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingBottom: 100,
-  },
-  centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dateHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  portionsContainer: {
-    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
 });

@@ -47,8 +47,8 @@ export default function FoodGroupRow({
     }
   };
 
-  // Show at least target slots, or more if user has logged more
-  const maxSlots = Math.max(target, completed, target + 2);
+  // For exercise, show only 1 slot. For others, show at least target slots, or more if user has logged more
+  const maxSlots = foodGroup === 'exercise' ? 1 : Math.max(target, completed, target + 2);
 
   return (
     <View style={styles.container}>
@@ -112,12 +112,13 @@ export default function FoodGroupRow({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 20,
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   labelContainer: {
     flexDirection: 'row',

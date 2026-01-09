@@ -16,15 +16,14 @@ export interface UserProfile {
 }
 
 export interface PortionTargets {
+  wholeGrains: number;
   protein: number;
   veggies: number;
-  fruit: number;
-  wholeGrains: number;
-  nutsSeeds: number;
-  fats: number;
+  fruits: number;
+  dairy: number;
   water: number;
-  alcohol: number;
-  exercise: number; // Added exercise as a portion type
+  nutsSeeds: number;
+  exercise: number;
 }
 
 // Daily portions - simplified (no S/M/L serving sizes)
@@ -42,15 +41,14 @@ export interface WeightEntry {
 export type FoodGroup = keyof PortionTargets;
 
 export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
+  { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
   { key: 'protein', label: 'Protein', icon: '🍗' },
   { key: 'veggies', label: 'Vegetables', icon: '🥦' },
-  { key: 'fruit', label: 'Fruit', icon: '🍎' },
-  { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
-  { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
-  { key: 'fats', label: 'Fats', icon: '🥑' },
+  { key: 'fruits', label: 'Fruit', icon: '🍎' },
+  { key: 'dairy', label: 'Dairy', icon: '🥛' },
   { key: 'water', label: 'Water', icon: '💧' },
-  { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
-  { key: 'exercise', label: 'Exercise', icon: '💪' }, // Added exercise to food groups
+  { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
+  { key: 'exercise', label: 'Exercise', icon: '💪' },
 ];
 
 // Activity levels with full details for display
