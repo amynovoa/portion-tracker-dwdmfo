@@ -1,127 +1,189 @@
 
-import React, { useState } from 'react';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadProfile, saveProfile, loadResetTime, saveResetTime } from '@/utils/storage';
-import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Switch } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import PaywallScreen from '@/components/PaywallScreen';
-import { Picker } from '@react-native-picker/picker';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { loadProfile, saveProfile } from '@/utils/storage';
+import { UserProfile, Sex, Goal } from '@/types';
+import AppLogo from '@/components/AppLogo';
 
-export default function SettingsScreen() {
+export default function ProfileScreen() {
   const router = useRouter();
-  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
-  const [resetHour, setResetHour] = useState(0);
-  const [paywallVisible, setPaywallVisible] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     React.useCallback(() => {
-      loadSettings();
+      loadProfileData();
     }, [])
   );
 
-  const loadSettings = async () => {
-    const enabled = await loadCelebrationEnabled();
-    setCelebrationEnabled(enabled);
-
-    const resetConfig = await loadResetTime();
-    if (resetConfig) {
-      setResetHour(resetConfig.hour);
+  const loadProfileData = async () => {
+    try {
+      const data = await loadProfile();
+      console.log('Profile loaded:', data);
+      setProfile(data);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCelebrationToggle = async (value: boolean) => {
-    setCelebrationEnabled(value);
-    await saveCelebrationEnabled(value);
+  const handleEditProfile = () => {
+    router.push('/setup-profile');
   };
 
-  const handleResetHourChange = async (hour: number) => {
-    setResetHour(hour);
-    await saveResetTime({ hour, minute: 0 });
+  const handleEditTargets = () => {
+    router.push('/setup-targets');
   };
 
-  const handleResetAppData = () => {
-    Alert.alert(
-      'Reset App Data',
-      'Are you sure you want to reset all app data? This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            router.replace('/welcome');
-          },
-        },
-      ]
+  const getSexLabel = (sex: Sex) => {
+    switch (sex) {
+      case 'male':
+        return 'Male';
+      case 'female':
+        return 'Female';
+      case 'prefer-not-to-say':
+        return 'Prefer not to say';
+      default:
+        return 'Not set';
+    }
+  };
+
+  const getGoalLabel = (goal: Goal) => {
+    switch (goal) {
+      case 'lose-weight':
+        return 'Lose Weight';
+      case 'maintain-weight':
+        return 'Maintain Weight';
+      case 'build-muscle':
+        return 'Build Muscle';
+      default:
+        return 'Not set';
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
     );
-  };
+  }
 
-  const handlePrivacyPolicy = () => {
-    Alert.alert('Privacy Policy', 'Privacy policy content will be displayed here.');
-  };
+  if (!profile) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.emptyContainer}>
+          <AppLogo size={80} />
+          <Text style={styles.emptyText}>No profile found</Text>
+          <TouchableOpacity style={buttonStyles.primary} onPress={handleEditProfile}>
+            <Text style={buttonStyles.primaryText}>Create Profile</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container}>
-        <Text style={styles.header}>Settings</Text>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={[
+          styles.contentContainer,
+          Platform.OS !== 'ios' && styles.contentContainerWithTabBar
+        ]}
+      >
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
+        <Text style={styles.header}>Profile</Text>
 
         <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.settingRow}
-            onPress={() => setPaywallVisible(true)}
-          >
-            <Text style={styles.settingLabel}>Subscriptions</Text>
-            <Text style={styles.settingValue}>›</Text>
-          </TouchableOpacity>
-
-          <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Celebration</Text>
-            <Switch
-              value={celebrationEnabled}
-              onValueChange={handleCelebrationToggle}
-              trackColor={{ false: '#767577', true: colors.primary }}
-              thumbColor="#fff"
-            />
+          <Text style={styles.sectionTitle}>Personal Information</Text>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Sex</Text>
+            <Text style={styles.infoValue}>{getSexLabel(profile.sex)}</Text>
           </View>
 
-          <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Daily Reset</Text>
-            <Picker
-              selectedValue={resetHour}
-              onValueChange={handleResetHourChange}
-              style={styles.picker}
-            >
-              {Array.from({ length: 24 }, (_, i) => (
-                <Picker.Item
-                  key={i}
-                  label={`${i.toString().padStart(2, '0')}:00`}
-                  value={i}
-                />
-              ))}
-            </Picker>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Current Weight</Text>
+            <Text style={styles.infoValue}>{profile.currentWeight} lbs</Text>
           </View>
 
-          <TouchableOpacity style={styles.settingRow} onPress={handlePrivacyPolicy}>
-            <Text style={styles.settingLabel}>Privacy Policy</Text>
-            <Text style={styles.settingValue}>›</Text>
-          </TouchableOpacity>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Goal Weight</Text>
+            <Text style={styles.infoValue}>{profile.goalWeight} lbs</Text>
+          </View>
 
-          <TouchableOpacity style={styles.settingRow} onPress={handleResetAppData}>
-            <Text style={[styles.settingLabel, styles.dangerText]}>Reset App Data</Text>
-            <Text style={styles.settingValue}>›</Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Goal</Text>
+            <Text style={styles.infoValue}>{getGoalLabel(profile.goal)}</Text>
+          </View>
+
+          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
+          
+          {profile.portionTargets && (
+            <>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Protein</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.protein} portions</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Veggies</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.veggies} portions</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Fruits</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.fruits} portions</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Whole Grains</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.wholeGrains} portions</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Nuts & Seeds</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.nutsSeeds} portions</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Fats</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.fats} portions</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Water</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.water} glasses</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Exercise</Text>
+                <Text style={styles.infoValue}>{profile.portionTargets.exercise} sessions</Text>
+              </View>
+            </>
+          )}
+
+          <TouchableOpacity style={styles.editButton} onPress={handleEditTargets}>
+            <Text style={styles.editButtonText}>Edit Targets</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <PaywallScreen
-        visible={paywallVisible}
-        onDismiss={() => setPaywallVisible(false)}
-        canDismiss={true}
-      />
     </SafeAreaView>
   );
 }
@@ -134,41 +196,83 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  contentContainer: {
+    padding: 20,
+  },
+  contentContainerWithTabBar: {
+    paddingBottom: 100,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   header: {
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   section: {
-    backgroundColor: '#fff',
-    marginHorizontal: 20,
+    marginBottom: 32,
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
-    overflow: 'hidden',
+    padding: 16,
   },
-  settingRow: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  infoRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: colors.border,
   },
-  settingLabel: {
+  infoLabel: {
     fontSize: 16,
     color: colors.text,
   },
-  settingValue: {
-    fontSize: 18,
+  infoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  editButton: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  editButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
     color: colors.textSecondary,
   },
-  dangerText: {
-    color: '#FF3B30',
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  picker: {
-    width: 120,
+  emptyText: {
+    fontSize: 18,
+    color: colors.textSecondary,
+    marginTop: 16,
+    marginBottom: 24,
   },
 });

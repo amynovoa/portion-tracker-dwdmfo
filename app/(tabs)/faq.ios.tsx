@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { colors, commonStyles } from '@/styles/commonStyles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AppLogo from '@/components/AppLogo';
 import { IconSymbol } from '@/components/IconSymbol';
 
@@ -84,7 +85,7 @@ export default function FAQScreen() {
   };
 
   return (
-    <View style={commonStyles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.logoContainer}>
           <AppLogo size={60} />
@@ -123,17 +124,19 @@ export default function FAQScreen() {
             </View>
           ))}
         </View>
-
-        <View style={styles.bottomPadding} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   scrollContent: {
-    paddingTop: 48,
-    paddingBottom: 120,
+    paddingTop: 20,
+    paddingBottom: 100,
   },
   logoContainer: {
     alignItems: 'center',
@@ -196,8 +199,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 24,
     marginTop: 12,
-  },
-  bottomPadding: {
-    height: 20,
   },
 });
