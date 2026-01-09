@@ -70,10 +70,6 @@ export default function SettingsScreen() {
     showPaywall();
   };
 
-  const handleActivityLevel = () => {
-    router.push('/activity-level');
-  };
-
   const handleCelebration = () => {
     router.push('/celebration-settings');
   };
@@ -123,16 +119,6 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.menuItemContent}>
             <Text style={styles.menuItemTitle}>Subscription</Text>
-          </View>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={24} color={colors.textSecondary} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={handleActivityLevel}>
-          <View style={styles.iconContainer}>
-            <IconSymbol ios_icon_name="figure.run" android_material_icon_name="directions-run" size={24} color="#FF6B6B" />
-          </View>
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemTitle}>Activity Level</Text>
           </View>
           <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={24} color={colors.textSecondary} />
         </TouchableOpacity>

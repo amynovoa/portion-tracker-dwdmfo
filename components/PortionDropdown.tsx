@@ -72,11 +72,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     color: colors.text,
+    fontSize: 32,
   },
   pickerItem: {
-    fontSize: 24,
+    fontSize: 32,
     color: colors.text,
-    height: 120,
+    height: 140,
   },
 });
 
