@@ -17,7 +17,7 @@ export default function TabLayout() {
         <Icon sf="scalemass.fill" />
         <Label>Weight</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="settings" name="settings">
+      <NativeTabs.Trigger key="profile" name="profile">
         <Icon sf="gearshape.fill" />
         <Label>Settings</Label>
       </NativeTabs.Trigger>
