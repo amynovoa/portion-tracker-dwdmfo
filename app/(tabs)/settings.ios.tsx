@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, Switch, TouchableOpacity, Platform } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, Switch, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { loadResetTime, saveResetTime, ResetTimeConfig } from '@/utils/storage';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
 
 const styles = StyleSheet.create({
@@ -36,28 +36,19 @@ const styles = StyleSheet.create({
     color: colors.text,
     flex: 1,
   },
-  timeButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-  },
-  timeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   description: {
     fontSize: 14,
     color: colors.textSecondary,
     marginTop: 8,
+  },
+  timePickerContainer: {
+    marginTop: 10,
   },
 });
 
 export default function SettingsScreen() {
   const [useCustomTime, setUseCustomTime] = useState(false);
   const [resetTime, setResetTime] = useState(new Date());
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -88,7 +79,6 @@ export default function SettingsScreen() {
   }
 
   async function handleTimeChange(event: any, selectedDate?: Date) {
-    setShowTimePicker(Platform.OS === 'ios');
     if (selectedDate) {
       setResetTime(selectedDate);
       await saveResetTime({
@@ -124,34 +114,24 @@ export default function SettingsScreen() {
             />
           </View>
           
-          {useCustomTime && (
-            <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Reset Time</Text>
-              <TouchableOpacity
-                style={styles.timeButton}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Text style={styles.timeButtonText}>{formatTime(resetTime)}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          
           <Text style={styles.description}>
             {useCustomTime
               ? `Your daily portions will reset at ${formatTime(resetTime)} each day.`
               : 'Your daily portions will reset at midnight each day.'}
           </Text>
-        </View>
 
-        {showTimePicker && (
-          <DateTimePicker
-            value={resetTime}
-            mode="time"
-            is24Hour={false}
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleTimeChange}
-          />
-        )}
+          {useCustomTime && (
+            <View style={styles.timePickerContainer}>
+              <DateTimePicker
+                value={resetTime}
+                mode="time"
+                is24Hour={false}
+                display="spinner"
+                onChange={handleTimeChange}
+              />
+            </View>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
