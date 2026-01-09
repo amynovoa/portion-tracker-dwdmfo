@@ -26,7 +26,6 @@ export default function SetupTargetsScreen() {
     veggies: 4,
     fruit: 2,
     wholeGrains: 2,
-    legumes: 1,
     nutsSeeds: 2,
     fats: 2,
     water: 8,
@@ -113,7 +112,6 @@ export default function SetupTargetsScreen() {
     { key: 'veggies', label: 'Veggies', icon: '🥦' },
     { key: 'fruit', label: 'Fruit', icon: '🍎' },
     { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
-    { key: 'legumes', label: 'Legumes', icon: '🫘' },
     { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
     { key: 'fats', label: 'Fats', icon: '🥑' },
     { key: 'water', label: 'Water', icon: '💧' },
@@ -130,6 +128,13 @@ export default function SetupTargetsScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Customize Your Targets</Text>
           <Text style={styles.subtitle}>Review and adjust your daily portion goals</Text>
+        </View>
+
+        {/* Tip moved above portions */}
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            💡 Tip: These targets are personalized based on your profile. Adjust them to match your preferences and lifestyle.
+          </Text>
         </View>
 
         <View style={styles.targetsSection}>
@@ -151,12 +156,6 @@ export default function SetupTargetsScreen() {
               </View>
             </View>
           ))}
-        </View>
-
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            💡 Tip: These targets are personalized based on your profile. Adjust them to match your preferences and lifestyle.
-          </Text>
         </View>
 
         <TouchableOpacity style={[buttonStyles.primary, styles.button]} onPress={handleSaveTargets}>
@@ -198,6 +197,21 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: colors.textSecondary,
+  },
+  infoBox: {
+    marginHorizontal: 16,
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  infoText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
+    fontWeight: '600',
   },
   targetsSection: {
     paddingHorizontal: 16,
@@ -246,21 +260,6 @@ const styles = StyleSheet.create({
   portionsText: {
     fontSize: 14,
     color: colors.textSecondary,
-  },
-  infoBox: {
-    marginHorizontal: 16,
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-  },
-  infoText: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 20,
-    fontWeight: '600',
   },
   button: {
     marginHorizontal: 16,

@@ -35,10 +35,10 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
     portionSize: `- 1 medium piece of fruit
 - 1 cup cut fruit`,
   },
-  healthyCarbs: {
-    benefit: 'Healthy Carbs include nutrient-dense carbohydrate foods that provide steady energy, fiber, and vitamins. These foods help support digestion, blood sugar balance, and long-term health.',
+  wholeGrains: {
+    benefit: 'Whole Grains include nutrient-dense carbohydrate foods that provide steady energy, fiber, and vitamins. These foods help support digestion, blood sugar balance, and long-term health. This category now includes legumes (beans and lentils) which are excellent sources of both carbohydrates and protein.',
     avoid: 'White bread, white pasta, white rice, pastries, donuts, cakes, cookies, breakfast cereals made from refined grains, chips, fries, processed snacks, sugary drinks, juices, candy, granola bars.',
-    examples: `Whole Grains
+    examples: `Whole Grains:
 - Oats
 - Quinoa
 - Brown rice
@@ -47,7 +47,7 @@ export const FOOD_GROUP_INFO: Record<FoodGroup, FoodGroupInfo> = {
 - Whole-wheat pasta
 - Whole-grain bread
 
-Beans & Lentils (Legumes)
+Beans & Lentils (Legumes):
 - Black beans
 - Pinto beans
 - Kidney beans
@@ -56,25 +56,25 @@ Beans & Lentils (Legumes)
 - Split peas
 - Edamame / soybeans
 
-Starchy Vegetables
+Starchy Vegetables:
 - Sweet potatoes
 - Potatoes
 - Winter squash (butternut, acorn, kabocha)
 - Corn
 
-Dairy & Dairy Alternatives
+Dairy & Dairy Alternatives:
 - Milk (cow's milk)
 - Plant-based milk (unsweetened)
 - Sweetened or flavored milk
 - Sweetened yogurt
 - Flavored yogurt
 - Kefir`,
-    portionSize: `- ½ cup cooked grains or starchy vegetables (rice, quinoa, oats, potatoes)
+    portionSize: `- ½ cup cooked grains, beans, or starchy vegetables (rice, quinoa, oats, potatoes, lentils, beans)
 - 1 slice bread
 - 1 small tortilla
 - 1 cup milk or kefir`,
   },
-  nuts: {
+  nutsSeeds: {
     benefit: 'Deliver protein, fiber, and omega fats that support heart health and satiety.',
     avoid: 'Candied nuts, nuts roasted in heavy oils, overly salted nuts.',
     examples: 'Almonds, walnuts, pecans, pistachios, chia, flax, hemp seeds, natural nut butters.',

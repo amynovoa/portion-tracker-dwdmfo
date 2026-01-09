@@ -9,7 +9,6 @@ import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } fr
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import ExerciseRow from '@/components/ExerciseRow';
-import InfoHintTooltip from '@/components/InfoHintTooltip';
 import DaySelector from '@/components/DaySelector';
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 
@@ -43,24 +42,24 @@ export default function HomeScreen() {
 
       console.log('Home: Profile found, loading portions');
       
-      if (!userProfile.targets) {
+      if (!userProfile.portionTargets) {
         console.error('Profile has no targets!');
         setLoading(false);
         return;
       }
 
       const safeTargets: PortionTargets = {
-        protein: userProfile.targets.protein || 0,
-        veggies: userProfile.targets.veggies || 0,
-        fruit: userProfile.targets.fruit || 0,
-        healthyCarbs: userProfile.targets.healthyCarbs || 0,
-        fats: userProfile.targets.fats || 0,
-        nuts: userProfile.targets.nuts || 0,
-        water: userProfile.targets.water || 8,
-        alcohol: userProfile.targets.alcohol || 0,
+        protein: userProfile.portionTargets.protein || 0,
+        veggies: userProfile.portionTargets.veggies || 0,
+        fruit: userProfile.portionTargets.fruit || 0,
+        wholeGrains: userProfile.portionTargets.wholeGrains || 0,
+        nutsSeeds: userProfile.portionTargets.nutsSeeds || 0,
+        fats: userProfile.portionTargets.fats || 0,
+        water: userProfile.portionTargets.water || 8,
+        alcohol: userProfile.portionTargets.alcohol || 0,
       };
 
-      userProfile.targets = safeTargets;
+      userProfile.portionTargets = safeTargets;
       setProfile(userProfile);
 
       await loadDateData(selectedDate);
@@ -97,9 +96,9 @@ export default function HomeScreen() {
           protein: dailyData.portions.protein || 0,
           veggies: dailyData.portions.veggies || 0,
           fruit: dailyData.portions.fruit || 0,
-          healthyCarbs: dailyData.portions.healthyCarbs || 0,
+          wholeGrains: dailyData.portions.wholeGrains || 0,
+          nutsSeeds: dailyData.portions.nutsSeeds || 0,
           fats: dailyData.portions.fats || 0,
-          nuts: dailyData.portions.nuts || 0,
           water: dailyData.portions.water || 0,
           alcohol: dailyData.portions.alcohol || 0,
         };
@@ -112,9 +111,9 @@ export default function HomeScreen() {
           protein: 0,
           veggies: 0,
           fruit: 0,
-          healthyCarbs: 0,
+          wholeGrains: 0,
+          nutsSeeds: 0,
           fats: 0,
-          nuts: 0,
           water: 0,
           alcohol: 0,
         };
@@ -187,7 +186,7 @@ export default function HomeScreen() {
     }
 
     // Check if all targets are met (100% completion)
-    const targets = profile.targets;
+    const targets = profile.portionTargets;
     let allComplete = true;
 
     // Check each food group
@@ -353,6 +352,28 @@ export default function HomeScreen() {
           </View>
         )}
 
+        {/* Tip moved above portions */}
+        {showInfoHint && (
+          <View style={styles.tipContainer}>
+            <View style={styles.tipBox}>
+              <Text style={styles.tipIcon}>💡</Text>
+              <View style={styles.tipTextContainer}>
+                <Text style={styles.tipTitle}>Portion Tips Available</Text>
+                <Text style={styles.tipText}>
+                  Tap the ℹ️ icon next to any food group to see examples and portion sizes.
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.tipCloseButton}
+                onPress={handleDismissInfoHint}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.tipCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <View style={styles.portionsSection}>
           {FOOD_GROUPS && Array.isArray(FOOD_GROUPS) && FOOD_GROUPS.map((group, index) => (
             <FoodGroupRow
@@ -360,7 +381,7 @@ export default function HomeScreen() {
               icon={group.icon}
               label={group.label}
               foodGroup={group.key}
-              target={profile.targets[group.key] || 0}
+              target={profile.portionTargets[group.key] || 0}
               completed={datePortions[group.key] || 0}
               onTogglePortion={(increment) => handleTogglePortion(group.key, increment)}
               showInfoHint={false}
@@ -376,13 +397,6 @@ export default function HomeScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-
-      {showInfoHint && (
-        <InfoHintTooltip 
-          visible={showInfoHint} 
-          onDismiss={handleDismissInfoHint}
-        />
-      )}
 
       <DailyCompletionCelebration
         visible={showCelebration}
@@ -425,6 +439,46 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
+  },
+  tipContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  tipBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF9E6',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  tipIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  tipTextContainer: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  tipText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  tipCloseButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  tipCloseText: {
+    fontSize: 20,
+    color: colors.textSecondary,
+    fontWeight: '600',
   },
   portionsSection: {
     marginBottom: 16,

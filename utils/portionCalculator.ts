@@ -15,6 +15,7 @@ export function classifySize(sex: Sex, weight: number): SizeCategory {
 }
 
 // Get baseline daily portions based on sex and goal (for Medium size)
+// NOTE: Legume servings have been merged into wholeGrains
 function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
   if (sex === 'female') {
     if (goal === 'lose') {
@@ -22,8 +23,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 4,
         veggies: 4,
         fruit: 2,
-        wholeGrains: 3,
-        legumes: 1,
+        wholeGrains: 4, // Was 3 wholeGrains + 1 legumes
         nutsSeeds: 1,
         fats: 2,
         water: 8,
@@ -34,8 +34,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 5,
         veggies: 4,
         fruit: 2,
-        wholeGrains: 3,
-        legumes: 1,
+        wholeGrains: 4, // Was 3 wholeGrains + 1 legumes
         nutsSeeds: 1,
         fats: 2,
         water: 8,
@@ -46,8 +45,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 6,
         veggies: 4,
         fruit: 2,
-        wholeGrains: 4,
-        legumes: 2,
+        wholeGrains: 6, // Was 4 wholeGrains + 2 legumes
         nutsSeeds: 1,
         fats: 2,
         water: 8,
@@ -60,8 +58,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 5,
         veggies: 4,
         fruit: 2,
-        wholeGrains: 3,
-        legumes: 1,
+        wholeGrains: 4, // Was 3 wholeGrains + 1 legumes
         nutsSeeds: 1,
         fats: 2,
         water: 8,
@@ -72,8 +69,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 6,
         veggies: 4,
         fruit: 2,
-        wholeGrains: 3,
-        legumes: 2,
+        wholeGrains: 5, // Was 3 wholeGrains + 2 legumes
         nutsSeeds: 1,
         fats: 2,
         water: 8,
@@ -84,8 +80,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         protein: 7,
         veggies: 4,
         fruit: 2,
-        wholeGrains: 4,
-        legumes: 2,
+        wholeGrains: 6, // Was 4 wholeGrains + 2 legumes
         nutsSeeds: 1,
         fats: 2,
         water: 8,
@@ -235,7 +230,7 @@ export function calculateRecommendedTargets(
   // Step 1: Determine size category
   const sizeCategory = classifySize(sex, weight);
   
-  // Step 2: Get baseline portions for Medium size
+  // Step 2: Get baseline portions for Medium size (legumes already merged into wholeGrains)
   let portions = getBaselinePortions(sex, goal);
   
   // Step 3: Apply size adjustment (affects Whole Grains and Water)
