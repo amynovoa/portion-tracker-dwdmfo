@@ -2,11 +2,12 @@
 import "react-native-reanimated";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme } from "react-native";
+import { useColorScheme, Alert } from "react-native";
+import { useNetworkState } from "expo-network";
 import {
   DarkTheme,
   DefaultTheme,
@@ -15,7 +16,6 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
-import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,8 +23,9 @@ export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
 
-function RootLayoutNav() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const networkState = useNetworkState();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -34,6 +35,18 @@ function RootLayoutNav() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  React.useEffect(() => {
+    if (
+      !networkState.isConnected &&
+      networkState.isInternetReachable === false
+    ) {
+      Alert.alert(
+        "🔌 You are offline",
+        "You can keep using the app! Your changes will be saved locally and synced when you are back online."
+      );
+    }
+  }, [networkState.isConnected, networkState.isInternetReachable]);
 
   if (!loaded) {
     return null;
@@ -63,89 +76,25 @@ function RootLayoutNav() {
       notification: "rgb(255, 69, 58)",
     },
   };
-
+  
   return (
     <>
       <StatusBar style="auto" animated />
-      <ThemeProvider
-        value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
-      >
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="modal"
-              options={{
-                presentation: "modal",
-                title: "Standard Modal",
-              }}
-            />
-            <Stack.Screen
-              name="formsheet"
-              options={{
-                presentation: "formSheet",
-                title: "Form Sheet Modal",
-                sheetGrabberVisible: true,
-                sheetAllowedDetents: [0.5, 0.8, 1.0],
-                sheetCornerRadius: 20,
-              }}
-            />
-            <Stack.Screen
-              name="transparent-modal"
-              options={{
-                presentation: "transparentModal",
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="setup-profile"
-              options={{
-                presentation: "modal",
-                title: "Set Up Profile",
-              }}
-            />
-            <Stack.Screen
-              name="setup-targets"
-              options={{
-                presentation: "modal",
-                title: "Customize Targets",
-              }}
-            />
-            <Stack.Screen
-              name="activity-level"
-              options={{
-                presentation: "modal",
-                title: "Activity Level",
-              }}
-            />
-            <Stack.Screen
-              name="celebration-settings"
-              options={{
-                presentation: "modal",
-                title: "Celebration Settings",
-              }}
-            />
-            <Stack.Screen
-              name="daily-reset"
-              options={{
-                presentation: "modal",
-                title: "Daily Reset Time",
-              }}
-            />
-          </Stack>
-          <SystemBars style={"auto"} />
-        </GestureHandlerRootView>
-      </ThemeProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
+        >
+          <WidgetProvider>
+            <GestureHandlerRootView>
+            <Stack>
+              <Stack.Screen name="welcome" options={{ headerShown: false }} />
+              <Stack.Screen name="setup-profile" options={{ headerShown: false }} />
+              <Stack.Screen name="setup-targets" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
+            <SystemBars style={"auto"} />
+            </GestureHandlerRootView>
+          </WidgetProvider>
+        </ThemeProvider>
     </>
-  );
-}
-
-export default function RootLayout() {
-  return (
-    <SubscriptionProvider>
-      <WidgetProvider>
-        <RootLayoutNav />
-      </WidgetProvider>
-    </SubscriptionProvider>
   );
 }
