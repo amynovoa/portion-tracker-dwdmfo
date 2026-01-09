@@ -25,6 +25,7 @@ export function calculateDailyAdherence(
       'nutsSeeds',
       'fats',
       'water',
+      'exercise',
     ];
 
     foodGroups.forEach((group) => {

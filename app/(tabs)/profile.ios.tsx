@@ -114,6 +114,10 @@ export default function ProfileScreen() {
             <Text style={styles.label}>Water:</Text>
             <Text style={styles.value}>{profile.portionTargets.water}</Text>
           </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Exercise:</Text>
+            <Text style={styles.value}>{profile.portionTargets.exercise || 0}</Text>
+          </View>
         </View>
 
         <TouchableOpacity

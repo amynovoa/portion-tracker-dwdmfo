@@ -38,8 +38,8 @@ export default function FoodGroupRow({
       return 'transparent';
     }
 
-    // Water and veggies are always green (no yellow/red)
-    if (foodGroup === 'water' || foodGroup === 'veggies') {
+    // Water, veggies, and exercise are always green (no yellow/red)
+    if (foodGroup === 'water' || foodGroup === 'veggies' || foodGroup === 'exercise') {
       return '#4CAF50'; // Bright green
     }
 

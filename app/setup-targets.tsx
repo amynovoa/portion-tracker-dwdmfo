@@ -27,6 +27,7 @@ export default function SetupTargetsScreen() {
     nutsSeeds: 2,
     fats: 2,
     water: 8,
+    exercise: 3,
   });
 
   useEffect(() => {
@@ -100,6 +101,11 @@ export default function SetupTargetsScreen() {
             label="💧 Water"
             value={targets.water}
             onChange={(val) => updateTarget('water', val)}
+          />
+          <TargetRow
+            label="💪 Exercise"
+            value={targets.exercise}
+            onChange={(val) => updateTarget('exercise', val)}
           />
         </View>
 

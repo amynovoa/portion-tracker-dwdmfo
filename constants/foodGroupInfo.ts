@@ -163,4 +163,31 @@ Okay in moderation:
 - Black coffee, unsweetened tea`,
     portionSize: 'About 8 oz (1 cup) per serving — aim for 7-10+ servings per day',
   },
+  exercise: {
+    benefit: `Regular exercise is essential for overall health, weight management, and mental well-being.
+
+It helps build and maintain muscle, improves cardiovascular health, and boosts mood.
+
+Consistency matters more than intensity — find activities you enjoy and can sustain.`,
+    avoid: `Avoid overtraining without adequate rest and recovery.
+
+Don't exercise through pain or injury.
+
+Avoid comparing yourself to others — focus on your own progress.`,
+    examples: `Cardio:
+- Walking, jogging, running
+- Cycling, swimming
+- Dancing, sports
+
+Strength training:
+- Weight lifting
+- Bodyweight exercises
+- Resistance bands
+
+Flexibility & balance:
+- Yoga, Pilates
+- Stretching routines
+- Tai chi`,
+    portionSize: 'One session counts as 1 portion (aim for 20-60 minutes of intentional movement)',
+  },
 };
