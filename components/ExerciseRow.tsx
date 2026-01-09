@@ -64,10 +64,12 @@ Strength/Resistance options:
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.countSpacer}>0/0</Text>
+          <Text style={styles.count}>
+            {completed ? '1/1' : '0/1'}
+          </Text>
         </View>
 
-        <View style={styles.slotContainer}>
+        <View style={styles.slotsContainer}>
           <TouchableOpacity 
             style={[
               styles.slot,
@@ -147,15 +149,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     opacity: 0.6,
   },
-  countSpacer: {
+  count: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'transparent',
+    color: colors.textSecondary,
   },
-  slotContainer: {
+  slotsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   slot: {
     width: 40,
@@ -166,8 +168,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 4,
-    marginVertical: 4,
   },
   slotCompleted: {
     backgroundColor: '#4CAF50',
