@@ -128,17 +128,26 @@ export default function HomeScreen() {
   };
 
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
-    if (!profile || !dailyPortions) return;
+    console.log(`handleTogglePortion called: foodGroup=${foodGroup}, increment=${increment}`);
+    if (!profile || !dailyPortions) {
+      console.log('Cannot toggle portion: profile or dailyPortions is null');
+      return;
+    }
 
     const currentValue = dailyPortions.portions[foodGroup];
     const targetValue = profile.portionTargets[foodGroup];
     
+    console.log(`Current value: ${currentValue}, Target value: ${targetValue}`);
+    
     let newValue = currentValue;
-    if (increment && currentValue < targetValue) {
+    if (increment) {
+      // Allow going beyond target
       newValue = currentValue + 1;
     } else if (!increment && currentValue > 0) {
       newValue = currentValue - 1;
     }
+
+    console.log(`New value: ${newValue}`);
 
     const updatedPortions = {
       ...dailyPortions.portions,
@@ -217,7 +226,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.portionsContainer}>
-          {FOOD_GROUPS.map((foodGroupItem) => (
+          {FOOD_GROUPS.map((foodGroupItem, index) => (
             <FoodGroupRow
               key={foodGroupItem.key}
               foodGroup={foodGroupItem.key}
@@ -225,11 +234,9 @@ export default function HomeScreen() {
               icon={foodGroupItem.icon}
               completed={dailyPortions.portions[foodGroupItem.key]}
               target={profile.portionTargets[foodGroupItem.key]}
-              onToggle={handleTogglePortion}
-              benefit={foodGroupItem.benefit}
-              avoid={foodGroupItem.avoid}
-              examples={foodGroupItem.examples}
-              portionSize={foodGroupItem.portionSize}
+              onTogglePortion={(increment) => handleTogglePortion(foodGroupItem.key, increment)}
+              showInfoHint={showInfoHint && index === 0}
+              isFirstRow={index === 0}
             />
           ))}
         </View>
