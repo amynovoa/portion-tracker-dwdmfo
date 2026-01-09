@@ -1,52 +1,68 @@
 
 import React from 'react';
-import { Stack } from 'expo-router';
-import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
+import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
+import FloatingTabBar from '@/components/FloatingTabBar';
+import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
-  // Define the tabs configuration
-  const tabs: TabBarItem[] = [
-    {
-      name: '(home)',
-      route: '/(tabs)/(home)/',
-      icon: 'home',
-      label: 'Home',
-    },
-    {
-      name: 'history',
-      route: '/(tabs)/history',
-      icon: 'calendar-today',
-      label: 'History',
-    },
-    {
-      name: 'weight',
-      route: '/(tabs)/weight',
-      icon: 'monitor-weight',
-      label: 'Weight',
-    },
-    {
-      name: 'profile',
-      route: '/(tabs)/profile',
-      icon: 'settings',
-      label: 'Settings',
-    },
-  ];
-
-  // For Android and Web, use Stack navigation with custom floating tab bar
   return (
-    <>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'none', // Remove fade animation to prevent black screen flash
-        }}
-      >
-        <Stack.Screen key="home" name="(home)" />
-        <Stack.Screen key="history" name="history" />
-        <Stack.Screen key="weight" name="weight" />
-        <Stack.Screen key="profile" name="profile" />
-      </Stack>
-      <FloatingTabBar tabs={tabs} />
-    </>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+      }}
+      tabBar={(props) => (
+        <FloatingTabBar
+          tabs={[
+            {
+              name: '(home)',
+              title: 'Track',
+              icon: 'check-circle',
+              route: '/(tabs)/(home)',
+            },
+            {
+              name: 'history',
+              title: 'History',
+              icon: 'history',
+              route: '/(tabs)/history',
+            },
+            {
+              name: 'weight',
+              title: 'Weight',
+              icon: 'monitor-weight',
+              route: '/(tabs)/weight',
+            },
+            {
+              name: 'faq',
+              title: 'FAQs',
+              icon: 'help',
+              route: '/(tabs)/faq',
+            },
+            {
+              name: 'profile',
+              title: 'Profile',
+              icon: 'person',
+              route: '/(tabs)/profile',
+            },
+            {
+              name: 'settings',
+              title: 'Settings',
+              icon: 'settings',
+              route: '/(tabs)/settings',
+            },
+          ]}
+          useFullWidth={true}
+        />
+      )}
+    >
+      <Tabs.Screen name="(home)" options={{ title: 'Track' }} />
+      <Tabs.Screen name="history" options={{ title: 'History' }} />
+      <Tabs.Screen name="weight" options={{ title: 'Weight' }} />
+      <Tabs.Screen name="faq" options={{ title: 'FAQs' }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+    </Tabs>
   );
 }
