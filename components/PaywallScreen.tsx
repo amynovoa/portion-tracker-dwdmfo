@@ -11,6 +11,7 @@ import {
   Modal,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 
@@ -20,35 +21,153 @@ interface PaywallScreenProps {
   canDismiss?: boolean;
 }
 
+const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDismiss = false }) => {
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('monthly');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    setIsLoading(true);
+    // TODO: Implement actual subscription logic with RevenueCat or Apple IAP
+    setTimeout(() => {
+      setIsLoading(false);
+      Alert.alert('Subscription', `${selectedPlan} subscription initiated`);
+    }, 1000);
+  };
+
+  const handleRestorePurchases = async () => {
+    setIsLoading(true);
+    // TODO: Implement restore purchases logic
+    setTimeout(() => {
+      setIsLoading(false);
+      Alert.alert('Restore', 'No purchases to restore');
+    }, 1000);
+  };
+
+  const getButtonText = () => {
+    if (selectedPlan === 'monthly') {
+      return 'Start 7-Day Free Trial';
+    }
+    return 'Continue';
+  };
+
+  const getButtonSubtext = () => {
+    if (selectedPlan === 'monthly') {
+      return 'Then $2.99 per month';
+    }
+    return 'Billed $24.99 annually';
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <View style={styles.container}>
+        {canDismiss && onDismiss && (
+          <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
+            <IconSymbol ios_icon_name="xmark" android_material_icon_name="close" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
+
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.logoContainer}>
+            <AppLogo size={60} />
+          </View>
+
+          <Text style={styles.title}>Unlock Full Access</Text>
+
+          <View style={styles.featuresContainer}>
+            <FeatureItem text="Track meals using simple portions" />
+            <FeatureItem text="Personalized goals based on activity level" />
+            <FeatureItem text="Progress insights and reminders" />
+            <FeatureItem text="Access to all current and future features" />
+          </View>
+
+          <Text style={styles.sectionTitle}>Subscription Options</Text>
+
+          <TouchableOpacity
+            style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
+            onPress={() => setSelectedPlan('monthly')}
+          >
+            <View style={styles.planHeader}>
+              <Text style={styles.planTitle}>Monthly Access</Text>
+              <View style={[styles.radio, selectedPlan === 'monthly' && styles.radioSelected]}>
+                {selectedPlan === 'monthly' && <View style={styles.radioDot} />}
+              </View>
+            </View>
+            <Text style={styles.planSubtitle}>7-day free trial, then $2.99 per month</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.planCard, selectedPlan === 'annual' && styles.planCardSelected]}
+            onPress={() => setSelectedPlan('annual')}
+          >
+            <View style={styles.planHeader}>
+              <Text style={styles.planTitle}>Annual Access</Text>
+              <View style={[styles.radio, selectedPlan === 'annual' && styles.radioSelected]}>
+                {selectedPlan === 'annual' && <View style={styles.radioDot} />}
+              </View>
+            </View>
+            <Text style={styles.planSubtitle}>7-day free trial, then $24.99 per year</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[buttonStyles.primary, styles.subscribeButton]}
+            onPress={handleSubscribe}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View>
+                <Text style={buttonStyles.primaryText}>{getButtonText()}</Text>
+                <Text style={styles.buttonSubtext}>{getButtonSubtext()}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.restoreButton} onPress={handleRestorePurchases}>
+            <Text style={styles.restoreText}>Restore Purchases</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.disclaimer}>
+            Subscriptions renew automatically unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account after the free trial ends. You can manage or cancel your subscription anytime in your Apple ID Account Settings.
+          </Text>
+
+          <View style={styles.linksContainer}>
+            <TouchableOpacity onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+              <Text style={styles.linkText}>Terms of Use</Text>
+            </TouchableOpacity>
+            <Text style={styles.linkSeparator}>•</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('https://portiontrack.com/privacy-policy')}>
+              <Text style={styles.linkText}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+};
+
+const FeatureItem: React.FC<{ text: string }> = ({ text }) => (
+  <View style={styles.featureItem}>
+    <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={20} color={colors.primary} />
+    <Text style={styles.featureText}>{text}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   container: {
+    flex: 1,
     backgroundColor: colors.background,
-    borderRadius: 20,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
-    maxHeight: '85%',
   },
   closeButton: {
     position: 'absolute',
     top: 16,
     right: 16,
     zIndex: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.lightGray,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
   },
   scrollContent: {
-    paddingTop: 8,
+    padding: 24,
+    paddingTop: 60,
   },
   logoContainer: {
     alignItems: 'center',
@@ -62,9 +181,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   featuresContainer: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
-  featureRow: {
+  featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
@@ -75,225 +194,100 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
   },
-  subscriptionOptions: {
-    marginBottom: 24,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
   },
-  optionButton: {
-    borderWidth: 2,
-    borderColor: colors.lightGray,
+  planCard: {
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  optionButtonSelected: {
+  planCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
   },
-  optionHeader: {
+  planHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
   },
-  optionTitle: {
+  planTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
   },
-  optionPrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  optionSubtext: {
+  planSubtitle: {
     fontSize: 14,
     color: colors.textSecondary,
   },
-  primaryButton: {
-    ...buttonStyles.primary,
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.textSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: {
+    borderColor: colors.primary,
+  },
+  radioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  subscribeButton: {
+    marginTop: 24,
     marginBottom: 16,
   },
-  primaryButtonText: {
-    ...buttonStyles.primaryText,
+  buttonSubtext: {
+    fontSize: 12,
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 4,
+    opacity: 0.9,
   },
-  footer: {
-    marginTop: 8,
+  restoreButton: {
+    padding: 12,
+    alignItems: 'center',
   },
-  footerText: {
+  restoreText: {
+    fontSize: 16,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  disclaimer: {
     fontSize: 11,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 16,
+    marginTop: 24,
     marginBottom: 16,
+    lineHeight: 16,
   },
-  secondaryActions: {
+  linksContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  linkButton: {
-    paddingVertical: 8,
+    alignItems: 'center',
+    marginBottom: 24,
   },
   linkText: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.primary,
     textDecorationLine: 'underline',
   },
+  linkSeparator: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginHorizontal: 8,
+  },
 });
 
-export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('monthly');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubscribe = async () => {
-    setIsLoading(true);
-    // TODO: Backend Integration - Implement actual subscription logic with Apple In-App Purchase
-    console.log('Subscribe to:', selectedPlan);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      onDismiss?.();
-    }, 1500);
-  };
-
-  const handleRestorePurchases = async () => {
-    setIsLoading(true);
-    // TODO: Backend Integration - Implement restore purchases logic
-    console.log('Restore purchases');
-    
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const getButtonText = () => {
-    return 'Start 7-Day Free Trial';
-  };
-
-  const getButtonSubtext = () => {
-    if (selectedPlan === 'monthly') {
-      return 'Then $2.99 per month';
-    }
-    return 'Then $24.99 per year';
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={canDismiss ? onDismiss : undefined}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.container}>
-          {canDismiss && (
-            <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
-              <IconSymbol name="xmark" size={18} color={colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            <View style={styles.logoContainer}>
-              <AppLogo size={60} />
-            </View>
-
-            <Text style={styles.title}>Unlock Full Access</Text>
-
-            <View style={styles.featuresContainer}>
-              <View style={styles.featureRow}>
-                <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-                <Text style={styles.featureText}>Track meals using simple portions</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-                <Text style={styles.featureText}>Personalized goals based on activity level</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-                <Text style={styles.featureText}>Progress insights and reminders</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <IconSymbol name="checkmark.circle.fill" size={24} color={colors.primary} />
-                <Text style={styles.featureText}>Access to all current and future features</Text>
-              </View>
-            </View>
-
-            <View style={styles.subscriptionOptions}>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  selectedPlan === 'monthly' && styles.optionButtonSelected,
-                ]}
-                onPress={() => setSelectedPlan('monthly')}
-              >
-                <View style={styles.optionHeader}>
-                  <Text style={styles.optionTitle}>Monthly Access</Text>
-                  <Text style={styles.optionPrice}>$2.99</Text>
-                </View>
-                <Text style={styles.optionSubtext}>7-day free trial, then $2.99 per month</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  selectedPlan === 'annual' && styles.optionButtonSelected,
-                ]}
-                onPress={() => setSelectedPlan('annual')}
-              >
-                <View style={styles.optionHeader}>
-                  <Text style={styles.optionTitle}>Annual Access</Text>
-                  <Text style={styles.optionPrice}>$24.99</Text>
-                </View>
-                <Text style={styles.optionSubtext}>7-day free trial, then $24.99 per year</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={handleSubscribe}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={colors.white} />
-              ) : (
-                <>
-                  <Text style={styles.primaryButtonText}>{getButtonText()}</Text>
-                  <Text style={[styles.primaryButtonText, { fontSize: 12, opacity: 0.9 }]}>
-                    {getButtonSubtext()}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Subscriptions renew automatically unless canceled at least 24 hours before the end of the current period. Payment will be charged to your Apple ID account after the free trial ends. You can manage or cancel your subscription anytime in your Apple ID Account Settings.
-              </Text>
-
-              <View style={styles.secondaryActions}>
-                <TouchableOpacity style={styles.linkButton} onPress={handleRestorePurchases}>
-                  <Text style={styles.linkText}>Restore Purchases</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.linkButton}
-                  onPress={() => Linking.openURL('https://portiontrack.com/terms-of-use')}
-                >
-                  <Text style={styles.linkText}>Terms of Use</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.linkButton}
-                  onPress={() => Linking.openURL('https://portiontrack.com/privacy-policy')}
-                >
-                  <Text style={styles.linkText}>Privacy Policy</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
-  );
-}
+export default PaywallScreen;
