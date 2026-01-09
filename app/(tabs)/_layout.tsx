@@ -4,47 +4,33 @@ import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 
 export default function TabLayout() {
-  // Define the tabs configuration
   const tabs: TabBarItem[] = [
     {
       name: '(home)',
       route: '/(tabs)/(home)/',
-      icon: 'checkmark.circle.fill',
-      label: 'Track',
+      icon: 'home',
+      label: 'Home',
     },
     {
       name: 'history',
       route: '/(tabs)/history',
-      icon: 'calendar',
+      icon: 'history',
       label: 'History',
     },
     {
       name: 'weight',
       route: '/(tabs)/weight',
-      icon: 'chart.line.uptrend.xyaxis',
+      icon: 'fitness-center',
       label: 'Weight',
-    },
-    {
-      name: 'faq',
-      route: '/(tabs)/faq',
-      icon: 'questionmark.circle',
-      label: 'FAQs',
-    },
-    {
-      name: 'profile',
-      route: '/(tabs)/profile',
-      icon: 'person.fill',
-      label: 'Profile',
     },
     {
       name: 'settings',
       route: '/(tabs)/settings',
-      icon: 'gearshape.fill',
+      icon: 'settings',
       label: 'Settings',
     },
   ];
 
-  // For Android and Web, use Stack navigation with custom floating tab bar
   return (
     <>
       <Stack
@@ -56,11 +42,9 @@ export default function TabLayout() {
         <Stack.Screen key="home" name="(home)" />
         <Stack.Screen key="history" name="history" />
         <Stack.Screen key="weight" name="weight" />
-        <Stack.Screen key="faq" name="faq" />
-        <Stack.Screen key="profile" name="profile" />
         <Stack.Screen key="settings" name="settings" />
       </Stack>
-      <FloatingTabBar tabs={tabs} useFullWidth={true} />
+      <FloatingTabBar tabs={tabs} />
     </>
   );
 }

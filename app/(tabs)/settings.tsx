@@ -1,152 +1,183 @@
 
-import { IconSymbol } from '@/components/IconSymbol';
-import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
+  Switch,
   Alert,
-  Linking,
+  Platform,
 } from 'react-native';
-import React from 'react';
-import { colors, commonStyles } from '@/styles/commonStyles';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    gap: 12,
-  },
-  headerTitle: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    backgroundColor: colors.surface,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    gap: 16,
-  },
-  menuItemContent: {
-    flex: 1,
-  },
-  menuItemTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { loadProfile, saveProfile, loadResetTime, saveResetTime } from '@/utils/storage';
+import { useFocusEffect } from 'expo-router';
+import { UserProfile } from '@/types';
+import PaywallScreen from '@/components/PaywallScreen';
+import { IconSymbol } from '@/components/IconSymbol';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
-  const handleCelebration = () => {
-    router.push('/celebration-settings');
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [])
+  );
+
+  const loadData = async () => {
+    const userProfile = await loadProfile();
+    setProfile(userProfile);
   };
 
-  const handleDailyReset = () => {
-    router.push('/daily-reset');
+  const handleEditProfile = () => {
+    router.push('/setup-profile');
   };
 
-  const handlePrivacyPolicy = () => {
-    Linking.openURL('https://www.portiontrack.com/privacy-policy');
+  const handleEditTargets = () => {
+    router.push('/setup-targets');
   };
 
-  const handleResetAppData = () => {
-    Alert.alert(
-      'Reset App Data',
-      'This will delete all your data including profile, daily tracking, and weight entries. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.clear();
-              Alert.alert('Success', 'All app data has been reset. Please restart the app.');
-            } catch (error) {
-              console.error('Error resetting app data:', error);
-              Alert.alert('Error', 'Failed to reset app data');
-            }
-          },
-        },
-      ]
-    );
+  const handleToggleReminder = (value: boolean) => {
+    setReminderEnabled(value);
+    Alert.alert('Reminder', value ? 'Reminder enabled' : 'Reminder disabled');
+  };
+
+  const handleUpgradeToPremium = () => {
+    setPaywallVisible(true);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={{ fontSize: 32 }}>⚙️</Text>
-        <Text style={styles.headerTitle}>Settings</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[
+          styles.contentContainer,
+          Platform.OS !== 'ios' && styles.contentContainerWithTabBar
+        ]}
+      >
+        <Text style={styles.header}>Settings</Text>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.menuItem} onPress={handleCelebration}>
-          <View style={styles.iconContainer}>
-            <IconSymbol ios_icon_name="party.popper.fill" android_material_icon_name="celebration" size={24} color="#FF6B6B" />
-          </View>
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemTitle}>Celebration</Text>
-          </View>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={24} color={colors.textSecondary} />
-        </TouchableOpacity>
+        {/* Profile Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Profile</Text>
+          <TouchableOpacity style={styles.settingRow} onPress={handleEditProfile}>
+            <Text style={styles.settingLabel}>Edit Profile</Text>
+            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="keyboard-arrow-right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingRow} onPress={handleEditTargets}>
+            <Text style={styles.settingLabel}>Edit Portion Targets</Text>
+            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="keyboard-arrow-right" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={handleDailyReset}>
-          <View style={styles.iconContainer}>
-            <IconSymbol ios_icon_name="clock.fill" android_material_icon_name="schedule" size={24} color="#FF6B6B" />
+        {/* Notifications Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Daily Reminder</Text>
+            <Switch
+              value={reminderEnabled}
+              onValueChange={handleToggleReminder}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor="#fff"
+            />
           </View>
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemTitle}>Daily Reset</Text>
-          </View>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={24} color={colors.textSecondary} />
-        </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={handlePrivacyPolicy}>
-          <View style={styles.iconContainer}>
-            <IconSymbol ios_icon_name="shield.fill" android_material_icon_name="shield" size={24} color="#FF6B6B" />
-          </View>
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemTitle}>Privacy Policy</Text>
-          </View>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={24} color={colors.textSecondary} />
-        </TouchableOpacity>
+        {/* Premium Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Premium</Text>
+          <TouchableOpacity style={styles.premiumButton} onPress={handleUpgradeToPremium}>
+            <IconSymbol ios_icon_name="star.fill" android_material_icon_name="star" size={24} color="#FFD700" />
+            <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={handleResetAppData}>
-          <View style={styles.iconContainer}>
-            <IconSymbol ios_icon_name="exclamationmark.triangle.fill" android_material_icon_name="warning" size={24} color="#FF6B6B" />
+        {/* About Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Version</Text>
+            <Text style={styles.settingValue}>1.0.0</Text>
           </View>
-          <View style={styles.menuItemContent}>
-            <Text style={styles.menuItemTitle}>Reset App Data</Text>
-          </View>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={24} color={colors.textSecondary} />
-        </TouchableOpacity>
-
-        <View style={{ height: 100 }} />
+        </View>
       </ScrollView>
-    </View>
+
+      <PaywallScreen
+        visible={paywallVisible}
+        onDismiss={() => setPaywallVisible(false)}
+        canDismiss={true}
+      />
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 20,
+  },
+  contentContainerWithTabBar: {
+    paddingBottom: 100,
+  },
+  header: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 24,
+  },
+  section: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  settingLabel: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  settingValue: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  premiumButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  premiumButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+});
