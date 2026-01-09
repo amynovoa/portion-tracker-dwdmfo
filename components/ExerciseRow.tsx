@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
+import PortionSlot from './PortionSlot';
 import { colors } from '../styles/commonStyles';
 
 interface ExerciseRowProps {
@@ -64,27 +65,20 @@ Strength/Resistance options:
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.count}>
-            {completed ? '1/1' : '0/1'}
-          </Text>
+          {/* Count is hidden for exercise as requested */}
+          <View style={styles.hiddenCount} />
         </View>
 
+        {/* Using PortionSlot component for consistency with FoodGroupRow */}
         <View style={styles.slotsContainer}>
-          <TouchableOpacity 
-            style={[
-              styles.slot,
-              completed && styles.slotCompleted,
-            ]}
+          <PortionSlot
+            completed={completed}
+            isExtra={false}
+            slotIndex={0}
+            target={1}
+            foodGroup="exercise"
             onPress={onToggle}
-            activeOpacity={0.7}
-          >
-            <Text style={[
-              styles.checkmark,
-              completed && styles.checkmarkCompleted,
-            ]}>
-              {completed ? '✓' : ''}
-            </Text>
-          </TouchableOpacity>
+          />
         </View>
       </View>
 
@@ -157,39 +151,13 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     lineHeight: 18,
   },
-  count: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    lineHeight: 32,
+  hiddenCount: {
+    // Empty view to maintain spacing where count would be
+    width: 0,
   },
   slotsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-  },
-  slot: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 4,
-    marginVertical: 4,
-  },
-  slotCompleted: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
-  },
-  checkmark: {
-    fontSize: 20,
-    color: 'transparent',
-    fontWeight: '700',
-  },
-  checkmarkCompleted: {
-    color: '#FFFFFF',
   },
 });
