@@ -1,49 +1,227 @@
 
-import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig, loadProfile, saveProfile } from '@/utils/storage';
-import { formatResetTime } from '@/utils/dailyReset';
-import { ActivityLevel, ACTIVITY_LEVELS, ACTIVITY_LEVEL_INFO } from '@/types';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import PaywallScreen from '@/components/PaywallScreen';
 import AppLogo from '@/components/AppLogo';
-import { saveCelebrationEnabled, loadCelebrationEnabled } from '@/utils/celebrationStorage';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Modal, Switch, Platform, Linking } from 'react-native';
-import { useSubscription } from '@/contexts/SubscriptionContext';
+import { clearAllData, saveResetTime, loadResetTime, ResetTimeConfig, loadProfile, saveProfile } from '@/utils/storage';
+import { saveCelebrationEnabled, loadCelebrationEnabled } from '@/utils/celebrationStorage';
+import PaywallScreen from '@/components/PaywallScreen';
+import { formatResetTime } from '@/utils/dailyReset';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
+import { ActivityLevel, ACTIVITY_LEVELS, ACTIVITY_LEVEL_INFO } from '@/types';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert, Modal, Switch, Platform, Linking } from 'react-native';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    paddingTop: Platform.OS === 'android' ? 48 : 0,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 24,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  sectionContent: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: 16,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  settingRowLast: {
+    borderBottomWidth: 0,
+  },
+  settingLabel: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  settingValue: {
+    fontSize: 16,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  activityLevelContainer: {
+    marginTop: 8,
+  },
+  activityButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    marginBottom: 8,
+  },
+  activityButtonSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  activityButtonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  activityButtonDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  resetButton: {
+    ...buttonStyles.secondary,
+    marginTop: 16,
+  },
+  resetButtonText: {
+    ...buttonStyles.secondaryText,
+    color: colors.error,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 24,
+    width: '80%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: 24,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: colors.border,
+  },
+  modalButtonConfirm: {
+    backgroundColor: colors.error,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  modalButtonTextConfirm: {
+    color: '#fff',
+  },
+  subscriptionSection: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  subscriptionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  subscriptionStatus: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: 16,
+  },
+  subscriptionButton: {
+    ...buttonStyles.primary,
+  },
+  subscriptionButtonText: {
+    ...buttonStyles.primaryText,
+  },
+});
 
 export default function SettingsScreen() {
-  const { hasActiveSubscription, isTrialActive, trialDaysRemaining } = useSubscription();
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const router = useRouter();
   const [celebrationEnabled, setCelebrationEnabled] = useState(true);
   const [resetEnabled, setResetEnabled] = useState(false);
   const [resetTime, setResetTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderatelyActive');
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    celebration: false,
+    reset: false,
+    activity: false,
+  });
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
   const [showPaywall, setShowPaywall] = useState(false);
-  const router = useRouter();
+  const { isSubscribed, isTrialAvailable, trialDaysRemaining } = useSubscription();
 
   useEffect(() => {
     loadCelebrationSettings();
-    loadResetSettings();
     loadActivityLevel();
+    loadResetSettings();
   }, []);
 
-  const loadCelebrationSettings = async () => {
+  async function loadCelebrationSettings() {
     const enabled = await loadCelebrationEnabled();
     setCelebrationEnabled(enabled);
-  };
+  }
 
-  const loadActivityLevel = async () => {
+  async function loadActivityLevel() {
     const profile = await loadProfile();
-    if (profile?.activityLevel) {
-      setActivityLevel(profile.activityLevel);
+    if (profile && profile.activityLevel) {
+      // Ensure activityLevel is a string
+      const level = typeof profile.activityLevel === 'string' ? profile.activityLevel : 'moderate';
+      setActivityLevel(level as ActivityLevel);
     }
-  };
+  }
 
-  const loadResetSettings = async () => {
+  async function loadResetSettings() {
     const config = await loadResetTime();
     if (config) {
       setResetEnabled(config.enabled);
@@ -52,51 +230,62 @@ export default function SettingsScreen() {
       date.setHours(hours, minutes, 0, 0);
       setResetTime(date);
     }
-  };
+  }
 
-  const toggleSection = (section: string) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
+  function toggleSection(section: string) {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  }
 
-  const handleToggleCelebration = async (enabled: boolean) => {
+  async function handleToggleCelebration(enabled: boolean) {
     setCelebrationEnabled(enabled);
     await saveCelebrationEnabled(enabled);
-  };
+  }
 
-  const handleToggleReset = async (enabled: boolean) => {
+  async function handleToggleReset(enabled: boolean) {
     setResetEnabled(enabled);
     const hours = resetTime.getHours().toString().padStart(2, '0');
     const minutes = resetTime.getMinutes().toString().padStart(2, '0');
-    await saveResetTime({ enabled, time: `${hours}:${minutes}` });
-  };
+    await saveResetTime({
+      enabled,
+      time: `${hours}:${minutes}`,
+    });
+  }
 
-  const handleTimeChange = (event: any, selectedDate?: Date) => {
+  function handleTimeChange(event: any) {
+    if (event.type === 'set' && event.nativeEvent?.timestamp) {
+      const selectedDate = new Date(event.nativeEvent.timestamp);
+      setResetTime(selectedDate);
+      
+      const hours = selectedDate.getHours().toString().padStart(2, '0');
+      const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
+      saveResetTime({
+        enabled: resetEnabled,
+        time: `${hours}:${minutes}`,
+      });
+    }
+    
     if (Platform.OS === 'android') {
       setShowTimePicker(false);
     }
-    if (selectedDate) {
-      setResetTime(selectedDate);
-      const hours = selectedDate.getHours().toString().padStart(2, '0');
-      const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
-      saveResetTime({ enabled: resetEnabled, time: `${hours}:${minutes}` });
-    }
-  };
+  }
 
-  const handleShowTimePicker = () => {
+  function handleShowTimePicker() {
     setShowTimePicker(true);
-  };
+  }
 
-  const handleDoneTimePicker = () => {
+  function handleDoneTimePicker() {
     setShowTimePicker(false);
-  };
+  }
 
-  const handleUpdateActivityLevel = async (newLevel: ActivityLevel) => {
+  async function handleUpdateActivityLevel(newLevel: ActivityLevel) {
     setActivityLevel(newLevel);
+    
     const profile = await loadProfile();
     if (profile) {
-      const updatedProfile = { ...profile, activityLevel: newLevel };
-      
-      const newTargets = calculateRecommendedTargets(
+      const updatedTargets = calculateRecommendedTargets(
         profile.sex,
         profile.currentWeight,
         profile.goal,
@@ -105,114 +294,80 @@ export default function SettingsScreen() {
         newLevel
       );
       
-      updatedProfile.dailyTargets = newTargets;
-      await saveProfile(updatedProfile);
+      const updatedProfile = {
+        ...profile,
+        activityLevel: newLevel,
+        targets: updatedTargets,
+      };
       
-      Alert.alert(
-        'Activity Level Updated',
-        'Your portion targets have been recalculated based on your new activity level.',
-        [{ text: 'OK' }]
-      );
+      await saveProfile(updatedProfile);
+      Alert.alert('Activity Level Updated', 'Your daily portion targets have been recalculated.');
     }
-  };
+  }
 
-  const handleResetApp = () => {
-    Alert.alert(
-      'Reset All Data',
-      'This will permanently delete all your data including profile, tracking history, and weight entries. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel', onPress: cancelReset },
-        { text: 'Reset', style: 'destructive', onPress: confirmReset },
-      ]
-    );
-  };
+  function handleResetApp() {
+    setShowResetModal(true);
+  }
 
-  const confirmReset = async () => {
+  async function confirmReset() {
     await clearAllData();
-    Alert.alert('Data Cleared', 'All app data has been reset.', [
-      { text: 'OK', onPress: () => router.replace('/(tabs)/profile') }
-    ]);
-  };
+    setShowResetModal(false);
+    Alert.alert('Reset Complete', 'All app data has been cleared. Please restart the app.');
+  }
 
-  const cancelReset = () => {
-    // User cancelled
-  };
+  function cancelReset() {
+    setShowResetModal(false);
+  }
 
-  const getActivityLevelLabel = (level: ActivityLevel): string => {
-    return ACTIVITY_LEVEL_INFO[level]?.label || 'Moderately Active';
-  };
+  function getActivityLevelLabel(level: ActivityLevel): string {
+    return ACTIVITY_LEVEL_INFO[level]?.label || level;
+  }
 
-  const handleManageSubscription = () => {
-    if (hasActiveSubscription || isTrialActive) {
-      const url = Platform.select({
-        ios: 'https://apps.apple.com/account/subscriptions',
-        android: 'https://play.google.com/store/account/subscriptions',
-        default: 'https://apps.apple.com/account/subscriptions',
-      });
-      Linking.openURL(url);
-    } else {
-      setShowPaywall(true);
+  function handleManageSubscription() {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('https://apps.apple.com/account/subscriptions');
+    } else if (Platform.OS === 'android') {
+      Linking.openURL('https://play.google.com/store/account/subscriptions');
     }
-  };
+  }
 
-  const handlePaywallDismiss = () => {
+  function handlePaywallDismiss() {
     setShowPaywall(false);
-  };
+  }
 
-  const getSubscriptionStatusText = () => {
-    if (isTrialActive) {
-      return `Free Trial (${trialDaysRemaining} days remaining)`;
+  function getSubscriptionStatusText(): string {
+    if (isSubscribed) {
+      return 'You have an active subscription';
+    } else if (isTrialAvailable) {
+      return `${trialDaysRemaining} days left in your trial`;
+    } else {
+      return 'No active subscription';
     }
-    if (hasActiveSubscription) {
-      return 'Active Subscription';
-    }
-    return 'No Active Subscription';
-  };
+  }
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
         <View style={styles.header}>
-          <AppLogo size={32} />
-          <Text style={styles.title}>Settings</Text>
+          <AppLogo size={40} />
         </View>
 
-        {/* Subscription Section */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('subscription')}
-          >
-            <View style={styles.sectionHeaderLeft}>
-              <IconSymbol ios_icon_name="creditcard" android_material_icon_name="credit-card" size={20} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Subscription</Text>
-            </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
-              size={20}
-              color={colors.textSecondary}
-              style={{
-                transform: [{ rotate: expandedSection === 'subscription' ? '90deg' : '0deg' }],
-              }}
-            />
-          </TouchableOpacity>
+        <Text style={styles.title}>Settings</Text>
 
-          {expandedSection === 'subscription' && (
-            <View style={styles.sectionContent}>
-              <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Status</Text>
-                <Text style={styles.settingValue}>{getSubscriptionStatusText()}</Text>
-              </View>
-              <TouchableOpacity
-                style={[buttonStyles.primary, { marginTop: 12 }]}
-                onPress={handleManageSubscription}
-              >
-                <Text style={buttonStyles.primaryText}>
-                  {hasActiveSubscription || isTrialActive ? 'Manage Subscription' : 'Subscribe'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+        {/* Subscription Section */}
+        <View style={styles.subscriptionSection}>
+          <Text style={styles.subscriptionTitle}>Subscription</Text>
+          <Text style={styles.subscriptionStatus}>{getSubscriptionStatusText()}</Text>
+          {isSubscribed ? (
+            <TouchableOpacity style={styles.subscriptionButton} onPress={handleManageSubscription}>
+              <Text style={styles.subscriptionButtonText}>Manage Subscription</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.subscriptionButton} onPress={() => setShowPaywall(true)}>
+              <Text style={styles.subscriptionButtonText}>
+                {isTrialAvailable ? 'Start Free Trial' : 'Subscribe Now'}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -222,58 +377,38 @@ export default function SettingsScreen() {
             style={styles.sectionHeader}
             onPress={() => toggleSection('activity')}
           >
-            <View style={styles.sectionHeaderLeft}>
-              <IconSymbol ios_icon_name="figure.run" android_material_icon_name="directions-run" size={20} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Activity Level</Text>
-            </View>
+            <Text style={styles.sectionTitle}>Activity Level</Text>
             <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
+              ios_icon_name={expandedSections.activity ? 'chevron.up' : 'chevron.down'}
+              android_material_icon_name={expandedSections.activity ? 'arrow-upward' : 'arrow-downward'}
               size={20}
-              color={colors.textSecondary}
-              style={{
-                transform: [{ rotate: expandedSection === 'activity' ? '90deg' : '0deg' }],
-              }}
+              color={colors.text}
             />
           </TouchableOpacity>
-
-          {expandedSection === 'activity' && (
+          {expandedSections.activity && (
             <View style={styles.sectionContent}>
-              <Text style={styles.sectionDescription}>
-                Your activity level affects your portion targets. Update this if your exercise routine changes.
+              <Text style={styles.settingLabel}>
+                Current: {getActivityLevelLabel(activityLevel)}
               </Text>
-              {ACTIVITY_LEVELS.map((level) => (
-                <TouchableOpacity
-                  key={level}
-                  style={[
-                    styles.activityOption,
-                    activityLevel === level && styles.activityOptionSelected,
-                  ]}
-                  onPress={() => handleUpdateActivityLevel(level)}
-                >
-                  <View style={styles.activityOptionContent}>
-                    <Text
-                      style={[
-                        styles.activityOptionLabel,
-                        activityLevel === level && styles.activityOptionLabelSelected,
-                      ]}
-                    >
+              <View style={styles.activityLevelContainer}>
+                {ACTIVITY_LEVELS.map((level) => (
+                  <TouchableOpacity
+                    key={level}
+                    style={[
+                      styles.activityButton,
+                      activityLevel === level && styles.activityButtonSelected,
+                    ]}
+                    onPress={() => handleUpdateActivityLevel(level)}
+                  >
+                    <Text style={styles.activityButtonLabel}>
                       {ACTIVITY_LEVEL_INFO[level].label}
                     </Text>
-                    <Text
-                      style={[
-                        styles.activityOptionDescription,
-                        activityLevel === level && styles.activityOptionDescriptionSelected,
-                      ]}
-                    >
+                    <Text style={styles.activityButtonDescription}>
                       {ACTIVITY_LEVEL_INFO[level].description}
                     </Text>
-                  </View>
-                  {activityLevel === level && (
-                    <IconSymbol ios_icon_name="checkmark.circle.fill" android_material_icon_name="check-circle" size={24} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -284,35 +419,25 @@ export default function SettingsScreen() {
             style={styles.sectionHeader}
             onPress={() => toggleSection('celebration')}
           >
-            <View style={styles.sectionHeaderLeft}>
-              <IconSymbol ios_icon_name="party.popper" android_material_icon_name="celebration" size={20} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Celebration</Text>
-            </View>
+            <Text style={styles.sectionTitle}>Celebrations</Text>
             <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
+              ios_icon_name={expandedSections.celebration ? 'chevron.up' : 'chevron.down'}
+              android_material_icon_name={expandedSections.celebration ? 'arrow-upward' : 'arrow-downward'}
               size={20}
-              color={colors.textSecondary}
-              style={{
-                transform: [{ rotate: expandedSection === 'celebration' ? '90deg' : '0deg' }],
-              }}
+              color={colors.text}
             />
           </TouchableOpacity>
-
-          {expandedSection === 'celebration' && (
+          {expandedSections.celebration && (
             <View style={styles.sectionContent}>
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Show daily celebration</Text>
+                <Text style={styles.settingLabel}>Daily Completion Celebration</Text>
                 <Switch
                   value={celebrationEnabled}
                   onValueChange={handleToggleCelebration}
-                  trackColor={{ false: colors.border, true: colors.primaryLight }}
-                  thumbColor={celebrationEnabled ? colors.primary : colors.textSecondary}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.surface}
                 />
               </View>
-              <Text style={styles.settingDescription}>
-                Display a celebration message when you complete all your daily targets
-              </Text>
             </View>
           )}
         </View>
@@ -323,332 +448,111 @@ export default function SettingsScreen() {
             style={styles.sectionHeader}
             onPress={() => toggleSection('reset')}
           >
-            <View style={styles.sectionHeaderLeft}>
-              <IconSymbol ios_icon_name="clock" android_material_icon_name="schedule" size={20} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Daily Reset</Text>
-            </View>
+            <Text style={styles.sectionTitle}>Daily Reset</Text>
             <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
+              ios_icon_name={expandedSections.reset ? 'chevron.up' : 'chevron.down'}
+              android_material_icon_name={expandedSections.reset ? 'arrow-upward' : 'arrow-downward'}
               size={20}
-              color={colors.textSecondary}
-              style={{
-                transform: [{ rotate: expandedSection === 'reset' ? '90deg' : '0deg' }],
-              }}
+              color={colors.text}
             />
           </TouchableOpacity>
-
-          {expandedSection === 'reset' && (
+          {expandedSections.reset && (
             <View style={styles.sectionContent}>
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Custom reset time</Text>
+                <Text style={styles.settingLabel}>Custom Reset Time</Text>
                 <Switch
                   value={resetEnabled}
                   onValueChange={handleToggleReset}
-                  trackColor={{ false: colors.border, true: colors.primaryLight }}
-                  thumbColor={resetEnabled ? colors.primary : colors.textSecondary}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.surface}
                 />
               </View>
-              <Text style={styles.settingDescription}>
-                {resetEnabled
-                  ? 'Your daily tracking resets at your chosen time'
-                  : 'Your daily tracking resets at midnight'}
-              </Text>
-
               {resetEnabled && (
-                <View style={styles.timePickerContainer}>
-                  <Text style={styles.timeLabel}>Reset Time:</Text>
-                  {Platform.OS === 'ios' ? (
-                    <>
-                      <TouchableOpacity
-                        style={styles.timeButton}
-                        onPress={handleShowTimePicker}
-                      >
-                        <Text style={styles.timeButtonText}>
-                          {formatResetTime(resetTime)}
-                        </Text>
-                      </TouchableOpacity>
-                      {showTimePicker && (
-                        <Modal
-                          transparent
-                          animationType="slide"
-                          visible={showTimePicker}
-                          onRequestClose={handleDoneTimePicker}
-                        >
-                          <View style={styles.modalOverlay}>
-                            <View style={styles.modalContent}>
-                              <View style={styles.modalHeader}>
-                                <TouchableOpacity onPress={handleDoneTimePicker}>
-                                  <Text style={styles.modalDoneButton}>Done</Text>
-                                </TouchableOpacity>
-                              </View>
-                              <DateTimePicker
-                                value={resetTime}
-                                mode="time"
-                                display="spinner"
-                                onChange={handleTimeChange}
-                                style={styles.timePicker}
-                              />
-                            </View>
-                          </View>
-                        </Modal>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <TouchableOpacity
-                        style={styles.timeButton}
-                        onPress={handleShowTimePicker}
-                      >
-                        <Text style={styles.timeButtonText}>
-                          {formatResetTime(resetTime)}
-                        </Text>
-                      </TouchableOpacity>
-                      {showTimePicker && (
-                        <DateTimePicker
-                          value={resetTime}
-                          mode="time"
-                          display="default"
-                          onChange={handleTimeChange}
-                        />
-                      )}
-                    </>
-                  )}
+                <View style={[styles.settingRow, styles.settingRowLast]}>
+                  <Text style={styles.settingLabel}>Reset Time</Text>
+                  <TouchableOpacity onPress={handleShowTimePicker}>
+                    <Text style={styles.settingValue}>{formatResetTime(resetTime)}</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
           )}
         </View>
 
-        {/* Privacy Policy Section */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => Linking.openURL('https://portiontrack.com/privacy-policy')}
-          >
-            <View style={styles.sectionHeaderLeft}>
-              <IconSymbol ios_icon_name="lock.shield" android_material_icon_name="security" size={20} color={colors.primary} />
-              <Text style={styles.sectionTitle}>Privacy Policy</Text>
-            </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
-              size={20}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </View>
+        {/* Reset App Data */}
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetApp}>
+          <Text style={styles.resetButtonText}>Reset All App Data</Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* Reset App Data Section */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => toggleSection('resetAppData')}
-          >
-            <View style={styles.sectionHeaderLeft}>
-              <IconSymbol ios_icon_name="exclamationmark.triangle" android_material_icon_name="warning" size={20} color={colors.error} />
-              <Text style={styles.sectionTitle}>Reset App Data</Text>
+      {/* Time Picker Modal */}
+      {showTimePicker && (
+        <Modal
+          visible={showTimePicker}
+          transparent
+          animationType="fade"
+          onRequestClose={handleDoneTimePicker}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <DateTimePicker
+                value={resetTime}
+                mode="time"
+                is24Hour={false}
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleTimeChange}
+              />
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity style={buttonStyles.primary} onPress={handleDoneTimePicker}>
+                  <Text style={buttonStyles.primaryText}>Done</Text>
+                </TouchableOpacity>
+              )}
             </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
-              size={20}
-              color={colors.textSecondary}
-              style={{
-                transform: [{ rotate: expandedSection === 'resetAppData' ? '90deg' : '0deg' }],
-              }}
-            />
-          </TouchableOpacity>
+          </View>
+        </Modal>
+      )}
 
-          {expandedSection === 'resetAppData' && (
-            <View style={styles.sectionContent}>
-              <Text style={styles.settingDescription}>
-                This will permanently delete all your data. This action cannot be undone.
-              </Text>
+      {/* Reset Confirmation Modal */}
+      <Modal
+        visible={showResetModal}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelReset}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Reset All Data?</Text>
+            <Text style={styles.modalMessage}>
+              This will permanently delete all your profile data, portion tracking history, and weight entries. This action cannot be undone.
+            </Text>
+            <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[buttonStyles.primary, styles.dangerButton]}
-                onPress={handleResetApp}
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={cancelReset}
               >
-                <Text style={buttonStyles.primaryText}>Reset All Data</Text>
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonConfirm]}
+                onPress={confirmReset}
+              >
+                <Text style={[styles.modalButtonText, styles.modalButtonTextConfirm]}>
+                  Reset
+                </Text>
               </TouchableOpacity>
             </View>
-          )}
+          </View>
         </View>
-      </ScrollView>
+      </Modal>
 
+      {/* Paywall */}
       <PaywallScreen
         visible={showPaywall}
         onDismiss={handlePaywallDismiss}
-        isTrialAvailable={!isTrialActive && !hasActiveSubscription}
+        isTrialAvailable={isTrialAvailable}
         trialDaysRemaining={trialDaysRemaining}
         canDismiss={true}
       />
-    </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    gap: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  section: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-    backgroundColor: colors.cardBackground,
-    borderRadius: 12,
-    overflow: 'hidden',
-    ...commonStyles.shadow,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  sectionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  sectionContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: colors.text,
-  },
-  settingValue: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  settingDescription: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 4,
-    lineHeight: 18,
-  },
-  activityOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 8,
-  },
-  activityOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-  },
-  activityOptionContent: {
-    flex: 1,
-  },
-  activityOptionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  activityOptionLabelSelected: {
-    color: colors.primary,
-  },
-  activityOptionDescription: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  activityOptionDescriptionSelected: {
-    color: colors.primary,
-  },
-  timePickerContainer: {
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  timeLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  timeButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  timeButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  timePicker: {
-    width: '100%',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: colors.cardBackground,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 34,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalDoneButton: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  dangerButton: {
-    backgroundColor: colors.error,
-    marginTop: 12,
-  },
-});

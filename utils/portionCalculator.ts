@@ -7,7 +7,7 @@ export function classifySize(sex: Sex, weight: number): SizeCategory {
     if (weight < 150) return 'small';
     if (weight < 190) return 'medium';
     return 'large';
-  } else { // male or prefer_not_to_say
+  } else { // male or other
     if (weight < 170) return 'small';
     if (weight < 210) return 'medium';
     return 'large';
@@ -54,7 +54,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         alcohol: 0,
       };
     }
-  } else { // male or prefer_not_to_say
+  } else { // male or other
     if (goal === 'lose') {
       return {
         protein: 5,
@@ -186,35 +186,35 @@ export function applyActivityAdjustment(
       console.log('Sedentary: No adjustment');
       break;
       
-    case 'lightlyActive':
+    case 'light':
       // Add 1 Whole Grain
       adjusted.wholeGrains += 1;
-      console.log('Lightly Active: +1 Whole Grain');
+      console.log('Light: +1 Whole Grain');
       break;
       
-    case 'moderatelyActive':
+    case 'moderate':
       // Add 1 Whole Grain
       adjusted.wholeGrains += 1;
-      console.log('Moderately Active: +1 Whole Grain');
+      console.log('Moderate: +1 Whole Grain');
       break;
       
-    case 'veryActive':
+    case 'active':
       // Add 2 Whole Grains and 1 Protein
       adjusted.wholeGrains += 2;
       adjusted.protein += 1;
-      console.log('Very Active: +2 Whole Grains, +1 Protein');
+      console.log('Active: +2 Whole Grains, +1 Protein');
       break;
       
-    case 'extremelyActive':
+    case 'veryActive':
       // Add 3 Whole Grains and 1 Protein
       adjusted.wholeGrains += 3;
       adjusted.protein += 1;
-      console.log('Extremely Active: +3 Whole Grains, +1 Protein');
+      console.log('Very Active: +3 Whole Grains, +1 Protein');
       break;
   }
   
   // Goal-based protein priority check
-  if (goal === 'build' && (activityLevel === 'veryActive' || activityLevel === 'extremelyActive')) {
+  if (goal === 'build' && (activityLevel === 'active' || activityLevel === 'veryActive')) {
     console.log('Build goal + high activity: Protein priority ensured');
   }
   

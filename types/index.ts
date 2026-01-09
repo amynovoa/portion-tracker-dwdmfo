@@ -1,8 +1,8 @@
 
-export type Sex = 'male' | 'female' | 'prefer_not_to_say';
+export type Sex = 'male' | 'female' | 'other';
 export type Goal = 'lose' | 'maintain' | 'build';
 export type SizeCategory = 'small' | 'medium' | 'large';
-export type ActivityLevel = 'sedentary' | 'lightlyActive' | 'moderatelyActive' | 'veryActive' | 'extremelyActive';
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive';
 
 export interface UserProfile {
   sex: Sex;
@@ -12,7 +12,7 @@ export interface UserProfile {
   includeAlcohol: boolean;
   alcoholServings: number;
   activityLevel: ActivityLevel;
-  dailyTargets: PortionTargets;
+  targets: PortionTargets;
 }
 
 export interface PortionTargets {
@@ -57,10 +57,10 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
 // Activity levels as simple array of strings for easy mapping
 export const ACTIVITY_LEVELS: ActivityLevel[] = [
   'sedentary',
-  'lightlyActive',
-  'moderatelyActive',
+  'light',
+  'moderate',
+  'active',
   'veryActive',
-  'extremelyActive',
 ];
 
 // Activity level details for display
@@ -69,20 +69,20 @@ export const ACTIVITY_LEVEL_INFO: Record<ActivityLevel, { label: string; descrip
     label: 'Sedentary',
     description: 'Little to no exercise',
   },
-  lightlyActive: {
-    label: 'Lightly Active',
+  light: {
+    label: 'Light',
     description: 'Light workouts 1-3x/week or ~6k-9k steps/day',
   },
-  moderatelyActive: {
-    label: 'Moderately Active',
+  moderate: {
+    label: 'Moderate',
     description: 'Workouts 3-5x/week or ~9k-12k steps/day',
+  },
+  active: {
+    label: 'Active',
+    description: 'Hard training most days or ~12k-15k+ steps/day',
   },
   veryActive: {
     label: 'Very Active',
-    description: 'Hard training most days or ~12k-15k+ steps/day',
-  },
-  extremelyActive: {
-    label: 'Extremely Active',
     description: 'Very high daily activity or double sessions',
   },
 };
