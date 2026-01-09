@@ -24,7 +24,6 @@ export default function SetupTargetsScreen() {
     veggies: 4,
     fruits: 2,
     wholeGrains: 2,
-    legumes: 2,
     nutsSeeds: 2,
     fats: 2,
     water: 8,
@@ -86,11 +85,6 @@ export default function SetupTargetsScreen() {
             label="🌾 Whole Grains"
             value={targets.wholeGrains}
             onChange={(val) => updateTarget('wholeGrains', val)}
-          />
-          <TargetRow
-            label="🫘 Legumes"
-            value={targets.legumes}
-            onChange={(val) => updateTarget('legumes', val)}
           />
           <TargetRow
             label="🥜 Nuts & Seeds"

@@ -23,7 +23,6 @@ export interface PortionTargets {
   water: number;
   nutsSeeds: number;
   fats: number;
-  legumes: number;
 }
 
 // Daily portions - simplified (no S/M/L serving sizes)
@@ -45,7 +44,6 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'veggies', label: 'Vegetables', icon: '🥦' },
   { key: 'fruits', label: 'Fruit', icon: '🍎' },
   { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
-  { key: 'legumes', label: 'Legumes', icon: '🫘' },
   { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
   { key: 'fats', label: 'Fats', icon: '🥑' },
   { key: 'water', label: 'Water', icon: '💧' },

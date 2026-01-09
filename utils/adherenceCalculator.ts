@@ -22,7 +22,6 @@ export function calculateDailyAdherence(
       'veggies',
       'fruits',
       'wholeGrains',
-      'legumes',
       'nutsSeeds',
       'fats',
       'water',

@@ -21,7 +21,6 @@ export function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
     veggies: 4,
     fruits: 2,
     wholeGrains: 2,
-    legumes: 2,
     nutsSeeds: 2,
     fats: 2,
     water: 8,
@@ -38,7 +37,6 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
     adjusted.veggies = Math.max(3, adjusted.veggies - 1);
     adjusted.fruits = Math.max(2, adjusted.fruits);
     adjusted.wholeGrains = Math.max(1, adjusted.wholeGrains - 1);
-    adjusted.legumes = Math.max(1, adjusted.legumes - 1);
     adjusted.nutsSeeds = Math.max(1, adjusted.nutsSeeds - 1);
     adjusted.fats = Math.max(1, adjusted.fats - 1);
     adjusted.water = Math.max(7, adjusted.water - 1);
@@ -47,7 +45,6 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
     adjusted.veggies = Math.min(6, adjusted.veggies + 1);
     adjusted.fruits = Math.min(4, adjusted.fruits + 1);
     adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
-    adjusted.legumes = Math.min(3, adjusted.legumes + 1);
     adjusted.nutsSeeds = Math.min(3, adjusted.nutsSeeds + 1);
     adjusted.fats = Math.min(3, adjusted.fats + 1);
     adjusted.water = Math.min(12, adjusted.water + 2);
@@ -73,17 +70,14 @@ export function applyActivityAdjustment(
     case 'moderate':
       adjusted.protein = Math.min(6, adjusted.protein + 1);
       adjusted.wholeGrains = Math.min(5, adjusted.wholeGrains + 1);
-      adjusted.legumes = Math.min(4, adjusted.legumes + 1);
       break;
     case 'active':
       adjusted.protein = Math.min(6, adjusted.protein + 2);
       adjusted.wholeGrains = Math.min(6, adjusted.wholeGrains + 2);
-      adjusted.legumes = Math.min(5, adjusted.legumes + 1);
       break;
     case 'veryActive':
       adjusted.protein = Math.min(7, adjusted.protein + 2);
       adjusted.wholeGrains = Math.min(7, adjusted.wholeGrains + 3);
-      adjusted.legumes = Math.min(5, adjusted.legumes + 2);
       adjusted.nutsSeeds = Math.min(4, adjusted.nutsSeeds + 1);
       break;
   }

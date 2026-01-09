@@ -106,20 +106,16 @@ export default function ProfileScreen() {
             <Text style={styles.value}>{profile.portionTargets.wholeGrains}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Dairy:</Text>
-            <Text style={styles.value}>{profile.portionTargets.dairy}</Text>
-          </View>
-          <View style={styles.infoRow}>
             <Text style={styles.label}>Nuts & Seeds:</Text>
             <Text style={styles.value}>{profile.portionTargets.nutsSeeds}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Water:</Text>
-            <Text style={styles.value}>{profile.portionTargets.water}</Text>
+            <Text style={styles.label}>Fats:</Text>
+            <Text style={styles.value}>{profile.portionTargets.fats}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Exercise:</Text>
-            <Text style={styles.value}>{profile.portionTargets.exercise}</Text>
+            <Text style={styles.label}>Water:</Text>
+            <Text style={styles.value}>{profile.portionTargets.water}</Text>
           </View>
         </View>
 

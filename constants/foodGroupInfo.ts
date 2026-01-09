@@ -97,31 +97,6 @@ Starchy vegetables (count as grains):
 - Sweet potatoes, white potatoes, corn, peas`,
     portionSize: 'About ½ cup cooked grains, 1 slice bread, or 1 small potato',
   },
-  legumes: {
-    benefit: `Legumes are an excellent source of plant-based protein, fiber, and complex carbohydrates. They support digestive health, help stabilize blood sugar, and keep you feeling full.
-
-They're budget-friendly and versatile in many dishes.
-
-Great for both vegetarians and meat-eaters looking to diversify protein sources.`,
-    avoid: `Avoid canned legumes with added sugar or excessive sodium (or rinse them well).
-
-Limit refried beans made with lard or excess oil.
-
-Watch portion sizes if you're sensitive to fiber or have digestive issues.`,
-    examples: `Common legumes:
-- Black beans, kidney beans, pinto beans
-- Chickpeas (garbanzo beans)
-- Lentils (red, green, brown)
-- Split peas
-- White beans (cannellini, navy)
-
-Prepared dishes:
-- Hummus
-- Bean soups and stews
-- Lentil curry
-- Three-bean salad`,
-    portionSize: 'About ½ cup cooked legumes',
-  },
   nutsSeeds: {
     benefit: `Nuts and seeds provide healthy fats, protein, fiber, and important minerals like magnesium and zinc.
 
