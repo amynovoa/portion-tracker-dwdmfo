@@ -1,5 +1,5 @@
 
-export type Sex = 'male' | 'female' | 'other';
+export type Sex = 'male' | 'female' | 'prefer_not_to_say';
 export type Goal = 'lose' | 'maintain' | 'build';
 export type SizeCategory = 'small' | 'medium' | 'large';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive';

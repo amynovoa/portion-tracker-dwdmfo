@@ -7,7 +7,7 @@ export function classifySize(sex: Sex, weight: number): SizeCategory {
     if (weight < 150) return 'small';
     if (weight < 190) return 'medium';
     return 'large';
-  } else { // male or other
+  } else { // male, prefer_not_to_say, or other
     if (weight < 170) return 'small';
     if (weight < 210) return 'medium';
     return 'large';
@@ -54,7 +54,7 @@ function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
         alcohol: 0,
       };
     }
-  } else { // male or other
+  } else { // male, prefer_not_to_say, or other
     if (goal === 'lose') {
       return {
         protein: 5,
