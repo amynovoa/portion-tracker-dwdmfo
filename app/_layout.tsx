@@ -1,6 +1,6 @@
 
 import "react-native-reanimated";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -17,11 +17,12 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { loadProfile } from "@/utils/storage";
 
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "welcome",
 };
 
 export default function RootLayout() {
@@ -30,11 +31,41 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    async function checkProfile() {
+      try {
+        const profile = await loadProfile();
+        console.log('Profile check:', profile ? 'Profile exists' : 'No profile found');
+        
+        if (loaded) {
+          await SplashScreen.hideAsync();
+          
+          // Navigate based on profile existence
+          if (profile && profile.portionTargets) {
+            // User has completed setup, go to main app
+            console.log('Navigating to main app (tabs)');
+            router.replace('/(tabs)/(home)');
+          } else {
+            // No profile, show welcome screen
+            console.log('Navigating to welcome screen');
+            router.replace('/welcome');
+          }
+          
+          setIsCheckingProfile(false);
+        }
+      } catch (error) {
+        console.error('Error checking profile:', error);
+        if (loaded) {
+          await SplashScreen.hideAsync();
+          router.replace('/welcome');
+          setIsCheckingProfile(false);
+        }
+      }
     }
+
+    checkProfile();
   }, [loaded]);
 
   React.useEffect(() => {
@@ -49,7 +80,7 @@ export default function RootLayout() {
     }
   }, [networkState.isConnected, networkState.isInternetReachable]);
 
-  if (!loaded) {
+  if (!loaded || isCheckingProfile) {
     return null;
   }
 
