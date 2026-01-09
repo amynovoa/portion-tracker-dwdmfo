@@ -125,7 +125,7 @@ export default function SetupProfileScreen() {
           </View>
           {includeAlcohol && (
             <>
-              <Text style={styles.label}>Daily Alcohol Servings</Text>
+              <Text style={styles.subLabel}>Daily Alcohol Servings</Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={alcoholServings}
@@ -173,6 +173,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginBottom: 8,
+  },
+  subLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+    marginTop: 12,
   },
   input: {
     backgroundColor: colors.surface,

@@ -38,10 +38,10 @@ export default function ProfileScreen() {
   const getActivityLabel = (level: string) => {
     switch (level) {
       case 'sedentary': return 'Sedentary';
-      case 'light': return 'Lightly Active';
-      case 'moderate': return 'Moderately Active';
-      case 'very': return 'Very Active';
-      case 'extra': return 'Extra Active';
+      case 'light': return 'Light';
+      case 'moderate': return 'Moderate';
+      case 'active': return 'Active';
+      case 'veryActive': return 'Very Active';
       default: return level;
     }
   };
@@ -74,23 +74,27 @@ export default function ProfileScreen() {
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Current Weight</Text>
-            <Text style={styles.value}>{profile.weight} lbs</Text>
+            <Text style={styles.value}>{profile.currentWeight} lbs</Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Goal Weight</Text>
-            <Text style={styles.value}>{profile.goalWeight} lbs</Text>
-          </View>
+          {profile.goalWeight && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Goal Weight</Text>
+              <Text style={styles.value}>{profile.goalWeight} lbs</Text>
+            </View>
+          )}
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Goal</Text>
             <Text style={styles.value}>{getGoalLabel(profile.goal)}</Text>
           </View>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Activity Level</Text>
-            <Text style={styles.value}>{getActivityLabel(profile.activityLevel)}</Text>
-          </View>
+          {profile.activityLevel && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Activity Level</Text>
+              <Text style={styles.value}>{getActivityLabel(profile.activityLevel)}</Text>
+            </View>
+          )}
 
           {profile.includeAlcohol && (
             <View style={styles.infoRow}>
@@ -104,34 +108,46 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Daily Portion Targets</Text>
           
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Protein</Text>
+            <Text style={styles.label}>🥩 Protein</Text>
             <Text style={styles.value}>{profile.portionTargets.protein}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Vegetables</Text>
-            <Text style={styles.value}>{profile.portionTargets.vegetables}</Text>
+            <Text style={styles.label}>🥦 Vegetables</Text>
+            <Text style={styles.value}>{profile.portionTargets.veggies}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Fruit</Text>
+            <Text style={styles.label}>🍎 Fruit</Text>
             <Text style={styles.value}>{profile.portionTargets.fruit}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Healthy Carbs</Text>
-            <Text style={styles.value}>{profile.portionTargets.healthyCarbs}</Text>
+            <Text style={styles.label}>🌾 Whole Grains</Text>
+            <Text style={styles.value}>{profile.portionTargets.wholeGrains}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Fats</Text>
+            <Text style={styles.label}>🥑 Fats</Text>
             <Text style={styles.value}>{profile.portionTargets.fats}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Nuts & Seeds</Text>
-            <Text style={styles.value}>{profile.portionTargets.nutsAndSeeds}</Text>
+            <Text style={styles.label}>🥜 Nuts & Seeds</Text>
+            <Text style={styles.value}>{profile.portionTargets.nutsSeeds}</Text>
           </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>💧 Water</Text>
+            <Text style={styles.value}>{profile.portionTargets.water}</Text>
+          </View>
+
+          {profile.includeAlcohol && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>🍷 Alcohol</Text>
+              <Text style={styles.value}>{profile.portionTargets.alcohol}</Text>
+            </View>
+          )}
         </View>
 
         <TouchableOpacity style={buttonStyles.primaryButton} onPress={handleEditProfile}>

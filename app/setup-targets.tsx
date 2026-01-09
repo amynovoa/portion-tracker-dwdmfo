@@ -65,7 +65,12 @@ export default function SetupTargetsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>👍 You Can Customize These:</Text>
+        <Text style={styles.tip}>💡 Tip</Text>
+        <Text style={styles.tipText}>
+          These targets are based on your profile. You can adjust them anytime.
+        </Text>
+
+        <Text style={styles.title}>Portions</Text>
 
         <View style={styles.targetsList}>
           <TargetRow
@@ -103,21 +108,17 @@ export default function SetupTargetsScreen() {
             value={targets.water}
             onChange={(val) => updateTarget('water', val)}
           />
-          <TargetRow
-            label="🍷 Alcohol"
-            value={targets.alcohol}
-            onChange={(val) => updateTarget('alcohol', val)}
-          />
+          {includeAlcohol && (
+            <TargetRow
+              label="🍷 Alcohol"
+              value={targets.alcohol}
+              onChange={(val) => updateTarget('alcohol', val)}
+            />
+          )}
         </View>
 
-        <View style={styles.callout}>
-          <Text style={styles.calloutText}>
-            💡 These targets are based on your profile. You can adjust them anytime in Settings.
-          </Text>
-        </View>
-
-        <TouchableOpacity style={buttonStyles.primary} onPress={handleSave}>
-          <Text style={buttonStyles.primaryText}>Save & Start Tracking</Text>
+        <TouchableOpacity style={buttonStyles.primaryButton} onPress={handleSave}>
+          <Text style={buttonStyles.primaryButtonText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -138,7 +139,6 @@ function TargetRow({ label, value, onChange }: { label: string; value: number; o
             <Picker.Item key={num} label={`${num}`} value={num} />
           ))}
         </Picker>
-        <Text style={styles.portionsText}>portions</Text>
       </View>
     </View>
   );
@@ -151,52 +151,52 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: 40,
+  },
+  tip: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  tipText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 24,
+    lineHeight: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 24,
-    textAlign: 'center',
+    marginBottom: 20,
   },
   targetsList: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   targetRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   targetLabel: {
-    fontSize: 18,
+    fontSize: 17,
     color: colors.text,
     flex: 1,
   },
   targetPickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    minWidth: 80,
   },
   targetPicker: {
+    height: 44,
     width: 80,
-    height: 40,
-  },
-  portionsText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  callout: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  calloutText: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 20,
   },
 });

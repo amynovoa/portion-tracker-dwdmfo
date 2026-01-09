@@ -16,14 +16,29 @@ export const colors = {
   border: '#E0E0E0',
   error: '#C94A3D',
   success: '#C8D647',
+  white: '#FFFFFF',
+  surface: '#F8F8F8',
 };
 
 export const buttonStyles = StyleSheet.create({
+  primaryButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   primary: {
     backgroundColor: colors.primary,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
