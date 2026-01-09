@@ -18,6 +18,7 @@ export interface ResetTimeConfig {
 // Profile functions
 export async function saveProfile(profile: UserProfile): Promise<void> {
   try {
+    console.log('Saving profile:', profile);
     await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
   } catch (error) {
     console.error('Error saving profile:', error);
@@ -27,8 +28,11 @@ export async function saveProfile(profile: UserProfile): Promise<void> {
 export async function loadProfile(): Promise<UserProfile | null> {
   try {
     const data = await AsyncStorage.getItem(PROFILE_KEY);
+    console.log('Raw profile data from storage:', data);
     if (data) {
-      return JSON.parse(data);
+      const profile = JSON.parse(data);
+      console.log('Parsed profile:', profile);
+      return profile;
     }
   } catch (error) {
     console.error('Error loading profile:', error);
@@ -40,16 +44,19 @@ export async function loadProfile(): Promise<UserProfile | null> {
 export async function saveDailyPortions(dailyPortions: DailyPortions): Promise<void> {
   try {
     const key = `${DAILY_PORTIONS_PREFIX}${dailyPortions.date}`;
+    console.log('Saving daily portions:', key, dailyPortions);
     await AsyncStorage.setItem(key, JSON.stringify(dailyPortions));
   } catch (error) {
     console.error('Error saving daily portions:', error);
   }
 }
 
-export async function loadDailyPortions(date: string): Promise<DailyPortions | null> {
+export async function loadDailyPortions(date: string): Promise<DailyPortions> {
   try {
     const key = `${DAILY_PORTIONS_PREFIX}${date}`;
     const data = await AsyncStorage.getItem(key);
+    console.log('Loading daily portions for', date, ':', data);
+    
     if (data) {
       const parsed = JSON.parse(data);
       
@@ -65,7 +72,7 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
             water: parsed.portions.water || 0,
             nutsSeeds: parsed.portions.nutsSeeds || 0,
             fats: parsed.portions.fats || 0,
-            legumes: parsed.portions.legumes || 0,
+            exercise: parsed.portions.exercise || 0,
           },
         };
       }
@@ -73,7 +80,22 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions | n
   } catch (error) {
     console.error('Error loading daily portions:', error);
   }
-  return null;
+  
+  // Return default empty structure if no data found
+  console.log('No data found, returning default structure for', date);
+  return {
+    date,
+    portions: {
+      wholeGrains: 0,
+      protein: 0,
+      veggies: 0,
+      fruits: 0,
+      water: 0,
+      nutsSeeds: 0,
+      fats: 0,
+      exercise: 0,
+    },
+  };
 }
 
 export async function getAllDailyPortions(): Promise<DailyPortions[]> {
@@ -99,7 +121,7 @@ export async function getAllDailyPortions(): Promise<DailyPortions[]> {
                   water: parsed.portions.water || 0,
                   nutsSeeds: parsed.portions.nutsSeeds || 0,
                   fats: parsed.portions.fats || 0,
-                  legumes: parsed.portions.legumes || 0,
+                  exercise: parsed.portions.exercise || 0,
                 },
               } as DailyPortions;
             }
