@@ -7,9 +7,11 @@ export const colors = {
   text: '#333333',
   textSecondary: '#7A7A7A',
   primary: '#C94A3D',
+  primaryLight: '#FFE5E3',
   secondary: '#C8D647',
   accent: '#7A7A7A',
   card: '#FFFFFF',
+  cardBackground: '#F8F8F8',
   highlight: '#FFF5F4',
   border: '#E0E0E0',
   error: '#C94A3D',
@@ -24,6 +26,11 @@ export const buttonStyles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  primaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   secondary: {
     backgroundColor: colors.secondary,
@@ -91,6 +98,13 @@ export const commonStyles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     marginVertical: 8,
+  },
+  button: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
     fontSize: 16,

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { colors } from '@/styles/commonStyles';
 
@@ -27,9 +27,16 @@ const PortionDropdown: React.FC<PortionDropdownProps> = ({
           selectedValue={value}
           onValueChange={(itemValue) => onValueChange(Number(itemValue))}
           style={styles.picker}
+          itemStyle={styles.pickerItem}
+          dropdownIconColor={colors.text}
         >
           {options.map((num) => (
-            <Picker.Item key={num} label={String(num)} value={num} />
+            <Picker.Item 
+              key={num} 
+              label={String(num)} 
+              value={num}
+              color={colors.text}
+            />
           ))}
         </Picker>
       </View>
@@ -46,6 +53,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    backgroundColor: colors.card,
   },
   label: {
     fontSize: 16,
@@ -53,13 +61,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pickerContainer: {
-    width: 80,
-    height: 40,
+    width: 100,
+    height: 44,
     justifyContent: 'center',
+    backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.background,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   picker: {
     width: '100%',
     height: '100%',
+    color: colors.text,
+  },
+  pickerItem: {
+    fontSize: 18,
+    color: colors.text,
+    height: 120,
   },
 });
 
