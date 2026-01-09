@@ -69,6 +69,13 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   
+  helperText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  
   calculateButton: {
     ...buttonStyles.primary,
     marginTop: 8,
@@ -198,7 +205,7 @@ export default function ProfileScreen() {
       goal,
       activityLevel,
       includeAlcohol,
-      alcoholServings: includeAlcohol ? parseInt(alcoholServings) : undefined,
+      alcoholServings: parseInt(alcoholServings) || 2,
       portionTargets: calculatedTargets,
     };
     
@@ -310,10 +317,17 @@ export default function ProfileScreen() {
         </View>
       </View>
       
-      {/* Alcohol */}
+      {/* Alcohol - Always show servings input */}
       <View style={styles.section}>
         <View style={styles.switchRow}>
-          <Text style={styles.label}>Include Alcohol in Plan</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>Include Alcohol in Plan</Text>
+            <Text style={[styles.helperText, { marginTop: 4 }]}>
+              {includeAlcohol 
+                ? 'Alcohol will affect your portion calculations' 
+                : 'Alcohol won\'t affect portions, but you can still set your goal'}
+            </Text>
+          </View>
           <Switch
             value={includeAlcohol}
             onValueChange={setIncludeAlcohol}
@@ -322,19 +336,20 @@ export default function ProfileScreen() {
           />
         </View>
         
-        {includeAlcohol && (
-          <View style={{ marginTop: 12 }}>
-            <Text style={styles.label}>Daily Alcohol Servings (max 2 recommended)</Text>
-            <TextInput
-              style={styles.input}
-              value={alcoholServings}
-              onChangeText={setAlcoholServings}
-              keyboardType="numeric"
-              placeholder="2"
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
-        )}
+        <View style={{ marginTop: 12 }}>
+          <Text style={styles.label}>Daily Alcohol Servings (max 2 recommended)</Text>
+          <TextInput
+            style={styles.input}
+            value={alcoholServings}
+            onChangeText={setAlcoholServings}
+            keyboardType="numeric"
+            placeholder="2"
+            placeholderTextColor={colors.textSecondary}
+          />
+          <Text style={styles.helperText}>
+            You can adjust this anytime, even if not currently including alcohol in your plan
+          </Text>
+        </View>
       </View>
       
       {/* Review & Customize Button - Only show this for new profiles or when editing */}
