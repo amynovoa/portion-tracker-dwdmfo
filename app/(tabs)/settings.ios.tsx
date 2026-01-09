@@ -1,113 +1,146 @@
 
-import React, { useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Switch,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadProfile, saveProfile, loadResetTime, saveResetTime } from '@/utils/storage';
-import { useFocusEffect } from 'expo-router';
-import { UserProfile } from '@/types';
-import PaywallScreen from '@/components/PaywallScreen';
-import { IconSymbol } from '@/components/IconSymbol';
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, Linking } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { IconSymbol } from "@/components/IconSymbol";
+import { GlassView } from "expo-glass-effect";
+import { useTheme } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { colors } from "@/styles/commonStyles";
+import { useRouter } from "expo-router";
+import { loadCelebrationEnabled, saveCelebrationEnabled } from "@/utils/celebrationStorage";
 
 export default function SettingsScreen() {
+  const theme = useTheme();
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [paywallVisible, setPaywallVisible] = useState(false);
+  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      loadData();
-    }, [])
-  );
+  useEffect(() => {
+    loadSettings();
+  }, []);
 
-  const loadData = async () => {
-    const userProfile = await loadProfile();
-    setProfile(userProfile);
+  const loadSettings = async () => {
+    try {
+      const celebration = await loadCelebrationEnabled();
+      setCelebrationEnabled(celebration);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
   };
 
-  const handleEditProfile = () => {
-    router.push('/setup-profile');
+  const handleCelebrationToggle = async (value: boolean) => {
+    setCelebrationEnabled(value);
+    await saveCelebrationEnabled(value);
   };
 
-  const handleEditTargets = () => {
-    router.push('/setup-targets');
+  const handleSubscriptions = () => {
+    // Navigate to subscriptions screen or show info
+    Alert.alert(
+      "Subscriptions",
+      "Subscription management coming soon!",
+      [{ text: "OK" }]
+    );
   };
 
-  const handleToggleReminder = (value: boolean) => {
-    setReminderEnabled(value);
-    Alert.alert('Reminder', value ? 'Reminder enabled' : 'Reminder disabled');
+  const handleDailyReset = () => {
+    router.push('/daily-reset');
   };
 
-  const handleUpgradeToPremium = () => {
-    setPaywallVisible(true);
+  const handleResetAppData = () => {
+    Alert.alert(
+      "Reset App Data",
+      "This will delete all your data including portions, weight entries, and settings. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              Alert.alert("Success", "All app data has been reset. Please restart the app.");
+            } catch (error) {
+              console.error('Error resetting app data:', error);
+              Alert.alert("Error", "Failed to reset app data.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handlePrivacyPolicy = () => {
+    Linking.openURL("https://yourapp.com/privacy");
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.header}>Settings</Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <Text style={[styles.header, { color: theme.colors.text }]}>Settings</Text>
 
-        {/* Profile Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Profile</Text>
-          <TouchableOpacity style={styles.settingRow} onPress={handleEditProfile}>
-            <Text style={styles.settingLabel}>Edit Profile</Text>
-            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="keyboard-arrow-right" size={20} color={colors.textSecondary} />
+        {/* Subscriptions */}
+        <GlassView style={styles.section} glassEffectStyle="regular">
+          <TouchableOpacity style={styles.settingRow} onPress={handleSubscriptions}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="crown.fill" android_material_icon_name="workspace-premium" size={24} color={colors.primary} />
+              <Text style={[styles.settingText, { color: theme.colors.text }]}>Subscriptions</Text>
+            </View>
+            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.settingRow} onPress={handleEditTargets}>
-            <Text style={styles.settingLabel}>Edit Portion Targets</Text>
-            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="keyboard-arrow-right" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+        </GlassView>
 
-        {/* Notifications Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
+        {/* Celebration */}
+        <GlassView style={styles.section} glassEffectStyle="regular">
           <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Daily Reminder</Text>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="party.popper.fill" android_material_icon_name="celebration" size={24} color={colors.primary} />
+              <Text style={[styles.settingText, { color: theme.colors.text }]}>Celebration</Text>
+            </View>
             <Switch
-              value={reminderEnabled}
-              onValueChange={handleToggleReminder}
-              trackColor={{ false: colors.border, true: colors.primary }}
+              value={celebrationEnabled}
+              onValueChange={handleCelebrationToggle}
+              trackColor={{ false: '#767577', true: colors.primary }}
               thumbColor="#fff"
             />
           </View>
-        </View>
+        </GlassView>
 
-        {/* Premium Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Premium</Text>
-          <TouchableOpacity style={styles.premiumButton} onPress={handleUpgradeToPremium}>
-            <IconSymbol ios_icon_name="star.fill" android_material_icon_name="star" size={24} color="#FFD700" />
-            <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
+        {/* Daily Reset */}
+        <GlassView style={styles.section} glassEffectStyle="regular">
+          <TouchableOpacity style={styles.settingRow} onPress={handleDailyReset}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="clock.fill" android_material_icon_name="schedule" size={24} color={colors.primary} />
+              <Text style={[styles.settingText, { color: theme.colors.text }]}>Daily Reset</Text>
+            </View>
+            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
           </TouchableOpacity>
-        </View>
+        </GlassView>
 
-        {/* About Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Version</Text>
-            <Text style={styles.settingValue}>1.0.0</Text>
-          </View>
-        </View>
+        {/* Privacy Policy */}
+        <GlassView style={styles.section} glassEffectStyle="regular">
+          <TouchableOpacity style={styles.settingRow} onPress={handlePrivacyPolicy}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="lock.shield.fill" android_material_icon_name="privacy-tip" size={24} color={colors.primary} />
+              <Text style={[styles.settingText, { color: theme.colors.text }]}>Privacy Policy</Text>
+            </View>
+            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
+          </TouchableOpacity>
+        </GlassView>
+
+        {/* Reset App Data */}
+        <GlassView style={styles.section} glassEffectStyle="regular">
+          <TouchableOpacity style={styles.settingRow} onPress={handleResetAppData}>
+            <View style={styles.settingLeft}>
+              <IconSymbol ios_icon_name="trash.fill" android_material_icon_name="delete" size={24} color="#FF3B30" />
+              <Text style={[styles.settingText, { color: '#FF3B30' }]}>Reset App Data</Text>
+            </View>
+            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={theme.dark ? '#98989D' : '#666'} />
+          </TouchableOpacity>
+        </GlassView>
       </ScrollView>
-
-      <PaywallScreen
-        visible={paywallVisible}
-        onDismiss={() => setPaywallVisible(false)}
-        canDismiss={true}
-      />
     </SafeAreaView>
   );
 }
@@ -115,7 +148,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -126,48 +158,24 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: 24,
   },
   section: {
-    backgroundColor: colors.cardBackground,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
     marginBottom: 12,
   },
   settingRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    justifyContent: 'space-between',
   },
-  settingLabel: {
-    fontSize: 16,
-    color: colors.text,
-  },
-  settingValue: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-  premiumButton: {
+  settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: 16,
-    gap: 8,
+    gap: 12,
   },
-  premiumButtonText: {
+  settingText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
   },
 });
