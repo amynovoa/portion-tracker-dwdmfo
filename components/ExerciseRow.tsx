@@ -65,13 +65,13 @@ Strength/Resistance options:
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           </View>
-          {/* Hidden count text - takes up space but invisible to match FoodGroupRow layout exactly */}
-          <Text style={[styles.count, styles.hiddenCount]}>
+          {/* Hidden count - maintains exact same layout as FoodGroupRow */}
+          <Text style={[styles.count, { opacity: 0 }]}>
             1/1
           </Text>
         </View>
 
-        {/* Using PortionSlot component for consistency with FoodGroupRow */}
+        {/* Using PortionSlot component - exact same structure as FoodGroupRow */}
         <View style={styles.slotsContainer}>
           <PortionSlot
             completed={completed}
@@ -158,9 +158,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textSecondary,
     lineHeight: 32,
-  },
-  hiddenCount: {
-    opacity: 0,
   },
   slotsContainer: {
     flexDirection: 'row',
