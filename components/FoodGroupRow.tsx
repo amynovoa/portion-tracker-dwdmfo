@@ -48,8 +48,8 @@ export default function FoodGroupRow({
       // Within target: green
       return '#4CAF50'; // Bright green
     } else if (index === target) {
-      // One over target: lighter green (instead of yellow)
-      return '#A8E6A1'; // Light green
+      // One over target (the portion at index === target is the first one over): yellow
+      return '#FFFF00'; // Yellow
     } else {
       // Two or more over target: red
       return '#FF4444'; // Bright red
