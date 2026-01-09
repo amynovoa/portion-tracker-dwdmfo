@@ -25,6 +25,10 @@ export default function TabLayout() {
         <Icon sf="person.circle.fill" />
         <Label>Profile</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="settings" name="settings">
+        <Icon sf="gearshape.fill" />
+        <Label>Settings</Label>
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

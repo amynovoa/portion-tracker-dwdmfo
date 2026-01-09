@@ -15,19 +15,19 @@ export default function TabLayout() {
     {
       name: 'history',
       route: '/(tabs)/history',
-      icon: 'history',
+      icon: 'calendar-today',
       label: 'History',
     },
     {
       name: 'weight',
       route: '/(tabs)/weight',
-      icon: 'fitness-center',
+      icon: 'monitor-weight',
       label: 'Weight',
     },
     {
-      name: 'faq',
-      route: '/(tabs)/faq',
-      icon: 'help',
+      name: 'faqs',
+      route: '/(tabs)/faqs',
+      icon: 'help-outline',
       label: 'FAQs',
     },
     {
@@ -35,6 +35,12 @@ export default function TabLayout() {
       route: '/(tabs)/profile',
       icon: 'person',
       label: 'Profile',
+    },
+    {
+      name: 'settings',
+      route: '/(tabs)/settings',
+      icon: 'settings',
+      label: 'Settings',
     },
   ];
 
@@ -50,7 +56,7 @@ export default function TabLayout() {
         <Stack.Screen key="home" name="(home)" />
         <Stack.Screen key="history" name="history" />
         <Stack.Screen key="weight" name="weight" />
-        <Stack.Screen key="faq" name="faq" />
+        <Stack.Screen key="faqs" name="faqs" />
         <Stack.Screen key="profile" name="profile" />
         <Stack.Screen key="settings" name="settings" />
       </Stack>
