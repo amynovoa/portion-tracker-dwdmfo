@@ -1,9 +1,9 @@
 
-import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import DaySelector from '@/components/DaySelector';
+import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import FoodGroupRow from '@/components/FoodGroupRow';
@@ -14,18 +14,27 @@ import React, { useState, useEffect } from 'react';
 import InfoHintTooltip from '@/components/InfoHintTooltip.ios';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [dailyPortions, setDailyPortions] = useState<DailyPortions | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
-  const router = useRouter();
-  const params = useLocalSearchParams();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [])
+  );
 
   useEffect(() => {
-    loadData();
-  }, [selectedDate]);
+    if (profile) {
+      loadDateData(selectedDate);
+    }
+  }, [selectedDate, profile]);
 
   useEffect(() => {
     if (params.reload) {
@@ -33,34 +42,62 @@ export default function HomeScreen() {
     }
   }, [params.reload]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      loadData();
-    }, [selectedDate])
-  );
-
   const loadData = async () => {
-    const userProfile = await loadProfile();
-    setProfile(userProfile);
-
-    if (!userProfile) {
-      router.replace('/welcome');
-      return;
-    }
-
-    await loadDateData(selectedDate);
-
-    const hintSeen = await hasSeenInfoHint();
-    if (!hintSeen && selectedDate === getTodayString()) {
-      setShowInfoHint(true);
+    console.log('Loading track screen data...');
+    try {
+      setLoading(true);
+      const userProfile = await loadProfile();
+      console.log('Profile loaded:', userProfile ? 'Found' : 'Not found');
+      
+      if (!userProfile) {
+        console.log('No profile found, redirecting to setup...');
+        router.replace('/setup-profile');
+        return;
+      }
+      
+      setProfile(userProfile);
+      await loadDateData(selectedDate);
+      
+      const hasSeenHint = await hasSeenInfoHint();
+      if (!hasSeenHint) {
+        setShowInfoHint(true);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadDateData = async (date: string) => {
-    if (!profile) return;
-
-    const portions = await loadDailyPortions(date);
-    setDailyPortions(portions);
+    console.log('Loading date data for:', date);
+    try {
+      let portions = await loadDailyPortions(date);
+      console.log('Portions loaded:', portions ? 'Found' : 'Creating new');
+      
+      // If no portions exist for this date, create default empty portions
+      if (!portions && profile) {
+        portions = {
+          date: date,
+          portions: {
+            protein: 0,
+            veggies: 0,
+            fruit: 0,
+            wholeGrains: 0,
+            nutsSeeds: 0,
+            fats: 0,
+            water: 0,
+            alcohol: 0,
+          },
+          exercise: false,
+        };
+        await saveDailyPortions(portions);
+      }
+      
+      setDailyPortions(portions);
+    } catch (error) {
+      console.error('Error loading date data:', error);
+    }
   };
 
   const onRefresh = async () => {
@@ -74,7 +111,7 @@ export default function HomeScreen() {
   };
 
   const checkAndShowCelebration = async (updatedPortions: PortionTargets) => {
-    if (!profile || selectedDate !== getTodayString()) return;
+    if (!profile) return;
 
     const celebrationEnabled = await loadCelebrationEnabled();
     if (!celebrationEnabled) return;
@@ -82,9 +119,12 @@ export default function HomeScreen() {
     const alreadyShown = await hasCelebrationBeenShownToday(selectedDate);
     if (alreadyShown) return;
 
-    const allComplete = FOOD_GROUPS.every(group => {
-      const target = profile.portionTargets[group.key];
-      const completed = updatedPortions[group.key] || 0;
+    const isToday = selectedDate === getTodayString();
+    if (!isToday) return;
+
+    const allComplete = FOOD_GROUPS.every(fg => {
+      const target = profile.portionTargets[fg.key];
+      const completed = updatedPortions[fg.key];
       return completed >= target;
     });
 
@@ -97,14 +137,14 @@ export default function HomeScreen() {
   const handleTogglePortion = async (foodGroup: FoodGroup, increment: boolean) => {
     if (!profile || !dailyPortions) return;
 
-    const currentValue = dailyPortions.portions[foodGroup] || 0;
+    const currentValue = dailyPortions.portions[foodGroup];
     const targetValue = profile.portionTargets[foodGroup];
-
-    let newValue: number;
-    if (increment) {
-      newValue = Math.min(currentValue + 1, targetValue + 5);
-    } else {
-      newValue = Math.max(currentValue - 1, 0);
+    
+    let newValue = currentValue;
+    if (increment && currentValue < targetValue) {
+      newValue = currentValue + 1;
+    } else if (!increment && currentValue > 0) {
+      newValue = currentValue - 1;
     }
 
     const updatedPortions = {
@@ -117,9 +157,8 @@ export default function HomeScreen() {
       portions: updatedPortions,
     };
 
-    await saveDailyPortions(updatedDailyPortions);
     setDailyPortions(updatedDailyPortions);
-
+    await saveDailyPortions(updatedDailyPortions);
     await checkAndShowCelebration(updatedPortions);
   };
 
@@ -131,8 +170,8 @@ export default function HomeScreen() {
       exercise: !dailyPortions.exercise,
     };
 
-    await saveDailyPortions(updatedDailyPortions);
     setDailyPortions(updatedDailyPortions);
+    await saveDailyPortions(updatedDailyPortions);
   };
 
   const handleDismissInfoHint = async () => {
@@ -144,10 +183,24 @@ export default function HomeScreen() {
     setShowCelebration(false);
   };
 
+  if (loading) {
+    return (
+      <View style={[commonStyles.container, styles.centerContent]}>
+        <Text style={commonStyles.bodyText}>Loading...</Text>
+      </View>
+    );
+  }
+
   if (!profile || !dailyPortions) {
     return (
-      <View style={[commonStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={commonStyles.bodyText}>Loading...</Text>
+      <View style={[commonStyles.container, styles.centerContent]}>
+        <Text style={commonStyles.bodyText}>No data available</Text>
+        <TouchableOpacity 
+          style={[buttonStyles.primary, { marginTop: 20 }]}
+          onPress={() => router.push('/setup-profile')}
+        >
+          <Text style={buttonStyles.primaryText}>Set Up Profile</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -155,49 +208,65 @@ export default function HomeScreen() {
   return (
     <View style={commonStyles.container}>
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <DaySelector selectedDate={selectedDate} onDateSelect={handleDateSelect} />
+        <DaySelector
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+        />
 
         <View style={styles.dateHeader}>
           <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
         </View>
 
-        <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
-
         <View style={styles.portionsContainer}>
-          {FOOD_GROUPS.map((foodGroupItem, index) => (
+          {FOOD_GROUPS.map((foodGroupItem) => (
             <FoodGroupRow
               key={foodGroupItem.key}
-              icon={foodGroupItem.icon}
-              label={foodGroupItem.label}
               foodGroup={foodGroupItem.key}
-              completed={dailyPortions.portions[foodGroupItem.key] || 0}
+              label={foodGroupItem.label}
+              icon={foodGroupItem.icon}
+              completed={dailyPortions.portions[foodGroupItem.key]}
               target={profile.portionTargets[foodGroupItem.key]}
-              onTogglePortion={(increment) => handleTogglePortion(foodGroupItem.key, increment)}
-              showInfoHint={showInfoHint && index === 0}
-              isFirstRow={index === 0}
+              onToggle={handleTogglePortion}
+              benefit={foodGroupItem.benefit}
+              avoid={foodGroupItem.avoid}
+              examples={foodGroupItem.examples}
+              portionSize={foodGroupItem.portionSize}
             />
           ))}
-
-          <ExerciseRow
-            completed={dailyPortions.exercise || false}
-            onToggle={handleToggleExercise}
-          />
         </View>
+
+        <ExerciseRow
+          completed={dailyPortions.exercise || false}
+          onToggle={handleToggleExercise}
+        />
       </ScrollView>
 
-      <DailyCompletionCelebration visible={showCelebration} onDismiss={handleDismissCelebration} />
+      <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
+      
+      <DailyCompletionCelebration
+        visible={showCelebration}
+        onDismiss={handleDismissCelebration}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     paddingBottom: 100,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   dateHeader: {
     paddingHorizontal: 20,
@@ -210,6 +279,6 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   portionsContainer: {
-    paddingHorizontal: 0,
+    paddingHorizontal: 20,
   },
 });
