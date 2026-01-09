@@ -9,20 +9,8 @@ export default function TabLayout() {
     {
       name: '(home)',
       route: '/(tabs)/(home)/',
-      icon: 'check-box',
-      label: 'Track',
-    },
-    {
-      name: 'history',
-      route: '/(tabs)/history',
-      icon: 'history',
-      label: 'History',
-    },
-    {
-      name: 'weight',
-      route: '/(tabs)/weight',
-      icon: 'show-chart',
-      label: 'Weight',
+      icon: 'home',
+      label: 'Home',
     },
     {
       name: 'profile',
@@ -44,16 +32,14 @@ export default function TabLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'none',
+          animation: 'none', // Remove fade animation to prevent black screen flash
         }}
       >
         <Stack.Screen key="home" name="(home)" />
-        <Stack.Screen key="history" name="history" />
-        <Stack.Screen key="weight" name="weight" />
         <Stack.Screen key="profile" name="profile" />
         <Stack.Screen key="settings" name="settings" />
       </Stack>
-      <FloatingTabBar tabs={tabs} useFullWidth={true} />
+      <FloatingTabBar tabs={tabs} />
     </>
   );
 }
