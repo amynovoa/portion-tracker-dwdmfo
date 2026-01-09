@@ -29,6 +29,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'left',
   },
+  portionsHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    textAlign: 'right',
+    marginBottom: 8,
+    paddingRight: 20,
+  },
   portionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -47,10 +55,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  portionsText: {
-    fontSize: 16,
-    color: colors.textSecondary,
   },
   calloutBox: {
     backgroundColor: '#FFE8E8',
@@ -140,6 +144,8 @@ export default function SetupTargetsScreen() {
       <ScrollView style={styles.scrollContent}>
         <Text style={styles.header}>👍 You Can Customize These:</Text>
         
+        <Text style={styles.portionsHeader}>Portions</Text>
+
         <View style={styles.portionRow}>
           <Text style={styles.portionLabel}>Protein</Text>
           <View style={styles.portionRight}>
@@ -148,7 +154,6 @@ export default function SetupTargetsScreen() {
               onValueChange={(value) => handleUpdateTargets('protein', value)}
               maxValue={10}
             />
-            <Text style={styles.portionsText}>portions</Text>
           </View>
         </View>
 
@@ -160,7 +165,6 @@ export default function SetupTargetsScreen() {
               onValueChange={(value) => handleUpdateTargets('vegetables', value)}
               maxValue={10}
             />
-            <Text style={styles.portionsText}>portions</Text>
           </View>
         </View>
 
@@ -172,7 +176,6 @@ export default function SetupTargetsScreen() {
               onValueChange={(value) => handleUpdateTargets('fruit', value)}
               maxValue={10}
             />
-            <Text style={styles.portionsText}>portions</Text>
           </View>
         </View>
 
@@ -184,7 +187,6 @@ export default function SetupTargetsScreen() {
               onValueChange={(value) => handleUpdateTargets('wholeGrains', value)}
               maxValue={10}
             />
-            <Text style={styles.portionsText}>portions</Text>
           </View>
         </View>
 
@@ -196,7 +198,6 @@ export default function SetupTargetsScreen() {
               onValueChange={(value) => handleUpdateTargets('fats', value)}
               maxValue={10}
             />
-            <Text style={styles.portionsText}>portions</Text>
           </View>
         </View>
 
@@ -208,7 +209,6 @@ export default function SetupTargetsScreen() {
               onValueChange={(value) => handleUpdateTargets('nutsAndSeeds', value)}
               maxValue={10}
             />
-            <Text style={styles.portionsText}>portions</Text>
           </View>
         </View>
 
@@ -220,7 +220,6 @@ export default function SetupTargetsScreen() {
               onValueChange={(value) => handleUpdateTargets('water', value)}
               maxValue={15}
             />
-            <Text style={styles.portionsText}>portions</Text>
           </View>
         </View>
 
@@ -233,7 +232,6 @@ export default function SetupTargetsScreen() {
                 onValueChange={(value) => handleUpdateTargets('alcohol', value)}
                 maxValue={5}
               />
-              <Text style={styles.portionsText}>portions</Text>
             </View>
           </View>
         )}

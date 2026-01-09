@@ -11,17 +11,17 @@ interface PortionDropdownProps {
   maxValue?: number;
 }
 
-export default function PortionDropdown({ 
-  label, 
-  value, 
+const PortionDropdown: React.FC<PortionDropdownProps> = ({
+  label,
+  value,
   onValueChange,
-  maxValue = 10 
-}: PortionDropdownProps) {
+  maxValue = 10,
+}) => {
   const options = Array.from({ length: maxValue + 1 }, (_, i) => i);
 
   return (
     <View style={styles.container}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <Text style={styles.label}>{label}</Text>
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={value}
@@ -29,36 +29,38 @@ export default function PortionDropdown({
           style={styles.picker}
         >
           {options.map((num) => (
-            <Picker.Item 
-              key={num} 
-              label={`${num} portion${num !== 1 ? 's' : ''}`} 
-              value={num} 
-            />
+            <Picker.Item key={num} label={String(num)} value={num} />
           ))}
         </Picker>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    flex: 1,
   },
   pickerContainer: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 8,
-    backgroundColor: colors.highlight,
-    overflow: 'hidden',
+    width: 80,
+    height: 40,
+    justifyContent: 'center',
   },
   picker: {
-    height: 50,
+    width: '100%',
+    height: '100%',
   },
 });
+
+export default PortionDropdown;
