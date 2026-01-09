@@ -34,61 +34,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  section: {
-    marginTop: 24,
-    marginHorizontal: 16,
+  scrollContent: {
+    paddingBottom: 100,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 8,
-    marginLeft: 16,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  item: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.card,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    gap: 12,
   },
-  itemText: {
-    fontSize: 16,
+  headerIcon: {
+    fontSize: 32,
+  },
+  headerTitle: {
+    fontSize: 42,
+    fontWeight: '800',
     color: colors.text,
+  },
+  settingsList: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  settingIcon: {
+    width: 32,
+    marginRight: 16,
+    fontSize: 24,
+  },
+  settingContent: {
     flex: 1,
   },
-  itemValue: {
-    fontSize: 16,
+  settingLabel: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  chevron: {
+    fontSize: 24,
     color: colors.textSecondary,
-    marginRight: 8,
-  },
-  resetButton: {
-    ...buttonStyles.secondary,
-    marginHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 32,
-  },
-  resetButtonText: {
-    ...buttonStyles.secondaryText,
   },
 });
 
 export default function SettingsScreen() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [celebrationEnabled, setCelebrationEnabled] = useState(true);
-  const [resetConfig, setResetConfig] = useState<ResetTimeConfig>({
-    hour: 0,
-    minute: 0,
-    enabled: false,
-  });
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [resetTime, setResetTime] = useState<Date>(new Date());
+  const [resetEnabled, setResetEnabled] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [tempTime, setTempTime] = useState(new Date());
-  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const { isSubscribed } = useSubscription();
   const router = useRouter();
@@ -97,55 +98,59 @@ export default function SettingsScreen() {
     loadData();
   }, []);
 
-  async function loadData() {
+  const loadData = async () => {
     const savedProfile = await loadProfile();
     setProfile(savedProfile);
 
     const savedCelebration = await loadCelebrationEnabled();
     setCelebrationEnabled(savedCelebration);
 
-    const savedResetConfig = await loadResetTime();
-    setResetConfig(savedResetConfig);
+    const savedResetTime = await loadResetTime();
+    if (savedResetTime) {
+      const date = new Date();
+      date.setHours(savedResetTime.hour, savedResetTime.minute, 0, 0);
+      setResetTime(date);
+      setResetEnabled(savedResetTime.enabled);
+    }
+  };
 
-    const date = new Date();
-    date.setHours(savedResetConfig.hour, savedResetConfig.minute, 0, 0);
-    setTempTime(date);
-  }
-
-  async function handleCelebrationToggle(value: boolean) {
+  const handleCelebrationToggle = async (value: boolean) => {
     setCelebrationEnabled(value);
     await saveCelebrationEnabled(value);
-  }
+  };
 
-  async function handleResetToggle(value: boolean) {
-    const newConfig = { ...resetConfig, enabled: value };
-    setResetConfig(newConfig);
-    await saveResetTime(newConfig);
-  }
+  const handleResetToggle = async (value: boolean) => {
+    setResetEnabled(value);
+    const config: ResetTimeConfig = {
+      hour: resetTime.getHours(),
+      minute: resetTime.getMinutes(),
+      enabled: value,
+    };
+    await saveResetTime(config);
+  };
 
-  function handleTimeChange(event: any, selectedDate?: Date) {
+  const handleTimeChange = async (event: any, selectedDate?: Date) => {
+    setShowTimePicker(false);
     if (selectedDate) {
-      setTempTime(selectedDate);
-      const newConfig = {
-        ...resetConfig,
+      setResetTime(selectedDate);
+      const config: ResetTimeConfig = {
         hour: selectedDate.getHours(),
         minute: selectedDate.getMinutes(),
+        enabled: resetEnabled,
       };
-      setResetConfig(newConfig);
-      saveResetTime(newConfig);
+      await saveResetTime(config);
     }
-  }
+  };
 
-  function formatTime(date: Date): string {
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    const displayMinutes = minutes.toString().padStart(2, '0');
-    return `${displayHours}:${displayMinutes} ${ampm}`;
-  }
+  const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
 
-  function handleActivityLevelPress() {
+  const handleActivityLevelPress = () => {
     if (!profile) return;
 
     const options = [
@@ -153,7 +158,7 @@ export default function SettingsScreen() {
       'Lightly Active (1-3 days/week)',
       'Moderately Active (3-5 days/week)',
       'Very Active (6-7 days/week)',
-      'Extra Active (2x per day)',
+      'Extremely Active (physical job or 2x/day training)',
       'Cancel',
     ];
 
@@ -164,14 +169,14 @@ export default function SettingsScreen() {
       },
       (buttonIndex) => {
         if (buttonIndex < 5) {
-          const levels: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'very', 'extra'];
+          const levels: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'very', 'extreme'];
           handleActivityLevelChange(levels[buttonIndex]);
         }
       }
     );
-  }
+  };
 
-  async function handleActivityLevelChange(newLevel: ActivityLevel) {
+  const handleActivityLevelChange = async (newLevel: ActivityLevel) => {
     if (!profile) return;
 
     const updatedProfile = { ...profile, activityLevel: newLevel };
@@ -183,16 +188,21 @@ export default function SettingsScreen() {
       profile.alcoholServings,
       newLevel
     );
-    updatedProfile.targets = newTargets;
+    updatedProfile.portionTargets = newTargets;
 
     await saveProfile(updatedProfile);
     setProfile(updatedProfile);
-  }
 
-  function handleResetData() {
+    Alert.alert(
+      'Activity Level Updated',
+      'Your portion targets have been recalculated based on your new activity level.'
+    );
+  };
+
+  const handleResetData = () => {
     Alert.alert(
       'Reset All Data',
-      'This will delete all your data including profile, tracking history, and weight entries. This cannot be undone.',
+      'This will permanently delete all your data including profile, tracking history, and weight entries. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -201,90 +211,144 @@ export default function SettingsScreen() {
           onPress: async () => {
             await clearAllData();
             Alert.alert('Success', 'All data has been reset.');
-            router.replace('/(tabs)/profile');
+            router.replace('/(tabs)/(home)');
           },
         },
       ]
     );
-  }
+  };
 
-  function openPrivacyPolicy() {
+  const openPrivacyPolicy = () => {
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
-  }
+  };
 
-  function getSubscriptionStatusText(): string {
+  const getSubscriptionStatusText = (): string => {
     return isSubscribed ? 'Active' : 'Free';
-  }
+  };
 
-  function formatActivityLevel(level: ActivityLevel): string {
+  const formatActivityLevel = (level: ActivityLevel): string => {
     const info = ACTIVITY_LEVEL_INFO[level];
     return info ? info.label : 'Not Set';
-  }
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Subscription</Text>
-        <TouchableOpacity style={styles.item} onPress={() => setShowPaywall(true)}>
-          <Text style={styles.itemText}>Subscription Status</Text>
-          <Text style={styles.itemValue}>{getSubscriptionStatusText()}</Text>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Activity Level</Text>
-        <TouchableOpacity style={styles.item} onPress={handleActivityLevelPress}>
-          <Text style={styles.itemText}>Activity Level</Text>
-          <Text style={styles.itemValue}>{profile ? formatActivityLevel(profile.activityLevel) : 'Loading...'}</Text>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Celebration</Text>
-        <View style={styles.item}>
-          <Text style={styles.itemText}>Daily Celebration</Text>
-          <Switch value={celebrationEnabled} onValueChange={handleCelebrationToggle} />
+    <View style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.headerIcon}>🍎</Text>
+          <Text style={styles.headerTitle}>Settings</Text>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Daily Reset</Text>
-        <View style={styles.item}>
-          <Text style={styles.itemText}>Custom Reset Time</Text>
-          <Switch value={resetConfig.enabled} onValueChange={handleResetToggle} />
-        </View>
-        {resetConfig.enabled && (
-          <TouchableOpacity style={styles.item} onPress={() => setShowTimePicker(true)}>
-            <Text style={styles.itemText}>Reset Time</Text>
-            <Text style={styles.itemValue}>{formatTime(tempTime)}</Text>
-            <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={colors.textSecondary} />
+        <View style={styles.settingsList}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => setPaywallVisible(true)}
+          >
+            <Text style={styles.settingIcon}>💳</Text>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Subscription</Text>
+            </View>
+            <IconSymbol 
+              ios_icon_name="chevron.right" 
+              android_material_icon_name="chevron-right" 
+              size={24} 
+              color={colors.textSecondary} 
+              style={styles.chevron} 
+            />
           </TouchableOpacity>
-        )}
-        {showTimePicker && (
-          <DateTimePicker
-            value={tempTime}
-            mode="time"
-            display="spinner"
-            onChange={handleTimeChange}
-          />
-        )}
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Legal</Text>
-        <TouchableOpacity style={styles.item} onPress={openPrivacyPolicy}>
-          <Text style={styles.itemText}>Privacy Policy</Text>
-          <IconSymbol ios_icon_name="chevron.right" android_material_icon_name="chevron-right" size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={handleActivityLevelPress}
+          >
+            <Text style={styles.settingIcon}>🏃</Text>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Activity Level</Text>
+            </View>
+            <IconSymbol 
+              ios_icon_name="chevron.right" 
+              android_material_icon_name="chevron-right" 
+              size={24} 
+              color={colors.textSecondary} 
+              style={styles.chevron} 
+            />
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.resetButton} onPress={handleResetData}>
-        <Text style={styles.resetButtonText}>Reset App Data</Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => router.push('/celebration-settings')}
+          >
+            <Text style={styles.settingIcon}>🎉</Text>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Celebration</Text>
+            </View>
+            <IconSymbol 
+              ios_icon_name="chevron.right" 
+              android_material_icon_name="chevron-right" 
+              size={24} 
+              color={colors.textSecondary} 
+              style={styles.chevron} 
+            />
+          </TouchableOpacity>
 
-      <PaywallScreen visible={showPaywall} onDismiss={() => setShowPaywall(false)} canDismiss={true} />
-    </ScrollView>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => router.push('/daily-reset')}
+          >
+            <Text style={styles.settingIcon}>🕐</Text>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Daily Reset</Text>
+            </View>
+            <IconSymbol 
+              ios_icon_name="chevron.right" 
+              android_material_icon_name="chevron-right" 
+              size={24} 
+              color={colors.textSecondary} 
+              style={styles.chevron} 
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={openPrivacyPolicy}
+          >
+            <Text style={styles.settingIcon}>🛡️</Text>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Privacy Policy</Text>
+            </View>
+            <IconSymbol 
+              ios_icon_name="chevron.right" 
+              android_material_icon_name="chevron-right" 
+              size={24} 
+              color={colors.textSecondary} 
+              style={styles.chevron} 
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={handleResetData}
+          >
+            <Text style={styles.settingIcon}>⚠️</Text>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Reset App Data</Text>
+            </View>
+            <IconSymbol 
+              ios_icon_name="chevron.right" 
+              android_material_icon_name="chevron-right" 
+              size={24} 
+              color={colors.textSecondary} 
+              style={styles.chevron} 
+            />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <PaywallScreen
+        visible={paywallVisible}
+        onDismiss={() => setPaywallVisible(false)}
+        canDismiss={true}
+      />
+    </View>
   );
 }
