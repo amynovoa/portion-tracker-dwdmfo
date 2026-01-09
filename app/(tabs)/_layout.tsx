@@ -9,19 +9,37 @@ export default function TabLayout() {
     {
       name: '(home)',
       route: '/(tabs)/(home)/',
-      icon: 'home',
-      label: 'Home',
+      icon: 'checkmark.circle.fill',
+      label: 'Track',
+    },
+    {
+      name: 'history',
+      route: '/(tabs)/history',
+      icon: 'calendar',
+      label: 'History',
+    },
+    {
+      name: 'weight',
+      route: '/(tabs)/weight',
+      icon: 'chart.line.uptrend.xyaxis',
+      label: 'Weight',
+    },
+    {
+      name: 'faq',
+      route: '/(tabs)/faq',
+      icon: 'questionmark.circle',
+      label: 'FAQs',
     },
     {
       name: 'profile',
       route: '/(tabs)/profile',
-      icon: 'person',
+      icon: 'person.fill',
       label: 'Profile',
     },
     {
       name: 'settings',
       route: '/(tabs)/settings',
-      icon: 'settings',
+      icon: 'gearshape.fill',
       label: 'Settings',
     },
   ];
@@ -32,14 +50,17 @@ export default function TabLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'none', // Remove fade animation to prevent black screen flash
+          animation: 'none',
         }}
       >
         <Stack.Screen key="home" name="(home)" />
+        <Stack.Screen key="history" name="history" />
+        <Stack.Screen key="weight" name="weight" />
+        <Stack.Screen key="faq" name="faq" />
         <Stack.Screen key="profile" name="profile" />
         <Stack.Screen key="settings" name="settings" />
       </Stack>
-      <FloatingTabBar tabs={tabs} />
+      <FloatingTabBar tabs={tabs} useFullWidth={true} />
     </>
   );
 }

@@ -35,12 +35,12 @@ interface FloatingTabBarProps {
 
 // Map SF Symbol names to Material Icon names for Android/Web
 const iconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  'checkmark.square': 'assignment',
+  'checkmark.circle.fill': 'check-circle',
   'calendar': 'calendar-today',
-  'scalemass': 'monitor-weight',
+  'chart.line.uptrend.xyaxis': 'show-chart',
   'questionmark.circle': 'help',
   'person.fill': 'person',
-  'gearshape': 'settings',
+  'gearshape.fill': 'settings',
 };
 
 export default function FloatingTabBar({
