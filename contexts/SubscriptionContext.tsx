@@ -1,56 +1,56 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useUser, usePlacement } from 'expo-superwall';
 
 interface SubscriptionContextType {
   isSubscribed: boolean;
   isLoading: boolean;
-  showPaywall: (placement?: string) => Promise<void>;
+  showPaywall: () => void;
+  hidePaywall: () => void;
+  paywallVisible: boolean;
   subscriptionStatus: 'UNKNOWN' | 'INACTIVE' | 'ACTIVE';
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { subscriptionStatus, user } = useUser();
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { registerPlacement } = usePlacement({
-    onPresent: (info) => {
-      console.log('Paywall presented:', info);
-    },
-    onDismiss: (info, result) => {
-      console.log('Paywall dismissed:', info, 'Result:', result);
-      setIsLoading(false);
-    },
-    onError: (error) => {
-      console.error('Paywall error:', error);
-      setIsLoading(false);
-    },
-  });
+  const [paywallVisible, setPaywallVisible] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'UNKNOWN' | 'INACTIVE' | 'ACTIVE'>('UNKNOWN');
 
-  const isSubscribed = subscriptionStatus?.status === 'ACTIVE';
+  // TODO: Backend Integration - Check subscription status on mount
+  useEffect(() => {
+    checkSubscriptionStatus();
+  }, []);
 
-  const showPaywall = async (placement: string = 'settings_paywall') => {
+  const checkSubscriptionStatus = async () => {
     try {
       setIsLoading(true);
-      await registerPlacement({
-        placement,
-        feature: () => {
-          console.log('User has access to feature');
-          setIsLoading(false);
-        },
-      });
+      // TODO: Backend Integration - Call API to check subscription status
+      // This should verify with Apple's servers if the user has an active subscription
+      console.log('Checking subscription status...');
+      
+      // Placeholder logic - replace with actual API call
+      const hasActiveSubscription = false; // Replace with actual check
+      setIsSubscribed(hasActiveSubscription);
+      setSubscriptionStatus(hasActiveSubscription ? 'ACTIVE' : 'INACTIVE');
     } catch (error) {
-      console.error('Error showing paywall:', error);
+      console.error('Error checking subscription status:', error);
+      setSubscriptionStatus('UNKNOWN');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    console.log('Subscription status:', subscriptionStatus?.status);
-    console.log('User:', user);
-  }, [subscriptionStatus, user]);
+  const showPaywall = () => {
+    setPaywallVisible(true);
+  };
+
+  const hidePaywall = () => {
+    setPaywallVisible(false);
+    // Recheck subscription status after paywall is dismissed
+    checkSubscriptionStatus();
+  };
 
   return (
     <SubscriptionContext.Provider
@@ -58,7 +58,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         isSubscribed,
         isLoading,
         showPaywall,
-        subscriptionStatus: subscriptionStatus?.status || 'UNKNOWN',
+        hidePaywall,
+        paywallVisible,
+        subscriptionStatus,
       }}
     >
       {children}

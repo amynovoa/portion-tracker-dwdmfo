@@ -1,12 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors } from '@/styles/commonStyles';
 import { clearAllData } from '@/utils/storage';
 import AppLogo from '@/components/AppLogo';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import PaywallScreen from '@/components/PaywallScreen';
 
 const styles = StyleSheet.create({
   container: {
@@ -69,16 +70,10 @@ const styles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { isSubscribed, showPaywall, subscriptionStatus } = useSubscription();
+  const { isSubscribed, showPaywall, hidePaywall, paywallVisible } = useSubscription();
 
-  const handleSubscription = async () => {
-    if (Platform.OS === 'ios') {
-      // Show Superwall paywall for iOS
-      await showPaywall('settings_paywall');
-    } else {
-      // For Android, open Play Store subscriptions (when Android support is added)
-      Linking.openURL('https://play.google.com/store/account/subscriptions');
-    }
+  const handleSubscription = () => {
+    showPaywall();
   };
 
   const handleActivityLevel = () => {
@@ -189,6 +184,12 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
       </ScrollView>
+
+      <PaywallScreen
+        visible={paywallVisible}
+        onDismiss={hidePaywall}
+        canDismiss={true}
+      />
     </View>
   );
 }
