@@ -1,73 +1,73 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, buttonStyles } from '@/styles/commonStyles';
 import { useRouter } from 'expo-router';
-import AppLogo from '@/components/AppLogo';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
-  const handleGetStarted = () => {
-    console.log('Welcome: User clicked Set Up My Profile');
-    router.push('/setup-profile');
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <AppLogo size={120} />
-          <Text style={styles.title}>Welcome to Portion Tracker</Text>
-          <Text style={styles.subtitle}>
-            Track your daily portions and build healthy habits
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Welcome to Portion Track</Text>
+          <Text style={styles.subtitle}>Simple Portions. Real-life Flexibility.</Text>
+          <Text style={styles.description}>
+            Track what you eat using portions instead of calories - and adjust them to fit your goals with ease.
           </Text>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={buttonStyles.primaryButton}
-            onPress={handleGetStarted}
-          >
-            <Text style={buttonStyles.primaryButtonText}>Set Up My Profile</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[buttonStyles.primary, styles.button]}
+          onPress={() => router.push('/setup-profile')}
+        >
+          <Text style={buttonStyles.primaryText}>Get Started</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
+  content: {
     flex: 1,
     justifyContent: 'space-between',
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 40,
   },
-  content: {
+  header: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
     textAlign: 'center',
-    marginTop: 30,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   subtitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  description: {
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    paddingHorizontal: 40,
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
-  buttonContainer: {
-    paddingBottom: 20,
+  button: {
+    marginBottom: 20,
   },
 });
