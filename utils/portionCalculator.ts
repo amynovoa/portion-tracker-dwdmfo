@@ -25,6 +25,7 @@ export function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
     fats: 2,
     water: 8,
     exercise: 3, // Default exercise target
+    alcohol: 2, // Default alcohol target (max recommended)
   };
 
   return baseline;
@@ -42,6 +43,7 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
     adjusted.fats = Math.max(1, adjusted.fats - 1);
     adjusted.water = Math.max(7, adjusted.water - 1);
     adjusted.exercise = Math.max(2, adjusted.exercise - 1);
+    // Alcohol stays at user's chosen goal
   } else if (size === 'large') {
     adjusted.protein = Math.min(5, adjusted.protein + 1);
     adjusted.veggies = Math.min(6, adjusted.veggies + 1);
@@ -51,6 +53,7 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
     adjusted.fats = Math.min(3, adjusted.fats + 1);
     adjusted.water = Math.min(12, adjusted.water + 2);
     adjusted.exercise = Math.min(5, adjusted.exercise + 1);
+    // Alcohol stays at user's chosen goal
   }
 
   return adjusted;

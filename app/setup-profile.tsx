@@ -14,6 +14,7 @@ export default function SetupProfileScreen() {
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
+  const [alcoholGoal, setAlcoholGoal] = useState('2');
 
   const handleContinue = () => {
     console.log('Setup profile - Continue clicked');
@@ -25,9 +26,16 @@ export default function SetupProfileScreen() {
 
     const weightNum = parseFloat(weight);
     const goalWeightNum = parseFloat(goalWeight);
+    const alcoholGoalNum = parseInt(alcoholGoal) || 2;
 
     if (isNaN(weightNum) || isNaN(goalWeightNum) || weightNum <= 0 || goalWeightNum <= 0) {
       alert('Please enter valid weight values');
+      return;
+    }
+
+    // Validate alcohol goal (max recommended is 2)
+    if (alcoholGoalNum < 0 || alcoholGoalNum > 10) {
+      alert('Please enter a valid alcohol goal (0-10 servings)');
       return;
     }
 
@@ -37,6 +45,7 @@ export default function SetupProfileScreen() {
       goalWeight: goalWeightNum,
       goal,
       activityLevel,
+      alcoholGoal: alcoholGoalNum,
     });
 
     router.push({
@@ -47,6 +56,7 @@ export default function SetupProfileScreen() {
         goalWeight: goalWeight,
         goal,
         activityLevel,
+        alcoholGoal: alcoholGoal,
       },
     });
   };
@@ -127,6 +137,19 @@ export default function SetupProfileScreen() {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.label}>Daily Alcohol Goal</Text>
+          <Text style={styles.helperText}>Recommended maximum: 2 servings per day</Text>
+          <TextInput
+            style={styles.input}
+            value={alcoholGoal}
+            onChangeText={setAlcoholGoal}
+            keyboardType="numeric"
+            placeholder="Enter daily alcohol goal"
+            placeholderTextColor={colors.textSecondary}
+          />
+        </View>
+
         <TouchableOpacity style={buttonStyles.primary} onPress={handleContinue}>
           <Text style={buttonStyles.primaryText}>Continue</Text>
         </TouchableOpacity>
@@ -159,6 +182,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginBottom: 8,
+  },
+  helperText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+    fontStyle: 'italic',
   },
   input: {
     backgroundColor: colors.surface,

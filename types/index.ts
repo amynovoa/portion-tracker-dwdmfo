@@ -24,6 +24,7 @@ export interface PortionTargets {
   nutsSeeds: number;
   fats: number;
   exercise: number;
+  alcohol: number;
 }
 
 // Daily portions - simplified (no S/M/L serving sizes)
@@ -49,6 +50,7 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'fats', label: 'Fats', icon: '🥑' },
   { key: 'water', label: 'Water', icon: '💧' },
   { key: 'exercise', label: 'Exercise', icon: '💪' },
+  { key: 'alcohol', label: 'Alcohol', icon: '🍷' },
 ];
 
 // Activity levels with full details for display

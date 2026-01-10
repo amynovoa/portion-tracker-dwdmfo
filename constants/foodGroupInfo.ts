@@ -190,4 +190,28 @@ Flexibility & balance:
 - Tai chi`,
     portionSize: 'One session counts as 1 portion (aim for 20-60 minutes of intentional movement)',
   },
+  alcohol: {
+    benefit: `If you choose to drink, moderation is key. Some studies suggest moderate alcohol consumption may have social and relaxation benefits.
+
+However, alcohol provides empty calories and can interfere with weight loss and fitness goals.
+
+The recommended maximum is 2 servings per day, but less is generally better for health.`,
+    avoid: `Avoid excessive drinking — it can lead to poor food choices, dehydration, and disrupted sleep.
+
+Limit sugary mixed drinks and high-calorie cocktails.
+
+Don't drink on an empty stomach.
+
+Avoid drinking if you're pregnant, taking certain medications, or have a history of alcohol issues.`,
+    examples: `Standard servings:
+- 12 oz beer (regular, ~5% ABV)
+- 5 oz wine (red or white)
+- 1.5 oz distilled spirits (vodka, whiskey, rum, gin, tequila)
+
+Lower-calorie options:
+- Light beer
+- Wine spritzer (wine + sparkling water)
+- Spirits with soda water and lime`,
+    portionSize: 'One standard drink: 12 oz beer, 5 oz wine, or 1.5 oz spirits',
+  },
 };
