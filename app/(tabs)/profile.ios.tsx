@@ -166,16 +166,25 @@ export default function ProfileScreen() {
                 <Text style={styles.infoValue}>{profile.portionTargets.water} glasses</Text>
               </View>
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Exercise</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.exercise} sessions</Text>
-              </View>
+              {profile.includeAlcohol && profile.portionTargets.alcohol > 0 && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Alcohol</Text>
+                  <Text style={styles.infoValue}>{profile.portionTargets.alcohol} servings</Text>
+                </View>
+              )}
             </>
           )}
 
           <TouchableOpacity style={styles.editButton} onPress={handleEditTargets}>
             <Text style={styles.editButtonText}>Edit Targets</Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.noteSection}>
+          <Text style={styles.noteIcon}>💪</Text>
+          <Text style={styles.noteText}>
+            Exercise can be tracked daily by checking it off, but doesn&apos;t have a numeric target.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -245,6 +254,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  noteSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 32,
+  },
+  noteIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
   loadingContainer: {
     flex: 1,

@@ -17,6 +17,7 @@ export function calculateDailyAdherence(
     let totalCompleted = 0;
     let totalTarget = 0;
 
+    // Exclude exercise from adherence calculations since it doesn't have a numeric target
     const foodGroups: (keyof PortionTargets)[] = [
       'protein',
       'veggies',
@@ -25,7 +26,6 @@ export function calculateDailyAdherence(
       'nutsSeeds',
       'fats',
       'water',
-      'exercise',
       'alcohol',
     ];
 
