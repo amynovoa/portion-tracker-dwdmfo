@@ -1,169 +1,168 @@
 
-import React from 'react';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+const FAQ_DATA: FAQItem[] = [
+  {
+    question: 'What is Portion Track?',
+    answer: 'Portion Track helps you track food using simple portions instead of calories. It is designed to be flexible, realistic and easy to adjust to your goals and dietary preferences.',
+  },
+  {
+    question: 'Do I need to count calories?',
+    answer: 'No. Portion Track is designed so you don\'t need to count calories at all.',
+  },
+  {
+    question: 'Where do I log dairy or plant-based dairy?',
+    answer: 'Dairy and plant-based dairy count as Protein, Fat, or Carbs depending on type. For example:\n\n• Greek yogurt or cottage cheese = Protein\n• Cheese or cream = Fat\n• Milk or plant-based milk = Carbs logged under Whole Grains',
+  },
+  {
+    question: 'Will Portion Track work with Keto or other diet plans?',
+    answer: 'Yes. Portion Track is designed to work with a wide variety of eating styles including keto, low-carb, Mediterranean, plant-based, and more. Because the app focuses on portions and food groups, users can adjust their portion choices to match their preferred approach.',
+  },
+  {
+    question: 'How do I know how much a "portion" is?',
+    answer: 'Tap the ⓘ info icon next to each food group to see portion examples and tips.',
+  },
+  {
+    question: 'I forgot to log my food yesterday. What do I do?',
+    answer: 'No problem! You can go back and log food, exercise, or weight for up to 7 days prior. Just use the day selector at the top of the screen in Tracking and choose the day you want to update.',
+  },
+  {
+    question: 'How do I log a food that isn\'t listed?',
+    answer: 'Choose the food group that best fits the item. You don\'t need perfect matches.',
+  },
+  {
+    question: 'What if a food fits into more than one category?',
+    answer: 'Pick the category that best reflects the main component. There is no single right answer.',
+  },
+  {
+    question: 'Do I need to be exact with portions?',
+    answer: 'Portion Track works best when it\'s consistent, not perfect. Portions do count and having larger or smaller portions of food items will impact your results.',
+  },
+  {
+    question: 'How does alcohol affect my portions?',
+    answer: 'Alcohol impacts the number of whole grain and fat serving targets in your daily calculations for up to 2 per day. Going over 2 will not impact your targets so should be considered in your overall planning and tracking.',
+  },
+  {
+    question: 'Can I change my portions or goals later?',
+    answer: 'Yes. You can update your goal and adjust portions at any time in your profile.',
+  },
+  {
+    question: 'When does my day reset?',
+    answer: 'The default setting is 12:00 a.m. You can adjust this in settings.',
+  },
+  {
+    question: 'Can Portion Track help with goals like improving cholesterol or blood sugar?',
+    answer: 'Portion Track does not diagnose or treat medical conditions. However, many people use portion control and balanced eating to support overall health. Eating consistent portions, choosing healthy options outlined in the app, and focusing on balanced meals can all play a role in supporting healthy blood sugar and cholesterol levels.',
+  },
+];
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 100,
-  },
   header: {
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     color: colors.textSecondary,
+    lineHeight: 22,
   },
   faqItem: {
-    marginBottom: 24,
+    backgroundColor: colors.cardBackground,
+    marginHorizontal: 16,
+    marginVertical: 6,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  question: {
-    fontSize: 18,
+  questionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  questionText: {
+    flex: 1,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginRight: 12,
   },
-  answer: {
-    fontSize: 16,
+  answerContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  answerText: {
+    fontSize: 15,
     color: colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: 22,
   },
 });
 
-export default function FAQsScreen() {
+export default function FAQScreen() {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  const toggleExpand = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <AppLogo />
-          <Text style={styles.title}>Frequently Asked Questions</Text>
-          <Text style={styles.subtitle}>Everything you need to know about Portion Tracker</Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>What is a portion?</Text>
-          <Text style={styles.answer}>
-            A portion is a serving size of food from a specific food group. For example, one portion of protein might be 3-4 oz of chicken, fish, or tofu. One portion of veggies is about 1 cup raw or 1/2 cup cooked.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>How are my daily targets calculated?</Text>
-          <Text style={styles.answer}>
-            Your targets are based on your sex, current weight, and goal (lose weight, maintain weight, or build muscle). The app assigns you to a size category (Small, Medium, or Large) behind the scenes and adjusts portions accordingly. For example, if you choose "Lose Weight," the app reduces whole grains and fats while optionally increasing veggies.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>Can I change my targets?</Text>
-          <Text style={styles.answer}>
-            Yes! Go to your Profile and tap "Edit Targets" to customize your daily portion goals for each food group. You can adjust any number to fit your personal needs.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>What food groups can I track?</Text>
-          <Text style={styles.answer}>
-            You can track Protein, Veggies, Fruit, Whole Grains, Legumes, Nuts & Seeds, Fats, Water, Alcohol, and Exercise. Each has its own daily target that you can customize.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>How does alcohol tracking work?</Text>
-          <Text style={styles.answer}>
-            During setup, you can set your daily alcohol goal (the app recommends a maximum of 2 portions per day). One portion equals one standard drink (12 oz beer, 5 oz wine, or 1.5 oz spirits). Track your alcohol intake just like other food groups.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>What about exercise tracking?</Text>
-          <Text style={styles.answer}>
-            You can track exercise sessions daily by checking them off. Exercise appears in your daily tracking but is not included in portion targets or adherence calculations—it's just a helpful habit tracker.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>What is adherence?</Text>
-          <Text style={styles.answer}>
-            Adherence is the percentage of your target portions that you've completed. It's calculated daily, weekly, and monthly to help you track your consistency. For example, if your daily target is 20 portions total and you complete 18, your adherence is 90%.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>When does my daily tracking reset?</Text>
-          <Text style={styles.answer}>
-            By default, your tracking resets at midnight. You can customize this in Settings under "Daily Reset" if you prefer a different time (for example, 4 AM if you work night shifts).
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>Can I track past days?</Text>
-          <Text style={styles.answer}>
-            Yes! Use the day selector at the top of the Track screen to view and edit previous days. Your history is preserved automatically, and you can go back to update any day.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>How do I view my history?</Text>
-          <Text style={styles.answer}>
-            Tap the History tab to see your past tracking days, along with daily, weekly, and monthly adherence summaries. You can expand any day to see which portions you completed.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>Can I track my weight?</Text>
-          <Text style={styles.answer}>
-            Yes! The Weight tab lets you log your weight over time and see a visual chart of your progress. You can also see how your current weight compares to your goal weight.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>What if I want to track calories or macros?</Text>
-          <Text style={styles.answer}>
-            Portion Tracker focuses on food groups and portions, not calories or macros. This approach is simpler and helps build sustainable eating habits without the stress of counting every calorie.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>Can I turn off the celebration animation?</Text>
-          <Text style={styles.answer}>
-            Yes! Go to Settings and toggle "Daily Completion Celebration" off if you prefer not to see the celebration when you complete all your portions for the day.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>How do I update my profile information?</Text>
-          <Text style={styles.answer}>
-            Go to the Profile tab and tap "Edit Profile" to update your sex, current weight, goal weight, or primary goal. Your portion targets will automatically adjust based on your changes.
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>How do I reset all my data?</Text>
-          <Text style={styles.answer}>
-            Go to Settings and tap "Reset App Data" at the bottom. This will clear all your data and return you to the welcome screen. Use with caution—this action cannot be undone!
-          </Text>
-        </View>
-
-        <View style={styles.faqItem}>
-          <Text style={styles.question}>What are the size categories?</Text>
-          <Text style={styles.answer}>
-            The app uses Small, Medium, and Large categories based on your sex and weight to set starting targets. For females: Small is under 150 lbs, Medium is 150-189 lbs, Large is 190+ lbs. For males: Small is under 170 lbs, Medium is 170-209 lbs, Large is 210+ lbs. You don't see these categories—they just help calculate your initial targets.
-          </Text>
-        </View>
+      <View style={styles.header}>
+        <AppLogo />
+        <Text style={styles.title}>FAQs</Text>
+        <Text style={styles.subtitle}>
+          Have questions? Portion Track is designed to be simple and flexible! These FAQs cover the most common questions about portions, logging food, and adjusting your plan.
+        </Text>
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {FAQ_DATA.map((faq, index) => (
+          <View key={index} style={styles.faqItem}>
+            <TouchableOpacity
+              style={styles.questionContainer}
+              onPress={() => toggleExpand(index)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.questionText}>{faq.question}</Text>
+              <MaterialIcons
+                name={expandedIndex === index ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                size={24}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+            {expandedIndex === index && (
+              <View style={styles.answerContainer}>
+                <Text style={styles.answerText}>{faq.answer}</Text>
+              </View>
+            )}
+          </View>
+        ))}
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );
