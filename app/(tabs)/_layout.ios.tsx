@@ -6,11 +6,11 @@ export default function TabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger key="home" name="(home)">
-        <Icon sf="fork.knife" />
+        <Icon sf="checkmark.circle.fill" />
         <Label>Track</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="history" name="history">
-        <Icon sf="calendar" />
+        <Icon sf="clock.fill" />
         <Label>History</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger key="weight" name="weight">

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -9,19 +10,18 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Href } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useTheme } from '@react-navigation/native';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Href } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export interface TabBarItem {
   name: string;
   route: Href;
-  icon: string; // Can be SF Symbol name or Material Icon name
+  icon: keyof typeof MaterialIcons.glyphMap;
   label: string;
 }
 
@@ -33,167 +33,6 @@ interface FloatingTabBarProps {
   useFullWidth?: boolean;
 }
 
-// Map SF Symbol names to Material Icon names for Android/Web
-const iconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  'checkmark.circle.fill': 'check-circle',
-  'calendar': 'calendar-today',
-  'chart.line.uptrend.xyaxis': 'show-chart',
-  'questionmark.circle': 'help',
-  'person.fill': 'person',
-  'gearshape.fill': 'settings',
-};
-
-export default function FloatingTabBar({
-  tabs,
-  containerWidth,
-  borderRadius = 35,
-  bottomMargin,
-  useFullWidth = false
-}: FloatingTabBarProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const theme = useTheme();
-
-  // Calculate width based on number of tabs and screen size
-  const calculatedWidth = React.useMemo(() => {
-    if (containerWidth) return containerWidth;
-    if (useFullWidth) {
-      // Use almost full width with some padding
-      return screenWidth - 24;
-    }
-    // Default behavior for fewer tabs
-    return screenWidth / 2.5;
-  }, [containerWidth, useFullWidth, tabs.length]);
-
-  // Improved active tab detection with better path matching
-  const activeTabIndex = React.useMemo(() => {
-    // Find the best matching tab based on the current pathname
-    let bestMatch = -1;
-    let bestMatchScore = 0;
-
-    tabs.forEach((tab, index) => {
-      let score = 0;
-
-      // Exact route match gets highest score
-      if (pathname === tab.route) {
-        score = 100;
-      }
-      // Check if pathname starts with tab route (for nested routes)
-      else if (pathname.startsWith(tab.route as string)) {
-        score = 80;
-      }
-      // Check if pathname contains the tab name
-      else if (pathname.includes(tab.name)) {
-        score = 60;
-      }
-      // Check for partial matches in the route
-      else if (tab.route.includes('/(tabs)/') && pathname.includes(tab.route.split('/(tabs)/')[1])) {
-        score = 40;
-      }
-
-      if (score > bestMatchScore) {
-        bestMatchScore = score;
-        bestMatch = index;
-      }
-    });
-
-    // Default to first tab if no match found
-    return bestMatch >= 0 ? bestMatch : 0;
-  }, [pathname, tabs]);
-
-  const handleTabPress = (route: Href) => {
-    router.push(route);
-  };
-
-  const tabWidthPercent = ((100 / tabs.length) - 1).toFixed(2);
-
-  // Calculate indicator position without animation
-  const indicatorLeft = React.useMemo(() => {
-    const tabWidth = (calculatedWidth - 8) / tabs.length;
-    return 2 + (tabWidth * activeTabIndex);
-  }, [activeTabIndex, calculatedWidth, tabs.length]);
-
-  // Dynamic styles based on theme
-  const dynamicStyles = {
-    container: {
-      ...styles.container,
-      borderWidth: 1.2,
-      borderColor: 'rgba(255, 255, 255, 1)',
-      borderRadius: borderRadius,
-      backgroundColor: theme.dark
-        ? 'rgba(28, 28, 30, 0.95)'
-        : 'rgba(255, 255, 255, 0.95)',
-    },
-    background: {
-      ...styles.background,
-    },
-    indicator: {
-      ...styles.indicator,
-      backgroundColor: theme.dark
-        ? 'rgba(200, 214, 71, 0.15)'
-        : 'rgba(201, 74, 61, 0.1)',
-      width: `${tabWidthPercent}%` as `${number}%`,
-      left: indicatorLeft,
-    },
-  };
-
-  return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-      <View style={[
-        styles.containerWrapper,
-        {
-          width: calculatedWidth,
-          marginBottom: bottomMargin ?? 20
-        }
-      ]}>
-        <View style={dynamicStyles.container}>
-          <View style={dynamicStyles.background} />
-          <View style={dynamicStyles.indicator} />
-          <View style={styles.tabsContainer}>
-            {tabs.map((tab, index) => {
-              const isActive = activeTabIndex === index;
-              
-              // Get the appropriate icon name for the platform
-              const androidIconName = iconMap[tab.icon] || tab.icon as keyof typeof MaterialIcons.glyphMap;
-
-              return (
-                <React.Fragment key={index}>
-                <TouchableOpacity
-                  style={styles.tab}
-                  onPress={() => handleTabPress(tab.route)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.tabContent}>
-                    <IconSymbol
-                      android_material_icon_name={androidIconName}
-                      ios_icon_name={tab.icon}
-                      size={20}
-                      color={isActive ? (theme.dark ? colors.secondary : colors.primary) : (theme.dark ? '#98989D' : colors.accent)}
-                    />
-                    <Text
-                      style={[
-                        styles.tabLabel,
-                        { color: theme.dark ? '#98989D' : colors.accent },
-                        isActive && { color: theme.dark ? colors.secondary : colors.primary, fontWeight: '600' },
-                      ]}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.7}
-                    >
-                      {tab.label}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-                </React.Fragment>
-              );
-            })}
-          </View>
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
   safeArea: {
     position: 'absolute',
@@ -203,46 +42,126 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     alignItems: 'center',
   },
-  containerWrapper: {
-    marginHorizontal: 12,
+  container: {
     alignSelf: 'center',
   },
-  container: {
-    overflow: 'hidden',
-  },
-  background: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  indicator: {
-    position: 'absolute',
-    top: 4,
-    bottom: 4,
-    borderRadius: 27,
-    width: `${(100 / 2) - 1}%`,
-  },
-  tabsContainer: {
+  tabBar: {
     flexDirection: 'row',
-    height: 64,
-    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingBottom: 8,
+    paddingTop: 12,
     paddingHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 2,
+    minWidth: 50,
   },
   tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    width: '100%',
+    gap: 3,
   },
   tabLabel: {
     fontSize: 9,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: 1,
     textAlign: 'center',
   },
 });
+
+export default function FloatingTabBar({
+  tabs,
+  containerWidth,
+  borderRadius = 20,
+  bottomMargin = 0,
+  useFullWidth = false,
+}: FloatingTabBarProps) {
+  const router = useRouter();
+  const theme = useTheme();
+  const pathname = usePathname();
+
+  const activeTabIndex = React.useMemo(() => {
+    let bestMatch = -1;
+    let bestMatchScore = 0;
+
+    tabs.forEach((tab, index) => {
+      let score = 0;
+
+      if (pathname === tab.route) {
+        score = 100;
+      } else if (pathname.startsWith(tab.route as string)) {
+        score = 80;
+      } else if (pathname.includes(tab.name)) {
+        score = 60;
+      }
+
+      if (score > bestMatchScore) {
+        bestMatchScore = score;
+        bestMatch = index;
+      }
+    });
+
+    return bestMatch >= 0 ? bestMatch : 0;
+  }, [pathname, tabs]);
+
+  const handleTabPress = (route: Href) => {
+    router.push(route);
+  };
+
+  const containerStyle = useFullWidth
+    ? { width: screenWidth }
+    : { width: containerWidth || screenWidth * 0.9, marginHorizontal: 20 };
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <View style={[styles.container, containerStyle, { marginBottom: bottomMargin }]}>
+        <View style={[styles.tabBar, { borderRadius: useFullWidth ? 0 : borderRadius }]}>
+          {tabs.map((tab, index) => {
+            const isActive = activeTabIndex === index;
+
+            return (
+              <TouchableOpacity
+                key={index}
+                style={styles.tab}
+                onPress={() => handleTabPress(tab.route)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.tabContent}>
+                  <MaterialIcons
+                    name={tab.icon}
+                    size={22}
+                    color={isActive ? colors.primary : colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.tabLabel,
+                      {
+                        color: isActive ? colors.primary : colors.textSecondary,
+                        fontWeight: isActive ? '600' : '500',
+                      },
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {tab.label}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
