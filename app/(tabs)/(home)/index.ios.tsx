@@ -206,12 +206,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dateText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: colors.text,
   },
   pastDateLabel: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textSecondary,
     fontStyle: 'italic',
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: 18,
     color: colors.textSecondary,
   },
 });

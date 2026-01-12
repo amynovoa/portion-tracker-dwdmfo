@@ -135,11 +135,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    fontSize: 24,
+    fontSize: 28,
     marginRight: 8,
   },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.text,
   },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   count: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.textSecondary,
     marginRight: 8,
   },
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   infoIcon: {
-    fontSize: 18,
+    fontSize: 20,
   },
   slotsContainer: {
     flexDirection: 'row',
