@@ -8,7 +8,7 @@ import { getAllDailyPortions, loadProfile, loadDailyPortions } from '@/utils/sto
 import { useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
-import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
+import { calculateDailyAdherence, calculateDailyAdherenceForDate, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
 
 export default function HistoryScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -66,9 +66,17 @@ export default function HistoryScreen() {
   }
 
   const todayString = getTodayString();
-  const dailyAdherence = calculateDailyAdherence(allPortions, profile.portionTargets, todayString);
+  const dailyAdherence = calculateDailyAdherenceForDate(allPortions, profile.portionTargets, todayString);
   const weeklyAdherence = calculateWeeklyAdherence(allPortions, profile.portionTargets);
   const monthlyAdherence = calculateMonthlyAdherence(allPortions, profile.portionTargets);
+
+  console.log('History screen adherence values:', {
+    today: dailyAdherence,
+    week: weeklyAdherence,
+    month: monthlyAdherence,
+    todayString,
+    allPortionsCount: allPortions.length
+  });
 
   return (
     <View style={commonStyles.container}>
@@ -116,7 +124,7 @@ export default function HistoryScreen() {
           ) : (
             allPortions.map((dayData) => {
               const isExpanded = expandedDates.has(dayData.date);
-              const adherence = calculateDailyAdherence([dayData], profile.portionTargets, dayData.date);
+              const adherence = calculateDailyAdherence(dayData.portions, profile.portionTargets);
               
               return (
                 <View key={dayData.date} style={styles.dayCard}>
@@ -126,7 +134,7 @@ export default function HistoryScreen() {
                   >
                     <View style={styles.dayHeaderLeft}>
                       <Text style={styles.dayDate}>{formatDisplayDate(dayData.date)}</Text>
-                      <Text style={styles.dayAdherence}>{adherence}% adherence</Text>
+                      <Text style={styles.dayAdherence}>{adherence}% complete</Text>
                     </View>
                     <Text style={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</Text>
                   </TouchableOpacity>

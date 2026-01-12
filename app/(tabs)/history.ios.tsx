@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getAllDailyPortions, loadProfile, loadDailyPortions } from '@/utils/storage';
 import AdherenceCard from '@/components/AdherenceCard';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
-import { calculateDailyAdherence, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
+import { calculateDailyAdherence, calculateDailyAdherenceForDate, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useFocusEffect } from 'expo-router';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } from 'react-native';
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
 });
 
 export default function HistoryScreen() {
-  const [allPortions, setAllPortions] = useState<Record<string, DailyPortions>>({});
+  const [allPortions, setAllPortions] = useState<DailyPortions[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
@@ -114,8 +114,13 @@ export default function HistoryScreen() {
   );
 
   const loadData = async () => {
+    console.log('Loading history data (iOS)...');
     const portions = await getAllDailyPortions();
     const userProfile = await loadProfile();
+    
+    console.log('iOS - Portions loaded:', portions.length);
+    console.log('iOS - Profile loaded:', userProfile ? 'Found' : 'Not found');
+    
     setAllPortions(portions);
     setProfile(userProfile);
   };
@@ -136,11 +141,28 @@ export default function HistoryScreen() {
     setExpandedDates(newExpanded);
   };
 
-  const todayAdherence = calculateDailyAdherence(allPortions, profile, getTodayString());
-  const weeklyAdherence = calculateWeeklyAdherence(allPortions, profile);
-  const monthlyAdherence = calculateMonthlyAdherence(allPortions, profile);
+  if (!profile) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: colors.text }}>No profile data available</Text>
+      </View>
+    );
+  }
 
-  const sortedDates = Object.keys(allPortions).sort((a, b) => b.localeCompare(a));
+  const todayString = getTodayString();
+  const todayAdherence = calculateDailyAdherenceForDate(allPortions, profile.portionTargets, todayString);
+  const weeklyAdherence = calculateWeeklyAdherence(allPortions, profile.portionTargets);
+  const monthlyAdherence = calculateMonthlyAdherence(allPortions, profile.portionTargets);
+
+  console.log('iOS History screen adherence values:', {
+    today: todayAdherence,
+    week: weeklyAdherence,
+    month: monthlyAdherence,
+    todayString,
+    allPortionsCount: allPortions.length
+  });
+
+  const sortedDates = allPortions.sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <View style={styles.container}>
@@ -161,11 +183,20 @@ export default function HistoryScreen() {
         </View>
 
         <View style={styles.adherenceSection}>
-          <Text style={styles.sectionTitle}>Adherence</Text>
           <AdherenceCard
-            todayAdherence={todayAdherence}
-            weeklyAdherence={weeklyAdherence}
-            monthlyAdherence={monthlyAdherence}
+            title="Today"
+            percentage={todayAdherence}
+            subtitle={formatDisplayDate(todayString)}
+          />
+          <AdherenceCard
+            title="This Week"
+            percentage={weeklyAdherence}
+            subtitle="Last 7 days"
+          />
+          <AdherenceCard
+            title="This Month"
+            percentage={monthlyAdherence}
+            subtitle="Last 30 days"
           />
         </View>
 
@@ -176,31 +207,35 @@ export default function HistoryScreen() {
               <Text style={styles.emptyText}>No tracking history yet</Text>
             </View>
           ) : (
-            sortedDates.map((date) => {
-              const portions = allPortions[date];
-              const dayAdherence = calculateDailyAdherence(allPortions, profile, date);
-              const isExpanded = expandedDates.has(date);
+            sortedDates.map((dayData) => {
+              const dayAdherence = calculateDailyAdherence(dayData.portions, profile.portionTargets);
+              const isExpanded = expandedDates.has(dayData.date);
 
               return (
                 <TouchableOpacity
-                  key={date}
+                  key={dayData.date}
                   style={styles.dayCard}
-                  onPress={() => toggleExpand(date)}
+                  onPress={() => toggleExpand(dayData.date)}
                 >
                   <View style={styles.dayHeader}>
-                    <Text style={styles.dayDate}>{formatDisplayDate(date)}</Text>
-                    <Text style={styles.dayAdherence}>{dayAdherence}% adherence</Text>
+                    <Text style={styles.dayDate}>{formatDisplayDate(dayData.date)}</Text>
+                    <Text style={styles.dayAdherence}>{dayAdherence}% complete</Text>
                   </View>
                   {isExpanded && (
                     <View style={styles.dayDetails}>
-                      {FOOD_GROUPS.map((group) => (
-                        <View key={group} style={styles.foodGroupRow}>
-                          <Text style={styles.foodGroupName}>{group}</Text>
-                          <Text style={styles.foodGroupValue}>
-                            {portions.completed[group] || 0} / {profile?.targets[group] || 0}
-                          </Text>
-                        </View>
-                      ))}
+                      {FOOD_GROUPS.map((fg) => {
+                        const completed = dayData.portions[fg.key] || 0;
+                        const target = profile.portionTargets[fg.key] || 0;
+                        
+                        return (
+                          <View key={fg.key} style={styles.foodGroupRow}>
+                            <Text style={styles.foodGroupName}>{fg.icon} {fg.label}</Text>
+                            <Text style={styles.foodGroupValue}>
+                              {completed} / {target}
+                            </Text>
+                          </View>
+                        );
+                      })}
                     </View>
                   )}
                 </TouchableOpacity>

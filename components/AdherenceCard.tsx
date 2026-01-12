@@ -6,9 +6,10 @@ import { colors } from '../styles/commonStyles';
 interface AdherenceCardProps {
   title: string;
   percentage: number;
+  subtitle?: string;
 }
 
-export default function AdherenceCard({ title, percentage }: AdherenceCardProps) {
+export default function AdherenceCard({ title, percentage, subtitle }: AdherenceCardProps) {
   // Handle NaN or invalid values
   const validPercentage = isNaN(percentage) || !isFinite(percentage) ? 0 : Math.max(0, Math.min(100, percentage));
   
@@ -21,6 +22,7 @@ export default function AdherenceCard({ title, percentage }: AdherenceCardProps)
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
+      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View
@@ -54,6 +56,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 12,
     color: colors.textSecondary,
     marginBottom: 8,
   },

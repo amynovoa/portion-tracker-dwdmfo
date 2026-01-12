@@ -2,7 +2,7 @@
 import { PortionTargets, DailyPortions, FoodGroup } from '../types';
 import { getTodayString, getWeekStartDate, getMonthStartDate, formatDate } from './dateUtils';
 
-// Calculate adherence for a single day
+// Calculate adherence for a single day given portions and targets
 export function calculateDailyAdherence(
   portions: PortionTargets,
   targets: PortionTargets
@@ -51,6 +51,28 @@ export function calculateDailyAdherence(
     return percentage;
   } catch (error) {
     console.error('Error in calculateDailyAdherence:', error);
+    return 0;
+  }
+}
+
+// Calculate adherence for a specific date from all records
+export function calculateDailyAdherenceForDate(
+  allRecords: DailyPortions[],
+  targets: PortionTargets,
+  date: string
+): number {
+  try {
+    // Find the record for the specific date
+    const dayRecord = allRecords.find(record => record.date === date);
+    
+    if (!dayRecord || !dayRecord.portions) {
+      console.log('No record found for date:', date);
+      return 0;
+    }
+
+    return calculateDailyAdherence(dayRecord.portions, targets);
+  } catch (error) {
+    console.error('Error calculating daily adherence for date:', error);
     return 0;
   }
 }
