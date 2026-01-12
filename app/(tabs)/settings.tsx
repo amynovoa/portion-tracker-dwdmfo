@@ -138,7 +138,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>🕐</Text>
           <View style={styles.settingContent}>
-            <Text style={settings.settingLabel}>Daily Reset</Text>
+            <Text style={styles.settingLabel}>Daily Reset</Text>
           </View>
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
