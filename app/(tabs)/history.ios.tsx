@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
@@ -147,7 +147,7 @@ export default function HistoryScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>Track your progress over time</Text>
+          <Text style={styles.subtitle}>Your tracking history</Text>
         </View>
 
         <View style={styles.adherenceSection}>

@@ -81,7 +81,10 @@ export default function HistoryScreen() {
       >
         <View style={styles.header}>
           <AppLogo size={32} />
-          <Text style={styles.title}>History & Adherence</Text>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>History</Text>
+            <Text style={styles.subtitle}>Your tracking history</Text>
+          </View>
         </View>
 
         <View style={styles.adherenceSection}>
@@ -173,11 +176,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
   },
+  headerTextContainer: {
+    marginLeft: 12,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: colors.text,
-    marginLeft: 12,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   adherenceSection: {
     paddingHorizontal: 20,
