@@ -5,8 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile } from '@/utils/storage';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { Sex, Goal, ActivityLevel, PortionTargets } from '@/types';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Sex, Goal, ActivityLevel, PortionTargets, FOOD_GROUPS } from '@/types';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function SetupTargetsScreen() {
@@ -81,6 +81,12 @@ export default function SetupTargetsScreen() {
     setTargets((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Get icon for a food group key
+  const getIconForFoodGroup = (key: keyof PortionTargets): string => {
+    const foodGroup = FOOD_GROUPS.find(fg => fg.key === key);
+    return foodGroup?.icon || '📊';
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -89,14 +95,54 @@ export default function SetupTargetsScreen() {
           We&apos;ve recommended targets based on your profile. You can adjust them to fit your preferences.
         </Text>
 
-        <TargetRow label="Protein" value={targets.protein} onChange={(v) => updateTarget('protein', v)} />
-        <TargetRow label="Vegetables" value={targets.veggies} onChange={(v) => updateTarget('veggies', v)} />
-        <TargetRow label="Fruit" value={targets.fruits} onChange={(v) => updateTarget('fruits', v)} />
-        <TargetRow label="Whole Grains" value={targets.wholeGrains} onChange={(v) => updateTarget('wholeGrains', v)} />
-        <TargetRow label="Nuts & Seeds" value={targets.nutsSeeds} onChange={(v) => updateTarget('nutsSeeds', v)} />
-        <TargetRow label="Fats" value={targets.fats} onChange={(v) => updateTarget('fats', v)} />
-        <TargetRow label="Water (cups)" value={targets.water} onChange={(v) => updateTarget('water', v)} />
-        <TargetRow label="Alcohol (servings)" value={targets.alcohol} onChange={(v) => updateTarget('alcohol', v)} />
+        <TargetRow 
+          label="Protein" 
+          icon={getIconForFoodGroup('protein')}
+          value={targets.protein} 
+          onChange={(v) => updateTarget('protein', v)} 
+        />
+        <TargetRow 
+          label="Vegetables" 
+          icon={getIconForFoodGroup('veggies')}
+          value={targets.veggies} 
+          onChange={(v) => updateTarget('veggies', v)} 
+        />
+        <TargetRow 
+          label="Fruit" 
+          icon={getIconForFoodGroup('fruits')}
+          value={targets.fruits} 
+          onChange={(v) => updateTarget('fruits', v)} 
+        />
+        <TargetRow 
+          label="Whole Grains" 
+          icon={getIconForFoodGroup('wholeGrains')}
+          value={targets.wholeGrains} 
+          onChange={(v) => updateTarget('wholeGrains', v)} 
+        />
+        <TargetRow 
+          label="Nuts & Seeds" 
+          icon={getIconForFoodGroup('nutsSeeds')}
+          value={targets.nutsSeeds} 
+          onChange={(v) => updateTarget('nutsSeeds', v)} 
+        />
+        <TargetRow 
+          label="Fats" 
+          icon={getIconForFoodGroup('fats')}
+          value={targets.fats} 
+          onChange={(v) => updateTarget('fats', v)} 
+        />
+        <TargetRow 
+          label="Water (cups)" 
+          icon={getIconForFoodGroup('water')}
+          value={targets.water} 
+          onChange={(v) => updateTarget('water', v)} 
+        />
+        <TargetRow 
+          label="Alcohol (servings)" 
+          icon={getIconForFoodGroup('alcohol')}
+          value={targets.alcohol} 
+          onChange={(v) => updateTarget('alcohol', v)} 
+        />
 
         <View style={styles.noteSection}>
           <Text style={styles.noteIcon}>💪</Text>
@@ -122,10 +168,12 @@ export default function SetupTargetsScreen() {
 
 function TargetRow({
   label,
+  icon,
   value,
   onChange,
 }: {
   label: string;
+  icon: string;
   value: number;
   onChange: (val: number) => void;
 }) {
@@ -133,12 +181,16 @@ function TargetRow({
 
   return (
     <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
+      <View style={styles.labelContainer}>
+        <Text style={styles.icon}>{icon}</Text>
+        <Text style={styles.rowLabel}>{label}</Text>
+      </View>
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={value}
           onValueChange={(itemValue) => onChange(itemValue as number)}
           style={styles.picker}
+          itemStyle={styles.pickerItem}
         >
           {options.map((num) => (
             <Picker.Item key={num} label={`${num}`} value={num} />
@@ -183,11 +235,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  icon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
   rowLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    flex: 1,
   },
   pickerContainer: {
     width: 80,
@@ -196,7 +256,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   picker: {
-    height: 40,
+    height: Platform.OS === 'ios' ? 120 : 50,
+    color: colors.text,
+  },
+  pickerItem: {
+    fontSize: 22,
+    height: 120,
+    color: colors.text,
   },
   noteSection: {
     flexDirection: 'row',
