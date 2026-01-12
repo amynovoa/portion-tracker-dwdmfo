@@ -10,36 +10,6 @@ export default function ResetDataScreen() {
   const router = useRouter();
   const [isResetting, setIsResetting] = useState(false);
 
-  const handleReset = () => {
-    console.log('=== RESET BUTTON PRESSED ===');
-    console.log('Platform:', Platform.OS);
-    console.log('isResetting:', isResetting);
-    
-    // Show confirmation alert
-    Alert.alert(
-      'Final Confirmation',
-      'Are you absolutely sure you want to reset all data? This cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => {
-            console.log('=== RESET CANCELLED ===');
-          },
-        },
-        {
-          text: 'Yes, Reset Everything',
-          style: 'destructive',
-          onPress: () => {
-            console.log('=== RESET CONFIRMED - STARTING RESET ===');
-            performReset();
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
   const performReset = async () => {
     console.log('=== performReset CALLED ===');
     setIsResetting(true);
@@ -66,6 +36,54 @@ export default function ResetDataScreen() {
         'Error',
         'Failed to reset app data. Please try again.',
         [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleReset = () => {
+    console.log('=== RESET BUTTON PRESSED ===');
+    console.log('Platform:', Platform.OS);
+    console.log('isResetting:', isResetting);
+    
+    if (isResetting) {
+      console.log('Already resetting, ignoring press');
+      return;
+    }
+    
+    // Show confirmation alert
+    if (Platform.OS === 'web') {
+      // For web, use native confirm dialog
+      const confirmed = window.confirm('Are you absolutely sure you want to reset all data? This cannot be undone.');
+      console.log('Web confirm result:', confirmed);
+      if (confirmed) {
+        console.log('=== RESET CONFIRMED - STARTING RESET ===');
+        performReset();
+      } else {
+        console.log('=== RESET CANCELLED ===');
+      }
+    } else {
+      // For native platforms, use Alert.alert
+      Alert.alert(
+        'Final Confirmation',
+        'Are you absolutely sure you want to reset all data? This cannot be undone.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => {
+              console.log('=== RESET CANCELLED ===');
+            },
+          },
+          {
+            text: 'Yes, Reset Everything',
+            style: 'destructive',
+            onPress: () => {
+              console.log('=== RESET CONFIRMED - STARTING RESET ===');
+              performReset();
+            },
+          },
+        ],
+        { cancelable: true }
       );
     }
   };
@@ -122,7 +140,7 @@ export default function ResetDataScreen() {
         <View style={{ height: 200 }} />
       </ScrollView>
 
-      <View style={styles.buttonContainer}>
+      <View style={styles.buttonContainer} pointerEvents="box-none">
         <TouchableOpacity
           style={[styles.resetButton, isResetting && styles.disabledButton]}
           onPress={handleReset}
