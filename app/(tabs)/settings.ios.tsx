@@ -59,22 +59,7 @@ const styles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [celebrationEnabled, setCelebrationEnabled] = useState(true);
   const [paywallVisible, setPaywallVisible] = useState(false);
-
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    const enabled = await loadCelebrationEnabled();
-    setCelebrationEnabled(enabled);
-  };
-
-  const handleCelebrationToggle = async (value: boolean) => {
-    setCelebrationEnabled(value);
-    await saveCelebrationEnabled(value);
-  };
 
   const handleResetAllData = () => {
     Alert.alert(
@@ -136,18 +121,16 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         {/* Celebration */}
-        <View style={styles.settingItem}>
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => router.push('/celebration-settings')}
+        >
           <Text style={styles.settingIcon}>🎉</Text>
           <View style={styles.settingContent}>
             <Text style={styles.settingLabel}>Celebration</Text>
           </View>
-          <Switch
-            value={celebrationEnabled}
-            onValueChange={handleCelebrationToggle}
-            trackColor={{ false: colors.textSecondary, true: colors.primary }}
-            thumbColor="#fff"
-          />
-        </View>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
 
         {/* Daily Reset */}
         <TouchableOpacity
