@@ -135,7 +135,7 @@ export default function SettingsScreen() {
           <View style={styles.settingContent}>
             <Text style={styles.settingLabel}>Subscription</Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
 
         {/* Celebration */}
@@ -150,7 +150,7 @@ export default function SettingsScreen() {
           <View style={styles.settingContent}>
             <Text style={styles.settingLabel}>Celebration</Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
 
         {/* Daily Reset */}
@@ -165,7 +165,7 @@ export default function SettingsScreen() {
           <View style={styles.settingContent}>
             <Text style={styles.settingLabel}>Daily Reset</Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
 
         {/* Privacy Policy */}
@@ -180,7 +180,7 @@ export default function SettingsScreen() {
           <View style={styles.settingContent}>
             <Text style={styles.settingLabel}>Privacy Policy</Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
 
         {/* Reset App Data */}
@@ -190,13 +190,13 @@ export default function SettingsScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.settingIcon}>⚠️</Text>
-          <View style={styles.settingContent}>
+          <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Reset App Data</Text>
             <Text style={styles.settingDescription}>
               Erase all data and start over
             </Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
       </ScrollView>
 
