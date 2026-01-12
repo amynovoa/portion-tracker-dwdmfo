@@ -190,7 +190,6 @@ function TargetRow({
           selectedValue={value}
           onValueChange={(itemValue) => onChange(itemValue as number)}
           style={styles.picker}
-          itemStyle={styles.pickerItem}
         >
           {options.map((num) => (
             <Picker.Item key={num} label={`${num}`} value={num} />
@@ -251,17 +250,14 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     width: 80,
+    height: 50,
     backgroundColor: colors.background,
     borderRadius: 8,
     overflow: 'hidden',
+    justifyContent: 'center',
   },
   picker: {
-    height: Platform.OS === 'ios' ? 120 : 50,
-    color: colors.text,
-  },
-  pickerItem: {
-    fontSize: 22,
-    height: 120,
+    height: 50,
     color: colors.text,
   },
   noteSection: {

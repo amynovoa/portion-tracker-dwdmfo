@@ -153,11 +153,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    fontSize: 28,
+    fontSize: 24,
     marginRight: 8,
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
   },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   count: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.textSecondary,
     marginRight: 8,
