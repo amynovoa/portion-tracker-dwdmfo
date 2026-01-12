@@ -79,12 +79,13 @@ export default function HistoryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
         <View style={styles.header}>
-          <AppLogo size={32} />
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>History</Text>
-            <Text style={styles.subtitle}>Your tracking history</Text>
-          </View>
+          <Text style={styles.title}>History</Text>
+          <Text style={styles.subtitle}>Your tracking history</Text>
         </View>
 
         <View style={styles.adherenceSection}>
@@ -169,15 +170,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    flexDirection: 'row',
+  logoContainer: {
     alignItems: 'center',
-    paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
   },
-  headerTextContainer: {
-    marginLeft: 12,
+  header: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   title: {
     fontSize: 24,

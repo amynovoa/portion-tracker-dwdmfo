@@ -9,6 +9,7 @@ import { useFocusEffect } from 'expo-router';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } from 'react-native';
 import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
+import AppLogo from '@/components/AppLogo';
 
 const styles = StyleSheet.create({
   container: {
@@ -19,8 +20,13 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   header: {
     marginBottom: 24,
+    alignItems: 'center',
   },
   title: {
     fontSize: 32,
@@ -145,6 +151,10 @@ export default function HistoryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
+        </View>
+
         <View style={styles.header}>
           <Text style={styles.title}>History</Text>
           <Text style={styles.subtitle}>Your tracking history</Text>
