@@ -60,16 +60,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  disabledButton: {
-    opacity: 0.5,
-  },
   pickerContainer: {
     marginTop: 16,
+    alignItems: 'center',
+  },
+  pickerLabel: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 8,
+    fontWeight: '500',
   },
 });
 
 export default function DailyResetScreen() {
-  const [resetTime, setResetTime] = useState(new Date());
+  const [resetTime, setResetTime] = useState(() => {
+    // Default to 12:00 AM
+    const defaultTime = new Date();
+    defaultTime.setHours(0, 0, 0, 0);
+    return defaultTime;
+  });
   const [showPicker, setShowPicker] = useState(false);
   const [customResetEnabled, setCustomResetEnabled] = useState(false);
 
@@ -80,11 +89,11 @@ export default function DailyResetScreen() {
   const loadSettings = async () => {
     const config = await loadResetTime();
     setCustomResetEnabled(config.enabled);
-    if (config.enabled) {
-      const time = new Date();
-      time.setHours(config.hour, config.minute, 0, 0);
-      setResetTime(time);
-    }
+    
+    // Set the time from config or default to 12:00 AM
+    const time = new Date();
+    time.setHours(config.hour, config.minute, 0, 0);
+    setResetTime(time);
   };
 
   const handleToggleCustomReset = async (value: boolean) => {
@@ -124,7 +133,7 @@ export default function DailyResetScreen() {
   };
 
   const handleTimeButtonPress = () => {
-    if (customResetEnabled) {
+    if (customResetEnabled && Platform.OS === 'android') {
       setShowPicker(true);
     }
   };
@@ -138,7 +147,7 @@ export default function DailyResetScreen() {
       <View style={styles.settingRow}>
         <Text style={styles.settingLabel}>Custom Reset Time</Text>
         <Text style={styles.settingDescription}>
-          By default, your daily portions reset at midnight. Enable this to choose a custom reset time.
+          By default, your daily portions reset at midnight (12:00 AM). Enable this to choose a custom reset time.
         </Text>
         
         <View style={styles.toggleRow}>
@@ -153,21 +162,27 @@ export default function DailyResetScreen() {
 
         {customResetEnabled && (
           <>
-            <Text style={styles.settingLabel}>Reset Time</Text>
-            <TouchableOpacity
-              style={styles.timeButton}
-              onPress={handleTimeButtonPress}
-            >
-              <Text style={styles.timeButtonText}>{formatTime(resetTime)}</Text>
-            </TouchableOpacity>
+            {Platform.OS === 'android' && (
+              <>
+                <Text style={styles.settingLabel}>Reset Time</Text>
+                <TouchableOpacity
+                  style={styles.timeButton}
+                  onPress={handleTimeButtonPress}
+                >
+                  <Text style={styles.timeButtonText}>{formatTime(resetTime)}</Text>
+                </TouchableOpacity>
+              </>
+            )}
 
             {Platform.OS === 'ios' && (
               <View style={styles.pickerContainer}>
+                <Text style={styles.pickerLabel}>Select Reset Time</Text>
                 <DateTimePicker
                   value={resetTime}
                   mode="time"
                   display="spinner"
                   onChange={handleTimeChange}
+                  style={{ width: '100%' }}
                 />
               </View>
             )}
@@ -176,7 +191,7 @@ export default function DailyResetScreen() {
               <DateTimePicker
                 value={resetTime}
                 mode="time"
-                display="default"
+                display="spinner"
                 onChange={handleTimeChange}
               />
             )}
