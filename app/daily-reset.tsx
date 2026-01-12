@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
   timeButton: {
     ...buttonStyles.secondary,
     paddingVertical: 12,
+    marginTop: 8,
   },
   timeButtonText: {
     fontSize: 18,
@@ -61,6 +62,9 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  pickerContainer: {
+    marginTop: 16,
   },
 });
 
@@ -94,10 +98,12 @@ export default function DailyResetScreen() {
   };
 
   const handleTimeChange = async (event: any, selectedDate?: Date) => {
+    // On Android, hide the picker after selection
     if (Platform.OS === 'android') {
       setShowPicker(false);
     }
 
+    // If user selected a time (didn't cancel)
     if (selectedDate) {
       setResetTime(selectedDate);
       const config: ResetTimeConfig = {
@@ -115,6 +121,12 @@ export default function DailyResetScreen() {
       minute: '2-digit',
       hour12: true,
     });
+  };
+
+  const handleTimeButtonPress = () => {
+    if (customResetEnabled) {
+      setShowPicker(true);
+    }
   };
 
   return (
@@ -143,18 +155,28 @@ export default function DailyResetScreen() {
           <>
             <Text style={styles.settingLabel}>Reset Time</Text>
             <TouchableOpacity
-              style={[styles.timeButton, !customResetEnabled && styles.disabledButton]}
-              onPress={() => setShowPicker(true)}
-              disabled={!customResetEnabled}
+              style={styles.timeButton}
+              onPress={handleTimeButtonPress}
             >
               <Text style={styles.timeButtonText}>{formatTime(resetTime)}</Text>
             </TouchableOpacity>
 
-            {(showPicker || Platform.OS === 'ios') && customResetEnabled && (
+            {Platform.OS === 'ios' && (
+              <View style={styles.pickerContainer}>
+                <DateTimePicker
+                  value={resetTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={handleTimeChange}
+                />
+              </View>
+            )}
+
+            {Platform.OS === 'android' && showPicker && (
               <DateTimePicker
                 value={resetTime}
                 mode="time"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                display="default"
                 onChange={handleTimeChange}
               />
             )}
