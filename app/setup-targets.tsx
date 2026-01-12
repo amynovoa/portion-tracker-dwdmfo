@@ -20,7 +20,7 @@ export default function SetupTargetsScreen() {
     nutsSeeds: 2,
     fats: 2,
     water: 8,
-    exercise: 3,
+    exercise: 0, // Exercise is not set during setup, only tracked
     alcohol: 2,
   });
 
@@ -38,6 +38,8 @@ export default function SetupTargetsScreen() {
       const recommended = calculateRecommendedTargets(sex, weight, goal, activityLevel);
       // Set the alcohol goal from the profile setup
       recommended.alcohol = alcoholGoal;
+      // Exercise is not set during setup, only tracked on the tracking page
+      recommended.exercise = 0;
       
       console.log('Recommended targets:', recommended);
       setTargets(recommended);
@@ -90,8 +92,14 @@ export default function SetupTargetsScreen() {
         <TargetRow label="Nuts & Seeds" value={targets.nutsSeeds} onChange={(v) => updateTarget('nutsSeeds', v)} />
         <TargetRow label="Fats" value={targets.fats} onChange={(v) => updateTarget('fats', v)} />
         <TargetRow label="Water (cups)" value={targets.water} onChange={(v) => updateTarget('water', v)} />
-        <TargetRow label="Exercise (sessions)" value={targets.exercise} onChange={(v) => updateTarget('exercise', v)} />
         <TargetRow label="Alcohol (servings)" value={targets.alcohol} onChange={(v) => updateTarget('alcohol', v)} />
+
+        <View style={styles.noteSection}>
+          <Text style={styles.noteIcon}>💪</Text>
+          <Text style={styles.noteText}>
+            Exercise can be tracked daily on the tracking page, but doesn&apos;t have a numeric target.
+          </Text>
+        </View>
 
         <TouchableOpacity style={buttonStyles.primary} onPress={handleSave}>
           <Text style={buttonStyles.primaryText}>Save & Continue</Text>
@@ -178,5 +186,26 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 40,
+  },
+  noteSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  noteIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
 });
