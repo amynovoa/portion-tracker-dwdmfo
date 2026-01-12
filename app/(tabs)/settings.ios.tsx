@@ -8,6 +8,7 @@ import PaywallScreen from '@/components/PaywallScreen';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
+import AppLogo from '@/components/AppLogo';
 
 const styles = StyleSheet.create({
   container: {
@@ -24,7 +25,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   headerIcon: {
-    fontSize: 40,
     marginRight: 15,
   },
   headerTitle: {
@@ -83,7 +83,9 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.headerIcon}>🍅</Text>
+          <View style={styles.headerIcon}>
+            <AppLogo size={40} />
+          </View>
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
@@ -128,6 +130,21 @@ export default function SettingsScreen() {
           <Text style={styles.settingIcon}>🕐</Text>
           <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Daily Reset</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
+        {/* Daily Reminder - Now with chevron */}
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => {
+            console.log('Daily Reminder button pressed');
+            router.push('/daily-reminder');
+          }}
+        >
+          <Text style={styles.settingIcon}>🔔</Text>
+          <View style={styles.settingContent} pointerEvents="none">
+            <Text style={styles.settingLabel}>Daily Reminder</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>

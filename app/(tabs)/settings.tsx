@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
 import { toggleNoonReminder, isNoonReminderEnabled } from '@/utils/notificationManager';
+import AppLogo from '@/components/AppLogo';
 
 const styles = StyleSheet.create({
   container: {
@@ -26,7 +27,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   headerIcon: {
-    fontSize: 40,
     marginRight: 15,
   },
   headerTitle: {
@@ -68,35 +68,6 @@ const styles = StyleSheet.create({
 export default function SettingsScreen() {
   const router = useRouter();
   const [paywallVisible, setPaywallVisible] = useState(false);
-  const [noonReminderEnabled, setNoonReminderEnabled] = useState(false);
-
-  useEffect(() => {
-    // Load noon reminder status
-    const loadReminderStatus = async () => {
-      try {
-        const enabled = await isNoonReminderEnabled();
-        setNoonReminderEnabled(enabled);
-      } catch (error) {
-        console.error('Error loading reminder status:', error);
-      }
-    };
-    loadReminderStatus();
-  }, []);
-
-  const handleToggleNoonReminder = async (value: boolean) => {
-    try {
-      await toggleNoonReminder(value);
-      setNoonReminderEnabled(value);
-      console.log('Noon reminder toggled:', value);
-    } catch (error) {
-      console.error('Error toggling noon reminder:', error);
-      Alert.alert(
-        'Permission Required',
-        'Please enable notifications in your device settings to receive reminders.',
-        [{ text: 'OK' }]
-      );
-    }
-  };
 
   const handleResetAppData = () => {
     console.log('=== RESET APP DATA BUTTON PRESSED ===');
@@ -114,7 +85,9 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.headerIcon}>🍅</Text>
+          <View style={styles.headerIcon}>
+            <AppLogo size={40} />
+          </View>
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
@@ -163,22 +136,20 @@ export default function SettingsScreen() {
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
 
-        {/* Noon Reminder */}
-        <View style={styles.settingItem}>
+        {/* Daily Reminder - Now with chevron */}
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => {
+            console.log('Daily Reminder button pressed');
+            router.push('/daily-reminder');
+          }}
+        >
           <Text style={styles.settingIcon}>🔔</Text>
-          <View style={styles.settingContent}>
+          <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Daily Reminder</Text>
-            <Text style={styles.settingDescription}>
-              Get reminded at 12 noon if you haven&apos;t logged anything
-            </Text>
           </View>
-          <Switch
-            value={noonReminderEnabled}
-            onValueChange={handleToggleNoonReminder}
-            trackColor={{ false: colors.textSecondary, true: colors.primary }}
-            thumbColor="#fff"
-          />
-        </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
 
         {/* Privacy Policy */}
         <TouchableOpacity
