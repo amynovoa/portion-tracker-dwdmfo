@@ -140,7 +140,6 @@ export default function FoodGroupRow({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 20,
-    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
