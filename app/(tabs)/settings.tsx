@@ -160,6 +160,7 @@ export default function SettingsScreen() {
           <View style={styles.settingContent}>
             <Text style={styles.settingLabel}>Reset App Data</Text>
           </View>
+          <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
       </ScrollView>
 
