@@ -55,6 +55,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.textSecondary,
   },
+  dangerLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FF3B30',
+  },
 });
 
 export default function SettingsScreen() {
@@ -62,6 +67,7 @@ export default function SettingsScreen() {
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   const handleResetAllData = () => {
+    console.log('Reset App Data button pressed');
     Alert.alert(
       'Reset All Data',
       'Are you sure you want to reset all app data? This action cannot be undone.',
@@ -72,20 +78,13 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('Clearing AsyncStorage...');
               await AsyncStorage.clear();
-              Alert.alert(
-                'Success',
-                'All data has been reset. The app will now restart.',
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      // Navigate to welcome screen to restart the setup flow
-                      router.replace('/welcome');
-                    },
-                  },
-                ]
-              );
+              console.log('AsyncStorage cleared successfully');
+              
+              // Navigate immediately to welcome screen
+              console.log('Navigating to welcome screen...');
+              router.replace('/welcome');
             } catch (error) {
               console.error('Error resetting app data:', error);
               Alert.alert('Error', 'Failed to reset app data. Please try again.');
@@ -139,7 +138,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>🕐</Text>
           <View style={styles.settingContent}>
-            <Text style={styles.settingLabel}>Daily Reset</Text>
+            <Text style={settings.settingLabel}>Daily Reset</Text>
           </View>
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
@@ -160,12 +159,12 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={styles.settingItem}
           onPress={handleResetAllData}
+          activeOpacity={0.7}
         >
           <Text style={styles.settingIcon}>⚠️</Text>
           <View style={styles.settingContent}>
-            <Text style={styles.settingLabel}>Reset App Data</Text>
+            <Text style={styles.dangerLabel}>Reset App Data</Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
       </ScrollView>
 
