@@ -166,7 +166,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   count: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '600',
     color: colors.textSecondary,
     marginRight: 8,
   },
