@@ -49,17 +49,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
-  timeButton: {
-    ...buttonStyles.secondary,
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  timeButtonText: {
-    fontSize: 18,
-    color: colors.primary,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   pickerContainer: {
     marginTop: 16,
     alignItems: 'center',
@@ -79,7 +68,6 @@ export default function DailyResetScreen() {
     defaultTime.setHours(0, 0, 0, 0);
     return defaultTime;
   });
-  const [showPicker, setShowPicker] = useState(false);
   const [customResetEnabled, setCustomResetEnabled] = useState(false);
 
   useEffect(() => {
@@ -109,11 +97,6 @@ export default function DailyResetScreen() {
   const handleTimeChange = async (event: any, selectedDate?: Date) => {
     console.log('Time picker onChange called', { event, selectedDate });
     
-    // On Android, hide the picker after selection or dismissal
-    if (Platform.OS === 'android') {
-      setShowPicker(false);
-    }
-
     // If user selected a time (didn't cancel)
     if (selectedDate) {
       console.log('Setting new time:', selectedDate);
@@ -124,22 +107,6 @@ export default function DailyResetScreen() {
         minute: selectedDate.getMinutes(),
       };
       await saveResetTime(config);
-    }
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
-
-  const handleTimeButtonPress = () => {
-    console.log('Time button pressed, customResetEnabled:', customResetEnabled);
-    if (customResetEnabled) {
-      setShowPicker(true);
-      console.log('Show picker set to true');
     }
   };
 
@@ -166,27 +133,16 @@ export default function DailyResetScreen() {
         </View>
 
         {customResetEnabled && (
-          <>
-            <Text style={styles.settingLabel}>Reset Time</Text>
-            <TouchableOpacity
-              style={styles.timeButton}
-              onPress={handleTimeButtonPress}
-            >
-              <Text style={styles.timeButtonText}>{formatTime(resetTime)}</Text>
-            </TouchableOpacity>
-
-            {showPicker && (
-              <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={resetTime}
-                  mode="time"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={handleTimeChange}
-                  style={{ width: '100%' }}
-                />
-              </View>
-            )}
-          </>
+          <View style={styles.pickerContainer}>
+            <Text style={styles.pickerLabel}>Select Reset Time</Text>
+            <DateTimePicker
+              value={resetTime}
+              mode="time"
+              display="spinner"
+              onChange={handleTimeChange}
+              style={{ width: '100%' }}
+            />
+          </View>
         )}
       </View>
     </View>
