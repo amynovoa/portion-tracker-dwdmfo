@@ -68,7 +68,9 @@ export default function SettingsScreen() {
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   const handleResetAllData = () => {
-    console.log('Reset App Data button pressed - showing confirmation alert');
+    console.log('=== RESET APP DATA BUTTON PRESSED ===');
+    console.log('Platform:', Platform.OS);
+    console.log('Showing confirmation alert...');
     
     Alert.alert(
       'Reset All Data',
@@ -77,22 +79,26 @@ export default function SettingsScreen() {
         { 
           text: 'Cancel', 
           style: 'cancel',
-          onPress: () => console.log('Reset cancelled by user')
+          onPress: () => {
+            console.log('=== RESET CANCELLED BY USER ===');
+          }
         },
         {
           text: 'Reset Everything',
           style: 'destructive',
           onPress: async () => {
+            console.log('=== USER CONFIRMED RESET ===');
             try {
-              console.log('User confirmed reset - clearing AsyncStorage...');
+              console.log('Step 1: Clearing AsyncStorage...');
               await AsyncStorage.clear();
-              console.log('AsyncStorage cleared successfully');
+              console.log('Step 2: AsyncStorage cleared successfully');
               
-              // Navigate to welcome screen
-              console.log('Navigating to welcome screen...');
+              console.log('Step 3: Navigating to welcome screen...');
               router.replace('/welcome');
+              console.log('Step 4: Navigation command sent');
             } catch (error) {
-              console.error('Error resetting app data:', error);
+              console.error('=== ERROR DURING RESET ===');
+              console.error('Error details:', error);
               Alert.alert('Error', 'Failed to reset app data. Please try again.');
             }
           },
@@ -100,9 +106,12 @@ export default function SettingsScreen() {
       ],
       { cancelable: true }
     );
+    
+    console.log('Alert.alert() called');
   };
 
   const openPrivacyPolicy = () => {
+    console.log('Opening privacy policy...');
     Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
@@ -117,7 +126,10 @@ export default function SettingsScreen() {
         {/* Subscription */}
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => setPaywallVisible(true)}
+          onPress={() => {
+            console.log('Subscription button pressed');
+            setPaywallVisible(true);
+          }}
         >
           <Text style={styles.settingIcon}>💳</Text>
           <View style={styles.settingContent}>
@@ -129,7 +141,10 @@ export default function SettingsScreen() {
         {/* Celebration */}
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => router.push('/celebration-settings')}
+          onPress={() => {
+            console.log('Celebration button pressed');
+            router.push('/celebration-settings');
+          }}
         >
           <Text style={styles.settingIcon}>🎉</Text>
           <View style={styles.settingContent}>
@@ -141,7 +156,10 @@ export default function SettingsScreen() {
         {/* Daily Reset */}
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => router.push('/daily-reset')}
+          onPress={() => {
+            console.log('Daily Reset button pressed');
+            router.push('/daily-reset');
+          }}
         >
           <Text style={styles.settingIcon}>🕐</Text>
           <View style={styles.settingContent}>
@@ -153,7 +171,10 @@ export default function SettingsScreen() {
         {/* Privacy Policy */}
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={openPrivacyPolicy}
+          onPress={() => {
+            console.log('Privacy Policy button pressed');
+            openPrivacyPolicy();
+          }}
         >
           <Text style={styles.settingIcon}>🛡️</Text>
           <View style={styles.settingContent}>
@@ -166,6 +187,7 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={styles.settingItem}
           onPress={handleResetAllData}
+          activeOpacity={0.7}
         >
           <Text style={styles.settingIcon}>⚠️</Text>
           <View style={styles.settingContent}>
