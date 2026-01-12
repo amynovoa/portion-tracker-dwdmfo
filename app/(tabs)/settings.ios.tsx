@@ -86,8 +86,25 @@ export default function SettingsScreen() {
           text: 'Reset',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.clear();
-            Alert.alert('Success', 'All data has been reset. Please restart the app.');
+            try {
+              await AsyncStorage.clear();
+              Alert.alert(
+                'Success',
+                'All data has been reset. The app will now restart.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Navigate to welcome screen to restart the setup flow
+                      router.replace('/welcome');
+                    },
+                  },
+                ]
+              );
+            } catch (error) {
+              console.error('Error resetting app data:', error);
+              Alert.alert('Error', 'Failed to reset app data. Please try again.');
+            }
           },
         },
       ]
@@ -95,7 +112,7 @@ export default function SettingsScreen() {
   };
 
   const openPrivacyPolicy = () => {
-    Linking.openURL('https://www.portiontrackapp.com/privacy-policy');
+    Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   return (
@@ -135,7 +152,7 @@ export default function SettingsScreen() {
         {/* Daily Reset */}
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => router.push('/reset-time-config')}
+          onPress={() => router.push('/daily-reset')}
         >
           <Text style={styles.settingIcon}>🕐</Text>
           <View style={styles.settingContent}>
