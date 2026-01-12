@@ -11,6 +11,7 @@ import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } fr
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import DaySelector from '@/components/DaySelector';
 import FoodGroupRow from '@/components/FoodGroupRow';
+import AppLogo from '@/components/AppLogo';
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -140,6 +141,11 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Logo at top */}
+        <View style={styles.logoContainer}>
+          <AppLogo size={50} />
+        </View>
+
         <DaySelector selectedDate={selectedDate} onDateSelect={handleDateSelect} />
 
         <View style={styles.dateHeader}>
@@ -178,6 +184,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 100,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   dateHeader: {
     flexDirection: 'row',

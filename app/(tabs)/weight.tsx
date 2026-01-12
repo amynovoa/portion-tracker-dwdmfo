@@ -8,6 +8,7 @@ import WeightChart from '@/components/WeightChart';
 import DaySelector from '@/components/DaySelector';
 import { useFocusEffect } from 'expo-router';
 import { formatDate } from '@/utils/dateUtils';
+import AppLogo from '@/components/AppLogo';
 
 type TimeRange = 'week' | '30days' | '90days' | 'all';
 
@@ -16,6 +17,7 @@ export default function WeightTrackingScreen() {
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [goalWeight, setGoalWeight] = useState<number | undefined>(undefined);
   const [currentWeight, setCurrentWeight] = useState<number | undefined>(undefined);
+  const [startingWeight, setStartingWeight] = useState<number | undefined>(undefined);
   const [timeRange, setTimeRange] = useState<TimeRange>('30days');
   const [filteredEntries, setFilteredEntries] = useState<WeightEntry[]>([]);
   const [showAllHistory, setShowAllHistory] = useState(false);
@@ -55,10 +57,15 @@ export default function WeightTrackingScreen() {
       const weightEntries = await loadWeightEntries();
       console.log('Weight entries found:', weightEntries.length);
 
+      // Determine starting weight (oldest entry or current weight if no entries)
+      if (weightEntries.length > 0) {
+        const sorted = [...weightEntries].sort((a, b) => a.timestamp - b.timestamp);
+        setStartingWeight(sorted[0].weight);
+      } else {
+        setStartingWeight(profile.currentWeight);
+      }
+
       // Check if we need to create an initial entry with the profile weight
-      // This should happen if:
-      // 1. There are no entries at all, OR
-      // 2. There are entries but none match the profile's current weight (meaning profile was updated)
       const hasProfileWeightEntry = weightEntries.some(entry => entry.weight === profile.currentWeight);
       
       if (weightEntries.length === 0 || !hasProfileWeightEntry) {
@@ -66,11 +73,9 @@ export default function WeightTrackingScreen() {
         const today = new Date();
         const todayString = today.toISOString().split('T')[0];
         
-        // Check if there's already an entry for today
         const todayEntry = weightEntries.find(entry => entry.date === todayString);
         
         if (!todayEntry) {
-          // No entry for today, create one with profile weight
           const initialEntry: WeightEntry = {
             date: todayString,
             weight: profile.currentWeight,
@@ -78,11 +83,9 @@ export default function WeightTrackingScreen() {
           };
           await saveWeightEntry(initialEntry);
           
-          // Reload entries after adding the initial one
           const updatedEntries = await loadWeightEntries();
           setEntries(updatedEntries);
         } else {
-          // There's already an entry for today, just use existing entries
           setEntries(weightEntries);
         }
       } else {
@@ -90,9 +93,9 @@ export default function WeightTrackingScreen() {
       }
     } else {
       console.log('No profile found, clearing weight data');
-      // No profile means data was cleared or user hasn't set up yet
       setGoalWeight(undefined);
       setCurrentWeight(undefined);
+      setStartingWeight(undefined);
       setEntries([]);
       setWeightInput('');
     }
@@ -134,7 +137,6 @@ export default function WeightTrackingScreen() {
       return;
     }
 
-    // Parse the selected date to get the timestamp
     const selectedDateObj = new Date(selectedDate + 'T12:00:00');
     const entry: WeightEntry = {
       date: selectedDate,
@@ -146,6 +148,10 @@ export default function WeightTrackingScreen() {
       await saveWeightEntry(entry);
       const updatedEntries = await loadWeightEntries();
       setEntries(updatedEntries);
+      
+      // Update starting weight if this is the oldest entry
+      const sorted = [...updatedEntries].sort((a, b) => a.timestamp - b.timestamp);
+      setStartingWeight(sorted[0].weight);
       
       const isToday = selectedDate === formatDate(new Date());
       const dateLabel = isToday ? 'today' : selectedDate;
@@ -171,7 +177,12 @@ export default function WeightTrackingScreen() {
               const updatedEntries = await loadWeightEntries();
               setEntries(updatedEntries);
               
-              // Clear input if we deleted the currently selected date
+              // Update starting weight after deletion
+              if (updatedEntries.length > 0) {
+                const sorted = [...updatedEntries].sort((a, b) => a.timestamp - b.timestamp);
+                setStartingWeight(sorted[0].weight);
+              }
+              
               if (date === selectedDate) {
                 setWeightInput('');
               }
@@ -203,21 +214,31 @@ export default function WeightTrackingScreen() {
   const latestWeight = entries.length > 0 ? entries[0].weight : currentWeight;
   const displayedHistory = showAllHistory ? entries : entries.slice(0, 3);
 
-  // Check if there's an entry for the selected date
+  // Calculate change from starting weight
+  const changeFromStart = startingWeight && latestWeight ? latestWeight - startingWeight : null;
+
   const hasEntryForSelectedDate = entries.some(e => e.date === selectedDate);
   const isToday = selectedDate === formatDate(new Date());
 
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Compact Header */}
+        {/* Header with Logo */}
         <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <AppLogo size={40} />
+          </View>
           <Text style={styles.title}>Weight Progress</Text>
         </View>
 
-        {/* Main Stats Card */}
+        {/* Main Stats Card with Starting Weight */}
         <View style={styles.mainStatsCard}>
           <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{startingWeight ? `${startingWeight}` : '--'}</Text>
+              <Text style={styles.statLabel}>Starting</Text>
+            </View>
+            <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{latestWeight ? `${latestWeight}` : '--'}</Text>
               <Text style={styles.statLabel}>Current</Text>
@@ -227,19 +248,14 @@ export default function WeightTrackingScreen() {
               <Text style={styles.statValue}>{goalWeight ? `${goalWeight}` : '--'}</Text>
               <Text style={styles.statLabel}>Goal</Text>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.secondary, fontSize: 20 }]}>
-                {goalWeight && latestWeight ? Math.abs(latestWeight - goalWeight).toFixed(1) : '--'}
-              </Text>
-              <Text style={styles.statLabel}>To Go</Text>
-            </View>
           </View>
           
-          {weightChange && (
+          {changeFromStart !== null && (
             <View style={styles.changeIndicator}>
-              <Text style={styles.changeText}>
-                {weightChange.change > 0 ? '↑' : '↓'} {Math.abs(weightChange.change).toFixed(1)} lbs ({weightChange.change > 0 ? '+' : ''}{weightChange.percentage}%) this period
+              <Text style={[styles.changeText, { 
+                color: changeFromStart > 0 ? colors.error : changeFromStart < 0 ? colors.secondary : colors.textSecondary 
+              }]}>
+                {changeFromStart > 0 ? '↑' : changeFromStart < 0 ? '↓' : '='} {Math.abs(changeFromStart).toFixed(1)} lbs from starting weight
               </Text>
             </View>
           )}
@@ -338,6 +354,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
+    alignItems: 'center',
+  },
+  logoContainer: {
+    marginBottom: 8,
   },
   title: {
     fontSize: 26,
@@ -387,8 +407,7 @@ const styles = StyleSheet.create({
   },
   changeText: {
     fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   quickAddCard: {
     marginHorizontal: 20,

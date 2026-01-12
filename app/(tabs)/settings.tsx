@@ -21,18 +21,16 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
-  header: {
-    flexDirection: 'row',
+  logoContainer: {
     alignItems: 'center',
-    marginBottom: 30,
-  },
-  headerIcon: {
-    marginRight: 15,
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
+    textAlign: 'center',
+    marginBottom: 30,
   },
   settingItem: {
     flexDirection: 'row',
@@ -84,12 +82,10 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scrollContent}>
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <AppLogo size={40} />
-          </View>
-          <Text style={styles.headerTitle}>Settings</Text>
+        <View style={styles.logoContainer}>
+          <AppLogo size={60} />
         </View>
+        <Text style={styles.headerTitle}>Settings</Text>
 
         {/* Subscription */}
         <TouchableOpacity
