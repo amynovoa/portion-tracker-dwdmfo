@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Switch, ScrollView } from 'react-native';
+import { Stack } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadResetTime, saveResetTime, ResetTimeConfig } from '@/utils/storage';
 import { colors } from '@/styles/commonStyles';
 
@@ -15,7 +17,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
   },
   headerTitle: {
@@ -137,43 +139,57 @@ export default function DailyResetScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Daily Reset</Text>
-      </View>
-
-      <View style={styles.settingRow}>
-        <Text style={styles.settingLabel}>Custom Reset Time</Text>
-        <Text style={styles.settingDescription}>
-          By default, your daily portions reset at midnight (12:00 AM). Enable this to choose a custom reset time.
-        </Text>
-        
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>Enable Custom Time</Text>
-          <Switch
-            value={customResetEnabled}
-            onValueChange={handleToggleCustomReset}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor="#fff"
-          />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Daily Reset',
+          headerBackTitle: 'Settings',
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTintColor: colors.text,
+        }}
+      />
+      
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Daily Reset</Text>
         </View>
 
-        {customResetEnabled && (
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerLabel}>Select Reset Time</Text>
-            <DateTimePicker
-              value={resetTime}
-              mode="time"
-              display="spinner"
-              onChange={handleTimeChange}
-              textColor={colors.text}
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>Custom Reset Time</Text>
+          <Text style={styles.settingDescription}>
+            By default, your daily portions reset at midnight (12:00 AM). Enable this to choose a custom reset time.
+          </Text>
+          
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Enable Custom Time</Text>
+            <Switch
+              value={customResetEnabled}
+              onValueChange={handleToggleCustomReset}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor="#fff"
             />
-            <Text style={styles.currentTimeText}>
-              Current reset time: {formatTime(resetTime)}
-            </Text>
           </View>
-        )}
-      </View>
-    </ScrollView>
+
+          {customResetEnabled && (
+            <View style={styles.pickerContainer}>
+              <Text style={styles.pickerLabel}>Select Reset Time</Text>
+              <DateTimePicker
+                value={resetTime}
+                mode="time"
+                display="spinner"
+                onChange={handleTimeChange}
+                textColor={colors.text}
+              />
+              <Text style={styles.currentTimeText}>
+                Current reset time: {formatTime(resetTime)}
+              </Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
