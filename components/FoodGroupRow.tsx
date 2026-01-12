@@ -56,6 +56,19 @@ export default function FoodGroupRow({
     }
   };
 
+  // Calculate slot size based on target
+  // Smaller targets get larger circles, larger targets get smaller circles
+  // This creates better visual balance and usability
+  const getSlotSize = () => {
+    if (target <= 2) return 40; // Large circles for small targets (1-2 portions)
+    if (target <= 4) return 36; // Medium-large circles (3-4 portions)
+    if (target <= 6) return 32; // Medium circles (5-6 portions)
+    if (target <= 8) return 28; // Medium-small circles (7-8 portions)
+    return 24; // Small circles for large targets (9+ portions)
+  };
+
+  const slotSize = getSlotSize();
+
   // For exercise, always show only 1 circle
   // For other food groups, show enough slots to accommodate completed portions, with extra slots for adding more
   const maxSlots = foodGroup === 'exercise' ? 1 : Math.max(target, completed + 3);
@@ -96,6 +109,11 @@ export default function FoodGroupRow({
               onPress={() => onTogglePortion(index >= completed)}
               style={[
                 styles.slot,
+                {
+                  width: slotSize,
+                  height: slotSize,
+                  borderRadius: slotSize / 2,
+                },
                 isFilled && { backgroundColor: slotColor, borderColor: slotColor },
               ]}
             />
@@ -168,9 +186,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   slot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
     borderWidth: 2,
     borderColor: colors.border,
     backgroundColor: 'transparent',
