@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking, Platform } from 'react-native';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -13,6 +13,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    paddingTop: 48,
   },
   scrollContent: {
     padding: 20,
@@ -51,6 +52,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
+  settingDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
   chevron: {
     fontSize: 24,
     color: colors.textSecondary,
@@ -63,6 +69,7 @@ export default function SettingsScreen() {
 
   const handleResetAllData = () => {
     console.log('Reset App Data button pressed - showing confirmation alert');
+    
     Alert.alert(
       'Reset All Data',
       'This will erase everything and start you over from the beginning. All your tracking data, profile settings, and progress will be permanently deleted. This action cannot be undone.\n\nAre you sure you want to continue?',
@@ -81,16 +88,19 @@ export default function SettingsScreen() {
               await AsyncStorage.clear();
               console.log('AsyncStorage cleared successfully');
               
-              // Navigate immediately to welcome screen
-              console.log('Navigating to welcome screen...');
-              router.replace('/welcome');
+              // Small delay to ensure storage is cleared
+              setTimeout(() => {
+                console.log('Navigating to welcome screen...');
+                router.replace('/welcome');
+              }, 100);
             } catch (error) {
               console.error('Error resetting app data:', error);
               Alert.alert('Error', 'Failed to reset app data. Please try again.');
             }
           },
         },
-      ]
+      ],
+      { cancelable: true }
     );
   };
 
@@ -163,6 +173,9 @@ export default function SettingsScreen() {
           <Text style={styles.settingIcon}>⚠️</Text>
           <View style={styles.settingContent}>
             <Text style={styles.settingLabel}>Reset App Data</Text>
+            <Text style={styles.settingDescription}>
+              Erase all data and start over
+            </Text>
           </View>
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
