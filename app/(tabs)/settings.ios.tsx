@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',
@@ -87,11 +88,9 @@ export default function SettingsScreen() {
               await AsyncStorage.clear();
               console.log('AsyncStorage cleared successfully');
               
-              // Small delay to ensure storage is cleared
-              setTimeout(() => {
-                console.log('Navigating to welcome screen...');
-                router.replace('/welcome');
-              }, 100);
+              // Navigate to welcome screen
+              console.log('Navigating to welcome screen...');
+              router.replace('/welcome');
             } catch (error) {
               console.error('Error resetting app data:', error);
               Alert.alert('Error', 'Failed to reset app data. Please try again.');
@@ -167,7 +166,6 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={styles.settingItem}
           onPress={handleResetAllData}
-          activeOpacity={0.7}
         >
           <Text style={styles.settingIcon}>⚠️</Text>
           <View style={styles.settingContent}>
