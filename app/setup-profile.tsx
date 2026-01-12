@@ -77,11 +77,11 @@ export default function SetupProfileScreen() {
               selectedValue={sex}
               onValueChange={(value) => setSex(value)}
               style={styles.picker}
-              itemStyle={styles.pickerItem}
+              dropdownIconColor={colors.text}
             >
-              <Picker.Item label="Female" value="female" />
-              <Picker.Item label="Male" value="male" />
-              <Picker.Item label="Prefer not to say" value="prefer-not-to-say" />
+              <Picker.Item label="Female" value="female" color={colors.text} />
+              <Picker.Item label="Male" value="male" color={colors.text} />
+              <Picker.Item label="Prefer not to say" value="prefer-not-to-say" color={colors.text} />
             </Picker>
           </View>
         </View>
@@ -118,11 +118,11 @@ export default function SetupProfileScreen() {
               selectedValue={goal}
               onValueChange={(value) => setGoal(value)}
               style={styles.picker}
-              itemStyle={styles.pickerItem}
+              dropdownIconColor={colors.text}
             >
-              <Picker.Item label="Lose Weight" value="lose" />
-              <Picker.Item label="Maintain Weight" value="maintain" />
-              <Picker.Item label="Build Muscle" value="build" />
+              <Picker.Item label="Lose Weight" value="lose" color={colors.text} />
+              <Picker.Item label="Maintain Weight" value="maintain" color={colors.text} />
+              <Picker.Item label="Build Muscle" value="build" color={colors.text} />
             </Picker>
           </View>
         </View>
@@ -134,13 +134,13 @@ export default function SetupProfileScreen() {
               selectedValue={activityLevel}
               onValueChange={(value) => setActivityLevel(value)}
               style={styles.picker}
-              itemStyle={styles.pickerItem}
+              dropdownIconColor={colors.text}
             >
-              <Picker.Item label="Sedentary - Little to no exercise" value="sedentary" />
-              <Picker.Item label="Light - 1-3x/week or 6k-9k steps/day" value="light" />
-              <Picker.Item label="Moderate - 3-5x/week or 9k-12k steps/day" value="moderate" />
-              <Picker.Item label="Active - Most days or 12k-15k+ steps/day" value="active" />
-              <Picker.Item label="Very Active - High daily activity" value="very-active" />
+              <Picker.Item label="Sedentary - Little to no exercise" value="sedentary" color={colors.text} />
+              <Picker.Item label="Light - 1-3x/week or 6k-9k steps/day" value="light" color={colors.text} />
+              <Picker.Item label="Moderate - 3-5x/week or 9k-12k steps/day" value="moderate" color={colors.text} />
+              <Picker.Item label="Active - Most days or 12k-15k+ steps/day" value="active" color={colors.text} />
+              <Picker.Item label="Very Active - High daily activity" value="very-active" color={colors.text} />
             </Picker>
           </View>
         </View>
@@ -192,19 +192,19 @@ export default function SetupProfileScreen() {
                 selectedValue={alcoholGoal}
                 onValueChange={(value) => setAlcoholGoal(value)}
                 style={styles.picker}
-                itemStyle={styles.pickerItem}
+                dropdownIconColor={colors.text}
               >
-                <Picker.Item label="0 servings" value={0} />
-                <Picker.Item label="1 serving" value={1} />
-                <Picker.Item label="2 servings (recommended max)" value={2} />
-                <Picker.Item label="3 servings" value={3} />
-                <Picker.Item label="4 servings" value={4} />
-                <Picker.Item label="5 servings" value={5} />
-                <Picker.Item label="6 servings" value={6} />
-                <Picker.Item label="7 servings" value={7} />
-                <Picker.Item label="8 servings" value={8} />
-                <Picker.Item label="9 servings" value={9} />
-                <Picker.Item label="10 servings" value={10} />
+                <Picker.Item label="0 servings" value={0} color={colors.text} />
+                <Picker.Item label="1 serving" value={1} color={colors.text} />
+                <Picker.Item label="2 servings (recommended max)" value={2} color={colors.text} />
+                <Picker.Item label="3 servings" value={3} color={colors.text} />
+                <Picker.Item label="4 servings" value={4} color={colors.text} />
+                <Picker.Item label="5 servings" value={5} color={colors.text} />
+                <Picker.Item label="6 servings" value={6} color={colors.text} />
+                <Picker.Item label="7 servings" value={7} color={colors.text} />
+                <Picker.Item label="8 servings" value={8} color={colors.text} />
+                <Picker.Item label="9 servings" value={9} color={colors.text} />
+                <Picker.Item label="10 servings" value={10} color={colors.text} />
               </Picker>
             </View>
           </View>
@@ -285,17 +285,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
-    minHeight: Platform.OS === 'ios' ? 180 : 50,
+    minHeight: 50,
   },
   picker: {
-    height: Platform.OS === 'ios' ? 180 : 50,
+    height: 50,
     color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  pickerItem: {
-    fontSize: 18,
-    height: 180,
-    color: colors.text,
+    backgroundColor: 'transparent',
   },
   toggleContainer: {
     flexDirection: 'row',
