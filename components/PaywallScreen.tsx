@@ -70,7 +70,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
         )}
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Unlock Premium Features</Text>
+          <Text style={styles.title}>Unlock Full Access</Text>
           <Text style={styles.subtitle}>
             Get full access to all features and track your health journey
           </Text>
