@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,10 +9,12 @@ import { colors } from '@/styles/commonStyles';
 export default function ResetDataScreen() {
   const router = useRouter();
   const [isResetting, setIsResetting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const performReset = async () => {
     console.log('=== performReset CALLED ===');
     setIsResetting(true);
+    setShowConfirmModal(false);
     
     try {
       console.log('Step 1: Clearing AsyncStorage...');
@@ -32,11 +34,16 @@ export default function ResetDataScreen() {
       console.error('Error:', error);
       setIsResetting(false);
       
-      Alert.alert(
-        'Error',
-        'Failed to reset app data. Please try again.',
-        [{ text: 'OK' }]
-      );
+      if (Platform.OS === 'web') {
+        setShowConfirmModal(false);
+        alert('Failed to reset app data. Please try again.');
+      } else {
+        Alert.alert(
+          'Error',
+          'Failed to reset app data. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
     }
   };
 
@@ -50,42 +57,18 @@ export default function ResetDataScreen() {
       return;
     }
     
-    // Show confirmation alert
-    if (Platform.OS === 'web') {
-      // For web, use native confirm dialog
-      const confirmed = window.confirm('Are you absolutely sure you want to reset all data? This cannot be undone.');
-      console.log('Web confirm result:', confirmed);
-      if (confirmed) {
-        console.log('=== RESET CONFIRMED - STARTING RESET ===');
-        performReset();
-      } else {
-        console.log('=== RESET CANCELLED ===');
-      }
-    } else {
-      // For native platforms, use Alert.alert
-      Alert.alert(
-        'Final Confirmation',
-        'Are you absolutely sure you want to reset all data? This cannot be undone.',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-            onPress: () => {
-              console.log('=== RESET CANCELLED ===');
-            },
-          },
-          {
-            text: 'Yes, Reset Everything',
-            style: 'destructive',
-            onPress: () => {
-              console.log('=== RESET CONFIRMED - STARTING RESET ===');
-              performReset();
-            },
-          },
-        ],
-        { cancelable: true }
-      );
-    }
+    // Show in-app confirmation modal for all platforms
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmReset = () => {
+    console.log('=== RESET CONFIRMED - STARTING RESET ===');
+    performReset();
+  };
+
+  const handleCancelReset = () => {
+    console.log('=== RESET CANCELLED FROM MODAL ===');
+    setShowConfirmModal(false);
   };
 
   const handleCancel = () => {
@@ -161,6 +144,41 @@ export default function ResetDataScreen() {
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       </View>
+
+      {/* In-App Confirmation Modal */}
+      <Modal
+        visible={showConfirmModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelReset}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Final Confirmation</Text>
+            <Text style={styles.modalMessage}>
+              Are you absolutely sure you want to reset all data? This cannot be undone.
+            </Text>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={handleCancelReset}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={handleConfirmReset}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalConfirmButtonText}>Yes, Reset Everything</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -273,5 +291,65 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    lineHeight: 24,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  modalCancelButton: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalCancelButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalConfirmButton: {
+    backgroundColor: '#DC3545',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalConfirmButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
