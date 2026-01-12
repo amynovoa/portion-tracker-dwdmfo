@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
@@ -19,6 +19,13 @@ type PickerModalProps = {
 
 function PickerModal({ visible, onClose, onSelect, selectedValue, items, title }: PickerModalProps) {
   const [tempValue, setTempValue] = useState(selectedValue);
+
+  // Reset tempValue whenever the modal becomes visible or selectedValue changes
+  useEffect(() => {
+    if (visible) {
+      setTempValue(selectedValue);
+    }
+  }, [visible, selectedValue]);
 
   const handleDone = () => {
     onSelect(tempValue);
