@@ -55,11 +55,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.textSecondary,
   },
-  dangerLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FF3B30',
-  },
 });
 
 export default function SettingsScreen() {
@@ -163,7 +158,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>⚠️</Text>
           <View style={styles.settingContent}>
-            <Text style={styles.dangerLabel}>Reset App Data</Text>
+            <Text style={styles.settingLabel}>Reset App Data</Text>
           </View>
         </TouchableOpacity>
       </ScrollView>
