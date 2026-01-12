@@ -11,9 +11,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     padding: 20,
+    paddingBottom: 20,
   },
   header: {
     marginBottom: 30,
@@ -64,8 +64,9 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   buttonContainer: {
-    marginTop: 'auto',
-    paddingBottom: 20,
+    padding: 20,
+    paddingBottom: 30,
+    backgroundColor: colors.background,
   },
   resetButton: {
     backgroundColor: '#DC3545',
@@ -90,13 +91,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  disabledButton: {
+    opacity: 0.5,
+  },
 });
 
 export default function ResetDataScreen() {
   const router = useRouter();
   const [isResetting, setIsResetting] = useState(false);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     console.log('=== RESET BUTTON PRESSED ON RESET SCREEN ===');
     
     Alert.alert(
@@ -147,7 +151,11 @@ export default function ResetDataScreen() {
         }}
       />
       
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Reset All App Data</Text>
         </View>
@@ -175,32 +183,32 @@ export default function ResetDataScreen() {
             After resetting, you&apos;ll be taken back to the welcome screen where you can set up your profile again from scratch.
           </Text>
         </View>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.resetButton}
-            onPress={handleReset}
-            disabled={isResetting}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.resetButtonText}>
-              {isResetting ? 'Resetting...' : 'Reset All Data'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => {
-              console.log('=== CANCEL PRESSED - GOING BACK ===');
-              router.back();
-            }}
-            disabled={isResetting}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.resetButton, isResetting && styles.disabledButton]}
+          onPress={handleReset}
+          disabled={isResetting}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.resetButtonText}>
+            {isResetting ? 'Resetting...' : 'Reset All Data'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.cancelButton, isResetting && styles.disabledButton]}
+          onPress={() => {
+            console.log('=== CANCEL PRESSED - GOING BACK ===');
+            router.back();
+          }}
+          disabled={isResetting}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
