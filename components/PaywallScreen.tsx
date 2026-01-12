@@ -53,11 +53,11 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
   };
 
   const openPrivacyPolicy = () => {
-    Linking.openURL('https://yourapp.com/privacy');
+    Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const openTermsOfService = () => {
-    Linking.openURL('https://yourapp.com/terms');
+    Linking.openURL('https://www.apple.com/legal/internet-services/itunes/us/terms.html');
   };
 
   return (
@@ -81,7 +81,6 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
             <FeatureItem text="Weight tracking & charts" />
             <FeatureItem text="Custom portion targets" />
             <FeatureItem text="Daily reminders" />
-            <FeatureItem text="Export your data" />
           </View>
 
           <View style={styles.plansContainer}>
@@ -92,6 +91,9 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
               ]}
               onPress={() => setSelectedPlan('annual')}
             >
+              <View style={styles.bestValueBadge}>
+                <Text style={styles.bestValueText}>BEST VALUE</Text>
+              </View>
               <View style={styles.planHeader}>
                 <Text style={styles.planTitle}>Annual</Text>
                 {selectedPlan === 'annual' && (
@@ -100,7 +102,6 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
               </View>
               <Text style={styles.planPrice}>$24.99/year</Text>
               <Text style={styles.planDetail}>7-day free trial</Text>
-              <Text style={styles.planSavings}>Best Value - Save 65%</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -130,7 +131,9 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={buttonStyles.primaryText}>
-                Start 7-Day Free Trial
+                {selectedPlan === 'annual' 
+                  ? 'Start 7-Day Free Trial then $24.99 annually'
+                  : 'Start 7-Day Free Trial then $2.99 monthly'}
               </Text>
             )}
           </TouchableOpacity>
@@ -217,9 +220,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 2,
     borderColor: 'transparent',
+    position: 'relative',
   },
   planCardSelected: {
     borderColor: colors.primary,
+  },
+  bestValueBadge: {
+    position: 'absolute',
+    top: -10,
+    right: 20,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  bestValueText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#fff',
+    letterSpacing: 0.5,
   },
   planHeader: {
     flexDirection: 'row',
@@ -242,11 +261,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 4,
-  },
-  planSavings: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
   },
   subscribeButton: {
     marginBottom: 12,

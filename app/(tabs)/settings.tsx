@@ -8,6 +8,7 @@ import PaywallScreen from '@/components/PaywallScreen';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
+import { toggleNoonReminder, isNoonReminderEnabled } from '@/utils/notificationManager';
 
 const styles = StyleSheet.create({
   container: {
@@ -67,6 +68,35 @@ const styles = StyleSheet.create({
 export default function SettingsScreen() {
   const router = useRouter();
   const [paywallVisible, setPaywallVisible] = useState(false);
+  const [noonReminderEnabled, setNoonReminderEnabled] = useState(false);
+
+  useEffect(() => {
+    // Load noon reminder status
+    const loadReminderStatus = async () => {
+      try {
+        const enabled = await isNoonReminderEnabled();
+        setNoonReminderEnabled(enabled);
+      } catch (error) {
+        console.error('Error loading reminder status:', error);
+      }
+    };
+    loadReminderStatus();
+  }, []);
+
+  const handleToggleNoonReminder = async (value: boolean) => {
+    try {
+      await toggleNoonReminder(value);
+      setNoonReminderEnabled(value);
+      console.log('Noon reminder toggled:', value);
+    } catch (error) {
+      console.error('Error toggling noon reminder:', error);
+      Alert.alert(
+        'Permission Required',
+        'Please enable notifications in your device settings to receive reminders.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   const handleResetAppData = () => {
     console.log('=== RESET APP DATA BUTTON PRESSED ===');
@@ -132,6 +162,23 @@ export default function SettingsScreen() {
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
+
+        {/* Noon Reminder */}
+        <View style={styles.settingItem}>
+          <Text style={styles.settingIcon}>🔔</Text>
+          <View style={styles.settingContent}>
+            <Text style={styles.settingLabel}>Daily Reminder</Text>
+            <Text style={styles.settingDescription}>
+              Get reminded at 12 noon if you haven&apos;t logged anything
+            </Text>
+          </View>
+          <Switch
+            value={noonReminderEnabled}
+            onValueChange={handleToggleNoonReminder}
+            trackColor={{ false: colors.textSecondary, true: colors.primary }}
+            thumbColor="#fff"
+          />
+        </View>
 
         {/* Privacy Policy */}
         <TouchableOpacity

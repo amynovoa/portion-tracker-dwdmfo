@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { loadProfile } from '@/utils/storage';
 import { View, ActivityIndicator } from 'react-native';
 import { colors } from '@/styles/commonStyles';
+import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,6 +26,16 @@ export default function RootLayout() {
         const profile = await loadProfile();
         console.log('Profile loaded:', profile ? 'Found' : 'Not found');
         setHasProfile(!!profile);
+
+        // Request notification permissions and schedule noon reminder if profile exists
+        if (profile) {
+          console.log('Requesting notification permissions...');
+          const hasPermission = await requestNotificationPermissions();
+          if (hasPermission) {
+            console.log('Scheduling noon reminder...');
+            await scheduleNoonReminder();
+          }
+        }
       } catch (e) {
         console.error('Error loading profile:', e);
         setHasProfile(false);
