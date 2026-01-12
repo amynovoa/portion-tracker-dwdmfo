@@ -62,18 +62,22 @@ export default function SettingsScreen() {
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   const handleResetAllData = () => {
-    console.log('Reset App Data button pressed');
+    console.log('Reset App Data button pressed - showing confirmation alert');
     Alert.alert(
       'Reset All Data',
-      'Are you sure you want to reset all app data? This action cannot be undone.',
+      'This will erase everything and start you over from the beginning. All your tracking data, profile settings, and progress will be permanently deleted. This action cannot be undone.\n\nAre you sure you want to continue?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => console.log('Reset cancelled by user')
+        },
         {
-          text: 'Reset',
+          text: 'Reset Everything',
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('Clearing AsyncStorage...');
+              console.log('User confirmed reset - clearing AsyncStorage...');
               await AsyncStorage.clear();
               console.log('AsyncStorage cleared successfully');
               
