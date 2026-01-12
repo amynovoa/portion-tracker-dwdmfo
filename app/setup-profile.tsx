@@ -15,7 +15,7 @@ export default function SetupProfileScreen() {
   const [goal, setGoal] = useState<Goal>('maintain');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
-  const [alcoholGoal, setAlcoholGoal] = useState('2');
+  const [alcoholGoal, setAlcoholGoal] = useState(2);
 
   const handleContinue = () => {
     console.log('Setup profile - Continue clicked');
@@ -27,16 +27,9 @@ export default function SetupProfileScreen() {
 
     const weightNum = parseFloat(weight);
     const goalWeightNum = parseFloat(goalWeight);
-    const alcoholGoalNum = includeAlcohol ? parseInt(alcoholGoal) || 2 : 0;
 
     if (isNaN(weightNum) || isNaN(goalWeightNum) || weightNum <= 0 || goalWeightNum <= 0) {
       alert('Please enter valid weight values');
-      return;
-    }
-
-    // Validate alcohol goal if included (max recommended is 2)
-    if (includeAlcohol && (alcoholGoalNum < 0 || alcoholGoalNum > 10)) {
-      alert('Please enter a valid alcohol goal (0-10 servings)');
       return;
     }
 
@@ -47,7 +40,7 @@ export default function SetupProfileScreen() {
       goal,
       activityLevel,
       includeAlcohol,
-      alcoholGoal: alcoholGoalNum,
+      alcoholGoal: includeAlcohol ? alcoholGoal : 0,
     });
 
     router.push({
@@ -59,7 +52,7 @@ export default function SetupProfileScreen() {
         goal,
         activityLevel,
         includeAlcohol: includeAlcohol.toString(),
-        alcoholGoal: alcoholGoalNum.toString(),
+        alcoholGoal: (includeAlcohol ? alcoholGoal : 0).toString(),
       },
     });
   };
@@ -182,14 +175,25 @@ export default function SetupProfileScreen() {
           <View style={styles.section}>
             <Text style={styles.label}>Daily Alcohol Goal</Text>
             <Text style={styles.helperText}>Recommended maximum: 2 servings per day</Text>
-            <TextInput
-              style={styles.input}
-              value={alcoholGoal}
-              onChangeText={setAlcoholGoal}
-              keyboardType="numeric"
-              placeholder="Enter daily alcohol goal"
-              placeholderTextColor={colors.textSecondary}
-            />
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={alcoholGoal}
+                onValueChange={(value) => setAlcoholGoal(value)}
+                style={styles.picker}
+              >
+                <Picker.Item label="0 servings" value={0} />
+                <Picker.Item label="1 serving" value={1} />
+                <Picker.Item label="2 servings (recommended max)" value={2} />
+                <Picker.Item label="3 servings" value={3} />
+                <Picker.Item label="4 servings" value={4} />
+                <Picker.Item label="5 servings" value={5} />
+                <Picker.Item label="6 servings" value={6} />
+                <Picker.Item label="7 servings" value={7} />
+                <Picker.Item label="8 servings" value={8} />
+                <Picker.Item label="9 servings" value={9} />
+                <Picker.Item label="10 servings" value={10} />
+              </Picker>
+            </View>
           </View>
         )}
 
