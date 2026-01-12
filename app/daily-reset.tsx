@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Platform, Switch } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Platform, Switch, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { loadResetTime, saveResetTime, ResetTimeConfig } from '@/utils/storage';
 import { colors, buttonStyles } from '@/styles/commonStyles';
@@ -9,6 +9,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   header: {
     paddingHorizontal: 20,
@@ -51,30 +54,27 @@ const styles = StyleSheet.create({
   },
   timeButton: {
     ...buttonStyles.secondary,
-    paddingVertical: 12,
+    paddingVertical: 16,
     marginTop: 8,
+    backgroundColor: colors.primary,
   },
   timeButtonText: {
-    fontSize: 18,
-    color: colors.primary,
+    fontSize: 20,
+    color: '#fff',
     fontWeight: '600',
     textAlign: 'center',
   },
-  pickerContainer: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  pickerLabel: {
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: 8,
-    fontWeight: '500',
+  timeButtonSubtext: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.8,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
 
 export default function DailyResetScreen() {
   const [resetTime, setResetTime] = useState(() => {
-    // Default to 12:00 AM
     const defaultTime = new Date();
     defaultTime.setHours(0, 0, 0, 0);
     return defaultTime;
@@ -87,16 +87,22 @@ export default function DailyResetScreen() {
   }, []);
 
   const loadSettings = async () => {
-    const config = await loadResetTime();
-    setCustomResetEnabled(config.enabled);
-    
-    // Set the time from config or default to 12:00 AM
-    const time = new Date();
-    time.setHours(config.hour, config.minute, 0, 0);
-    setResetTime(time);
+    try {
+      const config = await loadResetTime();
+      console.log('Loaded reset time config:', config);
+      setCustomResetEnabled(config.enabled);
+      
+      const time = new Date();
+      time.setHours(config.hour, config.minute, 0, 0);
+      setResetTime(time);
+      console.log('Set reset time to:', time.toLocaleTimeString());
+    } catch (error) {
+      console.error('Error loading reset time:', error);
+    }
   };
 
   const handleToggleCustomReset = async (value: boolean) => {
+    console.log('Toggle custom reset:', value);
     setCustomResetEnabled(value);
     const config: ResetTimeConfig = {
       enabled: value,
@@ -104,19 +110,18 @@ export default function DailyResetScreen() {
       minute: resetTime.getMinutes(),
     };
     await saveResetTime(config);
+    console.log('Saved reset time config:', config);
   };
 
   const handleTimeChange = async (event: any, selectedDate?: Date) => {
-    console.log('Time picker onChange called', { event, selectedDate });
+    console.log('Android Time picker onChange:', { event, selectedDate });
     
-    // On Android, hide the picker after selection or dismissal
-    if (Platform.OS === 'android') {
-      setShowPicker(false);
-    }
+    // On Android, the picker is a modal dialog, so we always hide it after interaction
+    setShowPicker(false);
 
     // If user selected a time (didn't cancel)
     if (selectedDate) {
-      console.log('Setting new time:', selectedDate);
+      console.log('New time selected:', selectedDate.toLocaleTimeString());
       setResetTime(selectedDate);
       const config: ResetTimeConfig = {
         enabled: customResetEnabled,
@@ -124,6 +129,7 @@ export default function DailyResetScreen() {
         minute: selectedDate.getMinutes(),
       };
       await saveResetTime(config);
+      console.log('Saved new time:', config);
     }
   };
 
@@ -136,15 +142,12 @@ export default function DailyResetScreen() {
   };
 
   const handleTimeButtonPress = () => {
-    console.log('Time button pressed, customResetEnabled:', customResetEnabled);
-    if (customResetEnabled) {
-      setShowPicker(true);
-      console.log('Show picker set to true');
-    }
+    console.log('Time button pressed, showing Android time picker');
+    setShowPicker(true);
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Daily Reset</Text>
       </View>
@@ -173,22 +176,20 @@ export default function DailyResetScreen() {
               onPress={handleTimeButtonPress}
             >
               <Text style={styles.timeButtonText}>{formatTime(resetTime)}</Text>
+              <Text style={styles.timeButtonSubtext}>Tap to change time</Text>
             </TouchableOpacity>
-
-            {showPicker && (
-              <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={resetTime}
-                  mode="time"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={handleTimeChange}
-                  style={{ width: '100%' }}
-                />
-              </View>
-            )}
           </>
         )}
       </View>
-    </View>
+
+      {showPicker && (
+        <DateTimePicker
+          value={resetTime}
+          mode="time"
+          display="default"
+          onChange={handleTimeChange}
+        />
+      )}
+    </ScrollView>
   );
 }
