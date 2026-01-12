@@ -67,47 +67,11 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [paywallVisible, setPaywallVisible] = useState(false);
 
-  const handleResetAllData = () => {
+  const handleResetAppData = () => {
     console.log('=== RESET APP DATA BUTTON PRESSED ===');
     console.log('Platform:', Platform.OS);
-    console.log('Showing confirmation alert...');
-    
-    Alert.alert(
-      'Reset All Data',
-      'This will erase everything and start you over from the beginning. All your tracking data, profile settings, and progress will be permanently deleted. This action cannot be undone.\n\nAre you sure you want to continue?',
-      [
-        { 
-          text: 'Cancel', 
-          style: 'cancel',
-          onPress: () => {
-            console.log('=== RESET CANCELLED BY USER ===');
-          }
-        },
-        {
-          text: 'Reset Everything',
-          style: 'destructive',
-          onPress: async () => {
-            console.log('=== USER CONFIRMED RESET ===');
-            try {
-              console.log('Step 1: Clearing AsyncStorage...');
-              await AsyncStorage.clear();
-              console.log('Step 2: AsyncStorage cleared successfully');
-              
-              console.log('Step 3: Navigating to welcome screen...');
-              router.replace('/welcome');
-              console.log('Step 4: Navigation command sent');
-            } catch (error) {
-              console.error('=== ERROR DURING RESET ===');
-              console.error('Error details:', error);
-              Alert.alert('Error', 'Failed to reset app data. Please try again.');
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-    
-    console.log('Alert.alert() called');
+    console.log('Navigating to reset-data screen...');
+    router.push('/reset-data');
   };
 
   const openPrivacyPolicy = () => {
@@ -132,7 +96,7 @@ export default function SettingsScreen() {
           }}
         >
           <Text style={styles.settingIcon}>💳</Text>
-          <View style={styles.settingContent}>
+          <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Subscription</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
@@ -147,7 +111,7 @@ export default function SettingsScreen() {
           }}
         >
           <Text style={styles.settingIcon}>🎉</Text>
-          <View style={styles.settingContent}>
+          <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Celebration</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
@@ -162,7 +126,7 @@ export default function SettingsScreen() {
           }}
         >
           <Text style={styles.settingIcon}>🕐</Text>
-          <View style={styles.settingContent}>
+          <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Daily Reset</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
@@ -177,7 +141,7 @@ export default function SettingsScreen() {
           }}
         >
           <Text style={styles.settingIcon}>🛡️</Text>
-          <View style={styles.settingContent}>
+          <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Privacy Policy</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
@@ -186,7 +150,7 @@ export default function SettingsScreen() {
         {/* Reset App Data */}
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={handleResetAllData}
+          onPress={handleResetAppData}
           activeOpacity={0.7}
         >
           <Text style={styles.settingIcon}>⚠️</Text>
