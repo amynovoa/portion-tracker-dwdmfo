@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 200,
+    paddingBottom: 20,
   },
   header: {
     marginBottom: 30,
@@ -67,6 +67,8 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 30,
     backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.surface,
   },
   resetButton: {
     backgroundColor: '#DC3545',
@@ -100,7 +102,7 @@ export default function ResetDataScreen() {
   const router = useRouter();
   const [isResetting, setIsResetting] = useState(false);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     console.log('=== RESET BUTTON PRESSED ON RESET SCREEN ===');
     console.log('isResetting state:', isResetting);
     
@@ -189,29 +191,29 @@ export default function ResetDataScreen() {
             After resetting, you&apos;ll be taken back to the welcome screen where you can set up your profile again from scratch.
           </Text>
         </View>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.resetButton, isResetting && styles.disabledButton]}
-            onPress={handleReset}
-            disabled={isResetting}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.resetButtonText}>
-              {isResetting ? 'Resetting...' : 'Reset All Data'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.cancelButton, isResetting && styles.disabledButton]}
-            onPress={handleCancel}
-            disabled={isResetting}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.resetButton, isResetting && styles.disabledButton]}
+          onPress={handleReset}
+          disabled={isResetting}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.resetButtonText}>
+            {isResetting ? 'Resetting...' : 'Reset All Data'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.cancelButton, isResetting && styles.disabledButton]}
+          onPress={handleCancel}
+          disabled={isResetting}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
