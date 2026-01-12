@@ -166,12 +166,12 @@ export default function ProfileScreen() {
                 <Text style={styles.infoValue}>{profile.portionTargets.water} glasses</Text>
               </View>
 
-              {profile.includeAlcohol && profile.portionTargets.alcohol > 0 && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Alcohol</Text>
-                  <Text style={styles.infoValue}>{profile.portionTargets.alcohol} servings</Text>
-                </View>
-              )}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Alcohol</Text>
+                <Text style={styles.infoValue}>
+                  {profile.portionTargets.alcohol || 0} servings
+                </Text>
+              </View>
             </>
           )}
 

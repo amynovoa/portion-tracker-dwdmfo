@@ -61,7 +61,7 @@ export default function SetupTargetsScreen() {
         goal: params.goal as Goal,
         activityLevel: (params.activityLevel as ActivityLevel) || 'moderate',
         includeAlcohol: includeAlcohol,
-        alcoholServings: includeAlcohol ? targets.alcohol : 0,
+        alcoholServings: targets.alcohol,
         portionTargets: targets,
       };
 
@@ -81,8 +81,6 @@ export default function SetupTargetsScreen() {
     setTargets((prev) => ({ ...prev, [key]: value }));
   };
 
-  const includeAlcohol = params.includeAlcohol === 'true';
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -98,14 +96,19 @@ export default function SetupTargetsScreen() {
         <TargetRow label="Nuts & Seeds" value={targets.nutsSeeds} onChange={(v) => updateTarget('nutsSeeds', v)} />
         <TargetRow label="Fats" value={targets.fats} onChange={(v) => updateTarget('fats', v)} />
         <TargetRow label="Water (cups)" value={targets.water} onChange={(v) => updateTarget('water', v)} />
-        {includeAlcohol && (
-          <TargetRow label="Alcohol (servings)" value={targets.alcohol} onChange={(v) => updateTarget('alcohol', v)} />
-        )}
+        <TargetRow label="Alcohol (servings)" value={targets.alcohol} onChange={(v) => updateTarget('alcohol', v)} />
 
         <View style={styles.noteSection}>
           <Text style={styles.noteIcon}>💪</Text>
           <Text style={styles.noteText}>
             Exercise can be tracked daily on the tracking page, but doesn&apos;t have a numeric target.
+          </Text>
+        </View>
+
+        <View style={styles.noteSection}>
+          <Text style={styles.noteIcon}>🍷</Text>
+          <Text style={styles.noteText}>
+            You can set your alcohol target to 0 if you don&apos;t drink, or adjust it to match your goals. Recommended maximum is 2 servings per day.
           </Text>
         </View>
 
@@ -202,7 +205,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },
