@@ -17,9 +17,17 @@ export default function TabLayout() {
         <Icon sf="scalemass.fill" />
         <Label>Weight</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="more" name="more">
-        <Icon sf="ellipsis.circle.fill" />
-        <Label>More</Label>
+      <NativeTabs.Trigger key="faqs" name="faqs">
+        <Icon sf="questionmark.circle.fill" />
+        <Label>FAQs</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="profile" name="profile">
+        <Icon sf="person.fill" />
+        <Label>Profile</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger key="settings" name="settings">
+        <Icon sf="gearshape.fill" />
+        <Label>Settings</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
