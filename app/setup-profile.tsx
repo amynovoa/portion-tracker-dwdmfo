@@ -14,6 +14,7 @@ export default function SetupProfileScreen() {
   const [goalWeight, setGoalWeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
+  const [includeAlcohol, setIncludeAlcohol] = useState(false);
   const [alcoholGoal, setAlcoholGoal] = useState('2');
 
   const handleContinue = () => {
@@ -26,15 +27,15 @@ export default function SetupProfileScreen() {
 
     const weightNum = parseFloat(weight);
     const goalWeightNum = parseFloat(goalWeight);
-    const alcoholGoalNum = parseInt(alcoholGoal) || 2;
+    const alcoholGoalNum = includeAlcohol ? parseInt(alcoholGoal) || 2 : 0;
 
     if (isNaN(weightNum) || isNaN(goalWeightNum) || weightNum <= 0 || goalWeightNum <= 0) {
       alert('Please enter valid weight values');
       return;
     }
 
-    // Validate alcohol goal (max recommended is 2)
-    if (alcoholGoalNum < 0 || alcoholGoalNum > 10) {
+    // Validate alcohol goal if included (max recommended is 2)
+    if (includeAlcohol && (alcoholGoalNum < 0 || alcoholGoalNum > 10)) {
       alert('Please enter a valid alcohol goal (0-10 servings)');
       return;
     }
@@ -45,6 +46,7 @@ export default function SetupProfileScreen() {
       goalWeight: goalWeightNum,
       goal,
       activityLevel,
+      includeAlcohol,
       alcoholGoal: alcoholGoalNum,
     });
 
@@ -56,7 +58,8 @@ export default function SetupProfileScreen() {
         goalWeight: goalWeight,
         goal,
         activityLevel,
-        alcoholGoal: alcoholGoal,
+        includeAlcohol: includeAlcohol.toString(),
+        alcoholGoal: alcoholGoalNum.toString(),
       },
     });
   };
@@ -138,17 +141,57 @@ export default function SetupProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Daily Alcohol Goal</Text>
-          <Text style={styles.helperText}>Recommended maximum: 2 servings per day</Text>
-          <TextInput
-            style={styles.input}
-            value={alcoholGoal}
-            onChangeText={setAlcoholGoal}
-            keyboardType="numeric"
-            placeholder="Enter daily alcohol goal"
-            placeholderTextColor={colors.textSecondary}
-          />
+          <Text style={styles.label}>Include Alcohol Tracking?</Text>
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                !includeAlcohol && styles.toggleButtonActive,
+              ]}
+              onPress={() => setIncludeAlcohol(false)}
+            >
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  !includeAlcohol && styles.toggleButtonTextActive,
+                ]}
+              >
+                No
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                includeAlcohol && styles.toggleButtonActive,
+              ]}
+              onPress={() => setIncludeAlcohol(true)}
+            >
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  includeAlcohol && styles.toggleButtonTextActive,
+                ]}
+              >
+                Yes
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {includeAlcohol && (
+          <View style={styles.section}>
+            <Text style={styles.label}>Daily Alcohol Goal</Text>
+            <Text style={styles.helperText}>Recommended maximum: 2 servings per day</Text>
+            <TextInput
+              style={styles.input}
+              value={alcoholGoal}
+              onChangeText={setAlcoholGoal}
+              keyboardType="numeric"
+              placeholder="Enter daily alcohol goal"
+              placeholderTextColor={colors.textSecondary}
+            />
+          </View>
+        )}
 
         <TouchableOpacity style={buttonStyles.primary} onPress={handleContinue}>
           <Text style={buttonStyles.primaryText}>Continue</Text>
@@ -207,5 +250,29 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  toggleButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  toggleButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  toggleButtonTextActive: {
+    color: '#FFFFFF',
   },
 });

@@ -54,11 +54,11 @@ export default function ProfileScreen() {
 
   const getGoalLabel = (goal: Goal) => {
     switch (goal) {
-      case 'lose-weight':
+      case 'lose':
         return 'Lose Weight';
-      case 'maintain-weight':
+      case 'maintain':
         return 'Maintain Weight';
-      case 'build-muscle':
+      case 'build':
         return 'Build Muscle';
       default:
         return 'Not set';

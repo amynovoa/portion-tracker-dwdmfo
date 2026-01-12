@@ -21,7 +21,7 @@ export default function SetupTargetsScreen() {
     fats: 2,
     water: 8,
     exercise: 0, // Exercise is not set during setup, only tracked
-    alcohol: 2,
+    alcohol: 0,
   });
 
   useEffect(() => {
@@ -31,12 +31,13 @@ export default function SetupTargetsScreen() {
       const weight = parseFloat(params.weight as string);
       const goal = params.goal as Goal;
       const activityLevel = (params.activityLevel as ActivityLevel) || 'moderate';
-      const alcoholGoal = parseInt(params.alcoholGoal as string) || 2;
+      const includeAlcohol = params.includeAlcohol === 'true';
+      const alcoholGoal = includeAlcohol ? parseInt(params.alcoholGoal as string) || 0 : 0;
 
-      console.log('Calculating recommended targets with:', { sex, weight, goal, activityLevel, alcoholGoal });
+      console.log('Calculating recommended targets with:', { sex, weight, goal, activityLevel, includeAlcohol, alcoholGoal });
       
       const recommended = calculateRecommendedTargets(sex, weight, goal, activityLevel);
-      // Set the alcohol goal from the profile setup
+      // Set the alcohol goal from the profile setup (0 if not included)
       recommended.alcohol = alcoholGoal;
       // Exercise is not set during setup, only tracked on the tracking page
       recommended.exercise = 0;
@@ -52,12 +53,15 @@ export default function SetupTargetsScreen() {
     console.log('Saving profile with targets:', targets);
     
     try {
+      const includeAlcohol = params.includeAlcohol === 'true';
       const profile = {
         sex: params.sex as Sex,
         currentWeight: parseFloat(params.weight as string),
         goalWeight: parseFloat(params.goalWeight as string),
         goal: params.goal as Goal,
         activityLevel: (params.activityLevel as ActivityLevel) || 'moderate',
+        includeAlcohol: includeAlcohol,
+        alcoholServings: includeAlcohol ? targets.alcohol : 0,
         portionTargets: targets,
       };
 
@@ -77,6 +81,8 @@ export default function SetupTargetsScreen() {
     setTargets((prev) => ({ ...prev, [key]: value }));
   };
 
+  const includeAlcohol = params.includeAlcohol === 'true';
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -92,7 +98,9 @@ export default function SetupTargetsScreen() {
         <TargetRow label="Nuts & Seeds" value={targets.nutsSeeds} onChange={(v) => updateTarget('nutsSeeds', v)} />
         <TargetRow label="Fats" value={targets.fats} onChange={(v) => updateTarget('fats', v)} />
         <TargetRow label="Water (cups)" value={targets.water} onChange={(v) => updateTarget('water', v)} />
-        <TargetRow label="Alcohol (servings)" value={targets.alcohol} onChange={(v) => updateTarget('alcohol', v)} />
+        {includeAlcohol && (
+          <TargetRow label="Alcohol (servings)" value={targets.alcohol} onChange={(v) => updateTarget('alcohol', v)} />
+        )}
 
         <View style={styles.noteSection}>
           <Text style={styles.noteIcon}>💪</Text>
