@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
@@ -77,6 +77,7 @@ export default function SetupProfileScreen() {
               selectedValue={sex}
               onValueChange={(value) => setSex(value)}
               style={styles.picker}
+              itemStyle={styles.pickerItem}
             >
               <Picker.Item label="Female" value="female" />
               <Picker.Item label="Male" value="male" />
@@ -117,6 +118,7 @@ export default function SetupProfileScreen() {
               selectedValue={goal}
               onValueChange={(value) => setGoal(value)}
               style={styles.picker}
+              itemStyle={styles.pickerItem}
             >
               <Picker.Item label="Lose Weight" value="lose" />
               <Picker.Item label="Maintain Weight" value="maintain" />
@@ -132,12 +134,13 @@ export default function SetupProfileScreen() {
               selectedValue={activityLevel}
               onValueChange={(value) => setActivityLevel(value)}
               style={styles.picker}
+              itemStyle={styles.pickerItem}
             >
               <Picker.Item label="Sedentary - Little to no exercise" value="sedentary" />
               <Picker.Item label="Light - 1-3x/week or 6k-9k steps/day" value="light" />
               <Picker.Item label="Moderate - 3-5x/week or 9k-12k steps/day" value="moderate" />
               <Picker.Item label="Active - Most days or 12k-15k+ steps/day" value="active" />
-              <Picker.Item label="Very Active - High daily activity" value="veryActive" />
+              <Picker.Item label="Very Active - High daily activity" value="very-active" />
             </Picker>
           </View>
         </View>
@@ -189,6 +192,7 @@ export default function SetupProfileScreen() {
                 selectedValue={alcoholGoal}
                 onValueChange={(value) => setAlcoholGoal(value)}
                 style={styles.picker}
+                itemStyle={styles.pickerItem}
               >
                 <Picker.Item label="0 servings" value={0} />
                 <Picker.Item label="1 serving" value={1} />
@@ -255,10 +259,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   helperText: {
     fontSize: 14,
@@ -281,9 +285,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+    height: Platform.OS === 'ios' ? 180 : 60,
   },
   picker: {
-    height: 50,
+    height: '100%',
+    color: colors.text,
+  },
+  pickerItem: {
+    fontSize: 20,
+    height: 180,
+    color: colors.text,
   },
   toggleContainer: {
     flexDirection: 'row',
