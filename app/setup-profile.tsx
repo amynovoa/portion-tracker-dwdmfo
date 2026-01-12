@@ -77,6 +77,7 @@ export default function SetupProfileScreen() {
               selectedValue={sex}
               onValueChange={(value) => setSex(value)}
               style={styles.picker}
+              itemStyle={styles.pickerItem}
             >
               <Picker.Item label="Female" value="female" />
               <Picker.Item label="Male" value="male" />
@@ -117,6 +118,7 @@ export default function SetupProfileScreen() {
               selectedValue={goal}
               onValueChange={(value) => setGoal(value)}
               style={styles.picker}
+              itemStyle={styles.pickerItem}
             >
               <Picker.Item label="Lose Weight" value="lose" />
               <Picker.Item label="Maintain Weight" value="maintain" />
@@ -132,6 +134,7 @@ export default function SetupProfileScreen() {
               selectedValue={activityLevel}
               onValueChange={(value) => setActivityLevel(value)}
               style={styles.picker}
+              itemStyle={styles.pickerItem}
             >
               <Picker.Item label="Sedentary - Little to no exercise" value="sedentary" />
               <Picker.Item label="Light - 1-3x/week or 6k-9k steps/day" value="light" />
@@ -189,6 +192,7 @@ export default function SetupProfileScreen() {
                 selectedValue={alcoholGoal}
                 onValueChange={(value) => setAlcoholGoal(value)}
                 style={styles.picker}
+                itemStyle={styles.pickerItem}
               >
                 <Picker.Item label="0 servings" value={0} />
                 <Picker.Item label="1 serving" value={1} />
@@ -281,10 +285,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
-    height: 50,
+    minHeight: Platform.OS === 'ios' ? 180 : 50,
   },
   picker: {
-    height: 50,
+    height: Platform.OS === 'ios' ? 180 : 50,
+    color: colors.text,
+    backgroundColor: colors.surface,
+  },
+  pickerItem: {
+    fontSize: 18,
+    height: 180,
     color: colors.text,
   },
   toggleContainer: {
