@@ -107,7 +107,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Current Weight</Text>
+            <Text style={styles.infoLabel}>Starting Weight</Text>
             <Text style={styles.infoValue}>{profile.currentWeight} lbs</Text>
           </View>
 

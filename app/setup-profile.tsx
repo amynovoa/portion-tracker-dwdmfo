@@ -29,7 +29,7 @@ export default function SetupProfileScreen() {
     console.log('Setup profile - Continue clicked');
     
     if (!weight || !goalWeight) {
-      showError('Please enter your current and goal weight');
+      showError('Please enter your starting and goal weight');
       return;
     }
 
@@ -86,13 +86,14 @@ export default function SetupProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Current Weight (lbs)</Text>
+          <Text style={styles.label}>Starting Weight (lbs)</Text>
+          <Text style={styles.helperText}>This will be your baseline for tracking progress</Text>
           <TextInput
             style={styles.input}
             value={weight}
             onChangeText={setWeight}
             keyboardType="numeric"
-            placeholder="Enter weight"
+            placeholder="Enter starting weight"
             placeholderTextColor={colors.textSecondary}
           />
         </View>
