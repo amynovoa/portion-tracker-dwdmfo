@@ -1,34 +1,68 @@
 
 import React from 'react';
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import { Stack } from 'expo-router';
+import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 
 export default function TabLayout() {
+  console.log('iOS Tab Layout: Rendering with FloatingTabBar to avoid native More tab');
+  
+  // Define all tabs that appear in the tab bar
+  const tabs: TabBarItem[] = [
+    {
+      name: '(home)',
+      route: '/(tabs)/(home)/',
+      icon: 'check-circle',
+      label: 'Track',
+    },
+    {
+      name: 'history',
+      route: '/(tabs)/history',
+      icon: 'history',
+      label: 'History',
+    },
+    {
+      name: 'weight',
+      route: '/(tabs)/weight',
+      icon: 'monitor-weight',
+      label: 'Weight',
+    },
+    {
+      name: 'faqs',
+      route: '/(tabs)/faqs',
+      icon: 'help',
+      label: 'FAQs',
+    },
+    {
+      name: 'profile',
+      route: '/(tabs)/profile',
+      icon: 'person',
+      label: 'Profile',
+    },
+    {
+      name: 'settings',
+      route: '/(tabs)/settings',
+      icon: 'settings',
+      label: 'Settings',
+    },
+  ];
+
   return (
-    <NativeTabs>
-      <NativeTabs.Trigger key="home" name="(home)">
-        <Icon sf="checkmark.circle.fill" />
-        <Label>Track</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="history" name="history">
-        <Icon sf="clock.fill" />
-        <Label>History</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="weight" name="weight">
-        <Icon sf="scalemass.fill" />
-        <Label>Weight</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="faqs" name="faqs">
-        <Icon sf="questionmark.circle.fill" />
-        <Label>FAQs</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="profile" name="profile">
-        <Icon sf="person.fill" />
-        <Label>Profile</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger key="settings" name="settings">
-        <Icon sf="gearshape.fill" />
-        <Label>Settings</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'none',
+        }}
+      >
+        <Stack.Screen key="home" name="(home)" />
+        <Stack.Screen key="history" name="history" />
+        <Stack.Screen key="weight" name="weight" />
+        <Stack.Screen key="faqs" name="faqs" />
+        <Stack.Screen key="profile" name="profile" />
+        <Stack.Screen key="settings" name="settings" />
+        <Stack.Screen key="more" name="more" />
+      </Stack>
+      <FloatingTabBar tabs={tabs} useFullWidth={true} />
+    </>
   );
 }
