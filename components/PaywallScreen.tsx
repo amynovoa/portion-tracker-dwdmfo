@@ -26,6 +26,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
 
   const handleSubscribe = async () => {
+    console.log('User tapped Subscribe button for plan:', selectedPlan);
     setLoading(true);
     try {
       // TODO: Backend Integration - Implement actual subscription logic with RevenueCat or similar
@@ -33,6 +34,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
+      console.log('Subscription error:', error);
       Alert.alert('Error', 'Failed to process subscription');
     } finally {
       setLoading(false);
@@ -40,12 +42,14 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
   };
 
   const handleRestorePurchases = async () => {
+    console.log('User tapped Restore Purchases');
     setLoading(true);
     try {
       // TODO: Backend Integration - Implement restore purchases logic
       Alert.alert('Restore', 'Checking for previous purchases...');
       await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
+      console.log('Restore purchases error:', error);
       Alert.alert('Error', 'Failed to restore purchases');
     } finally {
       setLoading(false);
@@ -53,10 +57,12 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
   };
 
   const openPrivacyPolicy = () => {
+    console.log('User tapped Privacy Policy link');
     Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const openTermsOfService = () => {
+    console.log('User tapped Terms of Service link');
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/us/terms.html');
   };
 
@@ -120,6 +126,20 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
               <Text style={styles.planPrice}>$2.99/month</Text>
               <Text style={styles.planDetail}>7-day free trial</Text>
             </TouchableOpacity>
+          </View>
+
+          <View style={styles.agreementContainer}>
+            <Text style={styles.agreementText}>
+              By subscribing, you agree to our{' '}
+              <Text style={styles.agreementLink} onPress={openTermsOfService}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.agreementLink} onPress={openPrivacyPolicy}>
+                Privacy Policy
+              </Text>
+              .
+            </Text>
           </View>
 
           <TouchableOpacity
@@ -261,6 +281,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 4,
+  },
+  agreementContainer: {
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  agreementText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  agreementLink: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
+    fontWeight: '600',
   },
   subscribeButton: {
     marginBottom: 12,
