@@ -20,7 +20,6 @@ type PickerModalProps = {
 function PickerModal({ visible, onClose, onSelect, selectedValue, items, title }: PickerModalProps) {
   const [tempValue, setTempValue] = useState(selectedValue);
 
-  // Reset tempValue when modal opens with the current selectedValue
   useEffect(() => {
     if (visible) {
       console.log('PickerModal opened with selectedValue:', selectedValue);
@@ -28,7 +27,6 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, items, title }
     }
   }, [visible]);
 
-  // Update tempValue if selectedValue changes while modal is open
   useEffect(() => {
     if (visible) {
       console.log('PickerModal selectedValue changed to:', selectedValue);
@@ -97,7 +95,6 @@ export default function SetupProfileScreen() {
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Modal visibility states
   const [sexPickerVisible, setSexPickerVisible] = useState(false);
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
   const [activityPickerVisible, setActivityPickerVisible] = useState(false);
@@ -345,7 +342,6 @@ export default function SetupProfileScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Picker Modals */}
       <PickerModal
         visible={sexPickerVisible}
         onClose={() => setSexPickerVisible(false)}
@@ -382,7 +378,6 @@ export default function SetupProfileScreen() {
         title="Daily Alcohol Goal"
       />
 
-      {/* Error Modal */}
       <Modal
         visible={errorModalVisible}
         transparent
@@ -486,7 +481,6 @@ const styles = StyleSheet.create({
   toggleButtonTextActive: {
     color: '#FFFFFF',
   },
-  // Picker Modal Styles
   pickerModalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -531,7 +525,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 216,
   },
-  // Error Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
