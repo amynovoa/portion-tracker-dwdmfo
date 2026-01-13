@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 
 export default function TabLayout() {
-  // Define main tabs that appear in the tab bar
+  // Define all tabs that appear in the tab bar
   const tabs: TabBarItem[] = [
     {
       name: '(home)',
@@ -25,10 +25,22 @@ export default function TabLayout() {
       label: 'Weight',
     },
     {
-      name: 'more',
-      route: '/(tabs)/more',
-      icon: 'more-horiz',
-      label: 'More',
+      name: 'faqs',
+      route: '/(tabs)/faqs',
+      icon: 'help',
+      label: 'FAQs',
+    },
+    {
+      name: 'profile',
+      route: '/(tabs)/profile',
+      icon: 'person',
+      label: 'Profile',
+    },
+    {
+      name: 'settings',
+      route: '/(tabs)/settings',
+      icon: 'settings',
+      label: 'Settings',
     },
   ];
 

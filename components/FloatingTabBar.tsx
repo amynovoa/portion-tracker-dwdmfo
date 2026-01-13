@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingBottom: 8,
     paddingTop: 12,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -64,16 +64,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 2,
+    paddingHorizontal: 1,
     minWidth: 50,
   },
   tabContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 2,
   },
   tabLabel: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '500',
     marginTop: 1,
     textAlign: 'center',
@@ -123,6 +123,10 @@ export default function FloatingTabBar({
     ? { width: screenWidth }
     : { width: containerWidth || screenWidth * 0.9, marginHorizontal: 20 };
 
+  // Adjust icon size based on number of tabs
+  const iconSize = tabs.length > 5 ? 20 : 22;
+  const fontSize = tabs.length > 5 ? 9 : 10;
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={[styles.container, containerStyle, { marginBottom: bottomMargin }]}>
@@ -140,7 +144,7 @@ export default function FloatingTabBar({
                 <View style={styles.tabContent}>
                   <MaterialIcons
                     name={tab.icon}
-                    size={22}
+                    size={iconSize}
                     color={isActive ? colors.primary : colors.textSecondary}
                   />
                   <Text
@@ -149,10 +153,12 @@ export default function FloatingTabBar({
                       {
                         color: isActive ? colors.primary : colors.textSecondary,
                         fontWeight: isActive ? '600' : '500',
+                        fontSize: fontSize,
                       },
                     ]}
                     numberOfLines={1}
                     adjustsFontSizeToFit
+                    minimumFontScale={0.7}
                   >
                     {tab.label}
                   </Text>
