@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,69 @@ import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile } from '@/utils/storage';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel, PortionTargets, FOOD_GROUPS } from '@/types';
+import { IconSymbol } from '@/components/IconSymbol';
+
+type PickerModalProps = {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (value: number) => void;
+  selectedValue: number;
+  title: string;
+  maxValue?: number;
+};
+
+function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValue = 15 }: PickerModalProps) {
+  const [tempValue, setTempValue] = useState(selectedValue);
+  const options = Array.from({ length: maxValue + 1 }, (_, i) => i);
+
+  useEffect(() => {
+    if (visible) {
+      setTempValue(selectedValue);
+    }
+  }, [visible, selectedValue]);
+
+  const handleDone = () => {
+    onSelect(tempValue);
+    onClose();
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.pickerModalOverlay}>
+        <TouchableOpacity 
+          style={styles.pickerModalBackdrop} 
+          activeOpacity={1} 
+          onPress={onClose}
+        />
+        <View style={styles.pickerModalContent}>
+          <View style={styles.pickerModalHeader}>
+            <TouchableOpacity onPress={onClose} style={styles.pickerModalButton}>
+              <Text style={styles.pickerModalButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.pickerModalTitle}>{title}</Text>
+            <TouchableOpacity onPress={handleDone} style={styles.pickerModalButton}>
+              <Text style={[styles.pickerModalButtonText, styles.pickerModalDoneButton]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+          <Picker
+            selectedValue={tempValue}
+            onValueChange={setTempValue}
+            style={styles.pickerModalPicker}
+          >
+            {options.map((num) => (
+              <Picker.Item key={num} label={`${num}`} value={num} />
+            ))}
+          </Picker>
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 export default function SetupTargetsScreen() {
   const params = useLocalSearchParams();
@@ -23,6 +86,8 @@ export default function SetupTargetsScreen() {
     exercise: 0,
     alcohol: 0,
   });
+
+  const [activePickerKey, setActivePickerKey] = useState<keyof PortionTargets | null>(null);
 
   useEffect(() => {
     console.log('SetupTargetsScreen params:', params);
@@ -84,6 +149,32 @@ export default function SetupTargetsScreen() {
     return foodGroup?.icon || '📊';
   };
 
+  const getLabelForKey = (key: keyof PortionTargets): string => {
+    const labels: Record<keyof PortionTargets, string> = {
+      protein: 'Protein',
+      veggies: 'Vegetables',
+      fruits: 'Fruit',
+      wholeGrains: 'Whole Grains',
+      nutsSeeds: 'Nuts & Seeds',
+      fats: 'Fats',
+      water: 'Water (cups)',
+      exercise: 'Exercise',
+      alcohol: 'Alcohol (servings)',
+    };
+    return labels[key];
+  };
+
+  const targetKeys: (keyof PortionTargets)[] = [
+    'protein',
+    'veggies',
+    'fruits',
+    'wholeGrains',
+    'nutsSeeds',
+    'fats',
+    'water',
+    'alcohol',
+  ];
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -92,54 +183,26 @@ export default function SetupTargetsScreen() {
           We&apos;ve recommended targets based on your profile. You can adjust them to fit your preferences.
         </Text>
 
-        <TargetRow 
-          label="Protein" 
-          icon={getIconForFoodGroup('protein')}
-          value={targets.protein} 
-          onChange={(v) => updateTarget('protein', v)} 
-        />
-        <TargetRow 
-          label="Vegetables" 
-          icon={getIconForFoodGroup('veggies')}
-          value={targets.veggies} 
-          onChange={(v) => updateTarget('veggies', v)} 
-        />
-        <TargetRow 
-          label="Fruit" 
-          icon={getIconForFoodGroup('fruits')}
-          value={targets.fruits} 
-          onChange={(v) => updateTarget('fruits', v)} 
-        />
-        <TargetRow 
-          label="Whole Grains" 
-          icon={getIconForFoodGroup('wholeGrains')}
-          value={targets.wholeGrains} 
-          onChange={(v) => updateTarget('wholeGrains', v)} 
-        />
-        <TargetRow 
-          label="Nuts & Seeds" 
-          icon={getIconForFoodGroup('nutsSeeds')}
-          value={targets.nutsSeeds} 
-          onChange={(v) => updateTarget('nutsSeeds', v)} 
-        />
-        <TargetRow 
-          label="Fats" 
-          icon={getIconForFoodGroup('fats')}
-          value={targets.fats} 
-          onChange={(v) => updateTarget('fats', v)} 
-        />
-        <TargetRow 
-          label="Water (cups)" 
-          icon={getIconForFoodGroup('water')}
-          value={targets.water} 
-          onChange={(v) => updateTarget('water', v)} 
-        />
-        <TargetRow 
-          label="Alcohol (servings)" 
-          icon={getIconForFoodGroup('alcohol')}
-          value={targets.alcohol} 
-          onChange={(v) => updateTarget('alcohol', v)} 
-        />
+        {targetKeys.map((key) => (
+          <View key={key} style={styles.row}>
+            <View style={styles.labelContainer}>
+              <Text style={styles.icon}>{getIconForFoodGroup(key)}</Text>
+              <Text style={styles.rowLabel}>{getLabelForKey(key)}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.valueButton}
+              onPress={() => setActivePickerKey(key)}
+            >
+              <Text style={styles.valueText}>{targets[key]}</Text>
+              <IconSymbol 
+                ios_icon_name="chevron.down" 
+                android_material_icon_name="arrow-drop-down" 
+                size={20} 
+                color={colors.text} 
+              />
+            </TouchableOpacity>
+          </View>
+        ))}
 
         <View style={styles.noteSection}>
           <Text style={styles.noteIcon}>💪</Text>
@@ -159,47 +222,22 @@ export default function SetupTargetsScreen() {
           <Text style={buttonStyles.primaryText}>Save & Continue</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Picker Modal */}
+      {activePickerKey && (
+        <PickerModal
+          visible={activePickerKey !== null}
+          onClose={() => setActivePickerKey(null)}
+          onSelect={(value) => {
+            updateTarget(activePickerKey, value);
+            setActivePickerKey(null);
+          }}
+          selectedValue={targets[activePickerKey]}
+          title={getLabelForKey(activePickerKey)}
+          maxValue={15}
+        />
+      )}
     </SafeAreaView>
-  );
-}
-
-function TargetRow({
-  label,
-  icon,
-  value,
-  onChange,
-}: {
-  label: string;
-  icon: string;
-  value: number;
-  onChange: (val: number) => void;
-}) {
-  const options = Array.from({ length: 16 }, (_, i) => i);
-
-  return (
-    <View style={styles.row}>
-      <View style={styles.labelContainer}>
-        <Text style={styles.icon}>{icon}</Text>
-        <Text style={styles.rowLabel}>{label}</Text>
-      </View>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={value}
-          onValueChange={(itemValue) => onChange(itemValue as number)}
-          style={styles.picker}
-          dropdownIconColor={colors.text}
-        >
-          {options.map((num) => (
-            <Picker.Item 
-              key={num} 
-              label={`${num}`} 
-              value={num}
-              color={colors.text}
-            />
-          ))}
-        </Picker>
-      </View>
-    </View>
   );
 }
 
@@ -251,19 +289,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
-  pickerContainer: {
-    width: 80,
-    height: 50,
+  valueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.background,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: 8,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    minWidth: 70,
+    justifyContent: 'space-between',
   },
-  picker: {
-    height: 50,
+  valueText: {
+    fontSize: 18,
+    fontWeight: '600',
     color: colors.text,
+    marginRight: 8,
   },
   noteSection: {
     flexDirection: 'row',
@@ -285,5 +325,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+  // Picker Modal Styles
+  pickerModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  pickerModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  pickerModalContent: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 34,
+  },
+  pickerModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  pickerModalButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    minWidth: 70,
+  },
+  pickerModalButtonText: {
+    fontSize: 17,
+    color: colors.primary,
+  },
+  pickerModalDoneButton: {
+    fontWeight: '600',
+  },
+  pickerModalTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  pickerModalPicker: {
+    width: '100%',
+    height: 216,
   },
 });
