@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Portion Tracker",
@@ -19,10 +20,9 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to take photos of your meals for tracking purposes.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
-        "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library.",
-        "NSUserTrackingUsageDescription": "This app uses tracking to provide personalized content and improve your experience."
+        "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library."
       },
-      "buildNumber": "4"
+      "buildNumber": "5"
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +31,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.portiontracker.app",
-      "versionCode": 4,
+      "versionCode": 5,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
