@@ -150,7 +150,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={buttonStyles.primaryText}>
+              <Text style={[buttonStyles.primaryText, styles.subscribeButtonText]}>
                 {selectedPlan === 'annual' 
                   ? 'Start 7-Day Free Trial then $24.99 annually'
                   : 'Start 7-Day Free Trial then $2.99 monthly'}
@@ -299,6 +299,9 @@ const styles = StyleSheet.create({
   },
   subscribeButton: {
     marginBottom: 12,
+  },
+  subscribeButtonText: {
+    textAlign: 'center',
   },
   trialNote: {
     fontSize: 12,
