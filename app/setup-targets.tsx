@@ -75,6 +75,16 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
 export default function SetupTargetsScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  
+  // Extract specific param values to avoid infinite loop
+  const sex = params.sex as string;
+  const weight = params.weight as string;
+  const goalWeight = params.goalWeight as string;
+  const goal = params.goal as string;
+  const activityLevel = params.activityLevel as string;
+  const includeAlcohol = params.includeAlcohol as string;
+  const alcoholGoal = params.alcoholGoal as string;
+  
   const [targets, setTargets] = useState<PortionTargets>({
     protein: 3,
     veggies: 4,
@@ -90,19 +100,29 @@ export default function SetupTargetsScreen() {
   const [activePickerKey, setActivePickerKey] = useState<keyof PortionTargets | null>(null);
 
   useEffect(() => {
-    console.log('SetupTargetsScreen params:', params);
-    if (params.sex && params.weight && params.goal) {
-      const sex = params.sex as Sex;
-      const weight = parseFloat(params.weight as string);
-      const goal = params.goal as Goal;
-      const activityLevel = (params.activityLevel as ActivityLevel) || 'moderate';
-      const includeAlcohol = params.includeAlcohol === 'true';
-      const alcoholGoal = includeAlcohol ? parseInt(params.alcoholGoal as string) || 0 : 0;
+    console.log('SetupTargetsScreen calculating targets');
+    if (sex && weight && goal) {
+      const parsedWeight = parseFloat(weight);
+      const parsedActivityLevel = (activityLevel as ActivityLevel) || 'moderate';
+      const shouldIncludeAlcohol = includeAlcohol === 'true';
+      const parsedAlcoholGoal = shouldIncludeAlcohol ? parseInt(alcoholGoal) || 0 : 0;
 
-      console.log('Calculating recommended targets with:', { sex, weight, goal, activityLevel, includeAlcohol, alcoholGoal });
+      console.log('Calculating recommended targets with:', { 
+        sex, 
+        weight: parsedWeight, 
+        goal, 
+        activityLevel: parsedActivityLevel, 
+        includeAlcohol: shouldIncludeAlcohol, 
+        alcoholGoal: parsedAlcoholGoal 
+      });
       
-      const recommended = calculateRecommendedTargets(sex, weight, goal, activityLevel);
-      recommended.alcohol = alcoholGoal;
+      const recommended = calculateRecommendedTargets(
+        sex as Sex, 
+        parsedWeight, 
+        goal as Goal, 
+        parsedActivityLevel
+      );
+      recommended.alcohol = parsedAlcoholGoal;
       recommended.exercise = 0;
       
       console.log('Recommended targets:', recommended);
@@ -110,20 +130,20 @@ export default function SetupTargetsScreen() {
     } else {
       console.log('Missing required params, using defaults');
     }
-  }, [params]);
+  }, [sex, weight, goal, activityLevel, includeAlcohol, alcoholGoal]); // Use specific values, not params object
 
   const handleSave = async () => {
     console.log('Saving profile with targets:', targets);
     
     try {
-      const includeAlcohol = params.includeAlcohol === 'true';
+      const shouldIncludeAlcohol = includeAlcohol === 'true';
       const profile = {
-        sex: params.sex as Sex,
-        currentWeight: parseFloat(params.weight as string),
-        goalWeight: parseFloat(params.goalWeight as string),
-        goal: params.goal as Goal,
-        activityLevel: (params.activityLevel as ActivityLevel) || 'moderate',
-        includeAlcohol: includeAlcohol,
+        sex: sex as Sex,
+        currentWeight: parseFloat(weight),
+        goalWeight: parseFloat(goalWeight),
+        goal: goal as Goal,
+        activityLevel: (activityLevel as ActivityLevel) || 'moderate',
+        includeAlcohol: shouldIncludeAlcohol,
         alcoholServings: targets.alcohol,
         portionTargets: targets,
       };
