@@ -20,16 +20,31 @@ type PickerModalProps = {
 function PickerModal({ visible, onClose, onSelect, selectedValue, items, title }: PickerModalProps) {
   const [tempValue, setTempValue] = useState(selectedValue);
 
-  // Reset tempValue whenever the modal becomes visible or selectedValue changes
+  // Reset tempValue when modal opens with the current selectedValue
   useEffect(() => {
     if (visible) {
+      console.log('PickerModal opened with selectedValue:', selectedValue);
       setTempValue(selectedValue);
     }
-  }, [visible, selectedValue]);
+  }, [visible]);
+
+  // Update tempValue if selectedValue changes while modal is open
+  useEffect(() => {
+    if (visible) {
+      console.log('PickerModal selectedValue changed to:', selectedValue);
+      setTempValue(selectedValue);
+    }
+  }, [selectedValue]);
 
   const handleDone = () => {
+    console.log('PickerModal Done clicked with tempValue:', tempValue);
     onSelect(tempValue);
     onClose();
+  };
+
+  const handleValueChange = (value: any) => {
+    console.log('PickerModal value changed to:', value);
+    setTempValue(value);
   };
 
   return (
@@ -57,7 +72,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, items, title }
           </View>
           <Picker
             selectedValue={tempValue}
-            onValueChange={setTempValue}
+            onValueChange={handleValueChange}
             style={styles.pickerModalPicker}
           >
             {items.map((item, index) => (
@@ -105,7 +120,7 @@ export default function SetupProfileScreen() {
     { label: 'Light - 1-3x/week or 6k-9k steps/day', value: 'light' as ActivityLevel },
     { label: 'Moderate - 3-5x/week or 9k-12k steps/day', value: 'moderate' as ActivityLevel },
     { label: 'Active - Most days or 12k-15k+ steps/day', value: 'active' as ActivityLevel },
-    { label: 'Very Active - High daily activity', value: 'very-active' as ActivityLevel },
+    { label: 'Very Active - High daily activity', value: 'veryActive' as ActivityLevel },
   ];
 
   const alcoholOptions = [
@@ -131,6 +146,11 @@ export default function SetupProfileScreen() {
     console.log('Showing error:', message);
     setErrorMessage(message);
     setErrorModalVisible(true);
+  };
+
+  const handleGoalSelect = (value: Goal) => {
+    console.log('User selected goal:', value);
+    setGoal(value);
   };
 
   const handleContinue = () => {
@@ -182,7 +202,10 @@ export default function SetupProfileScreen() {
           <Text style={styles.label}>Sex</Text>
           <TouchableOpacity 
             style={styles.selectButton}
-            onPress={() => setSexPickerVisible(true)}
+            onPress={() => {
+              console.log('Opening sex picker with current value:', sex);
+              setSexPickerVisible(true);
+            }}
           >
             <Text style={styles.selectButtonText}>{getSelectedLabel(sex, sexOptions)}</Text>
             <IconSymbol 
@@ -223,7 +246,10 @@ export default function SetupProfileScreen() {
           <Text style={styles.label}>Primary Goal</Text>
           <TouchableOpacity 
             style={styles.selectButton}
-            onPress={() => setGoalPickerVisible(true)}
+            onPress={() => {
+              console.log('Opening goal picker with current value:', goal);
+              setGoalPickerVisible(true);
+            }}
           >
             <Text style={styles.selectButtonText}>{getSelectedLabel(goal, goalOptions)}</Text>
             <IconSymbol 
@@ -239,7 +265,10 @@ export default function SetupProfileScreen() {
           <Text style={styles.label}>Activity Level</Text>
           <TouchableOpacity 
             style={styles.selectButton}
-            onPress={() => setActivityPickerVisible(true)}
+            onPress={() => {
+              console.log('Opening activity picker with current value:', activityLevel);
+              setActivityPickerVisible(true);
+            }}
           >
             <Text style={styles.selectButtonText}>{getSelectedLabel(activityLevel, activityOptions)}</Text>
             <IconSymbol 
@@ -295,7 +324,10 @@ export default function SetupProfileScreen() {
             <Text style={styles.helperText}>Recommended maximum: 2 servings per day</Text>
             <TouchableOpacity 
               style={styles.selectButton}
-              onPress={() => setAlcoholPickerVisible(true)}
+              onPress={() => {
+                console.log('Opening alcohol picker with current value:', alcoholGoal);
+                setAlcoholPickerVisible(true);
+              }}
             >
               <Text style={styles.selectButtonText}>{getSelectedLabel(alcoholGoal, alcoholOptions)}</Text>
               <IconSymbol 
@@ -326,7 +358,7 @@ export default function SetupProfileScreen() {
       <PickerModal
         visible={goalPickerVisible}
         onClose={() => setGoalPickerVisible(false)}
-        onSelect={setGoal}
+        onSelect={handleGoalSelect}
         selectedValue={goal}
         items={goalOptions}
         title="Select Primary Goal"
