@@ -169,9 +169,6 @@ export default function SettingsScreen() {
           <Text style={styles.settingIcon}>⚠️</Text>
           <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>Reset App Data</Text>
-            <Text style={styles.settingDescription}>
-              Erase all data and start over
-            </Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>

@@ -1,4 +1,3 @@
-
 // Global error logging for runtime errors
 // Captures console.log/warn/error and sends to Natively server for AI debugging
 
@@ -77,17 +76,10 @@ const getLogServerUrl = (): string | null => {
 
 // Track if we've logged fetch errors to avoid spam
 let fetchErrorLogged = false;
-let backendUnavailable = false;
 
 // Flush the log queue to server
 const flushLogs = async () => {
   if (logQueue.length === 0) return;
-  if (backendUnavailable) {
-    // Backend is unavailable, clear queue and skip
-    logQueue = [];
-    flushTimeout = null;
-    return;
-  }
 
   const logsToSend = [...logQueue];
   logQueue = [];
@@ -101,45 +93,28 @@ const flushLogs = async () => {
 
   for (const log of logsToSend) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
-
       fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(log),
-        signal: controller.signal,
-      })
-        .then(() => {
-          clearTimeout(timeoutId);
-        })
-        .catch((e) => {
-          clearTimeout(timeoutId);
-          // Mark backend as unavailable to stop trying
-          if (!backendUnavailable) {
-            backendUnavailable = true;
-            // Log fetch errors only once to avoid spam
-            if (!fetchErrorLogged) {
-              fetchErrorLogged = true;
-              // Use a different method to avoid recursion - write directly without going through our intercept
-              if (typeof window !== 'undefined' && window.console) {
-                (window.console as any).__proto__.log.call(console, '[Natively] Backend logging unavailable (this is normal for local-only apps)');
-              }
-            }
+      }).catch((e) => {
+        // Log fetch errors only once to avoid spam
+        if (!fetchErrorLogged) {
+          fetchErrorLogged = true;
+          // Use a different method to avoid recursion - write directly without going through our intercept
+          if (typeof window !== 'undefined' && window.console) {
+            (window.console as any).__proto__.log.call(console, '[Natively] Fetch error (will not repeat):', e.message || e);
           }
-        });
+        }
+      });
     } catch (e) {
       // Silently ignore sync errors
-      backendUnavailable = true;
     }
   }
 };
 
 // Queue a log to be sent
 const queueLog = (level: string, message: string, source: string = '') => {
-  // Skip if backend is unavailable
-  if (backendUnavailable) return;
-
   const logKey = `${level}:${message}`;
 
   // Skip duplicates
@@ -302,7 +277,7 @@ export const setupErrorLogging = () => {
     // Always call original first
     originalConsoleLog.apply(console, args);
 
-    // Queue log for sending to server (will be skipped if backend unavailable)
+    // Queue log for sending to server
     const message = stringifyArgs(args);
     const source = getCallerInfo();
     queueLog('log', message, source);
@@ -313,7 +288,7 @@ export const setupErrorLogging = () => {
     // Always call original first
     originalConsoleWarn.apply(console, args);
 
-    // Queue log for sending to server (will be skipped if backend unavailable)
+    // Queue log for sending to server
     const message = stringifyArgs(args);
     const source = getCallerInfo();
     queueLog('warn', message, source);
@@ -324,7 +299,7 @@ export const setupErrorLogging = () => {
     // Always call original first
     originalConsoleError.apply(console, args);
 
-    // Queue log for sending to server (will be skipped if backend unavailable)
+    // Queue log for sending to server
     const message = stringifyArgs(args);
     const source = getCallerInfo();
     queueLog('error', message, source);
