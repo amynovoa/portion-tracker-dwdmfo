@@ -1,14 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Picker } from '@react-native-picker/picker';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/IconSymbol';
 
-type PickerModalProps = {
+type DropdownModalProps = {
   visible: boolean;
   onClose: () => void;
   onSelect: (value: any) => void;
@@ -17,66 +16,67 @@ type PickerModalProps = {
   title: string;
 };
 
-function PickerModal({ visible, onClose, onSelect, selectedValue, items, title }: PickerModalProps) {
-  const [tempValue, setTempValue] = useState(selectedValue);
-
-  useEffect(() => {
-    if (visible) {
-      console.log('PickerModal opened with selectedValue:', selectedValue);
-      setTempValue(selectedValue);
-    }
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible) {
-      console.log('PickerModal selectedValue changed to:', selectedValue);
-      setTempValue(selectedValue);
-    }
-  }, [selectedValue]);
-
-  const handleDone = () => {
-    console.log('PickerModal Done clicked with tempValue:', tempValue);
-    onSelect(tempValue);
+function DropdownModal({ visible, onClose, onSelect, selectedValue, items, title }: DropdownModalProps) {
+  const handleSelect = (value: any) => {
+    console.log('User selected:', value);
+    onSelect(value);
     onClose();
-  };
-
-  const handleValueChange = (value: any) => {
-    console.log('PickerModal value changed to:', value);
-    setTempValue(value);
   };
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.pickerModalOverlay}>
+      <View style={styles.dropdownModalOverlay}>
         <TouchableOpacity 
-          style={styles.pickerModalBackdrop} 
+          style={styles.dropdownModalBackdrop} 
           activeOpacity={1} 
           onPress={onClose}
         />
-        <View style={styles.pickerModalContent}>
-          <View style={styles.pickerModalHeader}>
-            <TouchableOpacity onPress={onClose} style={styles.pickerModalButton}>
-              <Text style={styles.pickerModalButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.pickerModalTitle}>{title}</Text>
-            <TouchableOpacity onPress={handleDone} style={styles.pickerModalButton}>
-              <Text style={[styles.pickerModalButtonText, styles.pickerModalDoneButton]}>Done</Text>
+        <View style={styles.dropdownModalContent}>
+          <View style={styles.dropdownModalHeader}>
+            <Text style={styles.dropdownModalTitle}>{title}</Text>
+            <TouchableOpacity onPress={onClose} style={styles.dropdownModalCloseButton}>
+              <IconSymbol 
+                ios_icon_name="xmark" 
+                android_material_icon_name="close" 
+                size={24} 
+                color={colors.text} 
+              />
             </TouchableOpacity>
           </View>
-          <Picker
-            selectedValue={tempValue}
-            onValueChange={handleValueChange}
-            style={styles.pickerModalPicker}
-          >
+          <ScrollView style={styles.dropdownModalScroll}>
             {items.map((item, index) => (
-              <Picker.Item key={index} label={item.label} value={item.value} />
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.dropdownModalItem,
+                  item.value === selectedValue && styles.dropdownModalItemSelected,
+                ]}
+                onPress={() => handleSelect(item.value)}
+              >
+                <Text
+                  style={[
+                    styles.dropdownModalItemText,
+                    item.value === selectedValue && styles.dropdownModalItemTextSelected,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+                {item.value === selectedValue && (
+                  <IconSymbol 
+                    ios_icon_name="checkmark" 
+                    android_material_icon_name="check" 
+                    size={24} 
+                    color={colors.primary} 
+                  />
+                )}
+              </TouchableOpacity>
             ))}
-          </Picker>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -342,7 +342,7 @@ export default function SetupProfileScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      <PickerModal
+      <DropdownModal
         visible={sexPickerVisible}
         onClose={() => setSexPickerVisible(false)}
         onSelect={setSex}
@@ -351,7 +351,7 @@ export default function SetupProfileScreen() {
         title="Select Sex"
       />
 
-      <PickerModal
+      <DropdownModal
         visible={goalPickerVisible}
         onClose={() => setGoalPickerVisible(false)}
         onSelect={handleGoalSelect}
@@ -360,7 +360,7 @@ export default function SetupProfileScreen() {
         title="Select Primary Goal"
       />
 
-      <PickerModal
+      <DropdownModal
         visible={activityPickerVisible}
         onClose={() => setActivityPickerVisible(false)}
         onSelect={setActivityLevel}
@@ -369,7 +369,7 @@ export default function SetupProfileScreen() {
         title="Select Activity Level"
       />
 
-      <PickerModal
+      <DropdownModal
         visible={alcoholPickerVisible}
         onClose={() => setAlcoholPickerVisible(false)}
         onSelect={setAlcoholGoal}
@@ -481,50 +481,73 @@ const styles = StyleSheet.create({
   toggleButtonTextActive: {
     color: '#FFFFFF',
   },
-  pickerModalOverlay: {
+  // Dropdown Modal Styles
+  dropdownModalOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
-  },
-  pickerModalBackdrop: {
-    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  pickerModalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 34,
+  dropdownModalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  pickerModalHeader: {
+  dropdownModalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    width: '85%',
+    maxHeight: '70%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  dropdownModalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  pickerModalButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    minWidth: 70,
-  },
-  pickerModalButtonText: {
-    fontSize: 17,
-    color: colors.primary,
-  },
-  pickerModalDoneButton: {
-    fontWeight: '600',
-  },
-  pickerModalTitle: {
-    fontSize: 17,
+  dropdownModalTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: colors.text,
   },
-  pickerModalPicker: {
-    width: '100%',
-    height: 216,
+  dropdownModalCloseButton: {
+    padding: 4,
   },
+  dropdownModalScroll: {
+    maxHeight: 400,
+  },
+  dropdownModalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  dropdownModalItemSelected: {
+    backgroundColor: colors.primary + '15',
+  },
+  dropdownModalItemText: {
+    fontSize: 16,
+    color: colors.text,
+    flex: 1,
+  },
+  dropdownModalItemTextSelected: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  // Error Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
