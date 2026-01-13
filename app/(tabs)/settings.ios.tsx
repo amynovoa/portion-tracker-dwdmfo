@@ -17,36 +17,36 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 140,
+    paddingBottom: 180,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
-    marginBottom: 15,
+    marginBottom: 12,
   },
   settingIcon: {
-    fontSize: 28,
-    marginRight: 15,
+    fontSize: 24,
+    marginRight: 12,
   },
   settingContent: {
     flex: 1,
   },
   settingLabel: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
   },
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   chevron: {
-    fontSize: 24,
+    fontSize: 20,
     color: colors.textSecondary,
   },
 });
@@ -79,9 +79,14 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView style={styles.scrollContent}>
+      <ScrollView 
+        style={styles.scrollContent}
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+      >
         <View style={styles.logoContainer}>
-          <AppLogo size={60} />
+          <AppLogo size={50} />
         </View>
         <Text style={styles.headerTitle}>Settings</Text>
 
