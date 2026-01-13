@@ -54,13 +54,12 @@ export default function TabLayout() {
           animation: 'none',
         }}
       >
-        <Stack.Screen key="home" name="(home)" />
-        <Stack.Screen key="history" name="history" />
-        <Stack.Screen key="weight" name="weight" />
-        <Stack.Screen key="faqs" name="faqs" />
-        <Stack.Screen key="profile" name="profile" />
-        <Stack.Screen key="settings" name="settings" />
-        <Stack.Screen key="more" name="more" />
+        <Stack.Screen name="(home)" />
+        <Stack.Screen name="history" />
+        <Stack.Screen name="weight" />
+        <Stack.Screen name="faqs" />
+        <Stack.Screen name="profile" />
+        <Stack.Screen name="settings" />
       </Stack>
       <FloatingTabBar tabs={tabs} useFullWidth={true} />
     </>
