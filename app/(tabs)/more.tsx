@@ -46,9 +46,17 @@ export default function MoreScreen() {
       route: '/(tabs)/settings',
       description: 'App settings and preferences',
     },
+    {
+      title: 'Backup & Restore',
+      icon: 'backup',
+      iosIcon: 'arrow.clockwise.icloud.fill',
+      route: '/backup-restore',
+      description: 'Protect your data with backups',
+    },
   ];
 
   const handleItemPress = (route: string) => {
+    console.log('User tapped menu item:', route);
     router.push(route as any);
   };
 

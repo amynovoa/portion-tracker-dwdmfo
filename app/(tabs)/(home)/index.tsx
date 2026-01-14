@@ -5,7 +5,7 @@ import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
@@ -22,18 +22,7 @@ export default function HomeScreen() {
   const [showCelebration, setShowCelebration] = useState(false);
   const router = useRouter();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log('HomeScreen focused, loading data...');
-      loadData();
-    }, [])
-  );
-
-  useEffect(() => {
-    loadDateData(selectedDate);
-  }, [selectedDate, profile]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     console.log('Loading profile...');
     const userProfile = await loadProfile();
     console.log('Profile loaded:', userProfile ? 'exists' : 'null');
@@ -50,14 +39,25 @@ export default function HomeScreen() {
     if (!hasSeenHint) {
       setShowInfoHint(true);
     }
-  };
+  }, [router, selectedDate]);
 
-  const loadDateData = async (date: string) => {
+  const loadDateData = useCallback(async (date: string) => {
     console.log('Loading portions for date:', date);
     const portions = await loadDailyPortions(date);
     console.log('Portions loaded:', portions);
     setDailyPortions(portions);
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('HomeScreen focused, loading data...');
+      loadData();
+    }, [loadData])
+  );
+
+  useEffect(() => {
+    loadDateData(selectedDate);
+  }, [selectedDate, loadDateData]);
 
   const onRefresh = async () => {
     setRefreshing(true);

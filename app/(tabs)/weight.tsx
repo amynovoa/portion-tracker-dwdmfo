@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
@@ -23,29 +23,7 @@ export default function WeightTrackingScreen() {
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
 
-  // Reload data whenever the screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log('Weight screen focused, loading data');
-      loadData();
-    }, [])
-  );
-
-  useEffect(() => {
-    filterEntriesByTimeRange();
-  }, [entries, timeRange]);
-
-  useEffect(() => {
-    // Load weight for selected date
-    const entry = entries.find(e => e.date === selectedDate);
-    if (entry) {
-      setWeightInput(entry.weight.toString());
-    } else {
-      setWeightInput('');
-    }
-  }, [selectedDate, entries]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     console.log('Loading weight data...');
     const profile = await loadProfile();
     
@@ -99,9 +77,9 @@ export default function WeightTrackingScreen() {
       setEntries([]);
       setWeightInput('');
     }
-  };
+  }, []);
 
-  const filterEntriesByTimeRange = () => {
+  const filterEntriesByTimeRange = useCallback(() => {
     if (entries.length === 0) {
       setFilteredEntries([]);
       return;
@@ -127,7 +105,29 @@ export default function WeightTrackingScreen() {
 
     const filtered = entries.filter(entry => entry.timestamp >= cutoffTime);
     setFilteredEntries(filtered);
-  };
+  }, [entries, timeRange]);
+
+  // Reload data whenever the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Weight screen focused, loading data');
+      loadData();
+    }, [loadData])
+  );
+
+  useEffect(() => {
+    filterEntriesByTimeRange();
+  }, [filterEntriesByTimeRange]);
+
+  useEffect(() => {
+    // Load weight for selected date
+    const entry = entries.find(e => e.date === selectedDate);
+    if (entry) {
+      setWeightInput(entry.weight.toString());
+    } else {
+      setWeightInput('');
+    }
+  }, [selectedDate, entries]);
 
   const handleAddWeight = async () => {
     const weight = parseFloat(weightInput);

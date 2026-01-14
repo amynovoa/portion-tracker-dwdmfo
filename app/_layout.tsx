@@ -6,9 +6,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { loadProfile } from '@/utils/storage';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
+import { createAutomaticBackup } from '@/utils/backupManager';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,6 +36,10 @@ export default function RootLayout() {
             console.log('Scheduling noon reminder...');
             await scheduleNoonReminder();
           }
+
+          // Create automatic backup on app launch
+          console.log('Creating automatic backup on app launch...');
+          await createAutomaticBackup();
         }
       } catch (e) {
         console.error('Error loading profile:', e);
@@ -48,6 +53,26 @@ export default function RootLayout() {
       prepare();
     }
   }, [loaded]);
+
+  // Create backup when app comes to foreground
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        console.log('App came to foreground, creating backup...');
+        try {
+          await createAutomaticBackup();
+        } catch (error) {
+          console.error('Error creating automatic backup:', error);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (loaded && isReady) {
@@ -74,6 +99,7 @@ export default function RootLayout() {
         <Stack.Screen name="setup-profile" />
         <Stack.Screen name="setup-targets" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="backup-restore" />
       </Stack>
     </GestureHandlerRootView>
   );

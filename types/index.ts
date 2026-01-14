@@ -54,7 +54,7 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
 ];
 
 // Activity levels with full details for display
-export const ACTIVITY_LEVELS: Array<{ value: ActivityLevel; label: string; description: string }> = [
+export const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; description: string }[] = [
   {
     value: 'sedentary',
     label: 'Sedentary',
