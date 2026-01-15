@@ -12,7 +12,7 @@ type DropdownModalProps = {
   onClose: () => void;
   onSelect: (value: any) => void;
   selectedValue: any;
-  items: Array<{ label: string; value: any }>;
+  items: { label: string; value: any }[];
   title: string;
 };
 
@@ -134,7 +134,7 @@ export default function SetupProfileScreen() {
     { label: '10 servings', value: 10 },
   ];
 
-  const getSelectedLabel = (value: any, options: Array<{ label: string; value: any }>) => {
+  const getSelectedLabel = (value: any, options: { label: string; value: any }[]) => {
     const option = options.find(opt => opt.value === value);
     return option ? option.label : '';
   };

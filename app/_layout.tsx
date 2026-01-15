@@ -12,6 +12,7 @@ import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/no
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import Constants from 'expo-constants';
+import SpaceMonoFont from '../assets/fonts/SpaceMono-Regular.ttf';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,7 +26,7 @@ export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: SpaceMonoFont,
   });
 
   useEffect(() => {

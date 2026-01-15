@@ -10,6 +10,7 @@ let storage: any = null;
 // Only initialize on iOS and wrap in try-catch
 if (Platform.OS === 'ios') {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const AppleTargets = require("@bacons/apple-targets");
     ExtensionStorage = AppleTargets.ExtensionStorage;
     

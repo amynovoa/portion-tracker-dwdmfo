@@ -79,7 +79,16 @@ export default function WeightTrackingScreen() {
     }
   }, []);
 
-  const filterEntriesByTimeRange = useCallback(() => {
+  // Reload data whenever the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Weight screen (iOS) focused, loading data');
+      loadData();
+    }, [loadData])
+  );
+
+  // Filter entries by time range
+  useEffect(() => {
     if (entries.length === 0) {
       setFilteredEntries([]);
       return;
@@ -106,18 +115,6 @@ export default function WeightTrackingScreen() {
     const filtered = entries.filter(entry => entry.timestamp >= cutoffTime);
     setFilteredEntries(filtered);
   }, [entries, timeRange]);
-
-  // Reload data whenever the screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      console.log('Weight screen (iOS) focused, loading data');
-      loadData();
-    }, [loadData])
-  );
-
-  useEffect(() => {
-    filterEntriesByTimeRange();
-  }, [filterEntriesByTimeRange]);
 
   useEffect(() => {
     // Load weight for selected date
