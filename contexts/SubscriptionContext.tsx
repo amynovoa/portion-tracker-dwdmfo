@@ -21,31 +21,23 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  let subscriptionStatus = mockSubscriptionStatus;
-  let isSubscribed = true; // Default to subscribed in dev/Expo Go
-  
-  // Only try to use Superwall hooks if not in Expo Go AND on iOS
-  if (!isExpoGo && Platform.OS === 'ios') {
-    try {
-      // Dynamic import to avoid errors in Expo Go
-      const { useUser } = require('expo-superwall');
-      const userData = useUser();
-      
-      if (userData && userData.subscriptionStatus) {
-        subscriptionStatus = userData.subscriptionStatus;
-        isSubscribed = userData.subscriptionStatus.status === 'ACTIVE';
-      }
-    } catch (error) {
-      console.warn('⚠️ Superwall not available (this is normal in Expo Go or development)');
-      console.warn('To test Superwall, run: npx expo run:ios');
-      // Keep default mock values
-    }
-  } else if (isExpoGo) {
+  // For now, always use mock subscription data
+  // Superwall integration can be added later when needed
+  const subscriptionStatus = mockSubscriptionStatus;
+  const isSubscribed = true;
+
+  if (isExpoGo) {
     console.log('📱 Running in Expo Go - using mock subscription (full access granted)');
+  } else {
+    console.log('📱 Using mock subscription (full access granted)');
   }
 
   return (
-    <SubscriptionContext.Provider value={{ subscriptionStatus, isSubscribed, isExpoGo }}>
+    <SubscriptionContext.Provider value={{ 
+      subscriptionStatus, 
+      isSubscribed, 
+      isExpoGo 
+    }}>
       {children}
     </SubscriptionContext.Provider>
   );

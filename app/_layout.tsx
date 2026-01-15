@@ -12,8 +12,6 @@ import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/no
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import Constants from 'expo-constants';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import SpaceMonoFont from '../assets/fonts/SpaceMono-Regular.ttf';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,8 +24,9 @@ const isExpoGo = Constants.appOwnership === 'expo';
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const [loaded] = useFonts({
-    SpaceMono: SpaceMonoFont,
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -134,21 +133,8 @@ export default function RootLayout() {
     return AppContent;
   }
 
-  // In production builds, wrap with SuperwallProvider
-  try {
-    const { SuperwallProvider } = require('expo-superwall');
-    return (
-      <SuperwallProvider 
-        apiKeys={{ ios: SUPERWALL_API_KEY }}
-        onConfigurationError={(error) => {
-          console.error('Superwall configuration error:', error);
-        }}
-      >
-        {AppContent}
-      </SuperwallProvider>
-    );
-  } catch (error) {
-    console.warn('⚠️ Superwall not available, continuing without it');
-    return AppContent;
-  }
+  // In production builds, return AppContent directly
+  // Superwall integration can be added later when needed
+  console.log('📝 Production build - using mock subscription (full access)');
+  return AppContent;
 }
