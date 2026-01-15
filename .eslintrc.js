@@ -1,3 +1,4 @@
+
 // https://docs.expo.dev/guides/using-eslint/
 module.exports = {
   extends: [
@@ -31,7 +32,7 @@ module.exports = {
     "@typescript-eslint/no-wrapper-object-types": "off",
     "@typescript-eslint/ban-tslint-comment": "off",
     "react/no-unescaped-entities": "off",
-    "import/no-unresolved": "error",
+    "import/no-unresolved": "off", // Disabled - path aliases are handled by TypeScript and Babel
     "prefer-const": "off",
     "react/prop-types": 1,
     "no-case-declarations": "off",

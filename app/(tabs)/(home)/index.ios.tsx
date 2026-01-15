@@ -24,6 +24,13 @@ export default function HomeScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
 
+  const loadDateData = useCallback(async (date: string) => {
+    console.log('Loading portions for date:', date);
+    const portions = await loadDailyPortions(date);
+    console.log('Portions loaded:', portions);
+    setDailyPortions(portions);
+  }, []);
+
   const loadData = useCallback(async () => {
     console.log('Loading profile...');
     const userProfile = await loadProfile();
@@ -41,14 +48,7 @@ export default function HomeScreen() {
     if (!hasSeenHint) {
       setShowInfoHint(true);
     }
-  }, [router, selectedDate]);
-
-  const loadDateData = useCallback(async (date: string) => {
-    console.log('Loading portions for date:', date);
-    const portions = await loadDailyPortions(date);
-    console.log('Portions loaded:', portions);
-    setDailyPortions(portions);
-  }, []);
+  }, [router, selectedDate, loadDateData]);
 
   useEffect(() => {
     loadDateData(selectedDate);
