@@ -5,13 +5,18 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SuperwallProvider } from 'expo-superwall';
 import { loadProfile } from '@/utils/storage';
 import { View, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
 SplashScreen.preventAutoHideAsync();
+
+// Superwall API Key - Replace with your actual key from Superwall dashboard
+const SUPERWALL_API_KEY = 'pk_d1efbc344a5e3cdb8e5e732a2b1e3e5a9c8e5e732a2b1e3e5a9c8e5e732a2b1e';
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
@@ -90,17 +95,26 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack 
-        screenOptions={{ headerShown: false }}
-        initialRouteName={hasProfile ? '(tabs)' : 'welcome'}
-      >
-        <Stack.Screen name="welcome" />
-        <Stack.Screen name="setup-profile" />
-        <Stack.Screen name="setup-targets" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="backup-restore" />
-      </Stack>
-    </GestureHandlerRootView>
+    <SuperwallProvider 
+      apiKeys={{ ios: SUPERWALL_API_KEY }}
+      onConfigurationError={(error) => {
+        console.error('Superwall configuration error:', error);
+      }}
+    >
+      <SubscriptionProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack 
+            screenOptions={{ headerShown: false }}
+            initialRouteName={hasProfile ? '(tabs)' : 'welcome'}
+          >
+            <Stack.Screen name="welcome" />
+            <Stack.Screen name="setup-profile" />
+            <Stack.Screen name="setup-targets" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="backup-restore" />
+          </Stack>
+        </GestureHandlerRootView>
+      </SubscriptionProvider>
+    </SuperwallProvider>
   );
 }

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,13 @@ import {
   ActivityIndicator,
   Linking,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { purchaseProduct, restorePurchases, getProductDetails } from '@/utils/subscriptionManager';
+import { PRODUCT_IDS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -21,21 +24,93 @@ interface PaywallScreenProps {
   canDismiss?: boolean;
 }
 
+interface ProductDetails {
+  productId: string;
+  price: number;
+  priceString: string;
+  currencyCode: string;
+}
+
 const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDismiss = true }) => {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
+  const [products, setProducts] = useState<{ monthly?: ProductDetails; annual?: ProductDetails }>({});
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  // Load product details from App Store on mount
+  useEffect(() => {
+    if (visible) {
+      loadProductDetails();
+    }
+  }, [visible]);
+
+  const loadProductDetails = async () => {
+    console.log('Loading product details from App Store...');
+    setLoadingProducts(true);
+    try {
+      const monthlyProduct = await getProductDetails(PRODUCT_IDS.monthly);
+      const annualProduct = await getProductDetails(PRODUCT_IDS.annual);
+      
+      console.log('Monthly product:', monthlyProduct);
+      console.log('Annual product:', annualProduct);
+      
+      setProducts({
+        monthly: monthlyProduct || undefined,
+        annual: annualProduct || undefined,
+      });
+    } catch (error) {
+      console.error('Error loading product details:', error);
+      Alert.alert(
+        'Error',
+        'Failed to load subscription prices. Please check your internet connection and try again.'
+      );
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   const handleSubscribe = async () => {
-    console.log('User tapped Subscribe button for plan:', selectedPlan);
+    const productId = PRODUCT_IDS[selectedPlan];
+    console.log('User tapped Subscribe button for plan:', selectedPlan, 'Product ID:', productId);
+    
     setLoading(true);
     try {
-      // TODO: Backend Integration - Implement actual subscription logic with RevenueCat or similar
-      Alert.alert('Subscription', `Subscribing to ${selectedPlan} plan...`);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Attempt to purchase the product
+      // This will trigger Apple's StoreKit purchase sheet
+      const result = await purchaseProduct(productId);
+      
+      console.log('Purchase result:', result);
+      
+      if (result.success) {
+        Alert.alert(
+          'Success!',
+          'Your subscription is now active. Enjoy full access to all features!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                if (onDismiss) {
+                  onDismiss();
+                }
+              },
+            },
+          ]
+        );
+      } else if (result.userCancelled) {
+        console.log('User cancelled the purchase');
+        // Don't show an alert for user cancellation
+      } else {
+        Alert.alert(
+          'Purchase Failed',
+          result.error || 'Unable to complete the purchase. Please try again.'
+        );
+      }
     } catch (error) {
-      console.log('Subscription error:', error);
-      Alert.alert('Error', 'Failed to process subscription');
+      console.error('Subscription error:', error);
+      Alert.alert(
+        'Error',
+        'An unexpected error occurred. Please try again or contact support if the problem persists.'
+      );
     } finally {
       setLoading(false);
     }
@@ -45,12 +120,37 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
     console.log('User tapped Restore Purchases');
     setLoading(true);
     try {
-      // TODO: Backend Integration - Implement restore purchases logic
-      Alert.alert('Restore', 'Checking for previous purchases...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await restorePurchases();
+      
+      console.log('Restore purchases result:', result);
+      
+      if (result.success) {
+        Alert.alert(
+          'Purchases Restored',
+          'Your previous purchases have been restored successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                if (onDismiss) {
+                  onDismiss();
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'No Purchases Found',
+          'We could not find any previous purchases to restore. If you believe this is an error, please contact support.'
+        );
+      }
     } catch (error) {
-      console.log('Restore purchases error:', error);
-      Alert.alert('Error', 'Failed to restore purchases');
+      console.error('Restore purchases error:', error);
+      Alert.alert(
+        'Error',
+        'Failed to restore purchases. Please try again or contact support if the problem persists.'
+      );
     } finally {
       setLoading(false);
     }
@@ -65,6 +165,10 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
     console.log('User tapped Terms of Service link');
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/us/terms.html');
   };
+
+  // Get display prices - use fetched prices or fall back to defaults
+  const monthlyPrice = products.monthly?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.monthly].defaultPrice;
+  const annualPrice = products.annual?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.annual].defaultPrice;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
@@ -89,44 +193,51 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
             <FeatureItem text="Daily reminders" />
           </View>
 
-          <View style={styles.plansContainer}>
-            <TouchableOpacity
-              style={[
-                styles.planCard,
-                selectedPlan === 'annual' && styles.planCardSelected,
-              ]}
-              onPress={() => setSelectedPlan('annual')}
-            >
-              <View style={styles.bestValueBadge}>
-                <Text style={styles.bestValueText}>BEST VALUE</Text>
-              </View>
-              <View style={styles.planHeader}>
-                <Text style={styles.planTitle}>Annual</Text>
-                {selectedPlan === 'annual' && (
-                  <MaterialIcons name="check-circle" size={24} color={colors.primary} />
-                )}
-              </View>
-              <Text style={styles.planPrice}>$24.99/year</Text>
-              <Text style={styles.planDetail}>7-day free trial</Text>
-            </TouchableOpacity>
+          {loadingProducts ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Loading subscription options...</Text>
+            </View>
+          ) : (
+            <View style={styles.plansContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'annual' && styles.planCardSelected,
+                ]}
+                onPress={() => setSelectedPlan('annual')}
+              >
+                <View style={styles.bestValueBadge}>
+                  <Text style={styles.bestValueText}>BEST VALUE</Text>
+                </View>
+                <View style={styles.planHeader}>
+                  <Text style={styles.planTitle}>Annual</Text>
+                  {selectedPlan === 'annual' && (
+                    <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                  )}
+                </View>
+                <Text style={styles.planPrice}>{annualPrice}/year</Text>
+                <Text style={styles.planDetail}>7-day free trial</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.planCard,
-                selectedPlan === 'monthly' && styles.planCardSelected,
-              ]}
-              onPress={() => setSelectedPlan('monthly')}
-            >
-              <View style={styles.planHeader}>
-                <Text style={styles.planTitle}>Monthly</Text>
-                {selectedPlan === 'monthly' && (
-                  <MaterialIcons name="check-circle" size={24} color={colors.primary} />
-                )}
-              </View>
-              <Text style={styles.planPrice}>$2.99/month</Text>
-              <Text style={styles.planDetail}>7-day free trial</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'monthly' && styles.planCardSelected,
+                ]}
+                onPress={() => setSelectedPlan('monthly')}
+              >
+                <View style={styles.planHeader}>
+                  <Text style={styles.planTitle}>Monthly</Text>
+                  {selectedPlan === 'monthly' && (
+                    <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+                  )}
+                </View>
+                <Text style={styles.planPrice}>{monthlyPrice}/month</Text>
+                <Text style={styles.planDetail}>7-day free trial</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.agreementContainer}>
             <Text style={styles.agreementText}>
@@ -145,15 +256,15 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
           <TouchableOpacity
             style={[buttonStyles.primary, styles.subscribeButton]}
             onPress={handleSubscribe}
-            disabled={loading}
+            disabled={loading || loadingProducts}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={[buttonStyles.primaryText, styles.subscribeButtonText]}>
                 {selectedPlan === 'annual' 
-                  ? 'Start 7-Day Free Trial then $24.99 annually'
-                  : 'Start 7-Day Free Trial then $2.99 monthly'}
+                  ? `Start 7-Day Free Trial then ${annualPrice} annually`
+                  : `Start 7-Day Free Trial then ${monthlyPrice} monthly`}
               </Text>
             )}
           </TouchableOpacity>
@@ -162,7 +273,11 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDi
             Cancel anytime during trial. No charge until trial ends.
           </Text>
 
-          <TouchableOpacity onPress={handleRestorePurchases} style={styles.restoreButton}>
+          <TouchableOpacity 
+            onPress={handleRestorePurchases} 
+            style={styles.restoreButton}
+            disabled={loading}
+          >
             <Text style={styles.restoreText}>Restore Purchases</Text>
           </TouchableOpacity>
 
@@ -229,6 +344,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     marginLeft: 12,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   plansContainer: {
     marginBottom: 24,
