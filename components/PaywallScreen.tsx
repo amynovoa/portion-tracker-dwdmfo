@@ -200,7 +200,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             <FeatureItem text="Weight tracking & charts" />
             <FeatureItem text="Adherence history & trends" />
             <FeatureItem text="Daily reminders" />
-            <FeatureItem text="All future updates" />
           </View>
 
           <View style={styles.plansContainer}>
