@@ -52,8 +52,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     try {
       console.log('PaywallScreen: Fetching product details from App Store');
       const [monthly, annual] = await Promise.all([
-        getProductDetails(PRODUCT_IDS.MONTHLY),
-        getProductDetails(PRODUCT_IDS.ANNUAL),
+        getProductDetails(PRODUCT_IDS.monthly),
+        getProductDetails(PRODUCT_IDS.annual),
       ]);
 
       console.log('PaywallScreen: Product details loaded', { monthly, annual });
@@ -75,7 +75,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         console.log('PaywallScreen: Purchase successful, dismissing paywall');
         Alert.alert('Success', 'Thank you for subscribing!');
         onDismiss?.();
-      } else if (result.cancelled) {
+      } else if (result.userCancelled) {
         console.log('PaywallScreen: Purchase cancelled by user');
       } else {
         console.error('PaywallScreen: Purchase failed:', result.error);
@@ -115,12 +115,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
   const openPrivacyPolicy = () => {
     console.log('PaywallScreen: Opening privacy policy');
-    Linking.openURL('https://yourapp.com/privacy');
+    Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const openTermsOfService = () => {
     console.log('PaywallScreen: Opening terms of service');
-    Linking.openURL('https://yourapp.com/terms');
+    Linking.openURL('https://www.portiontrack.com/terms');
   };
 
   // Show development message in Expo Go
@@ -141,7 +141,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <MaterialIcons name="info" size={64} color={colors.primary} />
               <Text style={styles.devTitle}>Development Mode</Text>
               <Text style={styles.devMessage}>
-                You're running in Expo Go, which doesn't support native payment modules like Superwall.
+                You&apos;re running in Expo Go, which doesn&apos;t support native payment modules like Superwall.
               </Text>
               <Text style={styles.devMessage}>
                 To test subscriptions, create a development build:
@@ -177,7 +177,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
           <Text style={styles.title}>Unlock Premium Features</Text>
           <Text style={styles.subtitle}>
-            Get unlimited access to all features and support the app's development
+            Get unlimited access to all features and support the app&apos;s development
           </Text>
 
           <View style={styles.featuresContainer}>
@@ -194,13 +194,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             {/* Monthly Plan */}
             <TouchableOpacity
               style={[styles.planCard, loading && styles.planCardDisabled]}
-              onPress={() => handleSubscribe(PRODUCT_IDS.MONTHLY)}
+              onPress={() => handleSubscribe(PRODUCT_IDS.monthly)}
               disabled={loading}
             >
               <View style={styles.planHeader}>
                 <Text style={styles.planName}>Monthly</Text>
                 <Text style={styles.planPrice}>
-                  {productDetails.monthly?.priceString || PRODUCT_CONFIG.MONTHLY.displayPrice}
+                  {productDetails.monthly?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.monthly].defaultPrice}
                 </Text>
               </View>
               <Text style={styles.planDescription}>Billed monthly</Text>
@@ -209,7 +209,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             {/* Annual Plan */}
             <TouchableOpacity
               style={[styles.planCard, styles.planCardPopular, loading && styles.planCardDisabled]}
-              onPress={() => handleSubscribe(PRODUCT_IDS.ANNUAL)}
+              onPress={() => handleSubscribe(PRODUCT_IDS.annual)}
               disabled={loading}
             >
               <View style={styles.popularBadge}>
@@ -218,7 +218,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <View style={styles.planHeader}>
                 <Text style={styles.planName}>Annual</Text>
                 <Text style={styles.planPrice}>
-                  {productDetails.annual?.priceString || PRODUCT_CONFIG.ANNUAL.displayPrice}
+                  {productDetails.annual?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.annual].defaultPrice}
                 </Text>
               </View>
               <Text style={styles.planDescription}>
