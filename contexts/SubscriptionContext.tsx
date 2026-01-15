@@ -1,119 +1,51 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useUser } from 'expo-superwall';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, ReactNode } from 'react';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const ENTITLEMENT_KEY = '@portion_tracker_entitlement';
+// Check if we're running in Expo Go
+const isExpoGo = Constants.appOwnership === 'expo';
+
+// Mock subscription status for Expo Go
+const mockSubscriptionStatus = {
+  status: 'ACTIVE' as const,
+  entitlements: [{ id: 'premium', type: 'SUBSCRIPTION' as const }]
+};
 
 interface SubscriptionContextType {
+  subscriptionStatus: typeof mockSubscriptionStatus | undefined;
   isSubscribed: boolean;
-  isLoading: boolean;
-  showPaywall: () => void;
-  hidePaywall: () => void;
-  paywallVisible: boolean;
-  subscriptionStatus: 'UNKNOWN' | 'INACTIVE' | 'ACTIVE';
-  refreshSubscriptionStatus: () => Promise<void>;
+  isExpoGo: boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [paywallVisible, setPaywallVisible] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'UNKNOWN' | 'INACTIVE' | 'ACTIVE'>('UNKNOWN');
+  let subscriptionStatus = mockSubscriptionStatus;
+  let isSubscribed = true; // Default to subscribed in dev/Expo Go
   
-  // Use Superwall's useUser hook to get subscription status
-  const { subscriptionStatus: superwallStatus, refresh } = useUser();
-
-  // Check subscription status from Superwall and persist locally
-  useEffect(() => {
-    checkSubscriptionStatus();
-  }, [superwallStatus]);
-
-  const checkSubscriptionStatus = async () => {
+  // Only try to use Superwall hooks if not in Expo Go AND on iOS
+  if (!isExpoGo && Platform.OS === 'ios') {
     try {
-      setIsLoading(true);
-      console.log('Checking subscription status from Superwall...');
-      console.log('Superwall subscription status:', superwallStatus);
-
-      // Check Superwall subscription status
-      const hasActiveSubscription = superwallStatus?.status === 'ACTIVE';
+      // Dynamic import to avoid errors in Expo Go
+      const { useUser } = require('expo-superwall');
+      const userData = useUser();
       
-      // Persist entitlement locally for offline access
-      if (hasActiveSubscription) {
-        await AsyncStorage.setItem(ENTITLEMENT_KEY, JSON.stringify({
-          isSubscribed: true,
-          lastChecked: new Date().toISOString(),
-          entitlements: superwallStatus?.entitlements || [],
-        }));
+      if (userData && userData.subscriptionStatus) {
+        subscriptionStatus = userData.subscriptionStatus;
+        isSubscribed = userData.subscriptionStatus.status === 'ACTIVE';
       }
-
-      setIsSubscribed(hasActiveSubscription);
-      setSubscriptionStatus(superwallStatus?.status || 'UNKNOWN');
-      
-      console.log('Subscription status updated:', {
-        isSubscribed: hasActiveSubscription,
-        status: superwallStatus?.status || 'UNKNOWN',
-      });
     } catch (error) {
-      console.error('Error checking subscription status:', error);
-      
-      // Fallback to locally stored entitlement if Superwall check fails
-      try {
-        const storedEntitlement = await AsyncStorage.getItem(ENTITLEMENT_KEY);
-        if (storedEntitlement) {
-          const parsed = JSON.parse(storedEntitlement);
-          setIsSubscribed(parsed.isSubscribed);
-          setSubscriptionStatus(parsed.isSubscribed ? 'ACTIVE' : 'INACTIVE');
-          console.log('Using cached entitlement:', parsed);
-        } else {
-          setSubscriptionStatus('UNKNOWN');
-        }
-      } catch (storageError) {
-        console.error('Error reading cached entitlement:', storageError);
-        setSubscriptionStatus('UNKNOWN');
-      }
-    } finally {
-      setIsLoading(false);
+      console.warn('⚠️ Superwall not available (this is normal in Expo Go or development)');
+      console.warn('To test Superwall, run: npx expo run:ios');
+      // Keep default mock values
     }
-  };
-
-  const refreshSubscriptionStatus = async () => {
-    console.log('Manually refreshing subscription status...');
-    try {
-      // Refresh from Superwall servers
-      await refresh();
-      await checkSubscriptionStatus();
-    } catch (error) {
-      console.error('Error refreshing subscription status:', error);
-    }
-  };
-
-  const showPaywall = () => {
-    console.log('Showing paywall...');
-    setPaywallVisible(true);
-  };
-
-  const hidePaywall = () => {
-    console.log('Hiding paywall...');
-    setPaywallVisible(false);
-    // Recheck subscription status after paywall is dismissed
-    refreshSubscriptionStatus();
-  };
+  } else if (isExpoGo) {
+    console.log('📱 Running in Expo Go - using mock subscription (full access granted)');
+  }
 
   return (
-    <SubscriptionContext.Provider
-      value={{
-        isSubscribed,
-        isLoading,
-        showPaywall,
-        hidePaywall,
-        paywallVisible,
-        subscriptionStatus,
-        refreshSubscriptionStatus,
-      }}
-    >
+    <SubscriptionContext.Provider value={{ subscriptionStatus, isSubscribed, isExpoGo }}>
       {children}
     </SubscriptionContext.Provider>
   );

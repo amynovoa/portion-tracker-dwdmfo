@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -12,11 +14,10 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { purchaseProduct, restorePurchases, getProductDetails } from '@/utils/subscriptionManager';
 import { PRODUCT_IDS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import Constants from 'expo-constants';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -31,293 +32,267 @@ interface ProductDetails {
   currencyCode: string;
 }
 
-const PaywallScreen: React.FC<PaywallScreenProps> = ({ visible, onDismiss, canDismiss = true }) => {
-  const [loading, setLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
-  const [products, setProducts] = useState<{ monthly?: ProductDetails; annual?: ProductDetails }>({});
-  const [loadingProducts, setLoadingProducts] = useState(true);
+const isExpoGo = Constants.appOwnership === 'expo';
 
-  // Load product details from App Store on mount
+export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
+  const [loading, setLoading] = useState(false);
+  const [productDetails, setProductDetails] = useState<{
+    monthly?: ProductDetails;
+    annual?: ProductDetails;
+  }>({});
+
   useEffect(() => {
-    if (visible) {
+    if (visible && !isExpoGo) {
+      console.log('PaywallScreen: Loading product details');
       loadProductDetails();
     }
   }, [visible]);
 
   const loadProductDetails = async () => {
-    console.log('Loading product details from App Store...');
-    setLoadingProducts(true);
     try {
-      const monthlyProduct = await getProductDetails(PRODUCT_IDS.monthly);
-      const annualProduct = await getProductDetails(PRODUCT_IDS.annual);
-      
-      console.log('Monthly product:', monthlyProduct);
-      console.log('Annual product:', annualProduct);
-      
-      setProducts({
-        monthly: monthlyProduct || undefined,
-        annual: annualProduct || undefined,
-      });
+      console.log('PaywallScreen: Fetching product details from App Store');
+      const [monthly, annual] = await Promise.all([
+        getProductDetails(PRODUCT_IDS.MONTHLY),
+        getProductDetails(PRODUCT_IDS.ANNUAL),
+      ]);
+
+      console.log('PaywallScreen: Product details loaded', { monthly, annual });
+      setProductDetails({ monthly, annual });
     } catch (error) {
-      console.error('Error loading product details:', error);
-      Alert.alert(
-        'Error',
-        'Failed to load subscription prices. Please check your internet connection and try again.'
-      );
-    } finally {
-      setLoadingProducts(false);
+      console.error('PaywallScreen: Error loading product details:', error);
     }
   };
 
-  const handleSubscribe = async () => {
-    const productId = PRODUCT_IDS[selectedPlan];
-    console.log('User tapped Subscribe button for plan:', selectedPlan, 'Product ID:', productId);
-    
+  const handleSubscribe = async (productId: string) => {
+    console.log('PaywallScreen: User tapped Subscribe button for', productId);
     setLoading(true);
     try {
-      // Attempt to purchase the product
-      // This will trigger Apple's StoreKit purchase sheet
+      console.log('PaywallScreen: Initiating purchase for', productId);
       const result = await purchaseProduct(productId);
-      
-      console.log('Purchase result:', result);
+      console.log('PaywallScreen: Purchase result:', result);
       
       if (result.success) {
-        Alert.alert(
-          'Success!',
-          'Your subscription is now active. Enjoy full access to all features!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                if (onDismiss) {
-                  onDismiss();
-                }
-              },
-            },
-          ]
-        );
-      } else if (result.userCancelled) {
-        console.log('User cancelled the purchase');
-        // Don't show an alert for user cancellation
+        console.log('PaywallScreen: Purchase successful, dismissing paywall');
+        Alert.alert('Success', 'Thank you for subscribing!');
+        onDismiss?.();
+      } else if (result.cancelled) {
+        console.log('PaywallScreen: Purchase cancelled by user');
       } else {
-        Alert.alert(
-          'Purchase Failed',
-          result.error || 'Unable to complete the purchase. Please try again.'
-        );
+        console.error('PaywallScreen: Purchase failed:', result.error);
+        Alert.alert('Error', result.error || 'Purchase failed. Please try again.');
       }
     } catch (error) {
-      console.error('Subscription error:', error);
-      Alert.alert(
-        'Error',
-        'An unexpected error occurred. Please try again or contact support if the problem persists.'
-      );
+      console.error('PaywallScreen: Purchase error:', error);
+      Alert.alert('Error', 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleRestorePurchases = async () => {
-    console.log('User tapped Restore Purchases');
+    console.log('PaywallScreen: User tapped Restore Purchases');
     setLoading(true);
     try {
+      console.log('PaywallScreen: Restoring purchases');
       const result = await restorePurchases();
-      
-      console.log('Restore purchases result:', result);
+      console.log('PaywallScreen: Restore result:', result);
       
       if (result.success) {
-        Alert.alert(
-          'Purchases Restored',
-          'Your previous purchases have been restored successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                if (onDismiss) {
-                  onDismiss();
-                }
-              },
-            },
-          ]
-        );
+        console.log('PaywallScreen: Purchases restored successfully');
+        Alert.alert('Success', 'Your purchases have been restored!');
+        onDismiss?.();
       } else {
-        Alert.alert(
-          'No Purchases Found',
-          'We could not find any previous purchases to restore. If you believe this is an error, please contact support.'
-        );
+        console.log('PaywallScreen: No purchases to restore');
+        Alert.alert('No Purchases Found', 'No previous purchases were found for this account.');
       }
     } catch (error) {
-      console.error('Restore purchases error:', error);
-      Alert.alert(
-        'Error',
-        'Failed to restore purchases. Please try again or contact support if the problem persists.'
-      );
+      console.error('PaywallScreen: Restore error:', error);
+      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const openPrivacyPolicy = () => {
-    console.log('User tapped Privacy Policy link');
-    Linking.openURL('https://www.portiontrack.com/privacy-policy');
+    console.log('PaywallScreen: Opening privacy policy');
+    Linking.openURL('https://yourapp.com/privacy');
   };
 
   const openTermsOfService = () => {
-    console.log('User tapped Terms of Service link');
-    Linking.openURL('https://www.apple.com/legal/internet-services/itunes/us/terms.html');
+    console.log('PaywallScreen: Opening terms of service');
+    Linking.openURL('https://yourapp.com/terms');
   };
 
-  // Get display prices - use fetched prices or fall back to defaults
-  const monthlyPrice = products.monthly?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.monthly].defaultPrice;
-  const annualPrice = products.annual?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.annual].defaultPrice;
+  // Show development message in Expo Go
+  if (isExpoGo) {
+    return (
+      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.container}>
+          <View style={styles.header}>
+            {canDismiss && (
+              <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
+                <MaterialIcons name="close" size={28} color={colors.text} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+            <View style={styles.devMessageContainer}>
+              <MaterialIcons name="info" size={64} color={colors.primary} />
+              <Text style={styles.devTitle}>Development Mode</Text>
+              <Text style={styles.devMessage}>
+                You're running in Expo Go, which doesn't support native payment modules like Superwall.
+              </Text>
+              <Text style={styles.devMessage}>
+                To test subscriptions, create a development build:
+              </Text>
+              <View style={styles.codeBlock}>
+                <Text style={styles.codeText}>npx expo prebuild</Text>
+                <Text style={styles.codeText}>npx expo run:ios</Text>
+              </View>
+              <Text style={styles.devMessage}>
+                Or build with EAS:
+              </Text>
+              <View style={styles.codeBlock}>
+                <Text style={styles.codeText}>eas build --profile development --platform ios</Text>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+    );
+  }
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        {canDismiss && onDismiss && (
-          <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
-            <MaterialIcons name="close" size={28} color={colors.text} />
-          </TouchableOpacity>
-        )}
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          {canDismiss && (
+            <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
+              <MaterialIcons name="close" size={28} color={colors.text} />
+            </TouchableOpacity>
+          )}
+        </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Unlock Full Access</Text>
+        <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+          <Text style={styles.title}>Unlock Premium Features</Text>
           <Text style={styles.subtitle}>
-            Get full access to all features and track your health journey
+            Get unlimited access to all features and support the app's development
           </Text>
 
           <View style={styles.featuresContainer}>
             <FeatureItem text="Unlimited portion tracking" />
-            <FeatureItem text="Detailed adherence analytics" />
-            <FeatureItem text="Weight tracking & charts" />
+            <FeatureItem text="Advanced adherence analytics" />
             <FeatureItem text="Custom portion targets" />
+            <FeatureItem text="Weight tracking & charts" />
             <FeatureItem text="Daily reminders" />
+            <FeatureItem text="Data backup & restore" />
+            <FeatureItem text="Priority support" />
           </View>
 
-          {loadingProducts ? (
+          <View style={styles.plansContainer}>
+            {/* Monthly Plan */}
+            <TouchableOpacity
+              style={[styles.planCard, loading && styles.planCardDisabled]}
+              onPress={() => handleSubscribe(PRODUCT_IDS.MONTHLY)}
+              disabled={loading}
+            >
+              <View style={styles.planHeader}>
+                <Text style={styles.planName}>Monthly</Text>
+                <Text style={styles.planPrice}>
+                  {productDetails.monthly?.priceString || PRODUCT_CONFIG.MONTHLY.displayPrice}
+                </Text>
+              </View>
+              <Text style={styles.planDescription}>Billed monthly</Text>
+            </TouchableOpacity>
+
+            {/* Annual Plan */}
+            <TouchableOpacity
+              style={[styles.planCard, styles.planCardPopular, loading && styles.planCardDisabled]}
+              onPress={() => handleSubscribe(PRODUCT_IDS.ANNUAL)}
+              disabled={loading}
+            >
+              <View style={styles.popularBadge}>
+                <Text style={styles.popularBadgeText}>BEST VALUE</Text>
+              </View>
+              <View style={styles.planHeader}>
+                <Text style={styles.planName}>Annual</Text>
+                <Text style={styles.planPrice}>
+                  {productDetails.annual?.priceString || PRODUCT_CONFIG.ANNUAL.displayPrice}
+                </Text>
+              </View>
+              <Text style={styles.planDescription}>
+                {productDetails.annual 
+                  ? `${(productDetails.annual.price / 12).toFixed(2)} ${productDetails.annual.currencyCode}/month`
+                  : 'Save 40% compared to monthly'
+                }
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {loading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Loading subscription options...</Text>
-            </View>
-          ) : (
-            <View style={styles.plansContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.planCard,
-                  selectedPlan === 'annual' && styles.planCardSelected,
-                ]}
-                onPress={() => setSelectedPlan('annual')}
-              >
-                <View style={styles.bestValueBadge}>
-                  <Text style={styles.bestValueText}>BEST VALUE</Text>
-                </View>
-                <View style={styles.planHeader}>
-                  <Text style={styles.planTitle}>Annual</Text>
-                  {selectedPlan === 'annual' && (
-                    <MaterialIcons name="check-circle" size={24} color={colors.primary} />
-                  )}
-                </View>
-                <Text style={styles.planPrice}>{annualPrice}/year</Text>
-                <Text style={styles.planDetail}>7-day free trial</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.planCard,
-                  selectedPlan === 'monthly' && styles.planCardSelected,
-                ]}
-                onPress={() => setSelectedPlan('monthly')}
-              >
-                <View style={styles.planHeader}>
-                  <Text style={styles.planTitle}>Monthly</Text>
-                  {selectedPlan === 'monthly' && (
-                    <MaterialIcons name="check-circle" size={24} color={colors.primary} />
-                  )}
-                </View>
-                <Text style={styles.planPrice}>{monthlyPrice}/month</Text>
-                <Text style={styles.planDetail}>7-day free trial</Text>
-              </TouchableOpacity>
+              <Text style={styles.loadingText}>Processing...</Text>
             </View>
           )}
 
-          <View style={styles.agreementContainer}>
-            <Text style={styles.agreementText}>
-              By subscribing, you agree to our{' '}
-              <Text style={styles.agreementLink} onPress={openTermsOfService}>
-                Terms of Service
-              </Text>
-              {' '}and{' '}
-              <Text style={styles.agreementLink} onPress={openPrivacyPolicy}>
-                Privacy Policy
-              </Text>
-              .
-            </Text>
-          </View>
-
           <TouchableOpacity
-            style={[buttonStyles.primary, styles.subscribeButton]}
-            onPress={handleSubscribe}
-            disabled={loading || loadingProducts}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={[buttonStyles.primaryText, styles.subscribeButtonText]}>
-                {selectedPlan === 'annual' 
-                  ? `Start 7-Day Free Trial then ${annualPrice} annually`
-                  : `Start 7-Day Free Trial then ${monthlyPrice} monthly`}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <Text style={styles.trialNote}>
-            Cancel anytime during trial. No charge until trial ends.
-          </Text>
-
-          <TouchableOpacity 
-            onPress={handleRestorePurchases} 
-            style={styles.restoreButton}
+            style={[buttonStyles.secondary, styles.restoreButton]}
+            onPress={handleRestorePurchases}
             disabled={loading}
           >
-            <Text style={styles.restoreText}>Restore Purchases</Text>
+            <Text style={buttonStyles.secondaryText}>Restore Purchases</Text>
           </TouchableOpacity>
 
-          <View style={styles.linksContainer}>
-            <TouchableOpacity onPress={openPrivacyPolicy}>
-              <Text style={styles.linkText}>Privacy Policy</Text>
-            </TouchableOpacity>
-            <Text style={styles.linkSeparator}>•</Text>
-            <TouchableOpacity onPress={openTermsOfService}>
-              <Text style={styles.linkText}>Terms of Service</Text>
-            </TouchableOpacity>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Subscriptions auto-renew unless cancelled 24 hours before the end of the current period.
+            </Text>
+            <View style={styles.footerLinks}>
+              <TouchableOpacity onPress={openPrivacyPolicy}>
+                <Text style={styles.footerLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+              <Text style={styles.footerSeparator}>•</Text>
+              <TouchableOpacity onPress={openTermsOfService}>
+                <Text style={styles.footerLink}>Terms of Service</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
   );
-};
+}
 
-const FeatureItem: React.FC<{ text: string }> = ({ text }) => (
-  <View style={styles.featureItem}>
-    <MaterialIcons name="check-circle" size={24} color={colors.primary} />
-    <Text style={styles.featureText}>{text}</Text>
-  </View>
-);
+function FeatureItem({ text }: { text: string }) {
+  return (
+    <View style={styles.featureItem}>
+      <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+      <Text style={styles.featureText}>{text}</Text>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
   closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
     padding: 8,
   },
-  scrollContent: {
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
     padding: 24,
-    paddingTop: 60,
   },
   title: {
     fontSize: 32,
@@ -344,45 +319,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     marginLeft: 12,
-  },
-  loadingContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 14,
-    color: colors.textSecondary,
+    flex: 1,
   },
   plansContainer: {
     marginBottom: 24,
   },
   planCard: {
     backgroundColor: colors.cardBackground,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 2,
-    borderColor: 'transparent',
-    position: 'relative',
+    borderColor: colors.border,
   },
-  planCardSelected: {
+  planCardPopular: {
     borderColor: colors.primary,
+    backgroundColor: colors.primaryLight || colors.cardBackground,
   },
-  bestValueBadge: {
+  planCardDisabled: {
+    opacity: 0.6,
+  },
+  popularBadge: {
     position: 'absolute',
-    top: -10,
+    top: -12,
     right: 20,
     backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  bestValueText: {
-    fontSize: 11,
+  popularBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: 'bold',
-    color: '#fff',
-    letterSpacing: 0.5,
   },
   planHeader: {
     flexDirection: 'row',
@@ -390,74 +359,87 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  planTitle: {
-    fontSize: 20,
+  planName: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
   },
   planPrice: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 4,
+    color: colors.primary,
   },
-  planDetail: {
+  planDescription: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginBottom: 4,
   },
-  agreementContainer: {
-    marginBottom: 16,
-    paddingHorizontal: 8,
+  loadingContainer: {
+    alignItems: 'center',
+    marginVertical: 24,
   },
-  agreementText: {
-    fontSize: 13,
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
   },
-  agreementLink: {
-    color: colors.primary,
-    textDecorationLine: 'underline',
-    fontWeight: '600',
+  restoreButton: {
+    marginBottom: 24,
   },
-  subscribeButton: {
-    marginBottom: 12,
+  footer: {
+    marginTop: 16,
   },
-  subscribeButtonText: {
-    textAlign: 'center',
-  },
-  trialNote: {
+  footerText: {
     fontSize: 12,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 12,
   },
-  restoreButton: {
-    padding: 12,
-    alignItems: 'center',
-  },
-  restoreText: {
-    fontSize: 16,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  linksContainer: {
+  footerLinks: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
   },
-  linkText: {
+  footerLink: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: colors.primary,
     textDecorationLine: 'underline',
   },
-  linkSeparator: {
+  footerSeparator: {
     fontSize: 12,
     color: colors.textSecondary,
     marginHorizontal: 8,
   },
+  devMessageContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  devTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  devMessage: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 24,
+  },
+  codeBlock: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 12,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  codeText: {
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontSize: 14,
+    color: colors.primary,
+    marginBottom: 8,
+  },
 });
-
-export default PaywallScreen;
