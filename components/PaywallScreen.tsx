@@ -175,19 +175,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         </View>
 
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-          <Text style={styles.title}>Unlock Premium Features</Text>
+          <Text style={styles.title}>Unlock Premium</Text>
           <Text style={styles.subtitle}>
-            Get unlimited access to all features and support the app&apos;s development
+            Support the app&apos;s development and get unlimited access
           </Text>
 
           <View style={styles.featuresContainer}>
             <FeatureItem text="Unlimited portion tracking" />
-            <FeatureItem text="Advanced adherence analytics" />
             <FeatureItem text="Custom portion targets" />
             <FeatureItem text="Weight tracking & charts" />
+            <FeatureItem text="Adherence history & trends" />
             <FeatureItem text="Daily reminders" />
-            <FeatureItem text="Data backup & restore" />
-            <FeatureItem text="Priority support" />
+            <FeatureItem text="All future updates" />
           </View>
 
           <View style={styles.plansContainer}>
