@@ -122,7 +122,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
   const openTermsOfService = () => {
     console.log('PaywallScreen: Opening terms of service');
-    Linking.openURL('https://www.portiontrack.com/terms');
+    Linking.openURL('https://www.apple.com/legal/internet-services/itunes/');
   };
 
   const getButtonText = () => {
