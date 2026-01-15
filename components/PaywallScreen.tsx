@@ -187,10 +187,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         </View>
 
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-          <Text style={styles.title}>Unlock Premium</Text>
+          <Text style={styles.title}>7-day free trial. Cancel anytime.</Text>
           <Text style={styles.subtitle}>
-            Support the app&apos;s development and get unlimited access
+            Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.
           </Text>
+
+          <Text style={styles.subscriptionIncludesTitle}>Subscription includes:</Text>
 
           <View style={styles.featuresContainer}>
             <FeatureItem text="Unlimited portion tracking" />
@@ -202,7 +204,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           </View>
 
           <View style={styles.plansContainer}>
-            {/* Annual Plan - First */}
+            {/* Annual Plan - First with Best Value badge */}
             <TouchableOpacity
               style={[
                 styles.planCard,
@@ -212,6 +214,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               onPress={() => setSelectedPlan('annual')}
               disabled={loading}
             >
+              <View style={styles.bestValueBadge}>
+                <Text style={styles.bestValueText}>Best Value</Text>
+              </View>
               <View style={styles.planHeader}>
                 <View style={styles.planInfo}>
                   <Text style={styles.planName}>Annual</Text>
@@ -283,12 +288,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           >
             <Text style={styles.restoreButtonText}>Restore Purchases</Text>
           </TouchableOpacity>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Subscriptions auto-renew unless cancelled 24 hours before the end of the current period.
-            </Text>
-          </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -325,17 +324,24 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  subscriptionIncludesTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
   },
   featuresContainer: {
     marginBottom: 32,
@@ -361,6 +367,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 2,
     borderColor: colors.border,
+    position: 'relative',
   },
   planCardSelected: {
     borderColor: colors.primary,
@@ -368,6 +375,21 @@ const styles = StyleSheet.create({
   },
   planCardDisabled: {
     opacity: 0.6,
+  },
+  bestValueBadge: {
+    position: 'absolute',
+    top: -10,
+    right: 20,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  bestValueText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   planHeader: {
     flexDirection: 'row',
@@ -435,15 +457,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: '600',
-  },
-  footer: {
-    marginTop: 16,
-  },
-  footerText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
   },
   devMessageContainer: {
     alignItems: 'center',
