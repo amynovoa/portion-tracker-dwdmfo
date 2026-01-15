@@ -36,6 +36,7 @@ const isExpoGo = Constants.appOwnership === 'expo';
 
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [loading, setLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
   const [productDetails, setProductDetails] = useState<{
     monthly?: ProductDetails;
     annual?: ProductDetails;
@@ -63,7 +64,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     }
   };
 
-  const handleSubscribe = async (productId: string) => {
+  const handleSubscribe = async () => {
+    const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.monthly : PRODUCT_IDS.annual;
     console.log('PaywallScreen: User tapped Subscribe button for', productId);
     setLoading(true);
     try {
@@ -121,6 +123,16 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const openTermsOfService = () => {
     console.log('PaywallScreen: Opening terms of service');
     Linking.openURL('https://www.portiontrack.com/terms');
+  };
+
+  const getButtonText = () => {
+    if (selectedPlan === 'monthly') {
+      const price = productDetails.monthly?.priceString || '$2.99';
+      return `7 day free trial then ${price}/month`;
+    } else {
+      const price = productDetails.annual?.priceString || '$24.99';
+      return `7 day free trial then ${price}/year`;
+    }
   };
 
   // Show development message in Expo Go
@@ -190,73 +202,92 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           </View>
 
           <View style={styles.plansContainer}>
-            {/* Monthly Plan */}
+            {/* Annual Plan - First */}
             <TouchableOpacity
-              style={[styles.planCard, loading && styles.planCardDisabled]}
-              onPress={() => handleSubscribe(PRODUCT_IDS.monthly)}
+              style={[
+                styles.planCard,
+                selectedPlan === 'annual' && styles.planCardSelected,
+                loading && styles.planCardDisabled
+              ]}
+              onPress={() => setSelectedPlan('annual')}
               disabled={loading}
             >
               <View style={styles.planHeader}>
-                <Text style={styles.planName}>Monthly</Text>
-                <Text style={styles.planPrice}>
-                  {productDetails.monthly?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.monthly].defaultPrice}
-                </Text>
+                <View style={styles.planInfo}>
+                  <Text style={styles.planName}>Annual</Text>
+                  <Text style={styles.planPrice}>
+                    {productDetails.annual?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.annual].defaultPrice}
+                  </Text>
+                </View>
+                <View style={[styles.radioButton, selectedPlan === 'annual' && styles.radioButtonSelected]}>
+                  {selectedPlan === 'annual' && <View style={styles.radioButtonInner} />}
+                </View>
               </View>
-              <Text style={styles.planDescription}>Billed monthly</Text>
             </TouchableOpacity>
 
-            {/* Annual Plan */}
+            {/* Monthly Plan - Second */}
             <TouchableOpacity
-              style={[styles.planCard, styles.planCardPopular, loading && styles.planCardDisabled]}
-              onPress={() => handleSubscribe(PRODUCT_IDS.annual)}
+              style={[
+                styles.planCard,
+                selectedPlan === 'monthly' && styles.planCardSelected,
+                loading && styles.planCardDisabled
+              ]}
+              onPress={() => setSelectedPlan('monthly')}
               disabled={loading}
             >
-              <View style={styles.popularBadge}>
-                <Text style={styles.popularBadgeText}>BEST VALUE</Text>
-              </View>
               <View style={styles.planHeader}>
-                <Text style={styles.planName}>Annual</Text>
-                <Text style={styles.planPrice}>
-                  {productDetails.annual?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.annual].defaultPrice}
-                </Text>
+                <View style={styles.planInfo}>
+                  <Text style={styles.planName}>Monthly</Text>
+                  <Text style={styles.planPrice}>
+                    {productDetails.monthly?.priceString || PRODUCT_CONFIG[PRODUCT_IDS.monthly].defaultPrice}
+                  </Text>
+                </View>
+                <View style={[styles.radioButton, selectedPlan === 'monthly' && styles.radioButtonSelected]}>
+                  {selectedPlan === 'monthly' && <View style={styles.radioButtonInner} />}
+                </View>
               </View>
-              <Text style={styles.planDescription}>
-                {productDetails.annual 
-                  ? `${(productDetails.annual.price / 12).toFixed(2)} ${productDetails.annual.currencyCode}/month`
-                  : 'Save 40% compared to monthly'
-                }
-              </Text>
             </TouchableOpacity>
           </View>
 
-          {loading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Processing...</Text>
-            </View>
-          )}
+          {/* Terms Agreement */}
+          <View style={styles.termsContainer}>
+            <Text style={styles.termsText}>
+              By clicking I agree to the{' '}
+              <Text style={styles.termsLink} onPress={openTermsOfService}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.termsLink} onPress={openPrivacyPolicy}>
+                Privacy Policy
+              </Text>
+            </Text>
+          </View>
+
+          {/* Purchase Button */}
+          <TouchableOpacity
+            style={[buttonStyles.primary, styles.purchaseButton, loading && styles.buttonDisabled]}
+            onPress={handleSubscribe}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={buttonStyles.primaryText}>{getButtonText()}</Text>
+            )}
+          </TouchableOpacity>
 
           <TouchableOpacity
-            style={[buttonStyles.secondary, styles.restoreButton]}
+            style={styles.restoreButton}
             onPress={handleRestorePurchases}
             disabled={loading}
           >
-            <Text style={buttonStyles.secondaryText}>Restore Purchases</Text>
+            <Text style={styles.restoreButtonText}>Restore Purchases</Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Subscriptions auto-renew unless cancelled 24 hours before the end of the current period.
             </Text>
-            <View style={styles.footerLinks}>
-              <TouchableOpacity onPress={openPrivacyPolicy}>
-                <Text style={styles.footerLink}>Privacy Policy</Text>
-              </TouchableOpacity>
-              <Text style={styles.footerSeparator}>•</Text>
-              <TouchableOpacity onPress={openTermsOfService}>
-                <Text style={styles.footerLink}>Terms of Service</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -331,58 +362,79 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  planCardPopular: {
+  planCardSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.primaryLight || colors.cardBackground,
   },
   planCardDisabled: {
     opacity: 0.6,
   },
-  popularBadge: {
-    position: 'absolute',
-    top: -12,
-    right: 20,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  popularBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   planHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+  },
+  planInfo: {
+    flex: 1,
   },
   planName: {
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
+    marginBottom: 4,
   },
   planPrice: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: colors.primary,
   },
-  planDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  loadingContainer: {
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
     alignItems: 'center',
-    marginVertical: 24,
+    justifyContent: 'center',
   },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
+  radioButtonSelected: {
+    borderColor: colors.primary,
+  },
+  radioButtonInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  termsContainer: {
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  termsText: {
+    fontSize: 13,
     color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
+  purchaseButton: {
+    marginBottom: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   restoreButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  restoreButtonText: {
+    fontSize: 16,
+    color: colors.primary,
+    fontWeight: '600',
   },
   footer: {
     marginTop: 16,
@@ -391,22 +443,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 12,
-  },
-  footerLinks: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerLink: {
-    fontSize: 12,
-    color: colors.primary,
-    textDecorationLine: 'underline',
-  },
-  footerSeparator: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginHorizontal: 8,
+    lineHeight: 18,
   },
   devMessageContainer: {
     alignItems: 'center',
