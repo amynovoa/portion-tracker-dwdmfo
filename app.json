@@ -46,7 +46,6 @@
       "expo-font",
       "expo-router",
       "expo-web-browser",
-      "expo-superwall",
       [
         "expo-image-picker",
         {
@@ -65,6 +64,5 @@
         "projectId": "your-project-id-here"
       }
     }
-  },
-  "scheme": "Portion Tracker"
+  }
 }

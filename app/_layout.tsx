@@ -12,6 +12,7 @@ import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/no
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import Constants from 'expo-constants';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import SpaceMonoFont from '../assets/fonts/SpaceMono-Regular.ttf';
 
 SplashScreen.preventAutoHideAsync();
