@@ -14,10 +14,11 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { purchaseProduct, restorePurchases, getProductDetails } from '@/utils/subscriptionManager';
+import { getProductDetails } from '@/utils/subscriptionManager';
 import { PRODUCT_IDS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import Constants from 'expo-constants';
+import { usePlacement, useUser } from 'expo-superwall';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -42,6 +43,55 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     annual?: ProductDetails;
   }>({});
 
+  // Superwall hooks - only available in non-Expo Go builds
+  let registerPlacement: any = null;
+  let placementState: any = null;
+  let subscriptionStatus: any = null;
+
+  if (!isExpoGo) {
+    try {
+      // Use Superwall's usePlacement hook to handle purchases
+      const placement = usePlacement({
+        onPresent: (info) => {
+          console.log('PaywallScreen: Superwall paywall presented:', info);
+        },
+        onDismiss: (info, result) => {
+          console.log('PaywallScreen: Superwall paywall dismissed:', info, 'Result:', result);
+          setLoading(false);
+          
+          // Check if purchase was successful
+          if (result.state === 'purchased') {
+            console.log('PaywallScreen: Purchase successful!');
+            Alert.alert('Success', 'Thank you for subscribing!');
+            onDismiss?.();
+          } else if (result.state === 'restored') {
+            console.log('PaywallScreen: Purchases restored!');
+            Alert.alert('Success', 'Your purchases have been restored!');
+            onDismiss?.();
+          }
+        },
+        onError: (error) => {
+          console.error('PaywallScreen: Superwall error:', error);
+          setLoading(false);
+          Alert.alert('Error', 'An error occurred. Please try again.');
+        },
+        onSkip: (reason) => {
+          console.log('PaywallScreen: Paywall skipped:', reason);
+          setLoading(false);
+        },
+      });
+      
+      registerPlacement = placement.registerPlacement;
+      placementState = placement.state;
+
+      // Use Superwall's useUser hook to get subscription status
+      const user = useUser();
+      subscriptionStatus = user.subscriptionStatus;
+    } catch (error) {
+      console.error('PaywallScreen: Error initializing Superwall hooks:', error);
+    }
+  }
+
   useEffect(() => {
     if (visible && !isExpoGo) {
       console.log('PaywallScreen: Loading product details');
@@ -65,53 +115,66 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const handleSubscribe = async () => {
+    if (isExpoGo || !registerPlacement) {
+      console.log('PaywallScreen: Cannot purchase in Expo Go');
+      Alert.alert('Development Mode', 'Subscriptions are not available in Expo Go. Please create a development build to test purchases.');
+      return;
+    }
+
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.monthly : PRODUCT_IDS.annual;
     console.log('PaywallScreen: User tapped Subscribe button for', productId);
     setLoading(true);
+    
     try {
-      console.log('PaywallScreen: Initiating purchase for', productId);
-      const result = await purchaseProduct(productId);
-      console.log('PaywallScreen: Purchase result:', result);
+      console.log('PaywallScreen: Triggering Superwall placement');
       
-      if (result.success) {
-        console.log('PaywallScreen: Purchase successful, dismissing paywall');
-        Alert.alert('Success', 'Thank you for subscribing!');
-        onDismiss?.();
-      } else if (result.userCancelled) {
-        console.log('PaywallScreen: Purchase cancelled by user');
-      } else {
-        console.error('PaywallScreen: Purchase failed:', result.error);
-        Alert.alert('Error', result.error || 'Purchase failed. Please try again.');
-      }
+      // Use Superwall's registerPlacement to trigger the purchase flow
+      // The placement name should match what you configured in Superwall dashboard
+      await registerPlacement({
+        placement: 'subscription_paywall',
+        params: {
+          selectedProduct: productId,
+        },
+        feature: () => {
+          // This is called if the user already has access or successfully purchases
+          console.log('PaywallScreen: User has access to feature');
+          Alert.alert('Success', 'Thank you for subscribing!');
+          onDismiss?.();
+        },
+      });
     } catch (error) {
       console.error('PaywallScreen: Purchase error:', error);
-      Alert.alert('Error', 'An error occurred. Please try again.');
-    } finally {
       setLoading(false);
+      Alert.alert('Error', 'An error occurred. Please try again.');
     }
   };
 
   const handleRestorePurchases = async () => {
+    if (isExpoGo || !registerPlacement) {
+      console.log('PaywallScreen: Cannot restore in Expo Go');
+      Alert.alert('Development Mode', 'Restore purchases is not available in Expo Go. Please create a development build to test.');
+      return;
+    }
+
     console.log('PaywallScreen: User tapped Restore Purchases');
     setLoading(true);
+    
     try {
-      console.log('PaywallScreen: Restoring purchases');
-      const result = await restorePurchases();
-      console.log('PaywallScreen: Restore result:', result);
+      console.log('PaywallScreen: Triggering Superwall restore');
       
-      if (result.success) {
-        console.log('PaywallScreen: Purchases restored successfully');
-        Alert.alert('Success', 'Your purchases have been restored!');
-        onDismiss?.();
-      } else {
-        console.log('PaywallScreen: No purchases to restore');
-        Alert.alert('No Purchases Found', 'No previous purchases were found for this account.');
-      }
+      // Trigger Superwall placement with restore intent
+      await registerPlacement({
+        placement: 'restore_purchases',
+        feature: () => {
+          console.log('PaywallScreen: Purchases restored successfully');
+          Alert.alert('Success', 'Your purchases have been restored!');
+          onDismiss?.();
+        },
+      });
     } catch (error) {
       console.error('PaywallScreen: Restore error:', error);
-      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
-    } finally {
       setLoading(false);
+      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
     }
   };
 
