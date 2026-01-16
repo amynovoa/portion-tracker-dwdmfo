@@ -18,7 +18,18 @@ import { getProductDetails } from '@/utils/subscriptionManager';
 import { PRODUCT_IDS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import Constants from 'expo-constants';
-import { usePlacement, useUser } from 'expo-superwall';
+
+// Conditionally import Superwall hooks
+let usePlacement: any = null;
+let useUser: any = null;
+
+try {
+  const Superwall = require('expo-superwall');
+  usePlacement = Superwall.usePlacement;
+  useUser = Superwall.useUser;
+} catch (error) {
+  console.log('Superwall not available - running in Expo Go or module not found');
+}
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -43,19 +54,19 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     annual?: ProductDetails;
   }>({});
 
-  // Superwall hooks - only available in non-Expo Go builds
+  // Superwall hooks - only call if available
   let registerPlacement: any = null;
   let placementState: any = null;
   let subscriptionStatus: any = null;
 
-  if (!isExpoGo) {
+  if (usePlacement && useUser && !isExpoGo) {
     try {
       // Use Superwall's usePlacement hook to handle purchases
       const placement = usePlacement({
-        onPresent: (info) => {
+        onPresent: (info: any) => {
           console.log('PaywallScreen: Superwall paywall presented:', info);
         },
-        onDismiss: (info, result) => {
+        onDismiss: (info: any, result: any) => {
           console.log('PaywallScreen: Superwall paywall dismissed:', info, 'Result:', result);
           setLoading(false);
           
@@ -70,12 +81,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             onDismiss?.();
           }
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error('PaywallScreen: Superwall error:', error);
           setLoading(false);
           Alert.alert('Error', 'An error occurred. Please try again.');
         },
-        onSkip: (reason) => {
+        onSkip: (reason: any) => {
           console.log('PaywallScreen: Paywall skipped:', reason);
           setLoading(false);
         },

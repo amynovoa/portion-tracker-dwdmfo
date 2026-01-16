@@ -1,7 +1,16 @@
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import Constants from 'expo-constants';
-import { useUser } from 'expo-superwall';
+
+// Conditionally import Superwall hooks
+let useUser: any = null;
+
+try {
+  const Superwall = require('expo-superwall');
+  useUser = Superwall.useUser;
+} catch (error) {
+  console.log('Superwall not available - running in Expo Go or module not found');
+}
 
 // Check if we're running in Expo Go
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -18,8 +27,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(true); // Default to true for development
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(undefined);
 
-  // Only use Superwall hooks if not in Expo Go
-  if (!isExpoGo) {
+  // Only use Superwall hooks if available and not in Expo Go
+  if (useUser && !isExpoGo) {
     try {
       // Use Superwall's useUser hook to get subscription status
       const { subscriptionStatus: superwallStatus } = useUser();
@@ -40,7 +49,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.error('Error initializing Superwall subscription context:', error);
     }
   } else {
-    console.log('📱 Running in Expo Go - using mock subscription (full access granted)');
+    console.log('📱 Running in Expo Go or Superwall not available - using mock subscription (full access granted)');
   }
 
   return (
