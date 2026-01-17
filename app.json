@@ -51,7 +51,12 @@
       "expo-font",
       "expo-router",
       "expo-web-browser",
-      "expo-superwall",
+      [
+        "expo-superwall",
+        {
+          "iosApiKey": "pk_YOUR_IOS_API_KEY"
+        }
+      ],
       [
         "expo-image-picker",
         {
@@ -70,6 +75,5 @@
         "projectId": "your-project-id-here"
       }
     }
-  },
-  "scheme": "Portion Tracker"
+  }
 }
