@@ -1,4 +1,4 @@
-`) in the `subscriptionManager.ts` file that are causing a syntax error. These are from previous code generation attempts. Let me fix this by removing those XML tags:Looking at the error, I can see there are XML tags at lines 565-568 in the `subscriptionManager.ts` file. The error shows:
+B`) in the `subscriptionManager.ts` file that are causing a syntax error. These are from previous code generation attempts. Let me fix this by removing those XML tags:Looking at the error, I can see there are XML tags at lines 565-568 in the `subscriptionManager.ts` file. The error shows:
 
 ```
  563 |   }
