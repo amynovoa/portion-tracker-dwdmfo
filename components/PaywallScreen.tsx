@@ -15,7 +15,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { saveSubscriptionStatus } from '@/utils/storage';
+import { purchaseProduct, restorePurchases, PRODUCT_IDS, isTestFlightBuild } from '@/utils/subscriptionManager';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -34,32 +34,47 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      // Simulate subscription activation
-      // In production, this would integrate with App Store StoreKit
-      console.log('✅ Activating subscription for plan:', selectedPlan);
+      const productId = selectedPlan === 'annual' ? PRODUCT_IDS.ANNUAL : PRODUCT_IDS.MONTHLY;
+      console.log('🛒 Initiating purchase for product:', productId);
       
-      await saveSubscriptionStatus(true);
+      const result = await purchaseProduct(productId);
       
-      Alert.alert(
-        'Subscription Activated',
-        `Your ${selectedPlan} subscription is now active!\n\n✅ This is a simulated subscription for testing.\n\nFor production with real payments:\n• Set up In-App Purchases in App Store Connect\n• Create subscription products\n• Integrate StoreKit or RevenueCat\n• Test in TestFlight with Sandbox\n• Submit to App Store`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              console.log('Subscription successful, dismissing paywall');
-              if (onDismiss) {
-                onDismiss();
+      if (result.success) {
+        console.log('✅ Purchase successful');
+        
+        const isTestFlight = isTestFlightBuild();
+        
+        Alert.alert(
+          'Subscription Activated',
+          isTestFlight 
+            ? `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode: Using simulated subscription.\n\nIn production, this will process real payments through the App Store.`
+            : `Your ${selectedPlan} subscription is now active!\n\nThank you for subscribing!`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('Subscription successful, dismissing paywall');
+                if (onDismiss) {
+                  onDismiss();
+                }
               }
             }
-          }
-        ]
-      );
+          ]
+        );
+      } else if (result.userCancelled) {
+        console.log('ℹ️ User cancelled purchase');
+      } else {
+        console.error('❌ Purchase failed:', result.error);
+        Alert.alert(
+          'Purchase Failed',
+          result.error || 'Unable to complete purchase. Please try again.'
+        );
+      }
       
       setIsProcessing(false);
     } catch (error) {
-      console.error('Error activating subscription:', error);
-      Alert.alert('Error', 'Failed to activate subscription. Please try again.');
+      console.error('Error during purchase:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -69,26 +84,38 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      // Simulate restore purchases
-      // In production, this would check App Store for previous purchases
-      console.log('🔄 Restoring purchases...');
+      console.log('🔄 Restoring purchases from App Store...');
       
-      await saveSubscriptionStatus(true);
+      const result = await restorePurchases();
       
-      Alert.alert(
-        'Purchases Restored',
-        'Your subscription has been restored!\n\n✅ This is a simulated restore for testing.\n\nFor production:\n• StoreKit will check App Store for active subscriptions\n• Previous purchases will be restored automatically',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              if (onDismiss) {
-                onDismiss();
+      if (result.success) {
+        console.log('✅ Restore successful');
+        
+        const isTestFlight = isTestFlightBuild();
+        
+        Alert.alert(
+          'Purchases Restored',
+          isTestFlight
+            ? 'Your subscription has been restored!\n\n✅ TestFlight Mode: Using simulated restore.\n\nIn production, this will restore real App Store purchases.'
+            : 'Your subscription has been restored!\n\nThank you for being a subscriber!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                if (onDismiss) {
+                  onDismiss();
+                }
               }
             }
-          }
-        ]
-      );
+          ]
+        );
+      } else {
+        console.error('❌ Restore failed:', result.error);
+        Alert.alert(
+          'No Purchases Found',
+          'We couldn\'t find any previous purchases to restore.\n\nIf you believe this is an error, please contact support.'
+        );
+      }
       
       setIsProcessing(false);
     } catch (error) {
@@ -107,6 +134,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('User tapped Terms of Service');
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/');
   };
+
+  const isTestFlight = isTestFlightBuild();
 
   return (
     <Modal
@@ -227,18 +256,15 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             )}
           </TouchableOpacity>
 
-          <View style={styles.devModeContainer}>
-            <Text style={styles.devModeText}>
-              ℹ️ Test Mode: Using simulated subscriptions{'\n'}
-              {'\n'}
-              For production with real payments:{'\n'}
-              • Set up In-App Purchases in App Store Connect{'\n'}
-              • Create subscription products (monthly & annual){'\n'}
-              • Integrate StoreKit or RevenueCat{'\n'}
-              • Test in TestFlight with Sandbox{'\n'}
-              • Submit to App Store
-            </Text>
-          </View>
+          {isTestFlight && (
+            <View style={styles.testFlightBanner}>
+              <MaterialIcons name="info" size={20} color={colors.primary} />
+              <Text style={styles.testFlightText}>
+                TestFlight Mode: Subscriptions are simulated for testing.{'\n'}
+                In production, real App Store payments will be processed.
+              </Text>
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -406,15 +432,19 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
-  devModeContainer: {
+  testFlightBanner: {
     marginTop: 24,
     padding: 16,
     backgroundColor: colors.cardBackground,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
   },
-  devModeText: {
+  testFlightText: {
+    flex: 1,
     fontSize: 13,
     color: colors.textSecondary,
     lineHeight: 20,

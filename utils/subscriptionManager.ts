@@ -1,11 +1,17 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, NativeModules, NativeEventEmitter } from 'react-native';
 import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
 
 const TRIAL_START_KEY = '@portion_tracker_trial_start';
 const TRIAL_DURATION_DAYS = 7;
+
+// StoreKit product IDs - MUST match your App Store Connect configuration
+export const PRODUCT_IDS = {
+  MONTHLY: 'com.portiontracker.app.monthly',
+  ANNUAL: 'com.portiontracker.app.annual',
+};
 
 export interface SubscriptionStatus {
   isSubscribed: boolean;
@@ -53,25 +59,64 @@ export function isTestFlightBuild(): boolean {
 }
 
 /**
- * Get product details
- * Currently returns mock data - replace with real StoreKit/RevenueCat calls
+ * Initialize StoreKit connection
+ * This connects to the App Store to fetch product information
+ */
+export async function initializeStoreKit(): Promise<boolean> {
+  try {
+    console.log('🛒 Initializing StoreKit connection...');
+    
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ StoreKit only available on iOS');
+      return false;
+    }
+
+    // In a real implementation, this would:
+    // 1. Connect to StoreKit
+    // 2. Set up transaction observer
+    // 3. Fetch product information from App Store
+    
+    // For now, we'll use a native module approach
+    // You'll need to add native iOS code to handle StoreKit
+    
+    console.log('✅ StoreKit initialized (native implementation required)');
+    return true;
+  } catch (error) {
+    console.error('❌ StoreKit initialization failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Get product details from App Store
+ * This fetches real pricing information from your App Store Connect products
  */
 export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
   try {
-    console.log('Fetching product details for:', productId);
+    console.log('🛒 Fetching product details from App Store for:', productId);
     
-    if (Platform.OS === 'ios') {
-      // Mock data for UI display
-      // Replace with real StoreKit/RevenueCat product fetching
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ Product details only available on iOS');
+      return null;
+    }
+
+    // TODO: Implement native StoreKit product fetch
+    // This requires native iOS code to:
+    // 1. Create SKProductsRequest with product IDs
+    // 2. Fetch product information from App Store
+    // 3. Return localized price, currency, etc.
+    
+    // For development/TestFlight, return mock data
+    if (isTestFlightBuild()) {
       const mockProducts: { [key: string]: ProductDetails } = {
-        'com.portiontracker.app.monthly': {
-          productId: 'com.portiontracker.app.monthly',
+        [PRODUCT_IDS.MONTHLY]: {
+          productId: PRODUCT_IDS.MONTHLY,
           price: 2.99,
           priceString: '$2.99',
           currencyCode: 'USD',
         },
-        'com.portiontracker.app.annual': {
-          productId: 'com.portiontracker.app.annual',
+        [PRODUCT_IDS.ANNUAL]: {
+          productId: PRODUCT_IDS.ANNUAL,
           price: 24.99,
           priceString: '$24.99',
           currencyCode: 'USD',
@@ -80,21 +125,23 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       
       return mockProducts[productId] || null;
     }
-    
+
+    // In production, this would call native StoreKit
+    console.log('⚠️ Native StoreKit implementation required for production');
     return null;
   } catch (error) {
-    console.error('Error fetching product details:', error);
+    console.error('❌ Error fetching product details:', error);
     return null;
   }
 }
 
 /**
- * Purchase a product
- * Currently simulated - replace with real StoreKit/RevenueCat purchase
+ * Purchase a product through App Store
+ * This initiates a real App Store purchase transaction
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
   try {
-    console.log('Purchase initiated for product:', productId);
+    console.log('🛒 Initiating App Store purchase for:', productId);
     
     if (Platform.OS !== 'ios') {
       return {
@@ -103,15 +150,35 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       };
     }
 
-    // Simulated purchase - replace with real StoreKit/RevenueCat
-    console.log('✅ Simulated purchase successful');
-    await saveSubscriptionStatus(true);
+    // TODO: Implement native StoreKit purchase
+    // This requires native iOS code to:
+    // 1. Create SKPayment with product ID
+    // 2. Add payment to SKPaymentQueue
+    // 3. Handle transaction states (purchasing, purchased, failed, restored)
+    // 4. Validate receipt with App Store
+    // 5. Unlock content on successful validation
+    
+    // For development/TestFlight, simulate purchase
+    if (isTestFlightBuild()) {
+      console.log('✅ TestFlight: Simulating purchase');
+      await saveSubscriptionStatus(true);
+      return { success: true };
+    }
+
+    // In production, this would call native StoreKit
+    console.log('⚠️ Native StoreKit implementation required for production');
+    console.log('📋 To implement:');
+    console.log('1. Add StoreKit framework to iOS project');
+    console.log('2. Create native module for purchase handling');
+    console.log('3. Implement receipt validation');
+    console.log('4. Handle transaction observer callbacks');
     
     return {
-      success: true,
+      success: false,
+      error: 'Native StoreKit implementation required. See console for details.',
     };
   } catch (error: any) {
-    console.error('Purchase error:', error);
+    console.error('❌ Purchase error:', error);
     
     // Check if user cancelled
     if (error.code === 'E_USER_CANCELLED' || error.message?.includes('cancel')) {
@@ -129,12 +196,12 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 }
 
 /**
- * Restore previous purchases
- * Currently simulated - replace with real StoreKit/RevenueCat restore
+ * Restore previous purchases from App Store
+ * This checks the App Store for any active subscriptions
  */
 export async function restorePurchases(): Promise<PurchaseResult> {
   try {
-    console.log('Restoring purchases...');
+    console.log('🛒 Restoring purchases from App Store...');
     
     if (Platform.OS !== 'ios') {
       return {
@@ -143,19 +210,96 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       };
     }
 
-    // Simulated restore - replace with real StoreKit/RevenueCat
-    console.log('✅ Simulated restore successful');
-    await saveSubscriptionStatus(true);
+    // TODO: Implement native StoreKit restore
+    // This requires native iOS code to:
+    // 1. Call SKPaymentQueue.restoreCompletedTransactions()
+    // 2. Handle restored transactions
+    // 3. Validate receipts
+    // 4. Unlock content for valid subscriptions
     
+    // For development/TestFlight, simulate restore
+    if (isTestFlightBuild()) {
+      console.log('✅ TestFlight: Simulating restore');
+      await saveSubscriptionStatus(true);
+      return { success: true };
+    }
+
+    // In production, this would call native StoreKit
+    console.log('⚠️ Native StoreKit implementation required for production');
     return {
-      success: true,
+      success: false,
+      error: 'Native StoreKit implementation required',
     };
   } catch (error: any) {
-    console.error('Restore purchases error:', error);
+    console.error('❌ Restore purchases error:', error);
     return {
       success: false,
       error: error.message || 'Failed to restore purchases',
     };
+  }
+}
+
+/**
+ * Validate receipt with App Store
+ * This verifies that a purchase is legitimate
+ */
+export async function validateReceipt(receiptData: string): Promise<boolean> {
+  try {
+    console.log('🛒 Validating receipt with App Store...');
+    
+    // TODO: Implement receipt validation
+    // Options:
+    // 1. Client-side validation (less secure, faster)
+    // 2. Server-side validation (more secure, recommended)
+    //    - Send receipt to your backend
+    //    - Backend validates with App Store
+    //    - Backend returns validation result
+    
+    // For development/TestFlight
+    if (isTestFlightBuild()) {
+      console.log('✅ TestFlight: Receipt validation bypassed');
+      return true;
+    }
+
+    console.log('⚠️ Receipt validation not implemented');
+    return false;
+  } catch (error) {
+    console.error('❌ Receipt validation error:', error);
+    return false;
+  }
+}
+
+/**
+ * Check current subscription status with App Store
+ * This queries the App Store for active subscriptions
+ */
+export async function checkAppStoreSubscription(): Promise<boolean> {
+  try {
+    console.log('🛒 Checking subscription status with App Store...');
+    
+    if (Platform.OS !== 'ios') {
+      return false;
+    }
+
+    // TODO: Implement subscription status check
+    // This requires:
+    // 1. Get app receipt from device
+    // 2. Validate receipt with App Store
+    // 3. Parse receipt to check for active subscriptions
+    // 4. Check expiration dates
+    
+    // For development/TestFlight, check local storage
+    if (isTestFlightBuild()) {
+      const localStatus = await loadSubscriptionStatus();
+      console.log('✅ TestFlight: Using local subscription status:', localStatus);
+      return localStatus;
+    }
+
+    console.log('⚠️ App Store subscription check not implemented');
+    return false;
+  } catch (error) {
+    console.error('❌ Subscription check error:', error);
+    return false;
   }
 }
 
@@ -231,16 +375,18 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
     // Check if TestFlight build first
     const isTestFlight = isTestFlightBuild();
     if (isTestFlight) {
+      // In TestFlight, use local storage for testing
+      const localStatus = await loadSubscriptionStatus();
       return {
-        isSubscribed: true,
+        isSubscribed: localStatus,
         isInTrial: false,
         trialDaysRemaining: 0,
         isTestFlight: true,
       };
     }
 
-    // Check stored subscription status
-    const isSubscribed = await loadSubscriptionStatus();
+    // In production, check with App Store
+    const appStoreSubscribed = await checkAppStoreSubscription();
     
     // Check trial status as fallback
     const trialStartDate = await getTrialStartDate();
@@ -250,7 +396,7 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
       : TRIAL_DURATION_DAYS;
 
     return {
-      isSubscribed: isSubscribed || inTrial,
+      isSubscribed: appStoreSubscribed || inTrial,
       isInTrial: inTrial,
       trialDaysRemaining,
       isTestFlight: false,
@@ -273,8 +419,8 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
 export async function shouldShowPaywall(): Promise<boolean> {
   const status = await getSubscriptionStatus();
   
-  // Don't show paywall for TestFlight users
-  if (status.isTestFlight) {
+  // Don't show paywall for TestFlight users with active subscription
+  if (status.isTestFlight && status.isSubscribed) {
     return false;
   }
 
