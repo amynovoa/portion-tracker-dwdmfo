@@ -1,99 +1,83 @@
 
 /**
- * Superwall Configuration
+ * Subscription Configuration
  * 
- * This file contains the configuration for Superwall integration
- * including product IDs and placement names.
+ * This file contains the configuration for subscription management.
+ * Currently using simulated subscriptions for testing.
  * 
- * PRODUCTION-READY SETUP:
- * This integration is configured to work in both Sandbox (TestFlight) and Production.
+ * FOR PRODUCTION WITH REAL PAYMENTS:
  * 
- * SETUP STEPS:
- * 
- * 1. CREATE SUPERWALL ACCOUNT:
- *    - Go to https://superwall.com and create an account
- *    - Create a new app in the Superwall dashboard
- * 
- * 2. GET YOUR API KEY:
- *    - In Superwall dashboard, go to Settings > API Keys
- *    - Copy your iOS API key
- *    - Add it to .env file: EXPO_PUBLIC_SUPERWALL_API_KEY=your_key_here
- *    - For EAS Build, add it as a secret in Expo dashboard
- * 
- * 3. CONFIGURE PRODUCTS IN APP STORE CONNECT:
+ * 1. SET UP IN-APP PURCHASES IN APP STORE CONNECT:
  *    - Go to App Store Connect > Your App > Subscriptions
+ *    - Create subscription group
  *    - Create two subscription products:
- *      * Product ID: portiontrack.monthly (Monthly subscription)
- *      * Product ID: portiontrack.annual (Annual subscription)
- *    - Set up pricing and trial periods (7-day free trial)
+ *      * Product ID: com.portiontracker.app.monthly (Monthly subscription)
+ *      * Product ID: com.portiontracker.app.annual (Annual subscription)
+ *    - Set pricing: $2.99/month and $24.99/year
+ *    - Configure 7-day free trial
+ *    - Add localized descriptions
  * 
- * 4. CONFIGURE PRODUCTS IN SUPERWALL:
- *    - In Superwall dashboard, go to Products
- *    - Add your App Store Connect products:
- *      * portiontrack.monthly
- *      * portiontrack.annual
+ * 2. CHOOSE A SUBSCRIPTION INTEGRATION:
  * 
- * 5. CREATE PLACEMENT IN SUPERWALL:
- *    - In Superwall dashboard, go to Placements
- *    - Create a placement named: "onboarding_paywall"
- *    - Design your paywall UI in the Superwall editor
- *    - Add your products to the paywall
+ *    OPTION A: Native StoreKit (More control, more work)
+ *    - Install: expo install expo-in-app-purchases
+ *    - Implement purchase flow in PaywallScreen
+ *    - Handle receipt validation on backend
+ *    - Manage subscription status
  * 
- * 6. BUILD AND TEST:
+ *    OPTION B: RevenueCat (Easier, recommended)
+ *    - Create account at https://www.revenuecat.com
+ *    - Install: npm install react-native-purchases
+ *    - Configure products in RevenueCat dashboard
+ *    - Update PaywallScreen to use RevenueCat SDK
+ *    - RevenueCat handles receipt validation automatically
+ * 
+ * 3. UPDATE PaywallScreen.tsx:
+ *    - Replace simulated subscription logic with real purchase calls
+ *    - Handle purchase success/failure
+ *    - Implement restore purchases
+ * 
+ * 4. TEST IN TESTFLIGHT:
  *    - Build with: eas build --platform ios --profile production
- *    - Test in TestFlight with Sandbox subscriptions
- *    - Submit to App Store for production
+ *    - Upload to TestFlight
+ *    - Create sandbox test accounts in App Store Connect
+ *    - Test purchase flow with sandbox accounts
  * 
- * DEVELOPER INFO:
- * - Apple Team ID: 9978T8842P (configured in app.json and eas.json)
- * - Bundle ID: com.portiontracker.app
+ * 5. SUBMIT TO APP STORE:
+ *    - Ensure all subscription metadata is complete
+ *    - Add screenshots showing subscription benefits
+ *    - Submit for review
  */
 
-// Superwall API Key - Get this from your Superwall dashboard
-// The app will work without a valid key (uses simulated subscriptions)
-// but you need a real key for production builds
-export const SUPERWALL_API_KEY = process.env.EXPO_PUBLIC_SUPERWALL_API_KEY || 'pk_test_placeholder_key_replace_with_real_key';
-
-// Check if we have a valid API key (not the placeholder)
-export const hasValidSuperwallKey = () => {
-  const key = SUPERWALL_API_KEY;
-  return key && 
-         key.length > 10 && 
-         !key.includes('placeholder') && 
-         !key.includes('your_') &&
-         !key.includes('replace');
-};
-
-// Product IDs from App Store Connect
-// These must match the product IDs you created in App Store Connect
+// Product IDs for App Store Connect
+// Update these to match your actual product IDs
 export const PRODUCT_IDS = {
-  MONTHLY: 'portiontrack.monthly',
-  ANNUAL: 'portiontrack.annual',
-} as const;
-
-// Superwall placement names
-// These should match the placements configured in your Superwall dashboard
-export const PLACEMENTS = {
-  onboarding: 'onboarding_paywall',
-  settings: 'settings_paywall',
-  featureGate: 'feature_gate',
+  MONTHLY: 'com.portiontracker.app.monthly',
+  ANNUAL: 'com.portiontracker.app.annual',
 } as const;
 
 /**
  * Product configuration
- * Maps product IDs to their display information
  */
 export const PRODUCT_CONFIG = {
   TRIAL_DAYS: 7,
   MONTHLY: {
     name: 'Monthly',
     description: '7-day free trial',
-    defaultPrice: '$2.99/month',
+    price: '$2.99/month',
   },
   ANNUAL: {
     name: 'Annual',
     description: '7-day free trial',
-    defaultPrice: '$24.99/year',
+    price: '$24.99/year',
     badge: 'BEST VALUE',
   },
 } as const;
+
+/**
+ * Check if using simulated subscriptions (always true for now)
+ * Set to false when real StoreKit/RevenueCat is integrated
+ */
+export const isUsingSimulatedSubscriptions = () => {
+  return true; // Change to false when real subscriptions are integrated
+};

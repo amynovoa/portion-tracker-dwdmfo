@@ -48,35 +48,30 @@ export function isTestFlightBuild(): boolean {
 
   console.log('App ownership:', appOwnership);
   
-  // For production builds, return false so Superwall handles subscriptions
+  // For production builds, return false
   return false;
 }
 
 /**
- * Get product details from the App Store
- * Note: Superwall handles product fetching automatically
- * This is just for display purposes in the UI
+ * Get product details
+ * Currently returns mock data - replace with real StoreKit/RevenueCat calls
  */
 export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
   try {
     console.log('Fetching product details for:', productId);
     
-    // Superwall automatically fetches product details from App Store Connect
-    // We return mock data here for UI display, but the actual purchase
-    // will use real prices from Superwall
-    
     if (Platform.OS === 'ios') {
       // Mock data for UI display
-      // Real prices will be fetched by Superwall from App Store Connect
+      // Replace with real StoreKit/RevenueCat product fetching
       const mockProducts: { [key: string]: ProductDetails } = {
-        'portiontrack.monthly': {
-          productId: 'portiontrack.monthly',
+        'com.portiontracker.app.monthly': {
+          productId: 'com.portiontracker.app.monthly',
           price: 2.99,
           priceString: '$2.99',
           currencyCode: 'USD',
         },
-        'portiontrack.annual': {
-          productId: 'portiontrack.annual',
+        'com.portiontracker.app.annual': {
+          productId: 'com.portiontracker.app.annual',
           price: 24.99,
           priceString: '$24.99',
           currencyCode: 'USD',
@@ -94,10 +89,8 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
 }
 
 /**
- * Purchase a product using Superwall
- * Note: This is handled by Superwall's usePlacement hook in the PaywallScreen
- * This function is kept for compatibility but the actual purchase flow
- * is managed by Superwall
+ * Purchase a product
+ * Currently simulated - replace with real StoreKit/RevenueCat purchase
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
   try {
@@ -110,8 +103,9 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       };
     }
 
-    // Superwall handles the purchase flow automatically through usePlacement
-    // This function is called from PaywallScreen which uses usePlacement hook
+    // Simulated purchase - replace with real StoreKit/RevenueCat
+    console.log('✅ Simulated purchase successful');
+    await saveSubscriptionStatus(true);
     
     return {
       success: true,
@@ -136,8 +130,7 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 
 /**
  * Restore previous purchases
- * Note: Superwall handles restore automatically
- * This function triggers the restore flow
+ * Currently simulated - replace with real StoreKit/RevenueCat restore
  */
 export async function restorePurchases(): Promise<PurchaseResult> {
   try {
@@ -150,9 +143,9 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       };
     }
 
-    // Superwall handles restore purchases automatically
-    // The subscription status will be updated through Superwall's
-    // subscription status listener
+    // Simulated restore - replace with real StoreKit/RevenueCat
+    console.log('✅ Simulated restore successful');
+    await saveSubscriptionStatus(true);
     
     return {
       success: true,
@@ -232,8 +225,6 @@ export async function isInTrialPeriod(): Promise<boolean> {
 
 /**
  * Get comprehensive subscription status
- * Note: In production, this should check Superwall's subscription status
- * using the useUser hook from expo-superwall
  */
 export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
   try {
@@ -250,10 +241,6 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
 
     // Check stored subscription status
     const isSubscribed = await loadSubscriptionStatus();
-
-    // In production, subscription status is managed by Superwall
-    // This function is kept for compatibility but the actual status
-    // should be checked using useUser hook from expo-superwall
     
     // Check trial status as fallback
     const trialStartDate = await getTrialStartDate();
@@ -282,7 +269,6 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
 
 /**
  * Check if user should see paywall
- * Note: In production, use Superwall's shouldShowPaywall logic
  */
 export async function shouldShowPaywall(): Promise<boolean> {
   const status = await getSubscriptionStatus();

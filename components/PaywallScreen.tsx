@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -16,9 +16,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { saveSubscriptionStatus } from '@/utils/storage';
-import { usePlacement } from 'expo-superwall';
-import { PLACEMENTS, hasValidSuperwallKey } from '@/utils/superwallConfig';
-import Constants from 'expo-constants';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -32,119 +29,25 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
 
-  // Check if we have a valid Superwall API key
-  const hasValidKey = hasValidSuperwallKey();
-
-  // Use Superwall's usePlacement hook for production-ready paywall
-  // This works in both Sandbox (TestFlight) and Production
-  const { registerPlacement, state: placementState } = usePlacement({
-    onPresent: (info) => {
-      console.log('✅ Superwall paywall presented:', info);
-    },
-    onDismiss: async (info, result) => {
-      console.log('✅ Superwall paywall dismissed:', info, 'Result:', result);
-      
-      // Check if user purchased or restored
-      if (result && typeof result === 'object' && 'state' in result) {
-        const resultState = (result as any).state;
-        if (resultState === 'purchased' || resultState === 'restored') {
-          console.log('✅ User purchased or restored subscription');
-          await saveSubscriptionStatus(true);
-          
-          // Notify parent component
-          if (onDismiss) {
-            onDismiss();
-          }
-        }
-      }
-    },
-    onError: (error) => {
-      console.error('❌ Superwall error:', error);
-      setIsProcessing(false);
-    },
-    onSkip: (reason) => {
-      console.log('⏭️ Superwall paywall skipped:', reason);
-      setIsProcessing(false);
-    },
-  });
-
   const handleSubscribe = async () => {
     console.log('User tapped Subscribe button with plan:', selectedPlan);
     setIsProcessing(true);
     
     try {
-      if (hasValidKey) {
-        // Production mode: Use real Superwall paywall
-        console.log('🚀 Triggering Superwall placement:', PLACEMENTS.onboarding);
-        
-        await registerPlacement({
-          placement: PLACEMENTS.onboarding,
-          feature: async () => {
-            // This is called if user is already subscribed or successfully subscribes
-            console.log('✅ Feature unlocked - user has access');
-            await saveSubscriptionStatus(true);
-            
-            Alert.alert(
-              'Success',
-              'Subscription activated!',
-              [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    console.log('Subscription successful, dismissing paywall');
-                    if (onDismiss) {
-                      onDismiss();
-                    }
-                  }
-                }
-              ]
-            );
-            setIsProcessing(false);
-          },
-        });
-        
-        // If we reach here and no paywall was shown, user might already be subscribed
-        if (placementState?.status === 'skipped') {
-          console.log('⏭️ Paywall skipped - user may already be subscribed');
-          await saveSubscriptionStatus(true);
-          if (onDismiss) {
-            onDismiss();
-          }
-        }
-      } else {
-        // Development/Testing mode: Simulate subscription
-        console.log('⚠️ Dev/Test mode: Simulating successful subscription');
-        await saveSubscriptionStatus(true);
-        Alert.alert(
-          'Success',
-          'Subscription activated! (Simulated for testing)\n\nTo enable real subscriptions:\n1. Add your Superwall API key to .env\n2. Configure products in App Store Connect\n3. Set up placement in Superwall dashboard',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                if (onDismiss) {
-                  onDismiss();
-                }
-              }
-            }
-          ]
-        );
-      }
+      // Simulate subscription activation
+      // In production, this would integrate with App Store StoreKit
+      console.log('✅ Activating subscription for plan:', selectedPlan);
       
-      setIsProcessing(false);
-    } catch (error) {
-      console.error('Error showing subscription:', error);
-      
-      // Fallback: Simulate subscription for testing
-      console.log('⚠️ Fallback: Simulating successful subscription');
       await saveSubscriptionStatus(true);
+      
       Alert.alert(
-        'Success',
-        'Subscription activated! (Simulated for testing)',
+        'Subscription Activated',
+        `Your ${selectedPlan} subscription is now active!\n\n✅ This is a simulated subscription for testing.\n\nFor production with real payments:\n• Set up In-App Purchases in App Store Connect\n• Create subscription products\n• Integrate StoreKit or RevenueCat\n• Test in TestFlight with Sandbox\n• Submit to App Store`,
         [
           {
             text: 'OK',
             onPress: () => {
+              console.log('Subscription successful, dismissing paywall');
               if (onDismiss) {
                 onDismiss();
               }
@@ -153,6 +56,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         ]
       );
       
+      setIsProcessing(false);
+    } catch (error) {
+      console.error('Error activating subscription:', error);
+      Alert.alert('Error', 'Failed to activate subscription. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -162,64 +69,15 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      if (hasValidKey) {
-        // Production mode: Use real Superwall restore
-        console.log('🔄 Triggering Superwall restore purchases');
-        
-        await registerPlacement({
-          placement: PLACEMENTS.onboarding,
-          feature: async () => {
-            // User has active subscription after restore
-            console.log('✅ Purchases restored successfully');
-            await saveSubscriptionStatus(true);
-            
-            Alert.alert(
-              'Success',
-              'Purchases restored!',
-              [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    if (onDismiss) {
-                      onDismiss();
-                    }
-                  }
-                }
-              ]
-            );
-            setIsProcessing(false);
-          },
-        });
-      } else {
-        // Development/Testing mode: Simulate restore
-        console.log('⚠️ Dev/Test mode: Simulating successful restore');
-        await saveSubscriptionStatus(true);
-        Alert.alert(
-          'Success',
-          'Purchases restored! (Simulated for testing)',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                if (onDismiss) {
-                  onDismiss();
-                }
-              }
-            }
-          ]
-        );
-      }
+      // Simulate restore purchases
+      // In production, this would check App Store for previous purchases
+      console.log('🔄 Restoring purchases...');
       
-      setIsProcessing(false);
-    } catch (error) {
-      console.error('Restore purchases error:', error);
-      
-      // Fallback: Simulate restore for testing
-      console.log('⚠️ Fallback: Simulating successful restore');
       await saveSubscriptionStatus(true);
+      
       Alert.alert(
-        'Success',
-        'Purchases restored! (Simulated for testing)',
+        'Purchases Restored',
+        'Your subscription has been restored!\n\n✅ This is a simulated restore for testing.\n\nFor production:\n• StoreKit will check App Store for active subscriptions\n• Previous purchases will be restored automatically',
         [
           {
             text: 'OK',
@@ -232,6 +90,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         ]
       );
       
+      setIsProcessing(false);
+    } catch (error) {
+      console.error('Restore purchases error:', error);
+      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -365,14 +227,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             )}
           </TouchableOpacity>
 
-          {!hasValidKey && (
-            <View style={styles.devModeContainer}>
-              <Text style={styles.devModeText}>
-                ℹ️ Test Mode: Using simulated subscriptions{'\n'}
-                Add Superwall API key to .env for real subscriptions
-              </Text>
-            </View>
-          )}
+          <View style={styles.devModeContainer}>
+            <Text style={styles.devModeText}>
+              ℹ️ Test Mode: Using simulated subscriptions{'\n'}
+              {'\n'}
+              For production with real payments:{'\n'}
+              • Set up In-App Purchases in App Store Connect{'\n'}
+              • Create subscription products (monthly & annual){'\n'}
+              • Integrate StoreKit or RevenueCat{'\n'}
+              • Test in TestFlight with Sandbox{'\n'}
+              • Submit to App Store
+            </Text>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -549,8 +415,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   devModeText: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
-    textAlign: 'center',
+    lineHeight: 20,
   },
 });
