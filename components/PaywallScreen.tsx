@@ -42,6 +42,7 @@ let superwallAvailable = false;
 // Try to load Superwall only if not in Expo Go
 if (!isExpoGo) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Superwall = require('expo-superwall');
     usePlacement = Superwall.usePlacement;
     useUser = Superwall.useUser;
@@ -61,53 +62,50 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     annual?: ProductDetails;
   }>({});
 
-  // Superwall hooks - only use if available
+  // Superwall hooks - call at top level but handle null case
   let registerPlacement: any = null;
   let placementState: any = null;
   let subscriptionStatus: any = null;
 
+  // Call hooks at top level (React requirement)
   if (superwallAvailable && usePlacement && useUser) {
-    try {
-      // Use Superwall's usePlacement hook to handle purchases
-      const placement = usePlacement({
-        onPresent: (info: any) => {
-          console.log('PaywallScreen: Superwall paywall presented:', info);
-        },
-        onDismiss: (info: any, result: any) => {
-          console.log('PaywallScreen: Superwall paywall dismissed:', info, 'Result:', result);
-          setLoading(false);
-          
-          // Check if purchase was successful
-          if (result.state === 'purchased') {
-            console.log('PaywallScreen: Purchase successful!');
-            Alert.alert('Success', 'Thank you for subscribing!');
-            onDismiss?.();
-          } else if (result.state === 'restored') {
-            console.log('PaywallScreen: Purchases restored!');
-            Alert.alert('Success', 'Your purchases have been restored!');
-            onDismiss?.();
-          }
-        },
-        onError: (error: any) => {
-          console.error('PaywallScreen: Superwall error:', error);
-          setLoading(false);
-          Alert.alert('Error', 'An error occurred. Please try again.');
-        },
-        onSkip: (reason: any) => {
-          console.log('PaywallScreen: Paywall skipped:', reason);
-          setLoading(false);
-        },
-      });
-      
-      registerPlacement = placement.registerPlacement;
-      placementState = placement.state;
+    // Use Superwall's usePlacement hook to handle purchases
+    const placement = usePlacement({
+      onPresent: (info: any) => {
+        console.log('PaywallScreen: Superwall paywall presented:', info);
+      },
+      onDismiss: (info: any, result: any) => {
+        console.log('PaywallScreen: Superwall paywall dismissed:', info, 'Result:', result);
+        setLoading(false);
+        
+        // Check if purchase was successful
+        if (result.state === 'purchased') {
+          console.log('PaywallScreen: Purchase successful!');
+          Alert.alert('Success', 'Thank you for subscribing!');
+          onDismiss?.();
+        } else if (result.state === 'restored') {
+          console.log('PaywallScreen: Purchases restored!');
+          Alert.alert('Success', 'Your purchases have been restored!');
+          onDismiss?.();
+        }
+      },
+      onError: (error: any) => {
+        console.error('PaywallScreen: Superwall error:', error);
+        setLoading(false);
+        Alert.alert('Error', 'An error occurred. Please try again.');
+      },
+      onSkip: (reason: any) => {
+        console.log('PaywallScreen: Paywall skipped:', reason);
+        setLoading(false);
+      },
+    });
+    
+    registerPlacement = placement.registerPlacement;
+    placementState = placement.state;
 
-      // Use Superwall's useUser hook to get subscription status
-      const user = useUser();
-      subscriptionStatus = user.subscriptionStatus;
-    } catch (error) {
-      console.error('PaywallScreen: Error initializing Superwall hooks:', error);
-    }
+    // Use Superwall's useUser hook to get subscription status
+    const user = useUser();
+    subscriptionStatus = user.subscriptionStatus;
   }
 
   useEffect(() => {

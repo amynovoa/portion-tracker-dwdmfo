@@ -12,6 +12,7 @@ let superwallAvailable = false;
 // Try to load Superwall only if not in Expo Go
 if (!isExpoGo) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Superwall = require('expo-superwall');
     useUser = Superwall.useUser;
     superwallAvailable = true;
@@ -34,12 +35,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(true); // Default to true for development
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(undefined);
 
+  // Call useUser hook at top level if available
+  let superwallUser: any = null;
+  if (superwallAvailable && useUser && !isExpoGo) {
+    superwallUser = useUser();
+  }
+
   // Only use Superwall hooks if available and not in Expo Go
   useEffect(() => {
-    if (superwallAvailable && useUser && !isExpoGo) {
+    if (superwallAvailable && superwallUser && !isExpoGo) {
       try {
-        // Use Superwall's useUser hook to get subscription status
-        const { subscriptionStatus: superwallStatus } = useUser();
+        const superwallStatus = superwallUser.subscriptionStatus;
         
         if (superwallStatus) {
           console.log('📱 Superwall subscription status:', superwallStatus);
@@ -57,7 +63,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     } else {
       console.log('📱 Running in Expo Go or Superwall not available - using mock subscription (full access granted)');
     }
-  }, []);
+  }, [superwallUser, isExpoGo]);
 
   return (
     <SubscriptionContext.Provider value={{ 

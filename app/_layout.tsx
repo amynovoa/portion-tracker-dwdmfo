@@ -28,6 +28,7 @@ let superwallAvailable = false;
 
 if (!isExpoGo) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Superwall = require('expo-superwall');
     SuperwallProvider = Superwall.SuperwallProvider;
     SuperwallLoading = Superwall.SuperwallLoading;
@@ -134,6 +135,7 @@ function AppContent() {
 export default function RootLayout() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const [loaded] = useFonts({
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
