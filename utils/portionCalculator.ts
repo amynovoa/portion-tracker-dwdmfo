@@ -21,7 +21,7 @@ export function getBaselinePortions(sex: Sex, goal: Goal): PortionTargets {
     veggies: 4,
     fruits: 2,
     wholeGrains: 2,
-    nutsSeeds: 2,
+    nutsSeeds: 1, // Always start at 1 (max recommended)
     fats: 2,
     water: 8,
     exercise: 3, // Default exercise target
@@ -39,7 +39,8 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
     adjusted.veggies = Math.max(3, adjusted.veggies - 1);
     adjusted.fruits = Math.max(2, adjusted.fruits);
     adjusted.wholeGrains = Math.max(1, adjusted.wholeGrains - 1);
-    adjusted.nutsSeeds = Math.max(1, adjusted.nutsSeeds - 1);
+    // Nuts & Seeds always limited to 1 serving
+    adjusted.nutsSeeds = 1;
     adjusted.fats = Math.max(1, adjusted.fats - 1);
     adjusted.water = Math.max(7, adjusted.water - 1);
     adjusted.exercise = Math.max(2, adjusted.exercise - 1);
@@ -49,7 +50,8 @@ export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory
     adjusted.veggies = Math.min(6, adjusted.veggies + 1);
     adjusted.fruits = Math.min(4, adjusted.fruits + 1);
     adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
-    adjusted.nutsSeeds = Math.min(3, adjusted.nutsSeeds + 1);
+    // Nuts & Seeds always limited to 1 serving
+    adjusted.nutsSeeds = 1;
     adjusted.fats = Math.min(3, adjusted.fats + 1);
     adjusted.water = Math.min(12, adjusted.water + 2);
     adjusted.exercise = Math.min(5, adjusted.exercise + 1);
@@ -88,7 +90,8 @@ export function applyActivityAdjustment(
     case 'veryActive':
       adjusted.protein = Math.min(7, adjusted.protein + 2);
       adjusted.wholeGrains = Math.min(7, adjusted.wholeGrains + 3);
-      adjusted.nutsSeeds = Math.min(4, adjusted.nutsSeeds + 1);
+      // Nuts & Seeds always limited to 1 serving (removed the +1 adjustment)
+      adjusted.nutsSeeds = 1;
       adjusted.exercise = Math.max(6, adjusted.exercise + 3);
       break;
   }
@@ -102,6 +105,7 @@ export function calculateRecommendedTargets(
   goal: Goal,
   activityLevel: ActivityLevel = 'sedentary'
 ): PortionTargets {
+  console.log('Calculating recommended targets for:', { sex, weight, goal, activityLevel });
   const size = classifySize(sex, weight);
   let portions = getBaselinePortions(sex, goal);
 
@@ -117,7 +121,8 @@ export function calculateRecommendedTargets(
     portions.exercise = Math.min(7, portions.exercise + 1);
   } else if (goal === 'build') {
     portions.protein = Math.min(6, portions.protein + 1);
-    portions.nutsSeeds = Math.min(4, portions.nutsSeeds + 1);
+    // Nuts & Seeds always limited to 1 serving (removed the +1 adjustment)
+    portions.nutsSeeds = 1;
     portions.fats = Math.min(4, portions.fats + 1);
     // Encourage exercise for muscle building
     portions.exercise = Math.min(7, portions.exercise + 2);
@@ -126,6 +131,10 @@ export function calculateRecommendedTargets(
   // Apply activity level adjustment
   portions = applyActivityAdjustment(portions, activityLevel);
 
+  // Final safety check: Ensure nuts & seeds never exceeds 1 serving
+  portions.nutsSeeds = 1;
+
+  console.log('Final recommended portions:', portions);
   return portions;
 }
 
