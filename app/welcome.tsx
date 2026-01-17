@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadSubscriptionStatus } from '@/utils/storage';
+import { loadSubscriptionStatus, loadProfile } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
 
 export default function WelcomeScreen() {
@@ -30,16 +30,42 @@ export default function WelcomeScreen() {
     setShowPaywall(true);
   };
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async () => {
     console.log('User tapped Get Started button');
-    router.push('/setup-profile');
+    
+    // Check if profile already exists
+    const profile = await loadProfile();
+    console.log('Welcome: Profile exists:', !!profile);
+    
+    if (profile && profile.portionTargets) {
+      // Profile already exists, go directly to main app
+      console.log('Welcome: Profile exists -> Going to main app');
+      router.replace('/(tabs)/(home)');
+    } else {
+      // No profile, go to setup
+      console.log('Welcome: No profile -> Going to setup-profile');
+      router.replace('/setup-profile');
+    }
   };
 
-  const handlePaywallDismiss = () => {
+  const handlePaywallDismiss = async () => {
     console.log('Paywall dismissed');
     setShowPaywall(false);
     // Re-check subscription status in case user subscribed
-    checkSubscriptionStatus();
+    const subscribed = await loadSubscriptionStatus();
+    setIsSubscribed(subscribed);
+    
+    // If user just subscribed, check if they have a profile and navigate accordingly
+    if (subscribed) {
+      const profile = await loadProfile();
+      if (profile && profile.portionTargets) {
+        console.log('Paywall: User subscribed + Profile exists -> Going to main app');
+        router.replace('/(tabs)/(home)');
+      } else {
+        console.log('Paywall: User subscribed + No profile -> Going to setup-profile');
+        router.replace('/setup-profile');
+      }
+    }
   };
 
   if (isLoading) {
