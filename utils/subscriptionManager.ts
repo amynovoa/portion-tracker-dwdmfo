@@ -375,7 +375,7 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
     // Check if TestFlight build first
     const isTestFlight = isTestFlightBuild();
     if (isTestFlight) {
-      // In TestFlight, use local storage for testing
+      // In TestFlight/Dev, use local storage for testing
       const localStatus = await loadSubscriptionStatus();
       return {
         isSubscribed: localStatus,

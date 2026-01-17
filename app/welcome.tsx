@@ -7,11 +7,23 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadSubscriptionStatus, loadProfile } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { isTestFlightBuild } from '@/utils/subscriptionManager';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { isSubscribed, refreshSubscription } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
+  const [isDevMode, setIsDevMode] = useState(false);
+
+  useEffect(() => {
+    // Check if we're in development/TestFlight mode
+    const checkDevMode = async () => {
+      const devMode = isTestFlightBuild();
+      console.log('Welcome: Dev/TestFlight mode:', devMode);
+      setIsDevMode(devMode);
+    };
+    checkDevMode();
+  }, []);
 
   const handleStartTrial = () => {
     console.log('User tapped Start 7-Day Free Trial button');
@@ -57,6 +69,9 @@ export default function WelcomeScreen() {
     }
   };
 
+  // In development mode, always show "Get Started" button
+  const shouldShowGetStarted = isDevMode || isSubscribed;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -68,7 +83,7 @@ export default function WelcomeScreen() {
           </Text>
         </View>
 
-        {isSubscribed ? (
+        {shouldShowGetStarted ? (
           <TouchableOpacity
             style={[buttonStyles.primary, styles.button]}
             onPress={handleGetStarted}
