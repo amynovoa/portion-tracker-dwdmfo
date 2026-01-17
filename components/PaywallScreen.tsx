@@ -193,21 +193,21 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
   const openTermsOfService = () => {
     console.log('Opening terms of service...');
-    Linking.openURL('https://www.portiontrack.com/terms-of-service');
+    Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
   };
 
   const getMonthlyPrice = () => {
     if (loadingProducts) {
       return '...';
     }
-    return monthlyProduct?.priceString || '$9.99';
+    return monthlyProduct?.priceString || '$2.99';
   };
 
   const getAnnualPrice = () => {
     if (loadingProducts) {
       return '...';
     }
-    return annualProduct?.priceString || '$59.99';
+    return annualProduct?.priceString || '$24.99';
   };
 
   const getAnnualMonthlyPrice = () => {
@@ -219,7 +219,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       const monthlyEquivalent = (annualPrice / 12).toFixed(2);
       return `${annualProduct.currencyCode === 'USD' ? '$' : ''}${monthlyEquivalent}`;
     }
-    return '$4.99';
+    return '$2.08';
   };
 
   return (
@@ -255,19 +255,19 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Unlock Premium</Text>
+            <Text style={styles.title}>7-day free trial.{'\n'}Cancel anytime.</Text>
             <Text style={styles.subtitle}>
-              Get unlimited access to all features
+              Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.
             </Text>
           </View>
 
           <View style={styles.featuresContainer}>
-            <FeatureItem text="Track unlimited portions" />
-            <FeatureItem text="View detailed adherence history" />
-            <FeatureItem text="Customize portion targets" />
-            <FeatureItem text="Weight tracking & progress charts" />
-            <FeatureItem text="Daily reminders & celebrations" />
-            <FeatureItem text="Backup & restore your data" />
+            <Text style={styles.featuresTitle}>Subscription includes:</Text>
+            <FeatureItem text="Unlimited portion tracking" />
+            <FeatureItem text="Custom portion targets" />
+            <FeatureItem text="Weight tracking & charts" />
+            <FeatureItem text="Adherence history & trends" />
+            <FeatureItem text="Daily reminders" />
           </View>
 
           <View style={styles.plansContainer}>
@@ -283,16 +283,16 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             >
               {selectedPlan === 'annual' && (
                 <View style={styles.popularBadge}>
-                  <Text style={styles.popularText}>BEST VALUE</Text>
+                  <Text style={styles.popularText}>Best Value</Text>
                 </View>
               )}
               <View style={styles.planHeader}>
                 <Text style={styles.planName}>Annual</Text>
-                <Text style={styles.planPrice}>{getAnnualPrice()}/year</Text>
+                <View style={styles.radioButton}>
+                  {selectedPlan === 'annual' && <View style={styles.radioButtonInner} />}
+                </View>
               </View>
-              <Text style={styles.planDescription}>
-                Just {getAnnualMonthlyPrice()}/month
-              </Text>
+              <Text style={styles.planPrice}>{getAnnualPrice()}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -307,9 +307,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             >
               <View style={styles.planHeader}>
                 <Text style={styles.planName}>Monthly</Text>
-                <Text style={styles.planPrice}>{getMonthlyPrice()}/month</Text>
+                <View style={styles.radioButton}>
+                  {selectedPlan === 'monthly' && <View style={styles.radioButtonInner} />}
+                </View>
               </View>
-              <Text style={styles.planDescription}>Billed monthly</Text>
+              <Text style={styles.planPrice}>{getMonthlyPrice()}</Text>
             </TouchableOpacity>
           </View>
 
@@ -338,6 +340,19 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             </View>
           )}
 
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              By clicking I agree to the{' '}
+              <Text style={styles.footerLink} onPress={openTermsOfService}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.footerLink} onPress={openPrivacyPolicy}>
+                Privacy Policy
+              </Text>
+            </Text>
+          </View>
+
           <TouchableOpacity
             style={[buttonStyles.primary, styles.subscribeButton]}
             onPress={handleSubscribe}
@@ -347,7 +362,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <ActivityIndicator color={colors.surface} />
             ) : (
               <Text style={buttonStyles.primaryText}>
-                {loadingProducts ? 'Loading...' : 'Start Free Trial'}
+                {loadingProducts ? 'Loading...' : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`}
               </Text>
             )}
           </TouchableOpacity>
@@ -359,22 +374,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           >
             <Text style={styles.restoreButtonText}>Restore Purchases</Text>
           </TouchableOpacity>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              7-day free trial, then {selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}{' '}
-              {selectedPlan === 'monthly' ? 'per month' : 'per year'}. Cancel anytime.
-            </Text>
-            <View style={styles.footerLinks}>
-              <TouchableOpacity onPress={openPrivacyPolicy}>
-                <Text style={styles.footerLink}>Privacy Policy</Text>
-              </TouchableOpacity>
-              <Text style={styles.footerSeparator}>•</Text>
-              <TouchableOpacity onPress={openTermsOfService}>
-                <Text style={styles.footerLink}>Terms of Service</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -384,7 +383,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 function FeatureItem({ text }: { text: string }) {
   return (
     <View style={styles.featureItem}>
-      <MaterialIcons name="check-circle" size={24} color={colors.primary} />
+      <MaterialIcons name="check-circle" size={20} color={colors.primary} />
       <Text style={styles.featureText}>{text}</Text>
     </View>
   );
@@ -422,20 +421,28 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 16,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 20,
   },
   featuresContainer: {
     marginBottom: 32,
   },
+  featuresTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 16,
+  },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   featureText: {
     fontSize: 16,
@@ -448,15 +455,14 @@ const styles = StyleSheet.create({
   },
   planCard: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 20,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: colors.border,
   },
   planCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
   },
   popularBadge: {
     position: 'absolute',
@@ -484,13 +490,24 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   planPrice: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.primary,
   },
-  planDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioButtonInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
   },
   testFlightContainer: {
     backgroundColor: colors.warningLight,
@@ -540,28 +557,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   footer: {
-    marginTop: 24,
+    marginBottom: 24,
     alignItems: 'center',
   },
   footerText: {
     fontSize: 12,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 12,
     lineHeight: 18,
   },
-  footerLinks: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   footerLink: {
-    fontSize: 12,
     color: colors.primary,
     textDecorationLine: 'underline',
-  },
-  footerSeparator: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginHorizontal: 8,
   },
 });
