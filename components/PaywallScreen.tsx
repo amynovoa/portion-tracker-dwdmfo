@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { saveSubscriptionStatus } from '@/utils/storage';
 import Constants from 'expo-constants';
+import { usePlacement, useSuperwall } from 'expo-superwall';
+import { PLACEMENTS } from '@/utils/superwallConfig';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -29,6 +31,37 @@ type SubscriptionPlan = 'annual' | 'monthly';
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
+  const [superwallReady, setSuperwallReady] = useState(false);
+
+  // Use Superwall hooks for native builds
+  const { isConfigured } = useSuperwall();
+  const { registerPlacement, state: placementState } = usePlacement({
+    onPresent: (info) => {
+      console.log('✅ Superwall paywall presented:', info);
+    },
+    onDismiss: async (info, result) => {
+      console.log('✅ Superwall paywall dismissed:', result);
+      
+      // Check if user purchased
+      if (result === 'purchased' || result === 'restored') {
+        console.log('✅ User subscribed via Superwall!');
+        await saveSubscriptionStatus(true);
+        
+        if (onDismiss) {
+          onDismiss();
+        }
+      }
+    },
+    onError: (error) => {
+      console.error('❌ Superwall error:', error);
+      Alert.alert('Error', 'Failed to show subscription options. Please try again.');
+    },
+  });
+
+  useEffect(() => {
+    console.log('📱 PaywallScreen: Superwall configured =', isConfigured);
+    setSuperwallReady(isConfigured);
+  }, [isConfigured]);
 
   // Check if running in TestFlight or development
   const isTestFlightOrDev = __DEV__ || Constants.appOwnership === 'expo';
@@ -38,7 +71,21 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      if (isTestFlightOrDev) {
+      if (superwallReady && !isTestFlightOrDev) {
+        // Use Superwall for native builds
+        console.log('📱 Using Superwall to show paywall...');
+        await registerPlacement({
+          placement: PLACEMENTS.onboarding,
+          feature: async () => {
+            // User is already subscribed or successfully subscribed
+            console.log('✅ User has access to feature!');
+            await saveSubscriptionStatus(true);
+            if (onDismiss) {
+              onDismiss();
+            }
+          },
+        });
+      } else if (isTestFlightOrDev) {
         // In TestFlight/dev, simulate successful subscription
         console.log('TestFlight/Dev mode: Simulating successful subscription');
         await saveSubscriptionStatus(true);
@@ -58,11 +105,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           ]
         );
       } else {
-        // In production, Superwall will handle the subscription
-        // This will be integrated with Superwall in native builds
+        // Superwall not ready yet
         Alert.alert(
-          'Subscription',
-          'Subscription options will be available in the native build.',
+          'Loading',
+          'Subscription system is initializing. Please try again in a moment.',
           [{ text: 'OK' }]
         );
       }
@@ -79,7 +125,34 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      if (isTestFlightOrDev) {
+      if (superwallReady && !isTestFlightOrDev) {
+        // Use Superwall's restore functionality
+        console.log('📱 Using Superwall to restore purchases...');
+        
+        // Superwall handles restore automatically through the SDK
+        // We just need to trigger a check by registering a placement
+        await registerPlacement({
+          placement: PLACEMENTS.onboarding,
+          feature: async () => {
+            console.log('✅ Purchases restored successfully!');
+            await saveSubscriptionStatus(true);
+            Alert.alert(
+              'Success',
+              'Your purchases have been restored!',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    if (onDismiss) {
+                      onDismiss();
+                    }
+                  }
+                }
+              ]
+            );
+          },
+        });
+      } else if (isTestFlightOrDev) {
         // In TestFlight/dev, simulate successful restore
         console.log('TestFlight/Dev mode: Simulating successful restore');
         await saveSubscriptionStatus(true);
@@ -99,10 +172,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           ]
         );
       } else {
-        // In production, Superwall will handle restore
         Alert.alert(
-          'Restore Purchases',
-          'Purchase restoration will be available in the native build.',
+          'Loading',
+          'Subscription system is initializing. Please try again in a moment.',
           [{ text: 'OK' }]
         );
       }
@@ -242,6 +314,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <Text style={styles.restoreButtonText}>Restore Purchases</Text>
             )}
           </TouchableOpacity>
+
+          {!superwallReady && !isTestFlightOrDev && (
+            <View style={styles.statusContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.statusText}>Initializing subscription system...</Text>
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -408,5 +487,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: '600',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
 });

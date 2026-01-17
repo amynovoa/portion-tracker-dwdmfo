@@ -1,41 +1,62 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
+import { useUser, useSuperwall } from 'expo-superwall';
+import { saveSubscriptionStatus, loadSubscriptionStatus } from '@/utils/storage';
 
 interface SubscriptionContextType {
   isSubscribed: boolean;
   subscriptionStatus: any;
   isLoading: boolean;
+  user: any;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // TODO: Superwall Integration - Check subscription status
-    // For now, we'll default to not subscribed
-    // When you build natively, this will check actual subscription status
-    console.log('📱 SubscriptionContext: Initializing (native build required for Superwall)');
-    
-    // Simulate loading complete
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubscribed(false);
-      setSubscriptionStatus({ status: 'INACTIVE' });
-    }, 500);
-  }, []);
+  // Use Superwall hooks for native builds
+  const { subscriptionStatus, user } = useUser();
+  const { isConfigured } = useSuperwall();
 
-  console.log('📱 SubscriptionContext: Status =', subscriptionStatus?.status, 'Subscribed =', isSubscribed);
+  useEffect(() => {
+    async function checkSubscription() {
+      console.log('📱 SubscriptionContext: Checking subscription status...');
+      console.log('📱 Superwall configured:', isConfigured);
+      console.log('📱 Superwall subscription status:', subscriptionStatus?.status);
+
+      if (isConfigured && subscriptionStatus) {
+        // Use Superwall's subscription status for native builds
+        const subscribed = subscriptionStatus.status === 'ACTIVE';
+        console.log('📱 Using Superwall status: ACTIVE =', subscribed);
+        setIsSubscribed(subscribed);
+        
+        // Save to local storage for offline access
+        await saveSubscriptionStatus(subscribed);
+      } else {
+        // Fallback to local storage (for dev/TestFlight or when Superwall isn't configured)
+        console.log('📱 Superwall not configured, using local storage');
+        const localStatus = await loadSubscriptionStatus();
+        console.log('📱 Local storage status:', localStatus);
+        setIsSubscribed(localStatus);
+      }
+
+      setIsLoading(false);
+    }
+
+    checkSubscription();
+  }, [isConfigured, subscriptionStatus]);
+
+  console.log('📱 SubscriptionContext: Final status - Subscribed =', isSubscribed, 'Loading =', isLoading);
 
   return (
     <SubscriptionContext.Provider value={{ 
       isSubscribed, 
       subscriptionStatus,
-      isLoading
+      isLoading,
+      user
     }}>
       {children}
     </SubscriptionContext.Provider>

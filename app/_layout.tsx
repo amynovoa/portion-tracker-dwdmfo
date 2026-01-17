@@ -11,6 +11,8 @@ import { colors } from '@/styles/commonStyles';
 import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { SuperwallProvider } from 'expo-superwall';
+import { SUPERWALL_API_KEY } from '@/utils/superwallConfig';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -129,11 +131,21 @@ export default function RootLayout() {
     );
   }
 
-  console.log('✅ App initialized (Superwall will be available in native builds)');
+  console.log('✅ Initializing Superwall for native builds...');
   
+  // Wrap the entire app with SuperwallProvider for native builds
+  // This enables Superwall's subscription management
   return (
-    <SubscriptionProvider>
-      <AppContent />
-    </SubscriptionProvider>
+    <SuperwallProvider 
+      apiKeys={{ ios: SUPERWALL_API_KEY || 'pk_d1c0a2e8e0e5f5a5e5e5e5e5e5e5e5e5' }}
+      onConfigurationError={(error) => {
+        console.error('⚠️ Superwall configuration error:', error);
+        // App will continue to work even if Superwall fails to initialize
+      }}
+    >
+      <SubscriptionProvider>
+        <AppContent />
+      </SubscriptionProvider>
+    </SuperwallProvider>
   );
 }

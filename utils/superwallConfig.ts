@@ -7,11 +7,19 @@
  * 
  * IMPORTANT: Superwall requires a native build and proper App Store Connect setup.
  * For TestFlight and development builds, the app uses simulated subscriptions.
+ * 
+ * TO SET UP SUPERWALL:
+ * 1. Create an account at https://superwall.com
+ * 2. Get your API key from the Superwall dashboard
+ * 3. Replace the SUPERWALL_API_KEY below with your actual key
+ * 4. Configure your products in App Store Connect
+ * 5. Configure placements in the Superwall dashboard
  */
 
-// Superwall API Key - This will be configured when setting up native builds
-// For now, the app works without Superwall in TestFlight/dev mode
-export const SUPERWALL_API_KEY = '';
+// Superwall API Key - Get this from your Superwall dashboard
+// For development/TestFlight, the app will work without a valid key
+// For production, you MUST set a valid Superwall API key
+export const SUPERWALL_API_KEY = process.env.EXPO_PUBLIC_SUPERWALL_API_KEY || '';
 
 // Product IDs from App Store Connect
 // These must match the product IDs you created in App Store Connect
