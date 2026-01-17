@@ -1,29 +1,23 @@
 
 import React, { createContext, useContext, ReactNode, useState } from 'react';
-import Constants from 'expo-constants';
-
-// Check if we're running in Expo Go
-const isExpoGo = Constants.appOwnership === 'expo';
 
 interface SubscriptionContextType {
   isSubscribed: boolean;
-  isExpoGo: boolean;
   subscriptionStatus: any;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  // Default to true for development - users have full access
+  // Default to true - all users have full access while subscriptions are disabled
   const [isSubscribed] = useState(true);
   const [subscriptionStatus] = useState<any>(undefined);
 
-  console.log('📱 SubscriptionContext: User has full access (development mode)');
+  console.log('📱 SubscriptionContext: All users have full access (subscriptions temporarily disabled)');
 
   return (
     <SubscriptionContext.Provider value={{ 
       isSubscribed, 
-      isExpoGo,
       subscriptionStatus
     }}>
       {children}

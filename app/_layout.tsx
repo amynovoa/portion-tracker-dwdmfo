@@ -10,36 +10,8 @@ import { View, ActivityIndicator, AppState, AppStateStatus, Platform } from 'rea
 import { colors } from '@/styles/commonStyles';
 import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
-import Constants from 'expo-constants';
 
 SplashScreen.preventAutoHideAsync();
-
-// Superwall API Key - Replace with your actual key from Superwall dashboard
-const SUPERWALL_API_KEY = 'pk_d1efbc344a5e3cdb8e5e732a2b1e3e5a9c8e5e732a2b1e3e5a9c8e5e732a2b1e';
-
-// Check if we're running in Expo Go (which doesn't support native modules like Superwall)
-const isExpoGo = Constants.appOwnership === 'expo';
-
-// Try to load Superwall components only if not in Expo Go
-let SuperwallProvider: any = null;
-let SuperwallLoading: any = null;
-let SuperwallLoaded: any = null;
-let superwallAvailable = false;
-
-if (!isExpoGo) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Superwall = require('expo-superwall');
-    SuperwallProvider = Superwall.SuperwallProvider;
-    SuperwallLoading = Superwall.SuperwallLoading;
-    SuperwallLoaded = Superwall.SuperwallLoaded;
-    superwallAvailable = true;
-    console.log('✅ Superwall components loaded successfully');
-  } catch (error) {
-    console.log('⚠️ Superwall components not available:', error);
-    superwallAvailable = false;
-  }
-}
 
 function AppContent() {
   const [isReady, setIsReady] = useState(false);
@@ -50,47 +22,58 @@ function AppContent() {
       try {
         console.log('🚀 App starting up...');
         console.log('📱 Platform:', Platform.OS);
-        console.log('🔧 Environment:', isExpoGo ? 'Expo Go' : 'Development Build');
         
+        // CRITICAL: Only check for profile - do everything else in background
         console.log('Checking for existing profile...');
         const profile = await loadProfile();
         console.log('Profile loaded:', profile ? 'Found' : 'Not found');
         setHasProfile(!!profile);
 
-        // Request notification permissions and schedule noon reminder if profile exists
-        if (profile) {
-          console.log('Requesting notification permissions...');
-          const hasPermission = await requestNotificationPermissions();
-          if (hasPermission) {
-            console.log('Scheduling noon reminder...');
-            await scheduleNoonReminder();
-          }
+        // Mark app as ready immediately after profile check
+        setIsReady(true);
 
-          // Create automatic backup on app launch
-          console.log('Creating automatic backup on app launch...');
-          await createAutomaticBackup();
+        // Do everything else in the background AFTER the app is ready
+        if (profile) {
+          // Run these in background without blocking app launch
+          setTimeout(async () => {
+            try {
+              console.log('Background: Requesting notification permissions...');
+              const hasPermission = await requestNotificationPermissions();
+              if (hasPermission) {
+                console.log('Background: Scheduling noon reminder...');
+                await scheduleNoonReminder();
+              }
+
+              console.log('Background: Creating automatic backup...');
+              await createAutomaticBackup();
+            } catch (error) {
+              console.error('Background tasks error:', error);
+            }
+          }, 1000); // Wait 1 second after app loads to run background tasks
         }
       } catch (e) {
         console.error('Error loading profile:', e);
         setHasProfile(false);
-      } finally {
-        setIsReady(true);
+        setIsReady(true); // Still mark as ready even if there's an error
       }
     }
 
     prepare();
   }, []);
 
-  // Create backup when app comes to foreground
+  // Create backup when app comes to foreground (in background)
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        console.log('App came to foreground, creating backup...');
-        try {
-          await createAutomaticBackup();
-        } catch (error) {
-          console.error('Error creating automatic backup:', error);
-        }
+        console.log('App came to foreground, creating backup in background...');
+        // Run in background without blocking
+        setTimeout(async () => {
+          try {
+            await createAutomaticBackup();
+          } catch (error) {
+            console.error('Error creating automatic backup:', error);
+          }
+        }, 2000); // Wait 2 seconds after coming to foreground
       }
     };
 
@@ -147,37 +130,8 @@ export default function RootLayout() {
     );
   }
 
-  // If running in Expo Go or Superwall not available, skip Superwall integration
-  if (isExpoGo || !superwallAvailable) {
-    if (isExpoGo) {
-      console.log('⚠️ Running in Expo Go - Superwall disabled');
-      console.log('💡 To test subscriptions, create a development build:');
-      console.log('   npx expo prebuild && npx expo run:ios');
-    } else {
-      console.log('⚠️ Superwall module not available - running without subscription features');
-    }
-    return <AppContent />;
-  }
-
-  // For development builds, TestFlight, and production - use Superwall
-  console.log('✅ Initializing Superwall SDK');
-  console.log('🔑 API Key:', SUPERWALL_API_KEY.substring(0, 20) + '...');
-
-  return (
-    <SuperwallProvider 
-      apiKeys={{ ios: SUPERWALL_API_KEY }}
-      onConfigurationError={(error: any) => {
-        console.error('❌ Superwall configuration error:', error);
-      }}
-    >
-      <SuperwallLoading>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SuperwallLoading>
-      <SuperwallLoaded>
-        <AppContent />
-      </SuperwallLoaded>
-    </SuperwallProvider>
-  );
+  // Removed all Superwall integration - it was causing the 60-90 second delay
+  console.log('✅ App initialized without Superwall (removed to fix launch delay)');
+  
+  return <AppContent />;
 }
