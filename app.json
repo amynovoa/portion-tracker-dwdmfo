@@ -52,12 +52,6 @@
       "expo-router",
       "expo-web-browser",
       [
-        "expo-superwall",
-        {
-          "iosApiKey": "pk_YOUR_IOS_API_KEY"
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "This app needs access to your photo library to select meal photos.",

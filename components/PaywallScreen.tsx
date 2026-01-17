@@ -15,8 +15,6 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { usePlacement, useUser } from 'expo-superwall';
-import { PLACEMENTS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -26,49 +24,23 @@ interface PaywallScreenProps {
 
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  const { subscriptionStatus } = useUser();
-  const { registerPlacement, state: placementState } = usePlacement({
-    onError: (err) => {
-      console.error('❌ Paywall Error:', err);
-      setIsProcessing(false);
-      Alert.alert('Error', 'Failed to load subscription options. Please try again.');
-    },
-    onPresent: (info) => {
-      console.log('✅ Paywall Presented:', info);
-      setIsProcessing(false);
-    },
-    onDismiss: (info, result) => {
-      console.log('📱 Paywall Dismissed:', info, 'Result:', result);
-      setIsProcessing(false);
-      
-      // If user purchased, dismiss the modal
-      if (result.state === 'purchased') {
-        Alert.alert(
-          'Success!',
-          'Thank you for subscribing! You now have access to all premium features.',
-          [{ text: 'OK', onPress: onDismiss }]
-        );
-      }
-    },
-  });
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const handleSubscribe = async () => {
     console.log('User tapped Subscribe button');
     setIsProcessing(true);
     
     try {
-      await registerPlacement({
-        placement: PLACEMENTS.settings,
-        feature: () => {
-          console.log('✅ User has access to premium features');
-          if (onDismiss) {
-            onDismiss();
-          }
-        },
-      });
+      // TODO: Superwall Integration - This will be implemented when you build the app natively
+      // For now, show a message that subscriptions require a native build
+      Alert.alert(
+        'Subscription Setup Required',
+        'Subscriptions are available in the native iOS/Android build. To test subscriptions:\n\n1. Build the app with EAS Build or expo prebuild\n2. Configure Superwall in your Superwall dashboard\n3. Test on a physical device or TestFlight/Internal Testing',
+        [{ text: 'OK' }]
+      );
+      setIsProcessing(false);
     } catch (error) {
-      console.error('Error registering placement:', error);
+      console.error('Error showing subscription:', error);
       setIsProcessing(false);
       Alert.alert('Error', 'Failed to show subscription options. Please try again.');
     }
@@ -79,26 +51,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      // Superwall handles restore automatically through the SDK
-      // We just need to refresh the subscription status
+      // TODO: Superwall Integration - Restore purchases
       Alert.alert(
         'Restore Purchases',
-        'Checking for previous purchases...',
+        'Purchase restoration is available in the native build. Build the app with EAS Build to test this feature.',
         [{ text: 'OK' }]
       );
-      
-      // The subscription status will be updated automatically by Superwall
-      setTimeout(() => {
-        setIsProcessing(false);
-        if (subscriptionStatus?.status === 'ACTIVE') {
-          Alert.alert('Success', 'Your purchases have been restored!');
-          if (onDismiss) {
-            onDismiss();
-          }
-        } else {
-          Alert.alert('No Purchases Found', 'No previous purchases were found for this account.');
-        }
-      }, 2000);
+      setIsProcessing(false);
     } catch (error) {
       console.error('Restore purchases error:', error);
       setIsProcessing(false);
@@ -115,8 +74,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('User tapped Terms of Service');
     Linking.openURL('https://yourapp.com/terms');
   };
-
-  const isSubscribed = subscriptionStatus?.status === 'ACTIVE';
 
   return (
     <Modal
