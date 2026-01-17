@@ -6,24 +6,12 @@ import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadSubscriptionStatus, loadProfile } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const { isSubscribed, refreshSubscription } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    checkSubscriptionStatus();
-  }, []);
-
-  const checkSubscriptionStatus = async () => {
-    console.log('Welcome: Checking subscription status...');
-    const subscribed = await loadSubscriptionStatus();
-    console.log('Welcome: Subscription status:', subscribed);
-    setIsSubscribed(subscribed);
-    setIsLoading(false);
-  };
 
   const handleStartTrial = () => {
     console.log('User tapped Start 7-Day Free Trial button');
@@ -51,11 +39,12 @@ export default function WelcomeScreen() {
   const handlePaywallDismiss = async () => {
     console.log('Paywall dismissed');
     setShowPaywall(false);
-    // Re-check subscription status in case user subscribed
-    const subscribed = await loadSubscriptionStatus();
-    setIsSubscribed(subscribed);
     
-    // If user just subscribed, check if they have a profile and navigate accordingly
+    // Refresh subscription status from context
+    await refreshSubscription();
+    
+    // Check if user just subscribed
+    const subscribed = await loadSubscriptionStatus();
     if (subscribed) {
       const profile = await loadProfile();
       if (profile && profile.portionTargets) {
@@ -67,16 +56,6 @@ export default function WelcomeScreen() {
       }
     }
   };
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
