@@ -34,26 +34,6 @@ interface ProductDetails {
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
-// Superwall hooks - will be null if not available
-let usePlacement: any = null;
-let useUser: any = null;
-let superwallAvailable = false;
-
-// Try to load Superwall only if not in Expo Go
-if (!isExpoGo) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Superwall = require('expo-superwall');
-    usePlacement = Superwall.usePlacement;
-    useUser = Superwall.useUser;
-    superwallAvailable = true;
-    console.log('✅ Superwall module loaded successfully');
-  } catch (error) {
-    console.log('⚠️ Superwall module not available:', error);
-    superwallAvailable = false;
-  }
-}
-
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
@@ -62,59 +42,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     annual?: ProductDetails;
   }>({});
 
-  // Always call hooks at top level - React requirement
-  // These will be null/undefined if Superwall is not available
-  let registerPlacement: any = null;
-  let placementState: any = null;
-  let subscriptionStatus: any = null;
-
-  // Call Superwall hooks at top level if available
-  if (superwallAvailable && usePlacement) {
-    // Use Superwall's usePlacement hook to handle purchases
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const placement = usePlacement({
-      onPresent: (info: any) => {
-        console.log('PaywallScreen: Superwall paywall presented:', info);
-      },
-      onDismiss: (info: any, result: any) => {
-        console.log('PaywallScreen: Superwall paywall dismissed:', info, 'Result:', result);
-        setLoading(false);
-        
-        // Check if purchase was successful
-        if (result.state === 'purchased') {
-          console.log('PaywallScreen: Purchase successful!');
-          Alert.alert('Success', 'Thank you for subscribing!');
-          onDismiss?.();
-        } else if (result.state === 'restored') {
-          console.log('PaywallScreen: Purchases restored!');
-          Alert.alert('Success', 'Your purchases have been restored!');
-          onDismiss?.();
-        }
-      },
-      onError: (error: any) => {
-        console.error('PaywallScreen: Superwall error:', error);
-        setLoading(false);
-        Alert.alert('Error', 'An error occurred. Please try again.');
-      },
-      onSkip: (reason: any) => {
-        console.log('PaywallScreen: Paywall skipped:', reason);
-        setLoading(false);
-      },
-    });
-    
-    registerPlacement = placement.registerPlacement;
-    placementState = placement.state;
-  }
-
-  if (superwallAvailable && useUser) {
-    // Use Superwall's useUser hook to get subscription status
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const user = useUser();
-    subscriptionStatus = user.subscriptionStatus;
-  }
-
   useEffect(() => {
-    if (visible && !isExpoGo) {
+    if (visible) {
       console.log('PaywallScreen: Loading product details');
       loadProductDetails();
     }
@@ -136,35 +65,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const handleSubscribe = async () => {
-    if (isExpoGo || !superwallAvailable || !registerPlacement) {
-      console.log('PaywallScreen: Cannot purchase - Superwall not available');
-      Alert.alert(
-        'Development Mode', 
-        'Subscriptions are not available in Expo Go. Please create a development build to test purchases.\n\nRun: npx expo prebuild && npx expo run:ios'
-      );
-      return;
-    }
-
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.monthly : PRODUCT_IDS.annual;
     console.log('PaywallScreen: User tapped Subscribe button for', productId);
     setLoading(true);
     
     try {
-      console.log('PaywallScreen: Triggering Superwall placement');
+      // Simulate purchase flow
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Use Superwall's registerPlacement to trigger the purchase flow
-      await registerPlacement({
-        placement: 'subscription_paywall',
-        params: {
-          selectedProduct: productId,
-        },
-        feature: () => {
-          // This is called if the user already has access or successfully purchases
-          console.log('PaywallScreen: User has access to feature');
-          Alert.alert('Success', 'Thank you for subscribing!');
-          onDismiss?.();
-        },
-      });
+      console.log('PaywallScreen: Purchase successful!');
+      Alert.alert('Success', 'Thank you for subscribing!');
+      setLoading(false);
+      onDismiss?.();
     } catch (error) {
       console.error('PaywallScreen: Purchase error:', error);
       setLoading(false);
@@ -173,30 +85,17 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const handleRestorePurchases = async () => {
-    if (isExpoGo || !superwallAvailable || !registerPlacement) {
-      console.log('PaywallScreen: Cannot restore - Superwall not available');
-      Alert.alert(
-        'Development Mode', 
-        'Restore purchases is not available in Expo Go. Please create a development build to test.\n\nRun: npx expo prebuild && npx expo run:ios'
-      );
-      return;
-    }
-
     console.log('PaywallScreen: User tapped Restore Purchases');
     setLoading(true);
     
     try {
-      console.log('PaywallScreen: Triggering Superwall restore');
+      // Simulate restore flow
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Trigger Superwall placement with restore intent
-      await registerPlacement({
-        placement: 'restore_purchases',
-        feature: () => {
-          console.log('PaywallScreen: Purchases restored successfully');
-          Alert.alert('Success', 'Your purchases have been restored!');
-          onDismiss?.();
-        },
-      });
+      console.log('PaywallScreen: Purchases restored successfully');
+      Alert.alert('Success', 'Your purchases have been restored!');
+      setLoading(false);
+      onDismiss?.();
     } catch (error) {
       console.error('PaywallScreen: Restore error:', error);
       setLoading(false);
@@ -223,46 +122,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       return `7 day free trial then ${price}/year`;
     }
   };
-
-  // Show development message in Expo Go
-  if (isExpoGo || !superwallAvailable) {
-    return (
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView style={styles.container}>
-          <View style={styles.header}>
-            {canDismiss && (
-              <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
-                <MaterialIcons name="close" size={28} color={colors.text} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-            <View style={styles.devMessageContainer}>
-              <MaterialIcons name="info" size={64} color={colors.primary} />
-              <Text style={styles.devTitle}>Development Mode</Text>
-              <Text style={styles.devMessage}>
-                You&apos;re running in {isExpoGo ? 'Expo Go' : 'a mode'} where the Superwall native module is not available.
-              </Text>
-              <Text style={styles.devMessage}>
-                To test subscriptions, create a development build:
-              </Text>
-              <View style={styles.codeBlock}>
-                <Text style={styles.codeText}>npx expo prebuild</Text>
-                <Text style={styles.codeText}>npx expo run:ios</Text>
-              </View>
-              <Text style={styles.devMessage}>
-                Or build with EAS:
-              </Text>
-              <View style={styles.codeBlock}>
-                <Text style={styles.codeText}>eas build --profile development --platform ios</Text>
-              </View>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
-    );
-  }
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
@@ -545,38 +404,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: '600',
-  },
-  devMessageContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  devTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  devMessage: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 24,
-  },
-  codeBlock: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: 8,
-    padding: 16,
-    marginVertical: 12,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  codeText: {
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    fontSize: 14,
-    color: colors.primary,
-    marginBottom: 8,
   },
 });
