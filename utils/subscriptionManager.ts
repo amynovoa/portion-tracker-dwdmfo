@@ -3,7 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
-import * as InAppPurchases from 'expo-in-app-purchases';
+
+// Only import InAppPurchases on iOS
+let InAppPurchases: any = null;
+if (Platform.OS === 'ios') {
+  InAppPurchases = require('expo-in-app-purchases');
+}
 
 const TRIAL_START_KEY = '@portion_tracker_trial_start';
 const TRIAL_DURATION_DAYS = 7;
@@ -121,16 +126,21 @@ export async function initializeStoreKit(): Promise<boolean> {
       return false;
     }
 
+    if (!InAppPurchases) {
+      console.error('❌ InAppPurchases module not available');
+      return false;
+    }
+
     // Connect to the App Store
     await InAppPurchases.connectAsync();
     console.log('✅ Connected to App Store');
 
     // Set up purchase listener
-    InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }) => {
+    InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }: any) => {
       console.log('📱 Purchase listener triggered:', { responseCode, errorCode });
       
       if (responseCode === InAppPurchases.IAPResponseCode.OK) {
-        results?.forEach(async (purchase) => {
+        results?.forEach(async (purchase: any) => {
           console.log('✅ Purchase successful:', purchase.productId);
           
           // Acknowledge the purchase
@@ -169,6 +179,11 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     
     if (Platform.OS !== 'ios') {
       console.log('⚠️ Product details only available on iOS');
+      return null;
+    }
+
+    if (!InAppPurchases) {
+      console.error('❌ InAppPurchases module not available');
       return null;
     }
 
@@ -214,6 +229,13 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       return {
         success: false,
         error: 'Subscriptions are only available on iOS',
+      };
+    }
+
+    if (!InAppPurchases) {
+      return {
+        success: false,
+        error: 'InAppPurchases module not available',
       };
     }
 
@@ -293,6 +315,13 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       };
     }
 
+    if (!InAppPurchases) {
+      return {
+        success: false,
+        error: 'InAppPurchases module not available',
+      };
+    }
+
     // Check if TestFlight bypass is enabled
     const isTestFlight = isTestFlightBuild();
     const bypassEnabled = await getTestFlightBypassEnabled();
@@ -318,7 +347,7 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       console.log('✅ Found', results.length, 'previous purchases');
       
       // Check if any of the purchases are our subscription products
-      const hasSubscription = results.some(purchase => 
+      const hasSubscription = results.some((purchase: any) => 
         purchase.productId === PRODUCT_IDS.MONTHLY || 
         purchase.productId === PRODUCT_IDS.ANNUAL
       );
@@ -395,6 +424,11 @@ export async function checkAppStoreSubscription(): Promise<boolean> {
       return false;
     }
 
+    if (!InAppPurchases) {
+      console.log('⚠️ InAppPurchases module not available');
+      return false;
+    }
+
     // Check if TestFlight bypass is enabled
     const isTestFlight = isTestFlightBuild();
     const bypassEnabled = await getTestFlightBypassEnabled();
@@ -415,7 +449,7 @@ export async function checkAppStoreSubscription(): Promise<boolean> {
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
       // Check if any of the purchases are our subscription products
-      const hasSubscription = results.some(purchase => 
+      const hasSubscription = results.some((purchase: any) => 
         purchase.productId === PRODUCT_IDS.MONTHLY || 
         purchase.productId === PRODUCT_IDS.ANNUAL
       );
@@ -581,7 +615,7 @@ export async function shouldShowPaywall(): Promise<boolean> {
  */
 export async function disconnectStoreKit(): Promise<void> {
   try {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' && InAppPurchases) {
       await InAppPurchases.disconnectAsync();
       console.log('✅ Disconnected from App Store');
     }
