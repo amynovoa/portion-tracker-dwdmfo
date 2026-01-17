@@ -13,8 +13,8 @@ import {
   Platform,
   Switch,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { 
   purchaseProduct, 
@@ -33,342 +33,309 @@ interface PaywallScreenProps {
   canDismiss?: boolean;
 }
 
-type SubscriptionPlan = 'annual' | 'monthly';
+type SubscriptionPlan = 'monthly' | 'annual';
 
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
+  const [loading, setLoading] = useState(false);
+  const [isTestFlight, setIsTestFlight] = useState(false);
+  const [bypassEnabled, setBypassEnabled] = useState(false);
   const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [bypassEnabled, setBypassEnabled] = useState(false);
-  const [isTestFlight, setIsTestFlight] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
     if (visible) {
       loadInitialState();
+      loadProducts();
     }
   }, [visible]);
 
   const loadInitialState = async () => {
-    console.log('Loading paywall initial state...');
-    
-    // Check if TestFlight build
-    const testFlightBuild = isTestFlightBuild();
-    setIsTestFlight(testFlightBuild);
-    console.log('Is TestFlight build:', testFlightBuild);
-    
-    // Load bypass toggle state (only in TestFlight)
-    if (testFlightBuild) {
+    console.log('PaywallScreen: Loading initial state...');
+    const testFlight = isTestFlightBuild();
+    setIsTestFlight(testFlight);
+    console.log('PaywallScreen: Is TestFlight/Dev:', testFlight);
+
+    if (testFlight) {
       const bypass = await getTestFlightBypassEnabled();
       setBypassEnabled(bypass);
-      console.log('TestFlight bypass enabled:', bypass);
-    }
-    
-    // Load products on iOS
-    if (Platform.OS === 'ios') {
-      loadProducts();
-    } else {
-      setIsLoadingProducts(false);
+      console.log('PaywallScreen: Bypass enabled:', bypass);
     }
   };
 
   const loadProducts = async () => {
-    console.log('Loading product details from App Store...');
-    setIsLoadingProducts(true);
-    
+    console.log('PaywallScreen: Loading product details from App Store...');
+    setLoadingProducts(true);
+
     try {
       const [monthly, annual] = await Promise.all([
         getProductDetails(PRODUCT_IDS.MONTHLY),
         getProductDetails(PRODUCT_IDS.ANNUAL),
       ]);
-      
-      console.log('Monthly product:', monthly);
-      console.log('Annual product:', annual);
-      
+
+      console.log('PaywallScreen: Monthly product:', monthly);
+      console.log('PaywallScreen: Annual product:', annual);
+
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('PaywallScreen: Error loading products:', error);
     } finally {
-      setIsLoadingProducts(false);
+      setLoadingProducts(false);
     }
   };
 
   const handleBypassToggle = async (value: boolean) => {
-    console.log('User toggled TestFlight bypass to:', value);
+    console.log('PaywallScreen: Bypass toggle changed to:', value);
     setBypassEnabled(value);
     await setTestFlightBypassEnabled(value);
-    
-    Alert.alert(
-      'TestFlight Bypass ' + (value ? 'Enabled' : 'Disabled'),
-      value 
-        ? 'Purchases will be simulated. You can test the app without real purchases.'
-        : 'Real sandbox purchases are now enabled. Use a sandbox tester account to test purchases.',
-      [{ text: 'OK' }]
-    );
   };
 
   const handleSubscribe = async () => {
-    console.log('User tapped Subscribe button with plan:', selectedPlan);
-    setIsProcessing(true);
-    
+    console.log('User tapped Subscribe button');
+    console.log('Selected plan:', selectedPlan);
+
+    setLoading(true);
+
     try {
-      const productId = selectedPlan === 'annual' ? PRODUCT_IDS.ANNUAL : PRODUCT_IDS.MONTHLY;
-      console.log('🛒 Initiating purchase for product:', productId);
-      
+      const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
+      console.log('Purchasing product:', productId);
+
       const result = await purchaseProduct(productId);
-      
+      console.log('Purchase result:', result);
+
       if (result.success) {
-        console.log('✅ Purchase successful');
-        
-        let message = `Your ${selectedPlan} subscription is now active!\n\nThank you for subscribing!`;
-        
-        if (isTestFlight && bypassEnabled) {
-          message = `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated subscription.\n\nTo test real sandbox purchases, toggle the bypass switch to OFF.`;
-        } else if (isTestFlight) {
-          message = `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode: Real sandbox purchase completed.\n\nIn production, this will process real payments through the App Store.`;
-        }
-        
         Alert.alert(
-          'Subscription Activated',
-          message,
+          'Success!',
+          'Your subscription is now active. Enjoy unlimited access!',
           [
             {
               text: 'OK',
               onPress: () => {
-                console.log('Subscription successful, dismissing paywall');
-                if (onDismiss) {
-                  onDismiss();
-                }
-              }
-            }
+                console.log('User acknowledged subscription success');
+                onDismiss?.();
+              },
+            },
           ]
         );
       } else if (result.userCancelled) {
-        console.log('ℹ️ User cancelled purchase');
+        console.log('User cancelled purchase');
       } else {
-        console.error('❌ Purchase failed:', result.error);
         Alert.alert(
           'Purchase Failed',
-          result.error || 'Unable to complete purchase. Please try again.'
+          result.error || 'Unable to complete purchase. Please try again.',
+          [{ text: 'OK' }]
         );
       }
-      
-      setIsProcessing(false);
-    } catch (error) {
-      console.error('Error during purchase:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      setIsProcessing(false);
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      Alert.alert(
+        'Error',
+        error.message || 'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRestorePurchases = async () => {
     console.log('User tapped Restore Purchases button');
-    setIsProcessing(true);
-    
+
+    setLoading(true);
+
     try {
-      console.log('🔄 Restoring purchases from App Store...');
-      
       const result = await restorePurchases();
-      
+      console.log('Restore result:', result);
+
       if (result.success) {
-        console.log('✅ Restore successful');
-        
-        let message = 'Your subscription has been restored!\n\nThank you for being a subscriber!';
-        
-        if (isTestFlight && bypassEnabled) {
-          message = 'Your subscription has been restored!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated restore.\n\nTo test real sandbox restore, toggle the bypass switch to OFF.';
-        } else if (isTestFlight) {
-          message = 'Your subscription has been restored!\n\n✅ TestFlight Mode: Real sandbox restore completed.\n\nIn production, this will restore real App Store purchases.';
-        }
-        
         Alert.alert(
-          'Purchases Restored',
-          message,
+          'Success!',
+          'Your subscription has been restored.',
           [
             {
               text: 'OK',
               onPress: () => {
-                if (onDismiss) {
-                  onDismiss();
-                }
-              }
-            }
+                console.log('User acknowledged restore success');
+                onDismiss?.();
+              },
+            },
           ]
         );
       } else {
-        console.error('❌ Restore failed:', result.error);
         Alert.alert(
           'No Purchases Found',
-          result.error || 'We couldn\'t find any previous purchases to restore.\n\nIf you believe this is an error, please contact support.'
+          result.error || 'No previous purchases found to restore.',
+          [{ text: 'OK' }]
         );
       }
-      
-      setIsProcessing(false);
-    } catch (error) {
-      console.error('Restore purchases error:', error);
-      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
-      setIsProcessing(false);
+    } catch (error: any) {
+      console.error('Restore error:', error);
+      Alert.alert(
+        'Error',
+        error.message || 'Unable to restore purchases. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   const openPrivacyPolicy = () => {
-    console.log('User tapped Privacy Policy');
+    console.log('Opening privacy policy...');
     Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const openTermsOfService = () => {
-    console.log('User tapped Terms of Service');
-    Linking.openURL('https://www.apple.com/legal/internet-services/itunes/');
+    console.log('Opening terms of service...');
+    Linking.openURL('https://www.portiontrack.com/terms-of-service');
   };
 
-  // Use real product prices if available, otherwise use defaults
-  const monthlyPrice = monthlyProduct?.priceString || '$2.99';
-  const annualPrice = annualProduct?.priceString || '$24.99';
+  const getMonthlyPrice = () => {
+    if (loadingProducts) return '...';
+    return monthlyProduct?.priceString || '$9.99';
+  };
+
+  const getAnnualPrice = () => {
+    if (loadingProducts) return '...';
+    return annualProduct?.priceString || '$59.99';
+  };
+
+  const getAnnualMonthlyPrice = () => {
+    if (loadingProducts) return '...';
+    if (annualProduct) {
+      const annualPrice = parseFloat(annualProduct.price);
+      const monthlyEquivalent = (annualPrice / 12).toFixed(2);
+      return `${annualProduct.currencyCode === 'USD' ? '$' : ''}${monthlyEquivalent}`;
+    }
+    return '$4.99';
+  };
 
   return (
     <Modal
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={canDismiss ? onDismiss : undefined}
+      onRequestClose={() => {
+        if (canDismiss) {
+          console.log('User dismissed paywall');
+          onDismiss?.();
+        }
+      }}
     >
-      <SafeAreaView style={styles.container}>
-        {canDismiss && onDismiss && (
-          <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        {canDismiss && (
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => {
+              console.log('User tapped close button');
+              onDismiss?.();
+            }}
+          >
             <MaterialIcons name="close" size={28} color={colors.text} />
           </TouchableOpacity>
         )}
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-          {isTestFlight && (
-            <View style={styles.testFlightBanner}>
-              <View style={styles.testFlightHeader}>
-                <MaterialIcons name="info" size={20} color={colors.primary} />
-                <Text style={styles.testFlightTitle}>TestFlight Mode</Text>
-              </View>
-              
-              <View style={styles.bypassToggleContainer}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.bypassToggleLabel}>Bypass Purchases</Text>
-                  <Text style={styles.bypassToggleDescription}>
-                    {bypassEnabled 
-                      ? 'ON: Purchases are simulated (no real charges)'
-                      : 'OFF: Real sandbox purchases enabled'}
-                  </Text>
-                </View>
-                <Switch
-                  value={bypassEnabled}
-                  onValueChange={handleBypassToggle}
-                  trackColor={{ false: '#767577', true: colors.primary }}
-                  thumbColor={bypassEnabled ? '#FFFFFF' : '#f4f3f4'}
-                />
-              </View>
-              
-              <Text style={styles.testFlightText}>
-                {bypassEnabled 
-                  ? 'Toggle OFF to test real sandbox purchases with a sandbox tester account.'
-                  : 'Use a sandbox tester account to test purchases. In production, real App Store payments will be processed.'}
-              </Text>
-            </View>
-          )}
-
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
-            <Text style={styles.title}>7-day free trial.{'\n'}Cancel anytime.</Text>
+            <Text style={styles.title}>Unlock Premium</Text>
             <Text style={styles.subtitle}>
-              Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.
+              Get unlimited access to all features
             </Text>
           </View>
 
           <View style={styles.featuresContainer}>
-            <Text style={styles.featuresTitle}>Subscription includes:</Text>
-            <FeatureItem text="Unlimited portion tracking" />
-            <FeatureItem text="Custom portion targets" />
-            <FeatureItem text="Weight tracking & charts" />
-            <FeatureItem text="Adherence history & trends" />
-            <FeatureItem text="Daily reminders" />
+            <FeatureItem text="Track unlimited portions" />
+            <FeatureItem text="View detailed adherence history" />
+            <FeatureItem text="Customize portion targets" />
+            <FeatureItem text="Weight tracking & progress charts" />
+            <FeatureItem text="Daily reminders & celebrations" />
+            <FeatureItem text="Backup & restore your data" />
           </View>
 
-          {isLoadingProducts && Platform.OS === 'ios' ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Loading subscription options...</Text>
-            </View>
-          ) : (
-            <View style={styles.plansContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.planCard,
-                  selectedPlan === 'annual' && styles.planCardSelected,
-                ]}
-                onPress={() => setSelectedPlan('annual')}
-              >
-                <View style={styles.planHeader}>
-                  <View style={styles.planTitleContainer}>
-                    <Text style={styles.planTitle}>Annual</Text>
-                    <View style={styles.bestValueBadge}>
-                      <Text style={styles.bestValueText}>Best Value</Text>
-                    </View>
-                  </View>
-                  <View style={[
-                    styles.radioButton,
-                    selectedPlan === 'annual' && styles.radioButtonSelected,
-                  ]}>
-                    {selectedPlan === 'annual' && (
-                      <View style={styles.radioButtonInner} />
-                    )}
-                  </View>
+          <View style={styles.plansContainer}>
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                selectedPlan === 'annual' && styles.planCardSelected,
+              ]}
+              onPress={() => {
+                console.log('User selected annual plan');
+                setSelectedPlan('annual');
+              }}
+            >
+              {selectedPlan === 'annual' && (
+                <View style={styles.popularBadge}>
+                  <Text style={styles.popularText}>BEST VALUE</Text>
                 </View>
-                <Text style={styles.planPrice}>{annualPrice}</Text>
-              </TouchableOpacity>
+              )}
+              <View style={styles.planHeader}>
+                <Text style={styles.planName}>Annual</Text>
+                <Text style={styles.planPrice}>{getAnnualPrice()}/year</Text>
+              </View>
+              <Text style={styles.planDescription}>
+                Just {getAnnualMonthlyPrice()}/month
+              </Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  styles.planCard,
-                  selectedPlan === 'monthly' && styles.planCardSelected,
-                ]}
-                onPress={() => setSelectedPlan('monthly')}
-              >
-                <View style={styles.planHeader}>
-                  <Text style={styles.planTitle}>Monthly</Text>
-                  <View style={[
-                    styles.radioButton,
-                    selectedPlan === 'monthly' && styles.radioButtonSelected,
-                  ]}>
-                    {selectedPlan === 'monthly' && (
-                      <View style={styles.radioButtonInner} />
-                    )}
-                  </View>
-                </View>
-                <Text style={styles.planPrice}>{monthlyPrice}</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                selectedPlan === 'monthly' && styles.planCardSelected,
+              ]}
+              onPress={() => {
+                console.log('User selected monthly plan');
+                setSelectedPlan('monthly');
+              }}
+            >
+              <View style={styles.planHeader}>
+                <Text style={styles.planName}>Monthly</Text>
+                <Text style={styles.planPrice}>{getMonthlyPrice()}/month</Text>
+              </View>
+              <Text style={styles.planDescription}>Billed monthly</Text>
+            </TouchableOpacity>
+          </View>
+
+          {isTestFlight && (
+            <View style={styles.testFlightContainer}>
+              <View style={styles.testFlightHeader}>
+                <MaterialIcons name="bug-report" size={20} color={colors.warning} />
+                <Text style={styles.testFlightTitle}>TestFlight Mode</Text>
+              </View>
+              <View style={styles.testFlightToggle}>
+                <Text style={styles.testFlightLabel}>
+                  Bypass StoreKit (Testing Only)
+                </Text>
+                <Switch
+                  value={bypassEnabled}
+                  onValueChange={handleBypassToggle}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.surface}
+                />
+              </View>
+              <Text style={styles.testFlightDescription}>
+                {bypassEnabled
+                  ? '✅ Simulating purchases (no real charges)'
+                  : '⚠️ Using real StoreKit sandbox purchases'}
+              </Text>
             </View>
           )}
-
-          <View style={styles.legalContainer}>
-            <Text style={styles.legalText}>By clicking I agree to the </Text>
-            <TouchableOpacity onPress={openTermsOfService}>
-              <Text style={styles.legalLink}>Terms of Service</Text>
-            </TouchableOpacity>
-            <Text style={styles.legalText}> and{'\n'}</Text>
-            <TouchableOpacity onPress={openPrivacyPolicy}>
-              <Text style={styles.legalLink}>Privacy Policy</Text>
-            </TouchableOpacity>
-          </View>
 
           <TouchableOpacity
             style={[buttonStyles.primary, styles.subscribeButton]}
             onPress={handleSubscribe}
-            disabled={isProcessing || isLoadingProducts}
+            disabled={loading || loadingProducts}
           >
-            {isProcessing ? (
-              <ActivityIndicator color="#FFFFFF" />
+            {loading ? (
+              <ActivityIndicator color={colors.surface} />
             ) : (
               <Text style={buttonStyles.primaryText}>
-                {selectedPlan === 'annual' 
-                  ? `7 day free trial then ${annualPrice}/year`
-                  : `7 day free trial then ${monthlyPrice}/month`}
+                {loadingProducts ? 'Loading...' : 'Start Free Trial'}
               </Text>
             )}
           </TouchableOpacity>
@@ -376,14 +343,26 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           <TouchableOpacity
             style={styles.restoreButton}
             onPress={handleRestorePurchases}
-            disabled={isProcessing}
+            disabled={loading}
           >
-            {isProcessing ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : (
-              <Text style={styles.restoreButtonText}>Restore Purchases</Text>
-            )}
+            <Text style={styles.restoreButtonText}>Restore Purchases</Text>
           </TouchableOpacity>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              7-day free trial, then {selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}{' '}
+              {selectedPlan === 'monthly' ? 'per month' : 'per year'}. Cancel anytime.
+            </Text>
+            <View style={styles.footerLinks}>
+              <TouchableOpacity onPress={openPrivacyPolicy}>
+                <Text style={styles.footerLink}>Privacy Policy</Text>
+              </TouchableOpacity>
+              <Text style={styles.footerSeparator}>•</Text>
+              <TouchableOpacity onPress={openTermsOfService}>
+                <Text style={styles.footerLink}>Terms of Service</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -406,61 +385,22 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 8 : 48,
-    right: 16,
+    top: Platform.OS === 'ios' ? 60 : 20,
+    right: 20,
     zIndex: 10,
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
   },
-  content: {
+  scrollContent: {
     padding: 24,
-    paddingTop: 60,
-  },
-  testFlightBanner: {
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: colors.cardBackground,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  testFlightHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  testFlightTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  bypassToggleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  bypassToggleLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  bypassToggleDescription: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  testFlightText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 18,
+    paddingTop: Platform.OS === 'ios' ? 80 : 60,
   },
   header: {
     alignItems: 'center',
@@ -470,29 +410,20 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 40,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
   },
   featuresContainer: {
     marginBottom: 32,
   },
-  featuresTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 16,
-  },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   featureText: {
     fontSize: 16,
@@ -500,30 +431,34 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
   },
-  loadingContainer: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
   plansContainer: {
     marginBottom: 24,
   },
   planCard: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   planCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: '#FFE5E5',
+    backgroundColor: colors.primaryLight,
+  },
+  popularBadge: {
+    position: 'absolute',
+    top: -10,
+    right: 20,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  popularText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: colors.surface,
   },
   planHeader: {
     flexDirection: 'row',
@@ -531,67 +466,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  planTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  planTitle: {
-    fontSize: 24,
+  planName: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
   },
-  bestValueBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  bestValueText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   planPrice: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.primary,
   },
-  radioButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioButtonSelected: {
-    borderColor: colors.primary,
-  },
-  radioButtonInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  legalContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 16,
-  },
-  legalText: {
+  planDescription: {
     fontSize: 14,
     color: colors.textSecondary,
-    textAlign: 'center',
   },
-  legalLink: {
+  testFlightContainer: {
+    backgroundColor: colors.warningLight,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  testFlightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  testFlightTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.warning,
+    marginLeft: 8,
+  },
+  testFlightToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  testFlightLabel: {
     fontSize: 14,
-    color: colors.primary,
-    textDecorationLine: 'underline',
+    color: colors.text,
+    flex: 1,
+  },
+  testFlightDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   subscribeButton: {
     marginBottom: 16,
@@ -604,5 +526,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: '600',
+  },
+  footer: {
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerLink: {
+    fontSize: 12,
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
+  footerSeparator: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginHorizontal: 8,
   },
 });
