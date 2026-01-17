@@ -2,6 +2,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { loadSubscriptionStatus, saveSubscriptionStatus } from '@/utils/storage';
 import { useUser } from 'expo-superwall';
+import { hasValidSuperwallKey } from '@/utils/superwallConfig';
 import Constants from 'expo-constants';
 
 interface SubscriptionContextType {
@@ -17,13 +18,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Use Superwall's useUser hook to get real subscription status
+  // This will work in both Sandbox (TestFlight) and Production
   const { subscriptionStatus } = useUser();
 
   const refreshSubscription = async () => {
     console.log('📱 SubscriptionContext: Checking subscription status...');
+    
     try {
-      // Check Superwall subscription status first (production-ready)
-      if (subscriptionStatus) {
+      const hasValidKey = hasValidSuperwallKey();
+      
+      if (hasValidKey && subscriptionStatus) {
+        // Production mode: Use real Superwall subscription status
         const isActive = subscriptionStatus.status === 'ACTIVE';
         console.log('📱 Superwall subscription status:', subscriptionStatus.status, '-> isActive:', isActive);
         
@@ -31,8 +36,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         await saveSubscriptionStatus(isActive);
         setIsSubscribed(isActive);
       } else {
-        // Fallback to local storage if Superwall not available (dev mode)
-        console.log('📱 Superwall status not available, checking local storage...');
+        // Development/Testing mode: Use local storage
+        // This allows testing without a valid Superwall API key
+        console.log('📱 Using local storage for subscription status (dev/test mode)');
         const localStatus = await loadSubscriptionStatus();
         console.log('📱 Local storage status:', localStatus);
         setIsSubscribed(localStatus || false);

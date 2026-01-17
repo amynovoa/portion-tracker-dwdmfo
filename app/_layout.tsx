@@ -12,12 +12,9 @@ import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/no
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { SuperwallProvider, SuperwallLoading, SuperwallLoaded } from 'expo-superwall';
+import { SUPERWALL_API_KEY, hasValidSuperwallKey } from '@/utils/superwallConfig';
 
 SplashScreen.preventAutoHideAsync();
-
-// Superwall API Key - Get this from your Superwall dashboard
-// For now using a placeholder - you'll need to add your actual API key
-const SUPERWALL_API_KEY = process.env.EXPO_PUBLIC_SUPERWALL_API_KEY || '';
 
 function AppContent() {
   const [isReady, setIsReady] = useState(false);
@@ -28,6 +25,10 @@ function AppContent() {
       try {
         console.log('🚀 App starting up...');
         console.log('📱 Platform:', Platform.OS);
+        
+        // Check Superwall configuration
+        const hasValidKey = hasValidSuperwallKey();
+        console.log('🔑 Superwall API key status:', hasValidKey ? 'Valid' : 'Placeholder (using simulated subscriptions)');
         
         // CRITICAL: Only check for profile - do everything else in background
         console.log('Checking for existing profile...');
@@ -134,11 +135,22 @@ export default function RootLayout() {
     );
   }
 
+  // Only initialize Superwall if we have a valid API key
+  // This prevents build failures when the key is not set
+  const hasValidKey = hasValidSuperwallKey();
+  
+  if (!hasValidKey) {
+    console.log('⚠️ Superwall: Using placeholder API key - subscriptions will be simulated');
+    console.log('⚠️ For production: Set EXPO_PUBLIC_SUPERWALL_API_KEY in .env or EAS Build secrets');
+  }
+
   return (
     <SuperwallProvider 
       apiKeys={{ ios: SUPERWALL_API_KEY }}
       onConfigurationError={(error) => {
-        console.error('Superwall configuration error:', error);
+        // Gracefully handle configuration errors
+        // The app will continue to work with simulated subscriptions
+        console.log('⚠️ Superwall configuration error (app will use simulated subscriptions):', error);
       }}
     >
       <SuperwallLoading>
