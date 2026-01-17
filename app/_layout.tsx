@@ -11,8 +11,13 @@ import { colors } from '@/styles/commonStyles';
 import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { SuperwallProvider, SuperwallLoading, SuperwallLoaded } from 'expo-superwall';
 
 SplashScreen.preventAutoHideAsync();
+
+// Superwall API Key - Get this from your Superwall dashboard
+// For now using a placeholder - you'll need to add your actual API key
+const SUPERWALL_API_KEY = process.env.EXPO_PUBLIC_SUPERWALL_API_KEY || '';
 
 function AppContent() {
   const [isReady, setIsReady] = useState(false);
@@ -130,8 +135,22 @@ export default function RootLayout() {
   }
 
   return (
-    <SubscriptionProvider>
-      <AppContent />
-    </SubscriptionProvider>
+    <SuperwallProvider 
+      apiKeys={{ ios: SUPERWALL_API_KEY }}
+      onConfigurationError={(error) => {
+        console.error('Superwall configuration error:', error);
+      }}
+    >
+      <SuperwallLoading>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SuperwallLoading>
+      <SuperwallLoaded>
+        <SubscriptionProvider>
+          <AppContent />
+        </SubscriptionProvider>
+      </SuperwallLoaded>
+    </SuperwallProvider>
   );
 }

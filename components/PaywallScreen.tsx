@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { saveSubscriptionStatus } from '@/utils/storage';
 import Constants from 'expo-constants';
+import { usePlacement } from 'expo-superwall';
+import { PLACEMENTS } from '@/utils/superwallConfig';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -33,33 +35,87 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   // Check if running in TestFlight or development
   const isTestFlightOrDev = __DEV__ || Constants.appOwnership === 'expo';
 
+  // Use Superwall's usePlacement hook for real subscription handling
+  const { registerPlacement, state: placementState } = usePlacement({
+    onError: (error) => {
+      console.error('Superwall Placement Error:', error);
+      setIsProcessing(false);
+      Alert.alert('Error', 'Failed to show subscription options. Please try again.');
+    },
+    onPresent: (info) => {
+      console.log('Superwall Paywall Presented:', info);
+      setIsProcessing(false);
+    },
+    onDismiss: async (info, result) => {
+      console.log('Superwall Paywall Dismissed:', info, 'Result:', result);
+      setIsProcessing(false);
+      
+      // Check if user purchased
+      if (result.state === 'purchased' || result.state === 'restored') {
+        console.log('User subscribed successfully!');
+        await saveSubscriptionStatus(true);
+        Alert.alert(
+          'Success',
+          'Subscription activated!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('Subscription successful, dismissing paywall');
+                if (onDismiss) {
+                  onDismiss();
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        console.log('User dismissed paywall without purchasing');
+      }
+    },
+  });
+
   const handleSubscribe = async () => {
     console.log('User tapped Subscribe button with plan:', selectedPlan);
     setIsProcessing(true);
     
     try {
-      // In TestFlight/dev, simulate successful subscription
-      console.log('TestFlight/Dev mode: Simulating successful subscription');
-      await saveSubscriptionStatus(true);
-      Alert.alert(
-        'Success',
-        'Subscription activated! (TestFlight/Dev mode)',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              console.log('Subscription successful, dismissing paywall');
-              if (onDismiss) {
-                onDismiss();
+      if (isTestFlightOrDev) {
+        // In TestFlight/dev, simulate successful subscription
+        console.log('TestFlight/Dev mode: Simulating successful subscription');
+        await saveSubscriptionStatus(true);
+        Alert.alert(
+          'Success',
+          'Subscription activated! (TestFlight/Dev mode)',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('Subscription successful, dismissing paywall');
+                if (onDismiss) {
+                  onDismiss();
+                }
               }
             }
-          }
-        ]
-      );
+          ]
+        );
+        setIsProcessing(false);
+      } else {
+        // In production, use Superwall to show the paywall
+        console.log('Production mode: Triggering Superwall paywall');
+        await registerPlacement({
+          placement: PLACEMENTS.onboarding,
+          feature: () => {
+            console.log('User already has access or just subscribed');
+            if (onDismiss) {
+              onDismiss();
+            }
+          },
+        });
+      }
     } catch (error) {
       console.error('Error showing subscription:', error);
       Alert.alert('Error', 'Failed to show subscription options. Please try again.');
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -69,28 +125,54 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      // In TestFlight/dev, simulate successful restore
-      console.log('TestFlight/Dev mode: Simulating successful restore');
-      await saveSubscriptionStatus(true);
-      Alert.alert(
-        'Success',
-        'Purchases restored! (TestFlight/Dev mode)',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              console.log('Restore successful, dismissing paywall');
-              if (onDismiss) {
-                onDismiss();
+      if (isTestFlightOrDev) {
+        // In TestFlight/dev, simulate successful restore
+        console.log('TestFlight/Dev mode: Simulating successful restore');
+        await saveSubscriptionStatus(true);
+        Alert.alert(
+          'Success',
+          'Purchases restored! (TestFlight/Dev mode)',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('Restore successful, dismissing paywall');
+                if (onDismiss) {
+                  onDismiss();
+                }
               }
             }
-          }
-        ]
-      );
+          ]
+        );
+        setIsProcessing(false);
+      } else {
+        // In production, Superwall handles restore automatically
+        // We can trigger the paywall which will check for existing subscriptions
+        console.log('Production mode: Triggering Superwall for restore');
+        await registerPlacement({
+          placement: PLACEMENTS.onboarding,
+          feature: () => {
+            console.log('Purchases restored successfully');
+            Alert.alert(
+              'Success',
+              'Purchases restored!',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    if (onDismiss) {
+                      onDismiss();
+                    }
+                  }
+                }
+              ]
+            );
+          },
+        });
+      }
     } catch (error) {
       console.error('Restore purchases error:', error);
       Alert.alert('Error', 'Failed to restore purchases. Please try again.');
-    } finally {
       setIsProcessing(false);
     }
   };

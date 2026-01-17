@@ -8,16 +8,49 @@
  * IMPORTANT: Superwall requires a native build and proper App Store Connect setup.
  * For TestFlight and development builds, the app uses simulated subscriptions.
  * 
- * TO SET UP SUPERWALL:
- * 1. Create an account at https://superwall.com
- * 2. Get your API key from the Superwall dashboard
- * 3. Replace the SUPERWALL_API_KEY below with your actual key
- * 4. Configure your products in App Store Connect
- * 5. Configure placements in the Superwall dashboard
+ * TO SET UP SUPERWALL FOR PRODUCTION:
+ * 
+ * 1. CREATE SUPERWALL ACCOUNT:
+ *    - Go to https://superwall.com and create an account
+ *    - Create a new app in the Superwall dashboard
+ * 
+ * 2. GET YOUR API KEY:
+ *    - In Superwall dashboard, go to Settings > API Keys
+ *    - Copy your iOS API key
+ *    - Add it to your .env file: EXPO_PUBLIC_SUPERWALL_API_KEY=your_key_here
+ *    - Or set it as an environment variable in EAS Build secrets
+ * 
+ * 3. CONFIGURE PRODUCTS IN APP STORE CONNECT:
+ *    - Go to App Store Connect > Your App > Subscriptions
+ *    - Create two subscription products:
+ *      * Product ID: portiontrack.monthly (Monthly subscription)
+ *      * Product ID: portiontrack.annual (Annual subscription)
+ *    - Set up pricing and trial periods (7-day free trial)
+ * 
+ * 4. CONFIGURE PRODUCTS IN SUPERWALL:
+ *    - In Superwall dashboard, go to Products
+ *    - Add your App Store Connect products:
+ *      * portiontrack.monthly
+ *      * portiontrack.annual
+ * 
+ * 5. CREATE PLACEMENT IN SUPERWALL:
+ *    - In Superwall dashboard, go to Placements
+ *    - Create a placement named: "onboarding_paywall"
+ *    - Design your paywall UI in the Superwall editor
+ *    - Add your products to the paywall
+ * 
+ * 6. BUILD AND TEST:
+ *    - Build your app with EAS Build: eas build --platform ios --profile production
+ *    - Test in TestFlight with real subscriptions
+ *    - Submit to App Store
+ * 
+ * DEVELOPER INFO:
+ * - Apple Team ID: 9978T8842P (already configured in app.json and eas.json)
+ * - Bundle ID: com.portiontracker.app
  */
 
 // Superwall API Key - Get this from your Superwall dashboard
-// For development/TestFlight, the app will work without a valid key
+// For development/TestFlight, the app will work without a valid key (uses simulated subscriptions)
 // For production, you MUST set a valid Superwall API key
 export const SUPERWALL_API_KEY = process.env.EXPO_PUBLIC_SUPERWALL_API_KEY || '';
 

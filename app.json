@@ -53,7 +53,8 @@
           "photosPermission": "This app needs access to your photo library to select meal photos.",
           "cameraPermission": "This app uses the camera to take photos of your meals for tracking purposes."
         }
-      ]
+      ],
+      "expo-superwall"
     ],
     "scheme": "portiontracker",
     "experiments": {
