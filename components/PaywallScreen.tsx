@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,15 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { purchaseProduct, restorePurchases, PRODUCT_IDS, isTestFlightBuild } from '@/utils/subscriptionManager';
+import { 
+  purchaseProduct, 
+  restorePurchases, 
+  PRODUCT_IDS, 
+  isTestFlightBuild,
+  isTestFlightBypassEnabled,
+  getProductDetails,
+  ProductDetails
+} from '@/utils/subscriptionManager';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -28,6 +36,37 @@ type SubscriptionPlan = 'annual' | 'monthly';
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
+  const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
+  const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    if (visible && Platform.OS === 'ios') {
+      loadProducts();
+    }
+  }, [visible]);
+
+  const loadProducts = async () => {
+    console.log('Loading product details from App Store...');
+    setIsLoadingProducts(true);
+    
+    try {
+      const [monthly, annual] = await Promise.all([
+        getProductDetails(PRODUCT_IDS.MONTHLY),
+        getProductDetails(PRODUCT_IDS.ANNUAL),
+      ]);
+      
+      console.log('Monthly product:', monthly);
+      console.log('Annual product:', annual);
+      
+      setMonthlyProduct(monthly);
+      setAnnualProduct(annual);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
 
   const handleSubscribe = async () => {
     console.log('User tapped Subscribe button with plan:', selectedPlan);
@@ -43,12 +82,19 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         console.log('✅ Purchase successful');
         
         const isTestFlight = isTestFlightBuild();
+        const bypassEnabled = isTestFlightBypassEnabled();
+        
+        let message = `Your ${selectedPlan} subscription is now active!\n\nThank you for subscribing!`;
+        
+        if (isTestFlight && bypassEnabled) {
+          message = `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated subscription.\n\nTo test real sandbox purchases, set EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false in .env`;
+        } else if (isTestFlight) {
+          message = `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode: Real sandbox purchase completed.\n\nIn production, this will process real payments through the App Store.`;
+        }
         
         Alert.alert(
           'Subscription Activated',
-          isTestFlight 
-            ? `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode: Using simulated subscription.\n\nIn production, this will process real payments through the App Store.`
-            : `Your ${selectedPlan} subscription is now active!\n\nThank you for subscribing!`,
+          message,
           [
             {
               text: 'OK',
@@ -92,12 +138,19 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         console.log('✅ Restore successful');
         
         const isTestFlight = isTestFlightBuild();
+        const bypassEnabled = isTestFlightBypassEnabled();
+        
+        let message = 'Your subscription has been restored!\n\nThank you for being a subscriber!';
+        
+        if (isTestFlight && bypassEnabled) {
+          message = 'Your subscription has been restored!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated restore.\n\nTo test real sandbox restore, set EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false in .env';
+        } else if (isTestFlight) {
+          message = 'Your subscription has been restored!\n\n✅ TestFlight Mode: Real sandbox restore completed.\n\nIn production, this will restore real App Store purchases.';
+        }
         
         Alert.alert(
           'Purchases Restored',
-          isTestFlight
-            ? 'Your subscription has been restored!\n\n✅ TestFlight Mode: Using simulated restore.\n\nIn production, this will restore real App Store purchases.'
-            : 'Your subscription has been restored!\n\nThank you for being a subscriber!',
+          message,
           [
             {
               text: 'OK',
@@ -113,7 +166,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         console.error('❌ Restore failed:', result.error);
         Alert.alert(
           'No Purchases Found',
-          'We couldn\'t find any previous purchases to restore.\n\nIf you believe this is an error, please contact support.'
+          result.error || 'We couldn\'t find any previous purchases to restore.\n\nIf you believe this is an error, please contact support.'
         );
       }
       
@@ -136,6 +189,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const isTestFlight = isTestFlightBuild();
+  const bypassEnabled = isTestFlightBypassEnabled();
+
+  // Use real product prices if available, otherwise use defaults
+  const monthlyPrice = monthlyProduct?.priceString || '$2.99';
+  const annualPrice = annualProduct?.priceString || '$24.99';
 
   return (
     <Modal
@@ -168,54 +226,61 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             <FeatureItem text="Daily reminders" />
           </View>
 
-          <View style={styles.plansContainer}>
-            <TouchableOpacity
-              style={[
-                styles.planCard,
-                selectedPlan === 'annual' && styles.planCardSelected,
-              ]}
-              onPress={() => setSelectedPlan('annual')}
-            >
-              <View style={styles.planHeader}>
-                <View style={styles.planTitleContainer}>
-                  <Text style={styles.planTitle}>Annual</Text>
-                  <View style={styles.bestValueBadge}>
-                    <Text style={styles.bestValueText}>Best Value</Text>
+          {isLoadingProducts && Platform.OS === 'ios' ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Loading subscription options...</Text>
+            </View>
+          ) : (
+            <View style={styles.plansContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'annual' && styles.planCardSelected,
+                ]}
+                onPress={() => setSelectedPlan('annual')}
+              >
+                <View style={styles.planHeader}>
+                  <View style={styles.planTitleContainer}>
+                    <Text style={styles.planTitle}>Annual</Text>
+                    <View style={styles.bestValueBadge}>
+                      <Text style={styles.bestValueText}>Best Value</Text>
+                    </View>
+                  </View>
+                  <View style={[
+                    styles.radioButton,
+                    selectedPlan === 'annual' && styles.radioButtonSelected,
+                  ]}>
+                    {selectedPlan === 'annual' && (
+                      <View style={styles.radioButtonInner} />
+                    )}
                   </View>
                 </View>
-                <View style={[
-                  styles.radioButton,
-                  selectedPlan === 'annual' && styles.radioButtonSelected,
-                ]}>
-                  {selectedPlan === 'annual' && (
-                    <View style={styles.radioButtonInner} />
-                  )}
-                </View>
-              </View>
-              <Text style={styles.planPrice}>$24.99</Text>
-            </TouchableOpacity>
+                <Text style={styles.planPrice}>{annualPrice}</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.planCard,
-                selectedPlan === 'monthly' && styles.planCardSelected,
-              ]}
-              onPress={() => setSelectedPlan('monthly')}
-            >
-              <View style={styles.planHeader}>
-                <Text style={styles.planTitle}>Monthly</Text>
-                <View style={[
-                  styles.radioButton,
-                  selectedPlan === 'monthly' && styles.radioButtonSelected,
-                ]}>
-                  {selectedPlan === 'monthly' && (
-                    <View style={styles.radioButtonInner} />
-                  )}
+              <TouchableOpacity
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'monthly' && styles.planCardSelected,
+                ]}
+                onPress={() => setSelectedPlan('monthly')}
+              >
+                <View style={styles.planHeader}>
+                  <Text style={styles.planTitle}>Monthly</Text>
+                  <View style={[
+                    styles.radioButton,
+                    selectedPlan === 'monthly' && styles.radioButtonSelected,
+                  ]}>
+                    {selectedPlan === 'monthly' && (
+                      <View style={styles.radioButtonInner} />
+                    )}
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.planPrice}>$2.99</Text>
-            </TouchableOpacity>
-          </View>
+                <Text style={styles.planPrice}>{monthlyPrice}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.legalContainer}>
             <Text style={styles.legalText}>By clicking I agree to the </Text>
@@ -231,15 +296,15 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           <TouchableOpacity
             style={[buttonStyles.primary, styles.subscribeButton]}
             onPress={handleSubscribe}
-            disabled={isProcessing}
+            disabled={isProcessing || isLoadingProducts}
           >
             {isProcessing ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={buttonStyles.primaryText}>
                 {selectedPlan === 'annual' 
-                  ? '7 day free trial then $24.99/year'
-                  : '7 day free trial then $2.99/month'}
+                  ? `7 day free trial then ${annualPrice}/year`
+                  : `7 day free trial then ${monthlyPrice}/month`}
               </Text>
             )}
           </TouchableOpacity>
@@ -259,10 +324,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           {isTestFlight && (
             <View style={styles.testFlightBanner}>
               <MaterialIcons name="info" size={20} color={colors.primary} />
-              <Text style={styles.testFlightText}>
-                TestFlight Mode: Subscriptions are simulated for testing.{'\n'}
-                In production, real App Store payments will be processed.
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.testFlightText}>
+                  {bypassEnabled 
+                    ? '✅ TestFlight Mode (Bypass Enabled): Subscriptions are simulated.\n\nTo test real sandbox purchases, set EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false in .env'
+                    : '✅ TestFlight Mode: Real sandbox purchases enabled.\n\nUse a sandbox tester account to test purchases. In production, real App Store payments will be processed.'}
+                </Text>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -336,6 +404,16 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginLeft: 12,
     flex: 1,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
   },
   plansContainer: {
     marginBottom: 24,
@@ -444,7 +522,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   testFlightText: {
-    flex: 1,
     fontSize: 13,
     color: colors.textSecondary,
     lineHeight: 20,

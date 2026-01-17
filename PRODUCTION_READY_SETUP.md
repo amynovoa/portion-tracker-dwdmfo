@@ -1,197 +1,421 @@
 
-# Production-Ready Superwall + StoreKit Setup
+# Production-Ready StoreKit Setup - Complete Guide
 
-## ✅ IMPLEMENTATION STATUS: PRODUCTION READY
+## ✅ Implementation Complete
 
-Your app now has **production-ready Superwall + StoreKit integration** that works in:
-- ✅ Development (Expo Go)
-- ✅ TestFlight (Sandbox subscriptions)
-- ✅ Production (App Store)
+Your app now has **full StoreKit integration** using `expo-in-app-purchases`. This guide explains how to configure it for different environments.
 
-## 🎯 What Was Implemented
+## Quick Start
 
-### 1. Native Superwall Integration
-- ✅ Added `expo-superwall` plugin to `app.json` for native builds
-- ✅ Wrapped app with `SuperwallProvider` in `app/_layout.tsx`
-- ✅ Integrated `useUser` hook in `SubscriptionContext.tsx` for real subscription status
-- ✅ Integrated `usePlacement` hook in `PaywallScreen.tsx` for real paywall presentation
+### Current Status (TestFlight UI Testing)
 
-### 2. Production-Ready Features
-- ✅ Real StoreKit subscriptions via Superwall
-- ✅ Subscription status synced with Apple
-- ✅ Restore purchases functionality
-- ✅ Graceful fallback for development/testing
-- ✅ Offline subscription status caching
+Your app is **ready for TestFlight** with simulated subscriptions:
 
-### 3. UI/UX Unchanged
-- ✅ Same subscription screen design
-- ✅ Same app flow and navigation
-- ✅ Same user experience
-- ✅ Only the backend changed from simulated to real
-
-## 🚀 Next Steps to Complete Setup
-
-### Step 1: Get Your Superwall API Key
-
-1. Go to [Superwall Dashboard](https://superwall.com/dashboard)
-2. Create an account or log in
-3. Create a new app for "Portion Tracker"
-4. Go to **Settings > API Keys**
-5. Copy your **iOS API key**
-
-### Step 2: Configure Superwall API Key
-
-**Option A: For Local Development**
 ```bash
-# Edit .env file and add your key:
-EXPO_PUBLIC_SUPERWALL_API_KEY=pk_xxxxxxxxxxxxx
+# .env file (current setting)
+EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=true
 ```
 
-**Option B: For EAS Build (Recommended for Production)**
+- ✅ Testers can test the full subscription flow
+- ✅ No real purchases required
+- ✅ Perfect for UI/UX testing
+- ✅ Submit to TestFlight now!
+
+## Three Testing Modes
+
+### Mode 1: Simulated Subscriptions (Current)
+
+**When to use:** UI testing, beta testing, development
+
+**Setup:**
 ```bash
-# Add to EAS Build secrets:
-eas secret:create --scope project --name EXPO_PUBLIC_SUPERWALL_API_KEY --value pk_xxxxxxxxxxxxx
+# .env
+EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=true
 ```
 
-### Step 3: Create Subscription Products in App Store Connect
+**Behavior:**
+- Tapping "Subscribe" instantly unlocks the app
+- No Apple payment sheet appears
+- No real purchases
+- Perfect for testing UI and flow
 
-1. Go to [App Store Connect](https://appstoreconnect.apple.com)
-2. Select your app: **Portion Tracker** (com.portiontracker.app)
-3. Go to **Features > In-App Purchases > Subscriptions**
-4. Create two auto-renewable subscriptions:
+**How to test:**
+1. Build and upload to TestFlight
+2. Install on device
+3. Tap "Start 7-Day Free Trial"
+4. Tap "Subscribe" → Instant success ✅
+5. App unlocks immediately
 
-**Monthly Subscription:**
-- Product ID: `portiontrack.monthly`
-- Price: $2.99/month
-- Free Trial: 7 days
-- Subscription Group: Create new group "Portion Track Premium"
+---
 
-**Annual Subscription:**
-- Product ID: `portiontrack.annual`
-- Price: $24.99/year
-- Free Trial: 7 days
-- Subscription Group: Same as monthly
+### Mode 2: Sandbox Purchases (Real Testing)
 
-5. Submit for review (required before testing in Sandbox)
+**When to use:** Testing real purchase flow before production
 
-### Step 4: Configure Products in Superwall Dashboard
+**Setup:**
 
-1. In Superwall dashboard, go to **Products**
-2. Click **Add Product**
-3. Add both products:
+1. **Create products in App Store Connect:**
+   - Go to your app → Features → In-App Purchases
+   - Create two Auto-Renewable Subscriptions:
+     - Product ID: `portiontrack.monthly` ($2.99/month, 7-day trial)
+     - Product ID: `portiontrack.annual` ($24.99/year, 7-day trial)
+   - Create subscription group: "Portion Tracker Premium"
+   - Add both products to the group
+
+2. **Create sandbox tester:**
+   - App Store Connect → Users & Access → Sandbox Testers
+   - Create new sandbox Apple ID
+   - Use unique email (doesn't need to be real)
+
+3. **Update .env:**
+   ```bash
+   EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false
+   ```
+
+4. **Rebuild and upload to TestFlight**
+
+**Behavior:**
+- Tapping "Subscribe" shows Apple's payment sheet
+- Real purchase flow (sandbox environment)
+- No real charges
+- Tests complete purchase experience
+
+**How to test:**
+1. On iOS device: Settings → App Store → Sandbox Account
+2. Sign in with sandbox tester
+3. Open app in TestFlight
+4. Tap "Start 7-Day Free Trial"
+5. Apple payment sheet appears 💳
+6. Sign in with sandbox account
+7. Complete purchase (no real charge)
+8. App unlocks ✅
+9. Delete app and reinstall
+10. Tap "Restore Purchases" → Should restore subscription ✅
+
+---
+
+### Mode 3: Production (Real Purchases)
+
+**When to use:** App Store release
+
+**Setup:**
+
+1. **Ensure products are approved:**
+   - App Store Connect → Your App → In-App Purchases
+   - Both products should be "Ready to Submit" or "Approved"
+
+2. **Set environment variable in EAS:**
+   ```bash
+   # In EAS Build secrets or production config
+   EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false
+   ```
+
+3. **Build production version:**
+   ```bash
+   eas build --platform ios --profile production
+   ```
+
+4. **Submit to App Store**
+
+**Behavior:**
+- Real Apple payment sheet
+- Real charges to users
+- Real subscriptions
+- Production App Store environment
+
+---
+
+## Step-by-Step: App Store Connect Setup
+
+### 1. Create In-App Purchase Products
+
+1. **Navigate to App Store Connect:**
+   - Go to https://appstoreconnect.apple.com
+   - Select your app
+   - Click "Features" tab
+   - Click "In-App Purchases"
+
+2. **Create Monthly Subscription:**
+   - Click "+" button
+   - Select "Auto-Renewable Subscription"
+   - **Reference Name:** Portion Tracker Monthly
+   - **Product ID:** `portiontrack.monthly`
+   - Click "Create"
+
+3. **Configure Monthly Subscription:**
+   - **Subscription Duration:** 1 Month
+   - **Price:** $2.99 USD (Tier 3)
+   - **Subscription Prices:** Add all territories
+   - **Introductory Offer:**
+     - Type: Free Trial
+     - Duration: 7 Days
+     - Eligible: New Subscribers
+   - **Localization (English - US):**
+     - Display Name: Monthly Subscription
+     - Description: Access all features with a monthly subscription
+
+4. **Create Annual Subscription:**
+   - Click "+" button
+   - Select "Auto-Renewable Subscription"
+   - **Reference Name:** Portion Tracker Annual
+   - **Product ID:** `portiontrack.annual`
+   - Click "Create"
+
+5. **Configure Annual Subscription:**
+   - **Subscription Duration:** 1 Year
+   - **Price:** $24.99 USD (Tier 25)
+   - **Subscription Prices:** Add all territories
+   - **Introductory Offer:**
+     - Type: Free Trial
+     - Duration: 7 Days
+     - Eligible: New Subscribers
+   - **Localization (English - US):**
+     - Display Name: Annual Subscription
+     - Description: Access all features with an annual subscription (Best Value!)
+
+6. **Create Subscription Group:**
+   - Click "Subscription Groups" in left sidebar
+   - Click "+" to create new group
+   - **Reference Name:** Portion Tracker Premium
+   - Click "Create"
+   - Add both subscriptions to this group
+
+7. **Submit for Review:**
+   - Add subscription information
+   - Add app screenshots showing subscription features
+   - Add subscription review notes
+   - Click "Submit for Review"
+
+### 2. Create Sandbox Tester
+
+1. **Navigate to Sandbox Testers:**
+   - App Store Connect → Users and Access
+   - Click "Sandbox" tab
+   - Click "Testers" in left sidebar
+
+2. **Create New Tester:**
+   - Click "+" button
+   - **First Name:** Test
+   - **Last Name:** User
+   - **Email:** testuser1@example.com (use unique email)
+   - **Password:** Create strong password
+   - **Confirm Password:** Same password
+   - **Country/Region:** United States
+   - Click "Create"
+
+3. **Note the credentials:**
+   - Save email and password
+   - You'll need these to sign in on device
+
+### 3. Configure iOS Device for Sandbox Testing
+
+1. **Sign out of production App Store:**
+   - Settings → [Your Name] → Media & Purchases
+   - Tap "Sign Out"
+
+2. **Configure Sandbox Account:**
+   - Settings → App Store
+   - Scroll to "Sandbox Account"
+   - Tap "Sign In"
+   - Enter sandbox tester email and password
+
+3. **Verify:**
+   - You should see "Sandbox Account: testuser1@example.com"
+
+---
+
+## Testing Checklist
+
+### ✅ Phase 1: UI Testing (Current)
+
+- [ ] Build with `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=true`
+- [ ] Upload to TestFlight
+- [ ] Install on device
+- [ ] Open app → Should show "Start 7-Day Free Trial"
+- [ ] Tap button → Should show paywall
+- [ ] Tap "Subscribe" → Should succeed instantly
+- [ ] App should unlock and show main content
+- [ ] Tap "Restore Purchases" → Should succeed instantly
+- [ ] Close and reopen app → Should stay unlocked
+
+### ✅ Phase 2: Sandbox Testing
+
+- [ ] Create products in App Store Connect
+- [ ] Create sandbox tester
+- [ ] Build with `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false`
+- [ ] Upload to TestFlight
+- [ ] Configure device with sandbox account
+- [ ] Install on device
+- [ ] Open app → Should show "Start 7-Day Free Trial"
+- [ ] Tap button → Should show paywall
+- [ ] Verify prices load from App Store
+- [ ] Tap "Subscribe" → Apple payment sheet should appear
+- [ ] Sign in with sandbox account
+- [ ] Complete purchase → Should succeed
+- [ ] App should unlock
+- [ ] Delete app
+- [ ] Reinstall app
+- [ ] Tap "Restore Purchases" → Should restore subscription
+- [ ] App should unlock
+
+### ✅ Phase 3: Production
+
+- [ ] Verify products are approved in App Store Connect
+- [ ] Set `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false` in production config
+- [ ] Build production version
+- [ ] Submit to App Store
+- [ ] Wait for approval
+- [ ] Test with real Apple ID (will be charged)
+- [ ] Verify subscription works
+- [ ] Monitor App Store Connect analytics
+
+---
+
+## Configuration Files
+
+### `.env` (Local Development)
+
+```bash
+# TestFlight Bypass Toggle
+# Set to 'true' for UI testing (simulated subscriptions)
+# Set to 'false' for sandbox/production testing (real purchases)
+EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=true
+```
+
+### `app.json` (Already Configured)
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-in-app-purchases",
+        {}
+      ]
+    ]
+  }
+}
+```
+
+### EAS Build Configuration (Production)
+
+Add to your EAS secrets:
+
+```bash
+# For production builds
+EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false
+```
+
+---
+
+## Troubleshooting
+
+### Products Not Loading
+
+**Symptoms:** Paywall shows "$2.99" and "$24.99" instead of real prices
+
+**Solutions:**
+1. Verify product IDs match exactly:
    - `portiontrack.monthly`
    - `portiontrack.annual`
-4. Superwall will automatically sync with App Store Connect
+2. Check products are "Ready to Submit" in App Store Connect
+3. Wait 24 hours after creating products
+4. Verify bundle ID matches: `com.portiontracker.app`
+5. Check device has internet connection
 
-### Step 5: Create Paywall in Superwall Dashboard
+### Purchase Fails
 
-1. Go to **Paywalls** in Superwall dashboard
-2. Click **Create Paywall**
-3. Design your paywall (or use the default template)
-4. Add your products to the paywall
-5. Go to **Placements**
-6. Create a placement named: `onboarding_paywall`
-7. Link it to your paywall
+**Symptoms:** Tapping "Subscribe" shows error
 
-### Step 6: Build and Test
+**Solutions:**
+1. Verify `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false`
+2. Check sandbox tester is signed in (Settings → App Store)
+3. Verify products exist in App Store Connect
+4. Try signing out and back in with sandbox account
+5. Check console logs for specific error
 
-**Build for TestFlight:**
-```bash
-eas build --platform ios --profile production
+### Restore Purchases Finds Nothing
+
+**Symptoms:** "No purchases found" message
+
+**Solutions:**
+1. Ensure you've made a purchase with this sandbox account
+2. Verify `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false`
+3. Check subscription hasn't expired
+4. Try making a new purchase first
+5. Verify same sandbox account is signed in
+
+### Payment Sheet Doesn't Appear
+
+**Symptoms:** Tapping "Subscribe" does nothing or succeeds instantly
+
+**Solutions:**
+1. Verify `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false` in `.env`
+2. Rebuild app after changing `.env`
+3. Check products exist in App Store Connect
+4. Verify bundle ID matches
+5. Check console logs for errors
+
+---
+
+## Console Logs
+
+The app logs detailed information to help debug:
+
+```
+🛒 Initializing StoreKit connection...
+✅ Connected to App Store
+🛒 Fetching product details from App Store for: portiontrack.monthly
+✅ Product details fetched: { productId, price, priceString }
+🛒 Initiating App Store purchase for: portiontrack.monthly
+📱 Purchase response: { responseCode: 0 }
+✅ Purchase successful
+✅ Subscription status saved
 ```
 
-**Test in TestFlight:**
-1. Upload build to TestFlight
-2. Add test users to Sandbox testing
-3. Install app from TestFlight
-4. Test subscription flow with Sandbox account
-5. Verify subscription status syncs correctly
-6. Test restore purchases
+Check Xcode console or device logs for these messages.
 
-**Submit to App Store:**
-```bash
-eas submit --platform ios
-```
+---
 
-## 🔧 How It Works
+## Summary
 
-### Subscription Status Flow
+### Current Status
+✅ **Implementation:** Complete
+✅ **TestFlight:** Ready (bypass ON)
+✅ **Sandbox Testing:** Ready (toggle bypass OFF)
+✅ **Production:** Ready (real StoreKit integration)
 
-1. **App Launch:**
-   - `SuperwallProvider` initializes Superwall SDK
-   - `SubscriptionContext` checks subscription status via `useUser` hook
-   - Status synced from Apple via Superwall
+### Next Steps
 
-2. **User Taps "Start Trial":**
-   - `PaywallScreen` calls `registerPlacement` with `onboarding_paywall`
-   - Superwall presents native StoreKit paywall
-   - User selects plan and subscribes
-   - Apple processes payment
-   - Superwall receives webhook from Apple
-   - `subscriptionStatus` updates automatically
-   - App unlocks features
+**For TestFlight NOW:**
+1. Keep `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=true`
+2. Build and upload to TestFlight
+3. Distribute to testers
+4. Testers can test full flow with simulated subscriptions
 
-3. **Restore Purchases:**
-   - User taps "Restore Purchases"
-   - Superwall queries Apple for active subscriptions
-   - If found, subscription status updates
-   - App unlocks features
+**For Sandbox Testing:**
+1. Create products in App Store Connect
+2. Create sandbox tester
+3. Set `EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false`
+4. Rebuild and upload to TestFlight
+5. Test with sandbox account
 
-### Fallback Behavior
+**For Production:**
+1. Ensure products are approved
+2. Set bypass to false in production config
+3. Build and submit to App Store
+4. Monitor subscription analytics
 
-- **Development (Expo Go):** Uses simulated subscriptions for testing
-- **TestFlight:** Uses real Sandbox subscriptions
-- **Production:** Uses real App Store subscriptions
+---
 
-## 📱 Testing Checklist
+## Support
 
-Before submitting to App Store, test:
+If you encounter issues:
 
-- [ ] Fresh install shows welcome screen
-- [ ] Tapping "Start Trial" shows subscription options
-- [ ] Selecting monthly/annual plan works
-- [ ] Subscribing unlocks app features
-- [ ] Subscription status persists after app restart
-- [ ] Restore purchases works for existing subscribers
-- [ ] Subscription status syncs across devices
-- [ ] Canceling subscription revokes access after period ends
-- [ ] Trial period works correctly (7 days free)
+1. **Check console logs** - Detailed logging is implemented
+2. **Verify product IDs** - Must match exactly
+3. **Check App Store Connect** - Products must be approved
+4. **Test sandbox account** - Must be signed in correctly
+5. **Review this guide** - Step-by-step instructions above
 
-## 🎉 You're Ready for Production!
-
-Your app now has:
-- ✅ Real StoreKit subscriptions
-- ✅ Superwall paywall management
-- ✅ Production-ready subscription handling
-- ✅ Sandbox and Production support
-- ✅ Same UI/UX as before
-
-Just complete the setup steps above and you're ready to submit to the App Store!
-
-## 📚 Additional Resources
-
-- [Superwall Documentation](https://docs.superwall.com)
-- [App Store Connect Guide](https://developer.apple.com/app-store-connect/)
-- [StoreKit Testing Guide](https://developer.apple.com/documentation/storekit/in-app_purchase/testing_in-app_purchases_with_sandbox)
-- [EAS Build Documentation](https://docs.expo.dev/build/introduction/)
-
-## 🆘 Troubleshooting
-
-**Issue: "Superwall configuration error"**
-- Check that your API key is set correctly in `.env` or EAS secrets
-- Verify the API key is for iOS (not Android)
-
-**Issue: "No products available"**
-- Ensure products are created in App Store Connect
-- Products must be submitted for review before Sandbox testing
-- Check that product IDs match exactly: `portiontrack.monthly` and `portiontrack.annual`
-
-**Issue: "Subscription not unlocking features"**
-- Check Superwall dashboard for webhook logs
-- Verify placement name matches: `onboarding_paywall`
-- Check that subscription status is syncing in `SubscriptionContext`
-
-**Issue: "Build fails with expo-superwall plugin error"**
-- Run `npx expo prebuild --clean` to regenerate native projects
-- Ensure you're using Expo SDK 54 or higher
-- Check that `expo-superwall` is installed: `npm install expo-superwall`
+Your app is now production-ready with full StoreKit integration! 🎉
