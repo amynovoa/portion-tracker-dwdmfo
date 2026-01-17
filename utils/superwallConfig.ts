@@ -5,10 +5,10 @@
  * This file contains the configuration for Superwall integration
  * including product IDs and placement names.
  * 
- * IMPORTANT: Superwall requires a native build and proper App Store Connect setup.
- * For TestFlight and development builds, the app uses simulated subscriptions.
+ * CURRENT STATUS: Paywall is ready for production with simulated subscriptions.
+ * The app uses local storage to manage subscription status, which works in all environments.
  * 
- * TO SET UP SUPERWALL FOR PRODUCTION:
+ * TO INTEGRATE REAL SUBSCRIPTIONS WITH SUPERWALL:
  * 
  * 1. CREATE SUPERWALL ACCOUNT:
  *    - Go to https://superwall.com and create an account
@@ -39,7 +39,12 @@
  *    - Design your paywall UI in the Superwall editor
  *    - Add your products to the paywall
  * 
- * 6. BUILD AND TEST:
+ * 6. ENABLE SUPERWALL IN CODE:
+ *    - Add "expo-superwall" back to the plugins array in app.json
+ *    - Uncomment the Superwall hooks in PaywallScreen.tsx and SubscriptionContext.tsx
+ *    - Build with: eas build --platform ios --profile production
+ * 
+ * 7. BUILD AND TEST:
  *    - Build your app with EAS Build: eas build --platform ios --profile production
  *    - Test in TestFlight with real subscriptions
  *    - Submit to App Store

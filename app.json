@@ -23,7 +23,7 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library."
       },
-      "buildNumber": "6"
+      "buildNumber": "7"
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +32,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.portiontracker.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
@@ -53,8 +53,7 @@
           "photosPermission": "This app needs access to your photo library to select meal photos.",
           "cameraPermission": "This app uses the camera to take photos of your meals for tracking purposes."
         }
-      ],
-      "expo-superwall"
+      ]
     ],
     "scheme": "portiontracker",
     "experiments": {
@@ -66,5 +65,6 @@
         "projectId": "your-project-id-here"
       }
     }
-  }
+  },
+  "scheme": "Portion Tracker"
 }
