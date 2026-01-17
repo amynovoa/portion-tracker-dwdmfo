@@ -22,11 +22,14 @@ interface PaywallScreenProps {
   canDismiss?: boolean;
 }
 
+type SubscriptionPlan = 'annual' | 'monthly';
+
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
 
   const handleSubscribe = async () => {
-    console.log('User tapped Subscribe button');
+    console.log('User tapped Subscribe button with plan:', selectedPlan);
     setIsProcessing(true);
     
     try {
@@ -64,12 +67,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
   const openPrivacyPolicy = () => {
     console.log('User tapped Privacy Policy');
-    Linking.openURL('https://yourapp.com/privacy');
+    Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const openTermsOfService = () => {
     console.log('User tapped Terms of Service');
-    Linking.openURL('https://yourapp.com/terms');
+    Linking.openURL('https://www.apple.com/legal/internet-services/itunes/');
   };
 
   return (
@@ -88,23 +91,79 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Unlock Premium Features</Text>
-            <Text style={styles.subtitle}>Get unlimited access to all features</Text>
+            <Text style={styles.title}>7-day free trial.{'\n'}Cancel anytime.</Text>
+            <Text style={styles.subtitle}>
+              Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.
+            </Text>
           </View>
 
           <View style={styles.featuresContainer}>
-            <FeatureItem text="Track unlimited daily portions" />
-            <FeatureItem text="View detailed adherence history" />
-            <FeatureItem text="Set custom portion targets" />
-            <FeatureItem text="Track weight progress over time" />
-            <FeatureItem text="Automatic data backup" />
+            <Text style={styles.featuresTitle}>Subscription includes:</Text>
+            <FeatureItem text="Unlimited portion tracking" />
+            <FeatureItem text="Custom portion targets" />
+            <FeatureItem text="Weight tracking & charts" />
+            <FeatureItem text="Adherence history & trends" />
             <FeatureItem text="Daily reminders" />
-            <FeatureItem text="No ads, ever" />
           </View>
 
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>Starting at $2.99/month</Text>
-            <Text style={styles.priceSubtext}>Cancel anytime. 7-day free trial.</Text>
+          <View style={styles.plansContainer}>
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                selectedPlan === 'annual' && styles.planCardSelected,
+              ]}
+              onPress={() => setSelectedPlan('annual')}
+            >
+              <View style={styles.planHeader}>
+                <View style={styles.planTitleContainer}>
+                  <Text style={styles.planTitle}>Annual</Text>
+                  <View style={styles.bestValueBadge}>
+                    <Text style={styles.bestValueText}>Best Value</Text>
+                  </View>
+                </View>
+                <View style={[
+                  styles.radioButton,
+                  selectedPlan === 'annual' && styles.radioButtonSelected,
+                ]}>
+                  {selectedPlan === 'annual' && (
+                    <View style={styles.radioButtonInner} />
+                  )}
+                </View>
+              </View>
+              <Text style={styles.planPrice}>$24.99</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.planCard,
+                selectedPlan === 'monthly' && styles.planCardSelected,
+              ]}
+              onPress={() => setSelectedPlan('monthly')}
+            >
+              <View style={styles.planHeader}>
+                <Text style={styles.planTitle}>Monthly</Text>
+                <View style={[
+                  styles.radioButton,
+                  selectedPlan === 'monthly' && styles.radioButtonSelected,
+                ]}>
+                  {selectedPlan === 'monthly' && (
+                    <View style={styles.radioButtonInner} />
+                  )}
+                </View>
+              </View>
+              <Text style={styles.planPrice}>$2.99</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.legalContainer}>
+            <Text style={styles.legalText}>By clicking I agree to the </Text>
+            <TouchableOpacity onPress={openTermsOfService}>
+              <Text style={styles.legalLink}>Terms of Service</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalText}> and{'\n'}</Text>
+            <TouchableOpacity onPress={openPrivacyPolicy}>
+              <Text style={styles.legalLink}>Privacy Policy</Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -115,7 +174,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             {isProcessing ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={buttonStyles.primaryText}>View Subscription Options</Text>
+              <Text style={buttonStyles.primaryText}>
+                {selectedPlan === 'annual' 
+                  ? '7 day free trial then $24.99/year'
+                  : '7 day free trial then $2.99/month'}
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -130,20 +193,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <Text style={styles.restoreButtonText}>Restore Purchases</Text>
             )}
           </TouchableOpacity>
-
-          <View style={styles.legalContainer}>
-            <TouchableOpacity onPress={openPrivacyPolicy}>
-              <Text style={styles.legalText}>Privacy Policy</Text>
-            </TouchableOpacity>
-            <Text style={styles.legalSeparator}>•</Text>
-            <TouchableOpacity onPress={openTermsOfService}>
-              <Text style={styles.legalText}>Terms of Service</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.disclaimerText}>
-            Subscription automatically renews unless auto-renew is turned off at least 24 hours before the end of the current period.
-          </Text>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -183,24 +232,32 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+    lineHeight: 40,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 20,
   },
   featuresContainer: {
     marginBottom: 32,
   },
+  featuresTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 16,
+  },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   featureText: {
     fontSize: 16,
@@ -208,20 +265,88 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
   },
-  priceContainer: {
-    alignItems: 'center',
+  plansContainer: {
     marginBottom: 24,
   },
-  priceText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.primary,
+  planCard: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  planCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: '#FFE5E5',
+  },
+  planHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  priceSubtext: {
+  planTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  planTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  bestValueBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  bestValueText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  planPrice: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.textSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioButtonSelected: {
+    borderColor: colors.primary,
+  },
+  radioButtonInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  legalContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 16,
+  },
+  legalText: {
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  legalLink: {
+    fontSize: 14,
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
   subscribeButton: {
     marginBottom: 16,
@@ -234,28 +359,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: '600',
-  },
-  legalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  legalText: {
-    fontSize: 14,
-    color: colors.primary,
-    textDecorationLine: 'underline',
-  },
-  legalSeparator: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginHorizontal: 12,
-  },
-  disclaimerText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
   },
 });
