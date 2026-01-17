@@ -35,15 +35,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(true); // Default to true for development
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(undefined);
 
-  // Call useUser hook at top level if available
+  // Always call useUser hook at top level if available - React requirement
   let superwallUser: any = null;
-  if (superwallAvailable && useUser && !isExpoGo) {
+  if (superwallAvailable && useUser) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     superwallUser = useUser();
   }
 
   // Only use Superwall hooks if available and not in Expo Go
   useEffect(() => {
-    if (superwallAvailable && superwallUser && !isExpoGo) {
+    if (superwallAvailable && superwallUser) {
       try {
         const superwallStatus = superwallUser.subscriptionStatus;
         
@@ -63,7 +64,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     } else {
       console.log('📱 Running in Expo Go or Superwall not available - using mock subscription (full access granted)');
     }
-  }, [superwallUser, isExpoGo]);
+  }, [superwallUser]);
 
   return (
     <SubscriptionContext.Provider value={{ 

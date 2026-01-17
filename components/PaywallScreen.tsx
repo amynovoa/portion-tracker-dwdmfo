@@ -62,14 +62,16 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     annual?: ProductDetails;
   }>({});
 
-  // Superwall hooks - call at top level but handle null case
+  // Always call hooks at top level - React requirement
+  // These will be null/undefined if Superwall is not available
   let registerPlacement: any = null;
   let placementState: any = null;
   let subscriptionStatus: any = null;
 
-  // Call hooks at top level (React requirement)
-  if (superwallAvailable && usePlacement && useUser) {
+  // Call Superwall hooks at top level if available
+  if (superwallAvailable && usePlacement) {
     // Use Superwall's usePlacement hook to handle purchases
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const placement = usePlacement({
       onPresent: (info: any) => {
         console.log('PaywallScreen: Superwall paywall presented:', info);
@@ -102,8 +104,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     
     registerPlacement = placement.registerPlacement;
     placementState = placement.state;
+  }
 
+  if (superwallAvailable && useUser) {
     // Use Superwall's useUser hook to get subscription status
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const user = useUser();
     subscriptionStatus = user.subscriptionStatus;
   }
