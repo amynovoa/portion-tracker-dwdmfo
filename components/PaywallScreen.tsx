@@ -11,6 +11,7 @@ import {
   Linking,
   Alert,
   Platform,
+  Switch,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,7 +21,8 @@ import {
   restorePurchases, 
   PRODUCT_IDS, 
   isTestFlightBuild,
-  isTestFlightBypassEnabled,
+  getTestFlightBypassEnabled,
+  setTestFlightBypassEnabled,
   getProductDetails,
   ProductDetails
 } from '@/utils/subscriptionManager';
@@ -39,12 +41,37 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [bypassEnabled, setBypassEnabled] = useState(false);
+  const [isTestFlight, setIsTestFlight] = useState(false);
 
   useEffect(() => {
-    if (visible && Platform.OS === 'ios') {
-      loadProducts();
+    if (visible) {
+      loadInitialState();
     }
   }, [visible]);
+
+  const loadInitialState = async () => {
+    console.log('Loading paywall initial state...');
+    
+    // Check if TestFlight build
+    const testFlightBuild = isTestFlightBuild();
+    setIsTestFlight(testFlightBuild);
+    console.log('Is TestFlight build:', testFlightBuild);
+    
+    // Load bypass toggle state (only in TestFlight)
+    if (testFlightBuild) {
+      const bypass = await getTestFlightBypassEnabled();
+      setBypassEnabled(bypass);
+      console.log('TestFlight bypass enabled:', bypass);
+    }
+    
+    // Load products on iOS
+    if (Platform.OS === 'ios') {
+      loadProducts();
+    } else {
+      setIsLoadingProducts(false);
+    }
+  };
 
   const loadProducts = async () => {
     console.log('Loading product details from App Store...');
@@ -68,6 +95,20 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     }
   };
 
+  const handleBypassToggle = async (value: boolean) => {
+    console.log('User toggled TestFlight bypass to:', value);
+    setBypassEnabled(value);
+    await setTestFlightBypassEnabled(value);
+    
+    Alert.alert(
+      'TestFlight Bypass ' + (value ? 'Enabled' : 'Disabled'),
+      value 
+        ? 'Purchases will be simulated. You can test the app without real purchases.'
+        : 'Real sandbox purchases are now enabled. Use a sandbox tester account to test purchases.',
+      [{ text: 'OK' }]
+    );
+  };
+
   const handleSubscribe = async () => {
     console.log('User tapped Subscribe button with plan:', selectedPlan);
     setIsProcessing(true);
@@ -81,13 +122,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       if (result.success) {
         console.log('✅ Purchase successful');
         
-        const isTestFlight = isTestFlightBuild();
-        const bypassEnabled = isTestFlightBypassEnabled();
-        
         let message = `Your ${selectedPlan} subscription is now active!\n\nThank you for subscribing!`;
         
         if (isTestFlight && bypassEnabled) {
-          message = `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated subscription.\n\nTo test real sandbox purchases, set EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false in .env`;
+          message = `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated subscription.\n\nTo test real sandbox purchases, toggle the bypass switch to OFF.`;
         } else if (isTestFlight) {
           message = `Your ${selectedPlan} subscription is now active!\n\n✅ TestFlight Mode: Real sandbox purchase completed.\n\nIn production, this will process real payments through the App Store.`;
         }
@@ -137,13 +175,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       if (result.success) {
         console.log('✅ Restore successful');
         
-        const isTestFlight = isTestFlightBuild();
-        const bypassEnabled = isTestFlightBypassEnabled();
-        
         let message = 'Your subscription has been restored!\n\nThank you for being a subscriber!';
         
         if (isTestFlight && bypassEnabled) {
-          message = 'Your subscription has been restored!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated restore.\n\nTo test real sandbox restore, set EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false in .env';
+          message = 'Your subscription has been restored!\n\n✅ TestFlight Mode (Bypass Enabled): Using simulated restore.\n\nTo test real sandbox restore, toggle the bypass switch to OFF.';
         } else if (isTestFlight) {
           message = 'Your subscription has been restored!\n\n✅ TestFlight Mode: Real sandbox restore completed.\n\nIn production, this will restore real App Store purchases.';
         }
@@ -188,9 +223,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/');
   };
 
-  const isTestFlight = isTestFlightBuild();
-  const bypassEnabled = isTestFlightBypassEnabled();
-
   // Use real product prices if available, otherwise use defaults
   const monthlyPrice = monthlyProduct?.priceString || '$2.99';
   const annualPrice = annualProduct?.priceString || '$24.99';
@@ -210,6 +242,38 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         )}
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+          {isTestFlight && (
+            <View style={styles.testFlightBanner}>
+              <View style={styles.testFlightHeader}>
+                <MaterialIcons name="info" size={20} color={colors.primary} />
+                <Text style={styles.testFlightTitle}>TestFlight Mode</Text>
+              </View>
+              
+              <View style={styles.bypassToggleContainer}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.bypassToggleLabel}>Bypass Purchases</Text>
+                  <Text style={styles.bypassToggleDescription}>
+                    {bypassEnabled 
+                      ? 'ON: Purchases are simulated (no real charges)'
+                      : 'OFF: Real sandbox purchases enabled'}
+                  </Text>
+                </View>
+                <Switch
+                  value={bypassEnabled}
+                  onValueChange={handleBypassToggle}
+                  trackColor={{ false: '#767577', true: colors.primary }}
+                  thumbColor={bypassEnabled ? '#FFFFFF' : '#f4f3f4'}
+                />
+              </View>
+              
+              <Text style={styles.testFlightText}>
+                {bypassEnabled 
+                  ? 'Toggle OFF to test real sandbox purchases with a sandbox tester account.'
+                  : 'Use a sandbox tester account to test purchases. In production, real App Store payments will be processed.'}
+              </Text>
+            </View>
+          )}
+
           <View style={styles.header}>
             <Text style={styles.title}>7-day free trial.{'\n'}Cancel anytime.</Text>
             <Text style={styles.subtitle}>
@@ -320,19 +384,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <Text style={styles.restoreButtonText}>Restore Purchases</Text>
             )}
           </TouchableOpacity>
-
-          {isTestFlight && (
-            <View style={styles.testFlightBanner}>
-              <MaterialIcons name="info" size={20} color={colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.testFlightText}>
-                  {bypassEnabled 
-                    ? '✅ TestFlight Mode (Bypass Enabled): Subscriptions are simulated.\n\nTo test real sandbox purchases, set EXPO_PUBLIC_STOREKIT_TESTFLIGHT_BYPASS=false in .env'
-                    : '✅ TestFlight Mode: Real sandbox purchases enabled.\n\nUse a sandbox tester account to test purchases. In production, real App Store payments will be processed.'}
-                </Text>
-              </View>
-            </View>
-          )}
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -366,6 +417,50 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
     paddingTop: 60,
+  },
+  testFlightBanner: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  testFlightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  testFlightTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  bypassToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  bypassToggleLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  bypassToggleDescription: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  testFlightText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
   header: {
     alignItems: 'center',
@@ -509,21 +604,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: '600',
-  },
-  testFlightBanner: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: colors.cardBackground,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  testFlightText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
   },
 });
