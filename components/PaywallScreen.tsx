@@ -114,7 +114,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               text: 'OK',
               onPress: () => {
                 console.log('User acknowledged subscription success');
-                onDismiss?.();
+                if (onDismiss) {
+                  onDismiss();
+                }
               },
             },
           ]
@@ -158,7 +160,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               text: 'OK',
               onPress: () => {
                 console.log('User acknowledged restore success');
-                onDismiss?.();
+                if (onDismiss) {
+                  onDismiss();
+                }
               },
             },
           ]
@@ -193,17 +197,23 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const getMonthlyPrice = () => {
-    if (loadingProducts) return '...';
+    if (loadingProducts) {
+      return '...';
+    }
     return monthlyProduct?.priceString || '$9.99';
   };
 
   const getAnnualPrice = () => {
-    if (loadingProducts) return '...';
+    if (loadingProducts) {
+      return '...';
+    }
     return annualProduct?.priceString || '$59.99';
   };
 
   const getAnnualMonthlyPrice = () => {
-    if (loadingProducts) return '...';
+    if (loadingProducts) {
+      return '...';
+    }
     if (annualProduct) {
       const annualPrice = parseFloat(annualProduct.price);
       const monthlyEquivalent = (annualPrice / 12).toFixed(2);
@@ -218,9 +228,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={() => {
-        if (canDismiss) {
+        if (canDismiss && onDismiss) {
           console.log('User dismissed paywall');
-          onDismiss?.();
+          onDismiss();
         }
       }}
     >
@@ -230,7 +240,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             style={styles.closeButton}
             onPress={() => {
               console.log('User tapped close button');
-              onDismiss?.();
+              if (onDismiss) {
+                onDismiss();
+              }
             }}
           >
             <MaterialIcons name="close" size={28} color={colors.text} />
