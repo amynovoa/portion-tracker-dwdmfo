@@ -1,7 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -14,22 +12,12 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { getProductDetails } from '@/utils/subscriptionManager';
 import { PRODUCT_IDS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import Constants from 'expo-constants';
-
-// Conditionally import Superwall hooks
-let usePlacement: any = null;
-let useUser: any = null;
-
-try {
-  const Superwall = require('expo-superwall');
-  usePlacement = Superwall.usePlacement;
-  useUser = Superwall.useUser;
-} catch (error) {
-  console.log('Superwall not available - running in Expo Go or module not found');
-}
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -46,6 +34,25 @@ interface ProductDetails {
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
+// Superwall hooks - will be null if not available
+let usePlacement: any = null;
+let useUser: any = null;
+let superwallAvailable = false;
+
+// Try to load Superwall only if not in Expo Go
+if (!isExpoGo) {
+  try {
+    const Superwall = require('expo-superwall');
+    usePlacement = Superwall.usePlacement;
+    useUser = Superwall.useUser;
+    superwallAvailable = true;
+    console.log('✅ Superwall module loaded successfully');
+  } catch (error) {
+    console.log('⚠️ Superwall module not available:', error);
+    superwallAvailable = false;
+  }
+}
+
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
@@ -54,12 +61,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     annual?: ProductDetails;
   }>({});
 
-  // Superwall hooks - only call if available
+  // Superwall hooks - only use if available
   let registerPlacement: any = null;
   let placementState: any = null;
   let subscriptionStatus: any = null;
 
-  if (usePlacement && useUser && !isExpoGo) {
+  if (superwallAvailable && usePlacement && useUser) {
     try {
       // Use Superwall's usePlacement hook to handle purchases
       const placement = usePlacement({
@@ -126,9 +133,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const handleSubscribe = async () => {
-    if (isExpoGo || !registerPlacement) {
-      console.log('PaywallScreen: Cannot purchase in Expo Go');
-      Alert.alert('Development Mode', 'Subscriptions are not available in Expo Go. Please create a development build to test purchases.');
+    if (isExpoGo || !superwallAvailable || !registerPlacement) {
+      console.log('PaywallScreen: Cannot purchase - Superwall not available');
+      Alert.alert(
+        'Development Mode', 
+        'Subscriptions are not available in Expo Go. Please create a development build to test purchases.\n\nRun: npx expo prebuild && npx expo run:ios'
+      );
       return;
     }
 
@@ -140,7 +150,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('PaywallScreen: Triggering Superwall placement');
       
       // Use Superwall's registerPlacement to trigger the purchase flow
-      // The placement name should match what you configured in Superwall dashboard
       await registerPlacement({
         placement: 'subscription_paywall',
         params: {
@@ -161,9 +170,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const handleRestorePurchases = async () => {
-    if (isExpoGo || !registerPlacement) {
-      console.log('PaywallScreen: Cannot restore in Expo Go');
-      Alert.alert('Development Mode', 'Restore purchases is not available in Expo Go. Please create a development build to test.');
+    if (isExpoGo || !superwallAvailable || !registerPlacement) {
+      console.log('PaywallScreen: Cannot restore - Superwall not available');
+      Alert.alert(
+        'Development Mode', 
+        'Restore purchases is not available in Expo Go. Please create a development build to test.\n\nRun: npx expo prebuild && npx expo run:ios'
+      );
       return;
     }
 
@@ -210,7 +222,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   // Show development message in Expo Go
-  if (isExpoGo) {
+  if (isExpoGo || !superwallAvailable) {
     return (
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={styles.container}>
@@ -227,7 +239,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <MaterialIcons name="info" size={64} color={colors.primary} />
               <Text style={styles.devTitle}>Development Mode</Text>
               <Text style={styles.devMessage}>
-                You&apos;re running in Expo Go, which doesn&apos;t support native payment modules like Superwall.
+                You&apos;re running in {isExpoGo ? 'Expo Go' : 'a mode'} where the Superwall native module is not available.
               </Text>
               <Text style={styles.devMessage}>
                 To test subscriptions, create a development build:

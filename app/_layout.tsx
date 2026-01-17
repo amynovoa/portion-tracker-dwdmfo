@@ -10,7 +10,6 @@ import { View, ActivityIndicator, AppState, AppStateStatus, Platform } from 'rea
 import { colors } from '@/styles/commonStyles';
 import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
-import { SuperwallProvider, SuperwallLoading, SuperwallLoaded } from 'expo-superwall';
 import Constants from 'expo-constants';
 
 SplashScreen.preventAutoHideAsync();
@@ -20,6 +19,26 @@ const SUPERWALL_API_KEY = 'pk_d1efbc344a5e3cdb8e5e732a2b1e3e5a9c8e5e732a2b1e3e5a
 
 // Check if we're running in Expo Go (which doesn't support native modules like Superwall)
 const isExpoGo = Constants.appOwnership === 'expo';
+
+// Try to load Superwall components only if not in Expo Go
+let SuperwallProvider: any = null;
+let SuperwallLoading: any = null;
+let SuperwallLoaded: any = null;
+let superwallAvailable = false;
+
+if (!isExpoGo) {
+  try {
+    const Superwall = require('expo-superwall');
+    SuperwallProvider = Superwall.SuperwallProvider;
+    SuperwallLoading = Superwall.SuperwallLoading;
+    SuperwallLoaded = Superwall.SuperwallLoaded;
+    superwallAvailable = true;
+    console.log('✅ Superwall components loaded successfully');
+  } catch (error) {
+    console.log('⚠️ Superwall components not available:', error);
+    superwallAvailable = false;
+  }
+}
 
 function AppContent() {
   const [isReady, setIsReady] = useState(false);
@@ -126,11 +145,15 @@ export default function RootLayout() {
     );
   }
 
-  // If running in Expo Go, skip Superwall integration
-  if (isExpoGo) {
-    console.log('⚠️ Running in Expo Go - Superwall disabled');
-    console.log('💡 To test subscriptions, create a development build:');
-    console.log('   npx expo prebuild && npx expo run:ios');
+  // If running in Expo Go or Superwall not available, skip Superwall integration
+  if (isExpoGo || !superwallAvailable) {
+    if (isExpoGo) {
+      console.log('⚠️ Running in Expo Go - Superwall disabled');
+      console.log('💡 To test subscriptions, create a development build:');
+      console.log('   npx expo prebuild && npx expo run:ios');
+    } else {
+      console.log('⚠️ Superwall module not available - running without subscription features');
+    }
     return <AppContent />;
   }
 
@@ -141,7 +164,7 @@ export default function RootLayout() {
   return (
     <SuperwallProvider 
       apiKeys={{ ios: SUPERWALL_API_KEY }}
-      onConfigurationError={(error) => {
+      onConfigurationError={(error: any) => {
         console.error('❌ Superwall configuration error:', error);
       }}
     >

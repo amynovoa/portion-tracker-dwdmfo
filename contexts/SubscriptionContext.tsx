@@ -2,18 +2,25 @@
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import Constants from 'expo-constants';
 
-// Conditionally import Superwall hooks
-let useUser: any = null;
-
-try {
-  const Superwall = require('expo-superwall');
-  useUser = Superwall.useUser;
-} catch (error) {
-  console.log('Superwall not available - running in Expo Go or module not found');
-}
-
 // Check if we're running in Expo Go
 const isExpoGo = Constants.appOwnership === 'expo';
+
+// Superwall hooks - will be null if not available
+let useUser: any = null;
+let superwallAvailable = false;
+
+// Try to load Superwall only if not in Expo Go
+if (!isExpoGo) {
+  try {
+    const Superwall = require('expo-superwall');
+    useUser = Superwall.useUser;
+    superwallAvailable = true;
+    console.log('✅ SubscriptionContext: Superwall module loaded successfully');
+  } catch (error) {
+    console.log('⚠️ SubscriptionContext: Superwall module not available:', error);
+    superwallAvailable = false;
+  }
+}
 
 interface SubscriptionContextType {
   isSubscribed: boolean;
@@ -28,12 +35,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(undefined);
 
   // Only use Superwall hooks if available and not in Expo Go
-  if (useUser && !isExpoGo) {
-    try {
-      // Use Superwall's useUser hook to get subscription status
-      const { subscriptionStatus: superwallStatus } = useUser();
-      
-      useEffect(() => {
+  useEffect(() => {
+    if (superwallAvailable && useUser && !isExpoGo) {
+      try {
+        // Use Superwall's useUser hook to get subscription status
+        const { subscriptionStatus: superwallStatus } = useUser();
+        
         if (superwallStatus) {
           console.log('📱 Superwall subscription status:', superwallStatus);
           setSubscriptionStatus(superwallStatus);
@@ -44,13 +51,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           
           console.log('📱 User subscription active:', hasActiveSubscription);
         }
-      }, [superwallStatus]);
-    } catch (error) {
-      console.error('Error initializing Superwall subscription context:', error);
+      } catch (error) {
+        console.error('Error initializing Superwall subscription context:', error);
+      }
+    } else {
+      console.log('📱 Running in Expo Go or Superwall not available - using mock subscription (full access granted)');
     }
-  } else {
-    console.log('📱 Running in Expo Go or Superwall not available - using mock subscription (full access granted)');
-  }
+  }, []);
 
   return (
     <SubscriptionContext.Provider value={{ 
