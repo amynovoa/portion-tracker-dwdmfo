@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { getProductDetails } from '@/utils/subscriptionManager';
-import { PRODUCT_IDS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
-import Constants from 'expo-constants';
+import { usePlacement, useUser } from 'expo-superwall';
+import { PLACEMENTS, PRODUCT_CONFIG } from '@/utils/superwallConfig';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -25,54 +24,86 @@ interface PaywallScreenProps {
   canDismiss?: boolean;
 }
 
-interface ProductDetails {
-  productId: string;
-  price: number;
-  priceString: string;
-  currencyCode: string;
-}
-
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
-  const [loading, setLoading] = useState(false);
-  const [productDetails, setProductDetails] = useState<ProductDetails | null>(null);
-
-  useEffect(() => {
-    if (visible) {
-      loadProductDetails();
-    }
-  }, [visible]);
-
-  const loadProductDetails = async () => {
-    try {
-      setLoading(true);
-      const details = await getProductDetails(PRODUCT_IDS.MONTHLY);
-      setProductDetails(details);
-    } catch (error) {
-      console.error('Error loading product details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  const { subscriptionStatus } = useUser();
+  const { registerPlacement, state: placementState } = usePlacement({
+    onError: (err) => {
+      console.error('❌ Paywall Error:', err);
+      setIsProcessing(false);
+      Alert.alert('Error', 'Failed to load subscription options. Please try again.');
+    },
+    onPresent: (info) => {
+      console.log('✅ Paywall Presented:', info);
+      setIsProcessing(false);
+    },
+    onDismiss: (info, result) => {
+      console.log('📱 Paywall Dismissed:', info, 'Result:', result);
+      setIsProcessing(false);
+      
+      // If user purchased, dismiss the modal
+      if (result.state === 'purchased') {
+        Alert.alert(
+          'Success!',
+          'Thank you for subscribing! You now have access to all premium features.',
+          [{ text: 'OK', onPress: onDismiss }]
+        );
+      }
+    },
+  });
 
   const handleSubscribe = async () => {
     console.log('User tapped Subscribe button');
+    setIsProcessing(true);
     
-    // Show message that subscriptions are temporarily disabled
-    Alert.alert(
-      'Subscriptions Temporarily Disabled',
-      'Subscription features have been temporarily disabled to fix app launch issues. The app is fully functional without a subscription during this time.',
-      [{ text: 'OK' }]
-    );
+    try {
+      await registerPlacement({
+        placement: PLACEMENTS.settings,
+        feature: () => {
+          console.log('✅ User has access to premium features');
+          if (onDismiss) {
+            onDismiss();
+          }
+        },
+      });
+    } catch (error) {
+      console.error('Error registering placement:', error);
+      setIsProcessing(false);
+      Alert.alert('Error', 'Failed to show subscription options. Please try again.');
+    }
   };
 
   const handleRestorePurchases = async () => {
     console.log('User tapped Restore Purchases button');
+    setIsProcessing(true);
     
-    Alert.alert(
-      'Restore Purchases',
-      'Subscription features are temporarily disabled. All features are available without a subscription.',
-      [{ text: 'OK' }]
-    );
+    try {
+      // Superwall handles restore automatically through the SDK
+      // We just need to refresh the subscription status
+      Alert.alert(
+        'Restore Purchases',
+        'Checking for previous purchases...',
+        [{ text: 'OK' }]
+      );
+      
+      // The subscription status will be updated automatically by Superwall
+      setTimeout(() => {
+        setIsProcessing(false);
+        if (subscriptionStatus?.status === 'ACTIVE') {
+          Alert.alert('Success', 'Your purchases have been restored!');
+          if (onDismiss) {
+            onDismiss();
+          }
+        } else {
+          Alert.alert('No Purchases Found', 'No previous purchases were found for this account.');
+        }
+      }, 2000);
+    } catch (error) {
+      console.error('Restore purchases error:', error);
+      setIsProcessing(false);
+      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
+    }
   };
 
   const openPrivacyPolicy = () => {
@@ -85,13 +116,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     Linking.openURL('https://yourapp.com/terms');
   };
 
-  const getButtonText = () => {
-    if (loading) return 'Loading...';
-    if (productDetails) {
-      return `Subscribe for ${productDetails.priceString}/month`;
-    }
-    return 'Subscribe Now';
-  };
+  const isSubscribed = subscriptionStatus?.status === 'ACTIVE';
 
   return (
     <Modal
@@ -109,11 +134,23 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Unlock Premium Features</Text>
+            <Text style={styles.title}>
+              {isSubscribed ? 'Premium Active' : 'Unlock Premium Features'}
+            </Text>
             <Text style={styles.subtitle}>
-              Get unlimited access to all features
+              {isSubscribed 
+                ? 'You have access to all premium features'
+                : 'Get unlimited access to all features'
+              }
             </Text>
           </View>
+
+          {isSubscribed && (
+            <View style={styles.subscribedBadge}>
+              <MaterialIcons name="check-circle" size={48} color={colors.primary} />
+              <Text style={styles.subscribedText}>You&apos;re subscribed!</Text>
+            </View>
+          )}
 
           <View style={styles.featuresContainer}>
             <FeatureItem text="Track unlimited daily portions" />
@@ -125,34 +162,41 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             <FeatureItem text="No ads, ever" />
           </View>
 
-          <View style={styles.priceContainer}>
-            {loading ? (
-              <ActivityIndicator size="large" color={colors.primary} />
-            ) : (
-              <>
+          {!isSubscribed && (
+            <>
+              <View style={styles.priceContainer}>
                 <Text style={styles.priceText}>
-                  {productDetails?.priceString || '$2.99'}/month
+                  Starting at $2.99/month
                 </Text>
                 <Text style={styles.priceSubtext}>
-                  Cancel anytime. {PRODUCT_CONFIG.TRIAL_DAYS}-day free trial.
+                  Cancel anytime. 7-day free trial.
                 </Text>
-              </>
-            )}
-          </View>
+              </View>
 
-          <TouchableOpacity
-            style={[buttonStyles.primary, styles.subscribeButton]}
-            onPress={handleSubscribe}
-            disabled={loading}
-          >
-            <Text style={buttonStyles.primaryText}>{getButtonText()}</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[buttonStyles.primary, styles.subscribeButton]}
+                onPress={handleSubscribe}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={buttonStyles.primaryText}>View Subscription Options</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
 
           <TouchableOpacity
             style={styles.restoreButton}
             onPress={handleRestorePurchases}
+            disabled={isProcessing}
           >
-            <Text style={styles.restoreButtonText}>Restore Purchases</Text>
+            {isProcessing ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <Text style={styles.restoreButtonText}>Restore Purchases</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.legalContainer}>
@@ -217,6 +261,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  subscribedBadge: {
+    alignItems: 'center',
+    marginBottom: 32,
+    padding: 20,
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+  },
+  subscribedText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.primary,
+    marginTop: 12,
   },
   featuresContainer: {
     marginBottom: 32,

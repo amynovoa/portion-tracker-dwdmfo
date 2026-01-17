@@ -1,24 +1,28 @@
 
-import React, { createContext, useContext, ReactNode, useState } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useUser } from 'expo-superwall';
 
 interface SubscriptionContextType {
   isSubscribed: boolean;
   subscriptionStatus: any;
+  isLoading: boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  // Default to true - all users have full access while subscriptions are disabled
-  const [isSubscribed] = useState(true);
-  const [subscriptionStatus] = useState<any>(undefined);
+  const { subscriptionStatus, user } = useUser();
+  
+  const isSubscribed = subscriptionStatus?.status === 'ACTIVE';
+  const isLoading = !user && !subscriptionStatus;
 
-  console.log('📱 SubscriptionContext: All users have full access (subscriptions temporarily disabled)');
+  console.log('📱 SubscriptionContext: Status =', subscriptionStatus?.status, 'Subscribed =', isSubscribed);
 
   return (
     <SubscriptionContext.Provider value={{ 
       isSubscribed, 
-      subscriptionStatus
+      subscriptionStatus,
+      isLoading
     }}>
       {children}
     </SubscriptionContext.Provider>

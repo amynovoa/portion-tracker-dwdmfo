@@ -6,10 +6,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { loadProfile } from '@/utils/storage';
-import { View, ActivityIndicator, AppState, AppStateStatus, Platform } from 'react-native';
+import { View, ActivityIndicator, AppState, AppStateStatus, Platform, Text } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
+import { SuperwallProvider, SuperwallLoading, SuperwallLoaded, SuperwallError } from 'expo-superwall';
+import { SUPERWALL_API_KEY } from '@/utils/superwallConfig';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -116,9 +118,7 @@ function AppContent() {
 }
 
 export default function RootLayout() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const [loaded] = useFonts({
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
@@ -130,8 +130,41 @@ export default function RootLayout() {
     );
   }
 
-  // Removed all Superwall integration - it was causing the 60-90 second delay
-  console.log('✅ App initialized without Superwall (removed to fix launch delay)');
+  console.log('✅ Initializing Superwall SDK for in-app purchases');
   
-  return <AppContent />;
+  return (
+    <SuperwallProvider 
+      apiKeys={{ ios: SUPERWALL_API_KEY }}
+      onConfigurationError={(error) => {
+        console.error('❌ Superwall configuration error:', error);
+      }}
+    >
+      <SuperwallLoading>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: 16, color: colors.textSecondary }}>Loading...</Text>
+        </View>
+      </SuperwallLoading>
+
+      <SuperwallError>
+        {(error) => (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: colors.background }}>
+            <Text style={{ fontSize: 18, marginBottom: 10, color: colors.text, textAlign: 'center' }}>
+              Failed to initialize subscriptions
+            </Text>
+            <Text style={{ color: colors.textSecondary, marginBottom: 20, textAlign: 'center' }}>
+              {error}
+            </Text>
+            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+              The app will continue to work, but subscription features may be unavailable.
+            </Text>
+          </View>
+        )}
+      </SuperwallError>
+
+      <SuperwallLoaded>
+        <AppContent />
+      </SuperwallLoaded>
+    </SuperwallProvider>
+  );
 }
