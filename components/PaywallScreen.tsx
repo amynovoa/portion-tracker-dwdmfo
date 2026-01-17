@@ -15,6 +15,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { saveSubscriptionStatus } from '@/utils/storage';
+import Constants from 'expo-constants';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -28,17 +30,42 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
 
+  // Check if running in TestFlight or development
+  const isTestFlightOrDev = __DEV__ || Constants.appOwnership === 'expo';
+
   const handleSubscribe = async () => {
     console.log('User tapped Subscribe button with plan:', selectedPlan);
     setIsProcessing(true);
     
     try {
-      // Superwall integration - will work in native builds
-      Alert.alert(
-        'Subscription',
-        'Subscription options will be available in the native build.',
-        [{ text: 'OK' }]
-      );
+      if (isTestFlightOrDev) {
+        // In TestFlight/dev, simulate successful subscription
+        console.log('TestFlight/Dev mode: Simulating successful subscription');
+        await saveSubscriptionStatus(true);
+        Alert.alert(
+          'Success',
+          'Subscription activated! (TestFlight/Dev mode)',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('Subscription successful, dismissing paywall');
+                if (onDismiss) {
+                  onDismiss();
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        // In production, Superwall will handle the subscription
+        // This will be integrated with Superwall in native builds
+        Alert.alert(
+          'Subscription',
+          'Subscription options will be available in the native build.',
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
       console.error('Error showing subscription:', error);
       Alert.alert('Error', 'Failed to show subscription options. Please try again.');
@@ -52,11 +79,33 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setIsProcessing(true);
     
     try {
-      Alert.alert(
-        'Restore Purchases',
-        'Purchase restoration will be available in the native build.',
-        [{ text: 'OK' }]
-      );
+      if (isTestFlightOrDev) {
+        // In TestFlight/dev, simulate successful restore
+        console.log('TestFlight/Dev mode: Simulating successful restore');
+        await saveSubscriptionStatus(true);
+        Alert.alert(
+          'Success',
+          'Purchases restored! (TestFlight/Dev mode)',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('Restore successful, dismissing paywall');
+                if (onDismiss) {
+                  onDismiss();
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        // In production, Superwall will handle restore
+        Alert.alert(
+          'Restore Purchases',
+          'Purchase restoration will be available in the native build.',
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
       console.error('Restore purchases error:', error);
       Alert.alert('Error', 'Failed to restore purchases. Please try again.');

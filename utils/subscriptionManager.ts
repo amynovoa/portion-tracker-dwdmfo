@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
 
 const TRIAL_START_KEY = '@portion_tracker_trial_start';
 const TRIAL_DURATION_DAYS = 7;
@@ -247,6 +248,9 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
       };
     }
 
+    // Check stored subscription status
+    const isSubscribed = await loadSubscriptionStatus();
+
     // In production, subscription status is managed by Superwall
     // This function is kept for compatibility but the actual status
     // should be checked using useUser hook from expo-superwall
@@ -258,10 +262,8 @@ export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
       ? calculateTrialDaysRemaining(trialStartDate)
       : TRIAL_DURATION_DAYS;
 
-    const isSubscribed = inTrial;
-
     return {
-      isSubscribed,
+      isSubscribed: isSubscribed || inTrial,
       isInTrial: inTrial,
       trialDaysRemaining,
       isTestFlight: false,

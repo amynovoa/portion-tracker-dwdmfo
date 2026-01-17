@@ -8,11 +8,36 @@ const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
 const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
+const SUBSCRIPTION_STATUS_KEY = '@portion_tracker_subscription_status';
 
 export interface ResetTimeConfig {
   hour: number;
   minute: number;
   enabled: boolean;
+}
+
+// Subscription status functions
+export async function saveSubscriptionStatus(isSubscribed: boolean): Promise<void> {
+  try {
+    console.log('Saving subscription status:', isSubscribed);
+    await AsyncStorage.setItem(SUBSCRIPTION_STATUS_KEY, JSON.stringify(isSubscribed));
+  } catch (error) {
+    console.error('Error saving subscription status:', error);
+  }
+}
+
+export async function loadSubscriptionStatus(): Promise<boolean> {
+  try {
+    const data = await AsyncStorage.getItem(SUBSCRIPTION_STATUS_KEY);
+    if (data) {
+      const isSubscribed = JSON.parse(data);
+      console.log('Loaded subscription status:', isSubscribed);
+      return isSubscribed;
+    }
+  } catch (error) {
+    console.error('Error loading subscription status:', error);
+  }
+  return false;
 }
 
 // Profile functions
