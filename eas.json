@@ -1,3 +1,4 @@
+
 {
   "build": {
     "development": {
@@ -11,19 +12,6 @@
     },
     "production": {
       "autoIncrement": true
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "your-apple-id@example.com",
-        "ascAppId": "your-app-store-connect-id",
-        "appleTeamId": "your-team-id"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./path-to-your-service-account-key.json",
-        "track": "internal"
-      }
     }
   }
 }

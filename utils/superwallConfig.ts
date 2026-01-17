@@ -5,12 +5,13 @@
  * This file contains the configuration for Superwall integration
  * including product IDs and placement names.
  * 
- * IMPORTANT: Replace SUPERWALL_API_KEY with your actual API key from Superwall dashboard
+ * IMPORTANT: Superwall requires a native build and proper App Store Connect setup.
+ * For TestFlight and development builds, the app uses simulated subscriptions.
  */
 
-// Superwall API Key - Get this from your Superwall dashboard
-// For iOS: https://superwall.com/dashboard
-export const SUPERWALL_API_KEY = 'pk_d1efbc344a5e3cdb8e5e732a2b1e3e5a9c8e5e732a2b1e3e5a9c8e5e732a2b1e';
+// Superwall API Key - This will be configured when setting up native builds
+// For now, the app works without Superwall in TestFlight/dev mode
+export const SUPERWALL_API_KEY = '';
 
 // Product IDs from App Store Connect
 // These must match the product IDs you created in App Store Connect
