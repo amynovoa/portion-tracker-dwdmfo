@@ -18,6 +18,8 @@ export const colors = {
   success: '#C8D647',
   white: '#FFFFFF',
   surface: '#F8F8F8',
+  warning: '#FF9800',
+  warningLight: '#FFF3E0',
 };
 
 export const buttonStyles = StyleSheet.create({
