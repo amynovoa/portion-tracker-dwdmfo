@@ -92,8 +92,8 @@ export async function scheduleNoonReminder(): Promise<void> {
   try {
     console.log('Scheduling noon reminder...');
     
-    // Cancel any existing noon reminder
-    await cancelNoonReminder();
+    // Cancel any existing noon reminder first
+    await Notifications.cancelScheduledNotificationAsync(NOON_REMINDER_ID);
 
     // Schedule new reminder for 12:00 PM daily
     await Notifications.scheduleNotificationAsync({
@@ -111,9 +111,6 @@ export async function scheduleNoonReminder(): Promise<void> {
     });
 
     console.log('Noon reminder scheduled successfully');
-    
-    // Save the preference to storage
-    await saveNoonReminderEnabled(true);
   } catch (error) {
     console.error('Error scheduling noon reminder:', error);
     throw error;
@@ -127,11 +124,9 @@ export async function cancelNoonReminder(): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(NOON_REMINDER_ID);
     console.log('Noon reminder cancelled');
-    
-    // Save the preference to storage
-    await saveNoonReminderEnabled(false);
   } catch (error) {
     console.error('Error cancelling noon reminder:', error);
+    // Don't throw - cancelling a non-existent notification is fine
   }
 }
 
@@ -144,7 +139,7 @@ export async function isNoonReminderEnabled(): Promise<boolean> {
     // Use storage as the source of truth
     const enabled = await loadNoonReminderEnabled();
     console.log('Noon reminder enabled (from storage):', enabled);
-    return enabled;
+    return enabled ?? false;
   } catch (error) {
     console.error('Error checking noon reminder status:', error);
     return false;
@@ -153,6 +148,7 @@ export async function isNoonReminderEnabled(): Promise<boolean> {
 
 /**
  * Toggle noon reminder on/off
+ * Simplified version that just saves the preference and schedules/cancels
  */
 export async function toggleNoonReminder(enabled: boolean): Promise<void> {
   console.log('=== TOGGLE NOON REMINDER ===');
@@ -160,35 +156,43 @@ export async function toggleNoonReminder(enabled: boolean): Promise<void> {
   
   try {
     if (enabled) {
-      // First check if we already have permissions
+      // Check permissions first
       const hasPermission = await checkNotificationPermissions();
       console.log('Has notification permission:', hasPermission);
       
       if (!hasPermission) {
-        // Try to request permissions
-        console.log('Attempting to request notification permissions...');
+        // Request permissions
+        console.log('Requesting notification permissions...');
         const granted = await requestNotificationPermissions();
         
         if (!granted) {
-          console.log('Permission request was denied or failed');
-          // Don't throw error - just save the disabled state
+          console.log('Permission denied - cannot enable reminders');
+          // Save disabled state
           await saveNoonReminderEnabled(false);
           throw new Error('PERMISSION_DENIED');
         }
       }
       
-      // If we get here, we have permissions - schedule the reminder
-      console.log('Permissions confirmed, scheduling reminder...');
+      // Schedule the reminder
+      console.log('Scheduling reminder...');
       await scheduleNoonReminder();
-      console.log('Noon reminder enabled and scheduled successfully');
+      
+      // Save enabled state
+      await saveNoonReminderEnabled(true);
+      console.log('Noon reminder enabled successfully');
     } else {
-      console.log('Disabling noon reminder...');
+      // Cancel the reminder
+      console.log('Cancelling reminder...');
       await cancelNoonReminder();
-      console.log('Noon reminder disabled and cancelled successfully');
+      
+      // Save disabled state
+      await saveNoonReminderEnabled(false);
+      console.log('Noon reminder disabled successfully');
     }
   } catch (error) {
     console.error('Error in toggleNoonReminder:', error);
-    // Re-throw the error so the UI can handle it
+    // Make sure we save the correct state even on error
+    await saveNoonReminderEnabled(false);
     throw error;
   }
 }

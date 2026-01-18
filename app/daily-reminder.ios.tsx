@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, Alert, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { toggleNoonReminder, isNoonReminderEnabled, checkNotificationPermissions } from '@/utils/notificationManager';
 
@@ -69,7 +69,6 @@ const styles = StyleSheet.create({
 });
 
 export default function DailyReminderScreen() {
-  const router = useRouter();
   const [noonReminderEnabled, setNoonReminderEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState(false);
@@ -87,12 +86,13 @@ export default function DailyReminderScreen() {
       console.log('Loading reminder status...');
       const enabled = await isNoonReminderEnabled();
       const permission = await checkNotificationPermissions();
-      console.log('Reminder status loaded:', enabled);
-      console.log('Permission status:', permission);
+      console.log('Reminder enabled:', enabled, 'Permission granted:', permission);
       setNoonReminderEnabled(enabled);
       setHasPermission(permission);
     } catch (error) {
       console.error('Error loading reminder status:', error);
+      setNoonReminderEnabled(false);
+      setHasPermission(false);
     } finally {
       setIsLoading(false);
     }
@@ -101,12 +101,15 @@ export default function DailyReminderScreen() {
   const handleToggleNoonReminder = async (value: boolean) => {
     console.log('User toggled noon reminder to:', value);
     
-    // Optimistically update the UI
-    setNoonReminderEnabled(value);
+    // Don't update UI optimistically - wait for success
+    setIsLoading(true);
     
     try {
       await toggleNoonReminder(value);
       console.log('Noon reminder toggled successfully to:', value);
+      
+      // Update UI after success
+      setNoonReminderEnabled(value);
       
       // Reload permission status
       const permission = await checkNotificationPermissions();
@@ -114,7 +117,7 @@ export default function DailyReminderScreen() {
     } catch (error: any) {
       console.error('Error toggling noon reminder:', error);
       
-      // Reset the switch to previous state
+      // Make sure switch stays in correct position
       setNoonReminderEnabled(!value);
       
       // Check if it's a permission error
@@ -136,12 +139,15 @@ export default function DailyReminderScreen() {
         );
       } else {
         // Generic error
+        console.log('Showing generic error alert');
         Alert.alert(
           'Error',
           'Failed to update reminder setting. Please try again.',
           [{ text: 'OK' }]
         );
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
