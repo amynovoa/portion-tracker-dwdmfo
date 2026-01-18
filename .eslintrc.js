@@ -34,7 +34,8 @@ module.exports = {
   ],
   env: {
     browser: true,
-    'react-native/react-native': true,
+    node: true,
+    es6: true
   },
   rules: {
     "@typescript-eslint/no-unused-vars": "off",
