@@ -9,6 +9,7 @@ const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
 const SUBSCRIPTION_STATUS_KEY = '@portion_tracker_subscription_status';
+const NOON_REMINDER_ENABLED_KEY = '@portion_tracker_noon_reminder_enabled';
 
 export interface ResetTimeConfig {
   hour: number;
@@ -36,6 +37,30 @@ export async function loadSubscriptionStatus(): Promise<boolean> {
     }
   } catch (error) {
     console.error('Error loading subscription status:', error);
+  }
+  return false;
+}
+
+// Noon reminder preference functions
+export async function saveNoonReminderEnabled(enabled: boolean): Promise<void> {
+  try {
+    console.log('Saving noon reminder preference:', enabled);
+    await AsyncStorage.setItem(NOON_REMINDER_ENABLED_KEY, JSON.stringify(enabled));
+  } catch (error) {
+    console.error('Error saving noon reminder preference:', error);
+  }
+}
+
+export async function loadNoonReminderEnabled(): Promise<boolean> {
+  try {
+    const data = await AsyncStorage.getItem(NOON_REMINDER_ENABLED_KEY);
+    if (data !== null) {
+      const enabled = JSON.parse(data);
+      console.log('Loaded noon reminder preference:', enabled);
+      return enabled;
+    }
+  } catch (error) {
+    console.error('Error loading noon reminder preference:', error);
   }
   return false;
 }

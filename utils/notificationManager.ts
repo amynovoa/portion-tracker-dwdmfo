@@ -2,6 +2,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveNoonReminderEnabled, loadNoonReminderEnabled } from './storage';
 
 const NOTIFICATION_PERMISSION_KEY = 'notification_permission_requested';
 const NOON_REMINDER_ID = 'noon_reminder';
@@ -90,8 +91,12 @@ export async function scheduleNoonReminder(): Promise<void> {
     });
 
     console.log('Noon reminder scheduled successfully');
+    
+    // Save the preference to storage
+    await saveNoonReminderEnabled(true);
   } catch (error) {
     console.error('Error scheduling noon reminder:', error);
+    throw error;
   }
 }
 
@@ -102,6 +107,9 @@ export async function cancelNoonReminder(): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(NOON_REMINDER_ID);
     console.log('Noon reminder cancelled');
+    
+    // Save the preference to storage
+    await saveNoonReminderEnabled(false);
   } catch (error) {
     console.error('Error cancelling noon reminder:', error);
   }
@@ -109,11 +117,14 @@ export async function cancelNoonReminder(): Promise<void> {
 
 /**
  * Check if noon reminder is enabled
+ * Uses storage as the source of truth for reliability
  */
 export async function isNoonReminderEnabled(): Promise<boolean> {
   try {
-    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
-    return scheduledNotifications.some(notif => notif.identifier === NOON_REMINDER_ID);
+    // Use storage as the source of truth
+    const enabled = await loadNoonReminderEnabled();
+    console.log('Noon reminder enabled (from storage):', enabled);
+    return enabled;
   } catch (error) {
     console.error('Error checking noon reminder status:', error);
     return false;
@@ -124,14 +135,18 @@ export async function isNoonReminderEnabled(): Promise<boolean> {
  * Toggle noon reminder on/off
  */
 export async function toggleNoonReminder(enabled: boolean): Promise<void> {
+  console.log('Toggling noon reminder to:', enabled);
+  
   if (enabled) {
     const hasPermission = await requestNotificationPermissions();
     if (hasPermission) {
       await scheduleNoonReminder();
+      console.log('Noon reminder enabled and scheduled');
     } else {
       throw new Error('Notification permission not granted');
     }
   } else {
     await cancelNoonReminder();
+    console.log('Noon reminder disabled and cancelled');
   }
 }
