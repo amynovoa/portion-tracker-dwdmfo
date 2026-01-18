@@ -20,6 +20,24 @@ export const PRODUCT_IDS = {
   ANNUAL: 'portiontrack.annual',
 };
 
+// Fallback prices in case StoreKit fails or returns invalid data
+const FALLBACK_PRICES = {
+  MONTHLY: {
+    price: '2.99',
+    priceString: '$2.99',
+    currencyCode: 'USD',
+    title: 'Monthly Subscription',
+    description: 'Monthly subscription to Portion Tracker',
+  },
+  ANNUAL: {
+    price: '24.99',
+    priceString: '$24.99',
+    currencyCode: 'USD',
+    title: 'Annual Subscription',
+    description: 'Annual subscription to Portion Tracker',
+  },
+};
+
 export interface SubscriptionStatus {
   isSubscribed: boolean;
   isInTrial: boolean;
@@ -161,6 +179,34 @@ export async function initializeStoreKit(): Promise<boolean> {
 }
 
 /**
+ * Helper function to check if price data is valid
+ */
+function isPriceValid(price: any, priceString: any): boolean {
+  // Check if price is a valid number greater than 0
+  const priceNum = parseFloat(price);
+  const isValidPrice = !isNaN(priceNum) && priceNum > 0;
+  
+  // Check if priceString is a non-empty string
+  const isValidPriceString = typeof priceString === 'string' && priceString.trim().length > 0 && priceString !== '$0.00' && priceString !== '0';
+  
+  console.log('🔍 Price validation:', { price, priceString, isValidPrice, isValidPriceString });
+  
+  return isValidPrice && isValidPriceString;
+}
+
+/**
+ * Get fallback product details for a given product ID
+ */
+function getFallbackProduct(productId: string): ProductDetails {
+  const fallback = productId === PRODUCT_IDS.MONTHLY ? FALLBACK_PRICES.MONTHLY : FALLBACK_PRICES.ANNUAL;
+  console.log('📦 Using fallback product details for:', productId, fallback);
+  return {
+    productId,
+    ...fallback,
+  };
+}
+
+/**
  * Get product details from App Store via expo-in-app-purchases
  * PRODUCTION: Fetches real product details from App Store
  * TESTFLIGHT: Fetches real product details from App Store (sandbox)
@@ -171,52 +217,12 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     
     if (Platform.OS !== 'ios') {
       console.log('⚠️ Product details only available on iOS - returning fallback');
-      // Return fallback prices for non-iOS platforms
-      if (productId === PRODUCT_IDS.MONTHLY) {
-        return {
-          productId,
-          price: '2.99',
-          priceString: '$2.99',
-          currencyCode: 'USD',
-          title: 'Monthly Subscription',
-          description: 'Monthly subscription to Portion Tracker',
-        };
-      } else if (productId === PRODUCT_IDS.ANNUAL) {
-        return {
-          productId,
-          price: '24.99',
-          priceString: '$24.99',
-          currencyCode: 'USD',
-          title: 'Annual Subscription',
-          description: 'Annual subscription to Portion Tracker',
-        };
-      }
-      return null;
+      return getFallbackProduct(productId);
     }
 
     if (!InAppPurchases) {
       console.error('❌ InAppPurchases module not available - returning fallback');
-      // Return fallback prices
-      if (productId === PRODUCT_IDS.MONTHLY) {
-        return {
-          productId,
-          price: '2.99',
-          priceString: '$2.99',
-          currencyCode: 'USD',
-          title: 'Monthly Subscription',
-          description: 'Monthly subscription to Portion Tracker',
-        };
-      } else if (productId === PRODUCT_IDS.ANNUAL) {
-        return {
-          productId,
-          price: '24.99',
-          priceString: '$24.99',
-          currencyCode: 'USD',
-          title: 'Annual Subscription',
-          description: 'Annual subscription to Portion Tracker',
-        };
-      }
-      return null;
+      return getFallbackProduct(productId);
     }
 
     // Initialize if not already done
@@ -229,69 +235,36 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
       const product = results[0];
-      console.log('✅ Product details fetched:', {
+      console.log('✅ Product details fetched from StoreKit:', {
         productId: product.productId,
         price: product.price,
         priceString: product.priceString,
         currencyCode: product.currencyCode,
       });
       
-      return {
-        productId: product.productId,
-        price: product.price || '0',
-        priceString: product.priceString || '$0.00',
-        currencyCode: product.currencyCode || 'USD',
-        title: product.title || '',
-        description: product.description || '',
-      };
+      // CRITICAL FIX: Validate that the price data is actually valid
+      // If StoreKit returns 0, null, undefined, or empty string, use fallback
+      if (isPriceValid(product.price, product.priceString)) {
+        console.log('✅ Price data is valid, using StoreKit data');
+        return {
+          productId: product.productId,
+          price: product.price,
+          priceString: product.priceString,
+          currencyCode: product.currencyCode || 'USD',
+          title: product.title || '',
+          description: product.description || '',
+        };
+      } else {
+        console.warn('⚠️ StoreKit returned invalid price data (0 or empty), using fallback');
+        return getFallbackProduct(productId);
+      }
     }
 
     console.log('⚠️ No product found for ID:', productId, '- returning fallback');
-    // Return fallback prices if product not found
-    if (productId === PRODUCT_IDS.MONTHLY) {
-      return {
-        productId,
-        price: '2.99',
-        priceString: '$2.99',
-        currencyCode: 'USD',
-        title: 'Monthly Subscription',
-        description: 'Monthly subscription to Portion Tracker',
-      };
-    } else if (productId === PRODUCT_IDS.ANNUAL) {
-      return {
-        productId,
-        price: '24.99',
-        priceString: '$24.99',
-        currencyCode: 'USD',
-        title: 'Annual Subscription',
-        description: 'Annual subscription to Portion Tracker',
-      };
-    }
-    
-    return null;
+    return getFallbackProduct(productId);
   } catch (error) {
     console.error('❌ Error fetching product details:', error);
-    // Return fallback prices on error
-    if (productId === PRODUCT_IDS.MONTHLY) {
-      return {
-        productId,
-        price: '2.99',
-        priceString: '$2.99',
-        currencyCode: 'USD',
-        title: 'Monthly Subscription',
-        description: 'Monthly subscription to Portion Tracker',
-      };
-    } else if (productId === PRODUCT_IDS.ANNUAL) {
-      return {
-        productId,
-        price: '24.99',
-        priceString: '$24.99',
-        currencyCode: 'USD',
-        title: 'Annual Subscription',
-        description: 'Annual subscription to Portion Tracker',
-      };
-    }
-    return null;
+    return getFallbackProduct(productId);
   }
 }
 
@@ -542,4 +515,3 @@ export async function checkAppStoreSubscription(): Promise<boolean> {
     return localStatus;
   }
 }
-
