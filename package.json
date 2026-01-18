@@ -1,3 +1,4 @@
+
 {
   "name": "Natively",
   "version": "1.0.0",
@@ -9,7 +10,9 @@
     "web": "EXPO_NO_TELEMETRY=1 expo start --web",
     "build:web": "expo export -p web && npx workbox generateSW workbox-config.js",
     "build:android": "expo prebuild -p android",
-    "lint": "eslint .",
+    "lint": "eslint . --cache --cache-location .eslintcache --max-warnings 0",
+    "lint:fix": "eslint . --fix --cache --cache-location .eslintcache",
+    "lint:clear": "rm -f .eslintcache && eslint . --cache --cache-location .eslintcache --max-warnings 0",
     "backup:create": "node scripts/create-backup.js",
     "backup:list": "node scripts/list-backups.js",
     "backup:restore": "node scripts/restore-backup.js",

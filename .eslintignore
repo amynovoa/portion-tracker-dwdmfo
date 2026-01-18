@@ -1,35 +1,73 @@
 
-# Ignore generated files
+# Dependencies
+node_modules/
+
+# Build outputs
 _expo/
 dist/
 web-build/
 .expo/
+.expo-shared/
+build/
+android/
+ios/
 
-# Ignore node modules
-node_modules/
-
-# Ignore build artifacts
-*.bundle.js
-*.bundle.js.map
-
-# Ignore ESLint cache
+# Cache files
 .eslintcache
+.cache/
+*.cache
 
-# Ignore babel plugins
+# Babel plugins (generated code)
 babel-plugins/
 
-# Ignore documentation files
+# Documentation
 *.md
+**/*.md
 
-# Ignore config files that don't need linting
+# Config files
 *.config.js
+**/*.config.js
 workbox-config.js
 
-# Ignore scripts
+# Scripts
 scripts/
+**/scripts/
 
-# Ignore Natively internal files
+# Natively internal
 .natively/
+**/.natively/
 
-# Ignore asset files
+# Assets
 assets/
+**/assets/
+
+# Generated files
+*.bundle.js
+*.bundle.js.map
+*.generated.ts
+*.generated.tsx
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+
+# Chat history
+chat_history.json
