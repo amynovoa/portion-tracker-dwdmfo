@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { toggleNoonReminder, isNoonReminderEnabled } from '@/utils/notificationManager';
 
@@ -62,9 +62,13 @@ export default function DailyReminderScreen() {
   const [noonReminderEnabled, setNoonReminderEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadReminderStatus();
-  }, []);
+  // Load reminder status when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('Daily reminder screen focused - loading reminder status');
+      loadReminderStatus();
+    }, [])
+  );
 
   const loadReminderStatus = async () => {
     try {
@@ -80,11 +84,11 @@ export default function DailyReminderScreen() {
   };
 
   const handleToggleNoonReminder = async (value: boolean) => {
-    console.log('Toggle noon reminder:', value);
+    console.log('User toggled noon reminder to:', value);
     try {
       await toggleNoonReminder(value);
       setNoonReminderEnabled(value);
-      console.log('Noon reminder toggled successfully:', value);
+      console.log('Noon reminder toggled successfully to:', value);
     } catch (error) {
       console.error('Error toggling noon reminder:', error);
       // Reset the switch to previous state
