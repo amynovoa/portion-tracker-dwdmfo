@@ -1,4 +1,3 @@
-
 // Global error logging for runtime errors
 // Captures console.log/warn/error and sends to Natively server for AI debugging
 
@@ -173,7 +172,7 @@ const extractSourceLocation = (stack: string): string => {
   if (!stack) return '';
 
   // Look for various patterns in the stack trace
-  const patterns: RegExp[] = [
+  const patterns = [
     // Pattern for app files: app/filename.tsx:line:column
     /at .+\/(app\/[^:)]+):(\d+):(\d+)/,
     // Pattern for components: components/filename.tsx:line:column

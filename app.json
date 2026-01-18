@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "name": "Portion Tracker",
@@ -65,5 +64,6 @@
         "projectId": "your-project-id-here"
       }
     }
-  }
+  },
+  "scheme": "Portion Tracker"
 }
