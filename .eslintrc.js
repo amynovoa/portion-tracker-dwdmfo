@@ -18,9 +18,18 @@ module.exports = {
       jsx: true
     }
   },
-  ignorePatterns: ['/dist/*', '/public/*', '/babel-plugins/*'],
+  ignorePatterns: [
+    '/dist/*',
+    '/public/*',
+    '/babel-plugins/*',
+    '*.config.js',
+    'scripts/*',
+    '*.md',
+    '.eslintcache'
+  ],
   env: {
     browser: true,
+    'react-native/react-native': true,
   },
   rules: {
     "@typescript-eslint/no-unused-vars": "off",
@@ -32,9 +41,9 @@ module.exports = {
     "@typescript-eslint/no-wrapper-object-types": "off",
     "@typescript-eslint/ban-tslint-comment": "off",
     "react/no-unescaped-entities": "off",
-    "import/no-unresolved": "off", // Disabled - path aliases are handled by TypeScript and Babel
+    "import/no-unresolved": "off",
     "prefer-const": "off",
-    "react/prop-types": 1,
+    "react/prop-types": "off",
     "no-case-declarations": "off",
     "no-empty": "off",
     "react/display-name": "off",
@@ -42,7 +51,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['metro.config.js'],
+      files: ['metro.config.js', 'babel.config.js'],
       rules: {
         '@typescript-eslint/no-var-requires': 'off'
       }

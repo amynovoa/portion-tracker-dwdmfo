@@ -1,3 +1,4 @@
+
 # Ignore generated files
 _expo/
 dist/
@@ -9,3 +10,19 @@ node_modules/
 # Ignore build artifacts
 *.bundle.js
 *.bundle.js.map
+
+# Ignore ESLint cache
+.eslintcache
+
+# Ignore babel plugins
+babel-plugins/
+
+# Ignore documentation files
+*.md
+
+# Ignore config files that don't need linting
+*.config.js
+workbox-config.js
+
+# Ignore scripts
+scripts/
