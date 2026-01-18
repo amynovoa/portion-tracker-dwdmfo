@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Switch, Alert, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
-import { toggleNoonReminder, isNoonReminderEnabled } from '@/utils/notificationManager';
+import { toggleNoonReminder, isNoonReminderEnabled, checkNotificationPermissions } from '@/utils/notificationManager';
 
 const styles = StyleSheet.create({
   container: {
@@ -55,12 +55,24 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
+  warningBox: {
+    backgroundColor: '#fff3cd',
+    borderRadius: 8,
+    padding: 15,
+    marginTop: 15,
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#856404',
+    lineHeight: 20,
+  },
 });
 
 export default function DailyReminderScreen() {
   const router = useRouter();
   const [noonReminderEnabled, setNoonReminderEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasPermission, setHasPermission] = useState(false);
 
   // Load reminder status when screen comes into focus
   useFocusEffect(
@@ -74,8 +86,11 @@ export default function DailyReminderScreen() {
     try {
       console.log('Loading reminder status...');
       const enabled = await isNoonReminderEnabled();
+      const permission = await checkNotificationPermissions();
       console.log('Reminder status loaded:', enabled);
+      console.log('Permission status:', permission);
       setNoonReminderEnabled(enabled);
+      setHasPermission(permission);
     } catch (error) {
       console.error('Error loading reminder status:', error);
     } finally {
@@ -85,17 +100,47 @@ export default function DailyReminderScreen() {
 
   const handleToggleNoonReminder = async (value: boolean) => {
     console.log('User toggled noon reminder to:', value);
+    
+    // If turning on, check permissions first
+    if (value) {
+      const permission = await checkNotificationPermissions();
+      console.log('Permission check result:', permission);
+      
+      if (!permission) {
+        console.log('No notification permission - showing alert');
+        Alert.alert(
+          'Notification Permission Required',
+          'To receive daily reminders, please allow notifications for this app in your device settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Open Settings', 
+              onPress: () => {
+                console.log('Opening device settings...');
+                Linking.openSettings();
+              }
+            }
+          ]
+        );
+        return;
+      }
+    }
+    
     try {
       await toggleNoonReminder(value);
       setNoonReminderEnabled(value);
       console.log('Noon reminder toggled successfully to:', value);
+      
+      // Reload permission status
+      const permission = await checkNotificationPermissions();
+      setHasPermission(permission);
     } catch (error) {
       console.error('Error toggling noon reminder:', error);
       // Reset the switch to previous state
       setNoonReminderEnabled(!value);
       Alert.alert(
-        'Permission Required',
-        'Please enable notifications in your device settings to receive reminders.',
+        'Error',
+        'Failed to update reminder settings. Please try again.',
         [{ text: 'OK' }]
       );
     }
@@ -132,6 +177,14 @@ export default function DailyReminderScreen() {
           <Text style={styles.description}>
             Get reminded at 12:00 PM (noon) each day if you haven&apos;t logged any portions yet.
           </Text>
+
+          {!hasPermission && (
+            <View style={styles.warningBox}>
+              <Text style={styles.warningText}>
+                ⚠️ Notifications are not enabled for this app. To receive reminders, please enable notifications in your device settings.
+              </Text>
+            </View>
+          )}
 
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>

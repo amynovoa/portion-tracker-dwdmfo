@@ -17,20 +17,37 @@ Notifications.setNotificationHandler({
 });
 
 /**
+ * Check if notification permissions are currently granted
+ */
+export async function checkNotificationPermissions(): Promise<boolean> {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    console.log('Current notification permission status:', status);
+    return status === 'granted';
+  } catch (error) {
+    console.error('Error checking notification permissions:', error);
+    return false;
+  }
+}
+
+/**
  * Request notification permissions from the user
  */
 export async function requestNotificationPermissions(): Promise<boolean> {
   try {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    console.log('Existing notification permission status:', existingStatus);
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
+      console.log('Requesting notification permissions...');
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
+      console.log('Permission request result:', status);
     }
 
     if (finalStatus !== 'granted') {
-      console.log('Notification permission not granted');
+      console.log('Notification permission not granted. Final status:', finalStatus);
       return false;
     }
 
@@ -47,6 +64,7 @@ export async function requestNotificationPermissions(): Promise<boolean> {
       });
     }
 
+    console.log('Notification permissions granted successfully');
     return true;
   } catch (error) {
     console.error('Error requesting notification permissions:', error);
@@ -72,6 +90,8 @@ export async function hasRequestedPermissions(): Promise<boolean> {
  */
 export async function scheduleNoonReminder(): Promise<void> {
   try {
+    console.log('Scheduling noon reminder...');
+    
     // Cancel any existing noon reminder
     await cancelNoonReminder();
 
@@ -135,18 +155,32 @@ export async function isNoonReminderEnabled(): Promise<boolean> {
  * Toggle noon reminder on/off
  */
 export async function toggleNoonReminder(enabled: boolean): Promise<void> {
-  console.log('Toggling noon reminder to:', enabled);
+  console.log('=== TOGGLE NOON REMINDER ===');
+  console.log('Requested state:', enabled);
   
   if (enabled) {
-    const hasPermission = await requestNotificationPermissions();
-    if (hasPermission) {
-      await scheduleNoonReminder();
-      console.log('Noon reminder enabled and scheduled');
-    } else {
-      throw new Error('Notification permission not granted');
+    // First check if we already have permissions
+    const hasPermission = await checkNotificationPermissions();
+    console.log('Has notification permission:', hasPermission);
+    
+    if (!hasPermission) {
+      // Try to request permissions
+      console.log('Attempting to request notification permissions...');
+      const granted = await requestNotificationPermissions();
+      
+      if (!granted) {
+        console.log('Permission request was denied or failed');
+        throw new Error('Notification permission not granted');
+      }
     }
+    
+    // If we get here, we have permissions - schedule the reminder
+    console.log('Permissions confirmed, scheduling reminder...');
+    await scheduleNoonReminder();
+    console.log('Noon reminder enabled and scheduled successfully');
   } else {
+    console.log('Disabling noon reminder...');
     await cancelNoonReminder();
-    console.log('Noon reminder disabled and cancelled');
+    console.log('Noon reminder disabled and cancelled successfully');
   }
 }
