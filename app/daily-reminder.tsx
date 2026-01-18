@@ -119,7 +119,7 @@ export default function DailyReminderScreen() {
             <Switch
               value={noonReminderEnabled}
               onValueChange={handleToggleNoonReminder}
-              trackColor={{ false: colors.textSecondary, true: colors.primary }}
+              trackColor={{ false: '#4a4a4a', true: colors.primary }}
               thumbColor="#fff"
               disabled={isLoading}
             />
