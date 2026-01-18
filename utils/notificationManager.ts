@@ -158,29 +158,37 @@ export async function toggleNoonReminder(enabled: boolean): Promise<void> {
   console.log('=== TOGGLE NOON REMINDER ===');
   console.log('Requested state:', enabled);
   
-  if (enabled) {
-    // First check if we already have permissions
-    const hasPermission = await checkNotificationPermissions();
-    console.log('Has notification permission:', hasPermission);
-    
-    if (!hasPermission) {
-      // Try to request permissions
-      console.log('Attempting to request notification permissions...');
-      const granted = await requestNotificationPermissions();
+  try {
+    if (enabled) {
+      // First check if we already have permissions
+      const hasPermission = await checkNotificationPermissions();
+      console.log('Has notification permission:', hasPermission);
       
-      if (!granted) {
-        console.log('Permission request was denied or failed');
-        throw new Error('Notification permission not granted');
+      if (!hasPermission) {
+        // Try to request permissions
+        console.log('Attempting to request notification permissions...');
+        const granted = await requestNotificationPermissions();
+        
+        if (!granted) {
+          console.log('Permission request was denied or failed');
+          // Don't throw error - just save the disabled state
+          await saveNoonReminderEnabled(false);
+          throw new Error('PERMISSION_DENIED');
+        }
       }
+      
+      // If we get here, we have permissions - schedule the reminder
+      console.log('Permissions confirmed, scheduling reminder...');
+      await scheduleNoonReminder();
+      console.log('Noon reminder enabled and scheduled successfully');
+    } else {
+      console.log('Disabling noon reminder...');
+      await cancelNoonReminder();
+      console.log('Noon reminder disabled and cancelled successfully');
     }
-    
-    // If we get here, we have permissions - schedule the reminder
-    console.log('Permissions confirmed, scheduling reminder...');
-    await scheduleNoonReminder();
-    console.log('Noon reminder enabled and scheduled successfully');
-  } else {
-    console.log('Disabling noon reminder...');
-    await cancelNoonReminder();
-    console.log('Noon reminder disabled and cancelled successfully');
+  } catch (error) {
+    console.error('Error in toggleNoonReminder:', error);
+    // Re-throw the error so the UI can handle it
+    throw error;
   }
 }
