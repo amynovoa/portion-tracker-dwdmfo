@@ -101,14 +101,15 @@ export default function DailyReminderScreen() {
   const handleToggleNoonReminder = async (value: boolean) => {
     console.log('User toggled noon reminder to:', value);
     
-    // Don't update UI optimistically - wait for success
+    // Disable the switch while processing
     setIsLoading(true);
     
     try {
+      // Attempt to toggle the reminder
       await toggleNoonReminder(value);
       console.log('Noon reminder toggled successfully to:', value);
       
-      // Update UI after success
+      // Update UI on success
       setNoonReminderEnabled(value);
       
       // Reload permission status
@@ -117,11 +118,11 @@ export default function DailyReminderScreen() {
     } catch (error: any) {
       console.error('Error toggling noon reminder:', error);
       
-      // Make sure switch stays in correct position
+      // Revert switch to previous state
       setNoonReminderEnabled(!value);
       
-      // Check if it's a permission error
-      if (error?.message === 'PERMISSION_DENIED') {
+      // Handle specific error types
+      if (error?.message === 'PERMISSION_DENIED' || error?.name === 'PERMISSION_DENIED') {
         console.log('Permission denied - showing settings alert');
         Alert.alert(
           'Permission Required',
@@ -138,11 +139,11 @@ export default function DailyReminderScreen() {
           ]
         );
       } else {
-        // Generic error
+        // Generic error - something went wrong with scheduling
         console.log('Showing generic error alert');
         Alert.alert(
-          'Error',
-          'Failed to update reminder setting. Please try again.',
+          'Unable to Set Reminder',
+          'There was a problem setting up the reminder. Please try again.',
           [{ text: 'OK' }]
         );
       }

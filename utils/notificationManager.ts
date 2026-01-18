@@ -1,11 +1,10 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveNoonReminderEnabled, loadNoonReminderEnabled } from './storage';
 
-const NOTIFICATION_PERMISSION_KEY = 'notification_permission_requested';
 const NOON_REMINDER_ID = 'noon_reminder';
+const NOTIFICATION_CHANNEL_ID = 'daily-reminders';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -15,6 +14,29 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+/**
+ * Set up notification channel for Android
+ * MUST be called before requesting permissions on Android 13+
+ */
+async function setupNotificationChannel(): Promise<void> {
+  if (Platform.OS === 'android') {
+    try {
+      console.log('Setting up Android notification channel...');
+      await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
+        name: 'Daily Reminders',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        sound: 'default',
+        description: 'Notifications for daily portion tracking reminders',
+      });
+      console.log('Android notification channel created successfully');
+    } catch (error) {
+      console.error('Error creating notification channel:', error);
+      // Don't throw - channel creation failure shouldn't block the app
+    }
+  }
+}
 
 /**
  * Check if notification permissions are currently granted
@@ -32,55 +54,39 @@ export async function checkNotificationPermissions(): Promise<boolean> {
 
 /**
  * Request notification permissions from the user
+ * Follows best practices: creates channel first on Android 13+
  */
 export async function requestNotificationPermissions(): Promise<boolean> {
   try {
+    console.log('=== REQUESTING NOTIFICATION PERMISSIONS ===');
+    
+    // Step 1: Create notification channel FIRST (required for Android 13+)
+    await setupNotificationChannel();
+    
+    // Step 2: Check existing permissions
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     console.log('Existing notification permission status:', existingStatus);
+    
     let finalStatus = existingStatus;
 
+    // Step 3: Request permissions if not already granted
     if (existingStatus !== 'granted') {
-      console.log('Requesting notification permissions...');
+      console.log('Requesting notification permissions from user...');
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
       console.log('Permission request result:', status);
     }
 
+    // Step 4: Check final result
     if (finalStatus !== 'granted') {
       console.log('Notification permission not granted. Final status:', finalStatus);
       return false;
-    }
-
-    // Mark that we've requested permission
-    await AsyncStorage.setItem(NOTIFICATION_PERMISSION_KEY, 'true');
-
-    // Configure notification channel for Android
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
     }
 
     console.log('Notification permissions granted successfully');
     return true;
   } catch (error) {
     console.error('Error requesting notification permissions:', error);
-    return false;
-  }
-}
-
-/**
- * Check if notification permissions have been requested before
- */
-export async function hasRequestedPermissions(): Promise<boolean> {
-  try {
-    const requested = await AsyncStorage.getItem(NOTIFICATION_PERMISSION_KEY);
-    return requested === 'true';
-  } catch (error) {
-    console.error('Error checking notification permission status:', error);
     return false;
   }
 }
@@ -93,7 +99,7 @@ export async function scheduleNoonReminder(): Promise<void> {
     console.log('Scheduling noon reminder...');
     
     // Cancel any existing noon reminder first
-    await Notifications.cancelScheduledNotificationAsync(NOON_REMINDER_ID);
+    await cancelNoonReminder();
 
     // Schedule new reminder for 12:00 PM daily
     await Notifications.scheduleNotificationAsync({
@@ -107,6 +113,7 @@ export async function scheduleNoonReminder(): Promise<void> {
         hour: 12,
         minute: 0,
         repeats: true,
+        channelId: NOTIFICATION_CHANNEL_ID, // Link to our channel
       },
     });
 
@@ -136,7 +143,6 @@ export async function cancelNoonReminder(): Promise<void> {
  */
 export async function isNoonReminderEnabled(): Promise<boolean> {
   try {
-    // Use storage as the source of truth
     const enabled = await loadNoonReminderEnabled();
     console.log('Noon reminder enabled (from storage):', enabled);
     return enabled ?? false;
@@ -148,7 +154,7 @@ export async function isNoonReminderEnabled(): Promise<boolean> {
 
 /**
  * Toggle noon reminder on/off
- * Simplified version that just saves the preference and schedules/cancels
+ * Follows best practices for permission handling and error management
  */
 export async function toggleNoonReminder(enabled: boolean): Promise<void> {
   console.log('=== TOGGLE NOON REMINDER ===');
@@ -156,43 +162,65 @@ export async function toggleNoonReminder(enabled: boolean): Promise<void> {
   
   try {
     if (enabled) {
-      // Check permissions first
-      const hasPermission = await checkNotificationPermissions();
+      // Step 1: Check if we already have permissions
+      let hasPermission = await checkNotificationPermissions();
       console.log('Has notification permission:', hasPermission);
       
       if (!hasPermission) {
-        // Request permissions
+        // Step 2: Request permissions (this will also create the channel)
         console.log('Requesting notification permissions...');
-        const granted = await requestNotificationPermissions();
+        hasPermission = await requestNotificationPermissions();
         
-        if (!granted) {
+        if (!hasPermission) {
           console.log('Permission denied - cannot enable reminders');
           // Save disabled state
           await saveNoonReminderEnabled(false);
-          throw new Error('PERMISSION_DENIED');
+          // Throw specific error for permission denial
+          const error = new Error('PERMISSION_DENIED');
+          error.name = 'PERMISSION_DENIED';
+          throw error;
         }
+      } else {
+        // Even if we have permissions, ensure channel exists
+        await setupNotificationChannel();
       }
       
-      // Schedule the reminder
+      // Step 3: Schedule the reminder
       console.log('Scheduling reminder...');
       await scheduleNoonReminder();
       
-      // Save enabled state
+      // Step 4: Save enabled state
       await saveNoonReminderEnabled(true);
       console.log('Noon reminder enabled successfully');
     } else {
-      // Cancel the reminder
+      // Disable: Cancel the reminder and save state
       console.log('Cancelling reminder...');
       await cancelNoonReminder();
-      
-      // Save disabled state
       await saveNoonReminderEnabled(false);
       console.log('Noon reminder disabled successfully');
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in toggleNoonReminder:', error);
-    // Make sure we save the correct state even on error
+    
+    // Always save disabled state on error
     await saveNoonReminderEnabled(false);
+    
+    // Re-throw the error so the UI can handle it
     throw error;
+  }
+}
+
+/**
+ * Initialize notifications on app startup
+ * Creates the notification channel if needed
+ */
+export async function initializeNotifications(): Promise<void> {
+  try {
+    console.log('Initializing notifications...');
+    await setupNotificationChannel();
+    console.log('Notifications initialized successfully');
+  } catch (error) {
+    console.error('Error initializing notifications:', error);
+    // Don't throw - initialization failure shouldn't crash the app
   }
 }

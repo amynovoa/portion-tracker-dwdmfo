@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { loadProfile } from '@/utils/storage';
 import { View, ActivityIndicator, AppState, AppStateStatus, Platform } from 'react-native';
 import { colors } from '@/styles/commonStyles';
-import { requestNotificationPermissions, scheduleNoonReminder } from '@/utils/notificationManager';
+import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
@@ -24,36 +24,32 @@ function AppContent() {
         console.log('🚀 App starting up...');
         console.log('📱 Platform:', Platform.OS);
         
-        // CRITICAL: Only check for profile - do everything else in background
+        // Initialize notifications early (creates channel on Android)
+        console.log('Initializing notifications...');
+        await initializeNotifications();
+        
+        // Check for profile
         console.log('Checking for existing profile...');
         const profile = await loadProfile();
         console.log('Profile loaded:', profile ? 'Found' : 'Not found');
         setHasProfile(!!profile);
 
-        // Mark app as ready immediately after profile check
+        // Mark app as ready
         setIsReady(true);
 
-        // Do everything else in the background AFTER the app is ready
+        // Do backup in background AFTER the app is ready
         if (profile) {
-          // Run these in background without blocking app launch
           setTimeout(async () => {
             try {
-              console.log('Background: Requesting notification permissions...');
-              const hasPermission = await requestNotificationPermissions();
-              if (hasPermission) {
-                console.log('Background: Scheduling noon reminder...');
-                await scheduleNoonReminder();
-              }
-
               console.log('Background: Creating automatic backup...');
               await createAutomaticBackup();
             } catch (error) {
               console.error('Background tasks error:', error);
             }
-          }, 1000); // Wait 1 second after app loads to run background tasks
+          }, 1000);
         }
       } catch (e) {
-        console.error('Error loading profile:', e);
+        console.error('Error during app initialization:', e);
         setHasProfile(false);
         setIsReady(true); // Still mark as ready even if there's an error
       }
@@ -67,14 +63,13 @@ function AppContent() {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         console.log('App came to foreground, creating backup in background...');
-        // Run in background without blocking
         setTimeout(async () => {
           try {
             await createAutomaticBackup();
           } catch (error) {
             console.error('Error creating automatic backup:', error);
           }
-        }, 2000); // Wait 2 seconds after coming to foreground
+        }, 2000);
       }
     };
 
