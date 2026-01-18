@@ -3,6 +3,7 @@
 _expo/
 dist/
 web-build/
+.expo/
 
 # Ignore node modules
 node_modules/
@@ -26,3 +27,9 @@ workbox-config.js
 
 # Ignore scripts
 scripts/
+
+# Ignore Natively internal files
+.natively/
+
+# Ignore asset files
+assets/

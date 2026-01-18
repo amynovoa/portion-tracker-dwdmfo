@@ -25,7 +25,12 @@ module.exports = {
     '*.config.js',
     'scripts/*',
     '*.md',
-    '.eslintcache'
+    '.eslintcache',
+    'node_modules/',
+    '.expo/',
+    'web-build/',
+    '_expo/',
+    'workbox-config.js'
   ],
   env: {
     browser: true,
@@ -51,7 +56,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['metro.config.js', 'babel.config.js'],
+      files: ['metro.config.js', 'babel.config.js', 'workbox-config.js'],
       rules: {
         '@typescript-eslint/no-var-requires': 'off'
       }
