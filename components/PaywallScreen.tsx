@@ -24,6 +24,8 @@ import {
   getTestFlightBypassEnabled,
   setTestFlightBypassEnabled,
   getProductDetails,
+  queryProducts,
+  isProductReady,
   ProductDetails
 } from '@/utils/subscriptionManager';
 
@@ -43,6 +45,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsReady, setProductsReady] = useState<string[]>([]);
 
   useEffect(() => {
     if (visible) {
@@ -69,6 +72,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setLoadingProducts(true);
 
     try {
+      // CRITICAL FIX: Query BOTH products from StoreKit first
+      console.log('PaywallScreen: Querying products from StoreKit...');
+      const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+      console.log('PaywallScreen: Queried product IDs:', queriedIds);
+      setProductsReady(queriedIds);
+
+      // Now fetch the product details for display
       const [monthly, annual] = await Promise.all([
         getProductDetails(PRODUCT_IDS.MONTHLY),
         getProductDetails(PRODUCT_IDS.ANNUAL),
@@ -96,10 +106,22 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('User tapped Subscribe button');
     console.log('Selected plan:', selectedPlan);
 
+    const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
+
+    // CRITICAL FIX: Check if product is ready before attempting purchase
+    if (!bypassEnabled && !isProductReady(productId)) {
+      console.error('Product not ready for purchase:', productId);
+      Alert.alert(
+        'Please Wait',
+        'Products are still loading. Please try again in a moment.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
       console.log('Purchasing product:', productId);
 
       const result = await purchaseProduct(productId);
@@ -132,9 +154,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       }
     } catch (error: any) {
       console.error('Purchase error:', error);
+      
+      // CRITICAL FIX: Don't reference responseCode on iOS
+      const errorMessage = error?.message || 'An unexpected error occurred. Please try again.';
+      
       Alert.alert(
         'Error',
-        error.message || 'An unexpected error occurred. Please try again.',
+        errorMessage,
         [{ text: 'OK' }]
       );
     } finally {
@@ -176,9 +202,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       }
     } catch (error: any) {
       console.error('Restore error:', error);
+      
+      // CRITICAL FIX: Don't reference responseCode on iOS
+      const errorMessage = error?.message || 'Unable to restore purchases. Please try again.';
+      
       Alert.alert(
         'Error',
-        error.message || 'Unable to restore purchases. Please try again.',
+        errorMessage,
         [{ text: 'OK' }]
       );
     } finally {
@@ -220,6 +250,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       return `${annualProduct.currencyCode === 'USD' ? '$' : ''}${monthlyEquivalent}`;
     }
     return '$2.08';
+  };
+
+  // Check if selected product is ready for purchase
+  const isSelectedProductReady = () => {
+    if (bypassEnabled) return true; // Bypass mode doesn't need products
+    const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
+    return productsReady.includes(productId);
   };
 
   return (
@@ -337,6 +374,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                   ? '✅ Simulating purchases (no real charges)'
                   : '⚠️ Using real StoreKit sandbox purchases'}
               </Text>
+              {!bypassEnabled && (
+                <Text style={styles.testFlightDescription}>
+                  Products ready: {productsReady.join(', ') || 'Loading...'}
+                </Text>
+              )}
             </View>
           )}
 
@@ -354,15 +396,23 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           </View>
 
           <TouchableOpacity
-            style={[buttonStyles.primary, styles.subscribeButton]}
+            style={[
+              buttonStyles.primary, 
+              styles.subscribeButton,
+              (!isSelectedProductReady() && !bypassEnabled) && styles.subscribeButtonDisabled
+            ]}
             onPress={handleSubscribe}
-            disabled={loading || loadingProducts}
+            disabled={loading || (loadingProducts && !bypassEnabled) || (!isSelectedProductReady() && !bypassEnabled)}
           >
             {loading ? (
               <ActivityIndicator color={colors.surface} />
             ) : (
               <Text style={buttonStyles.primaryText}>
-                {loadingProducts ? 'Loading...' : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`}
+                {loadingProducts && !bypassEnabled
+                  ? 'Loading products...'
+                  : !isSelectedProductReady() && !bypassEnabled
+                  ? 'Product not available'
+                  : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`}
               </Text>
             )}
           </TouchableOpacity>
@@ -543,9 +593,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     fontStyle: 'italic',
+    marginTop: 4,
   },
   subscribeButton: {
     marginBottom: 16,
+  },
+  subscribeButtonDisabled: {
+    opacity: 0.5,
   },
   restoreButton: {
     padding: 16,

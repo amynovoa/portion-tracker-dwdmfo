@@ -38,6 +38,9 @@ const FALLBACK_PRICES = {
   },
 };
 
+// Store queried products globally so they can be used for purchase
+let queriedProducts: Map<string, any> = new Map();
+
 export interface SubscriptionStatus {
   isSubscribed: boolean;
   isInTrial: boolean;
@@ -207,6 +210,62 @@ function getFallbackProduct(productId: string): ProductDetails {
 }
 
 /**
+ * Query and store products from StoreKit
+ * This MUST be called before attempting to purchase
+ * Returns array of product IDs that were successfully queried
+ */
+export async function queryProducts(productIds: string[]): Promise<string[]> {
+  try {
+    console.log('🛒 Querying products from StoreKit:', productIds);
+    
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ Product query only available on iOS');
+      return [];
+    }
+
+    if (!InAppPurchases) {
+      console.error('❌ InAppPurchases module not available');
+      return [];
+    }
+
+    // Initialize if not already done
+    await initializeStoreKit();
+
+    // Fetch products from App Store
+    const { responseCode, results } = await InAppPurchases.getProductsAsync(productIds);
+    
+    console.log('🛒 Product query response:', { responseCode, resultsCount: results?.length });
+    
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
+      // Store the queried products for later use in purchase
+      results.forEach((product: any) => {
+        queriedProducts.set(product.productId, product);
+        console.log('✅ Stored product for purchase:', product.productId);
+      });
+      
+      const queriedIds = results.map((p: any) => p.productId);
+      console.log('✅ Successfully queried products:', queriedIds);
+      return queriedIds;
+    }
+
+    console.log('⚠️ No products returned from StoreKit');
+    return [];
+  } catch (error) {
+    console.error('❌ Error querying products:', error);
+    return [];
+  }
+}
+
+/**
+ * Check if a product has been queried and is ready for purchase
+ */
+export function isProductReady(productId: string): boolean {
+  const ready = queriedProducts.has(productId);
+  console.log('🔍 Product ready check:', productId, ready);
+  return ready;
+}
+
+/**
  * Get product details from App Store via expo-in-app-purchases
  * PRODUCTION: Fetches real product details from App Store
  * TESTFLIGHT: Fetches real product details from App Store (sandbox)
@@ -235,6 +294,10 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
       const product = results[0];
+      
+      // Store the product for later purchase
+      queriedProducts.set(product.productId, product);
+      
       console.log('✅ Product details fetched from StoreKit:', {
         productId: product.productId,
         price: product.price,
@@ -270,6 +333,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
 
 /**
  * Purchase a product through App Store via expo-in-app-purchases
+ * CRITICAL: Product MUST be queried first via queryProducts() or getProductDetails()
  * PRODUCTION: Always processes real App Store purchases
  * TESTFLIGHT WITH BYPASS ON: Simulates purchase (no real charge)
  * TESTFLIGHT WITH BYPASS OFF: Processes real sandbox purchases
@@ -299,6 +363,16 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       console.log('✅ TestFlight bypass enabled: Simulating purchase (no real charge)');
       await saveSubscriptionStatus(true);
       return { success: true };
+    }
+
+    // CRITICAL FIX: Check if product has been queried
+    if (!queriedProducts.has(productId)) {
+      console.error('❌ Product not queried yet:', productId);
+      console.log('🔍 Available products:', Array.from(queriedProducts.keys()));
+      return {
+        success: false,
+        error: 'Product not ready. Please wait for products to load.',
+      };
     }
 
     // Initialize if not already done
@@ -333,8 +407,15 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
   } catch (error: any) {
     console.error('❌ Purchase error:', error);
     
+    // CRITICAL FIX: iOS doesn't return responseCode like Android
+    // Use error.code and error.message with optional chaining
+    const errorCode = error?.code;
+    const errorMessage = error?.message || 'Purchase failed';
+    
+    console.log('🔍 Error details:', { errorCode, errorMessage });
+    
     // Check if user cancelled
-    if (error.code === 'E_USER_CANCELLED' || error.message?.includes('cancel')) {
+    if (errorCode === 'E_USER_CANCELLED' || errorMessage?.includes('cancel')) {
       return {
         success: false,
         userCancelled: true,
@@ -343,7 +424,7 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     
     return {
       success: false,
-      error: error.message || 'Purchase failed',
+      error: errorMessage,
     };
   }
 }
@@ -419,9 +500,17 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     }
   } catch (error: any) {
     console.error('❌ Restore purchases error:', error);
+    
+    // CRITICAL FIX: iOS doesn't return responseCode like Android
+    // Use error.code and error.message with optional chaining
+    const errorCode = error?.code;
+    const errorMessage = error?.message || 'Failed to restore purchases';
+    
+    console.log('🔍 Error details:', { errorCode, errorMessage });
+    
     return {
       success: false,
-      error: error.message || 'Failed to restore purchases',
+      error: errorMessage,
     };
   }
 }
