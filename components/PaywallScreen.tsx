@@ -49,6 +49,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
   useEffect(() => {
     if (visible) {
+      console.log('PaywallScreen: Paywall opened, loading products...');
       loadInitialState();
       loadProducts();
     }
@@ -72,13 +73,16 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setLoadingProducts(true);
 
     try {
-      // CRITICAL FIX: Query BOTH products from StoreKit first
+      // CRITICAL FIX: Query BOTH products from StoreKit FIRST
+      // This stores the Product objects in memory for later purchase
       console.log('PaywallScreen: Querying products from StoreKit...');
       const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-      console.log('PaywallScreen: Queried product IDs:', queriedIds);
+      console.log('PaywallScreen: Successfully queried product IDs:', queriedIds);
       setProductsReady(queriedIds);
 
       // Now fetch the product details for display
+      // getProductDetails also stores the Product objects if not already stored
+      console.log('PaywallScreen: Fetching product details for display...');
       const [monthly, annual] = await Promise.all([
         getProductDetails(PRODUCT_IDS.MONTHLY),
         getProductDetails(PRODUCT_IDS.ANNUAL),
@@ -89,6 +93,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
+      
+      console.log('✅ PaywallScreen: Products loaded and ready for purchase');
     } catch (error) {
       console.error('PaywallScreen: Error loading products:', error);
     } finally {
@@ -107,10 +113,14 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('Selected plan:', selectedPlan);
 
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
+    console.log('Product ID to purchase:', productId);
 
     // CRITICAL FIX: Check if product is ready before attempting purchase
+    // If bypass is enabled, we don't need the product to be ready
     if (!bypassEnabled && !isProductReady(productId)) {
-      console.error('Product not ready for purchase:', productId);
+      console.warn('⚠️ Product not ready for purchase:', productId);
+      console.log('Available products:', productsReady);
+      
       Alert.alert(
         'Please Wait',
         'Products are still loading. Please try again in a moment.',
@@ -122,8 +132,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setLoading(true);
 
     try {
-      console.log('Purchasing product:', productId);
+      console.log('Initiating purchase for:', productId);
 
+      // purchaseProduct will re-query if needed
       const result = await purchaseProduct(productId);
       console.log('Purchase result:', result);
 
@@ -256,7 +267,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const isSelectedProductReady = () => {
     if (bypassEnabled) return true; // Bypass mode doesn't need products
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-    return productsReady.includes(productId);
+    const ready = productsReady.includes(productId);
+    console.log('Selected product ready check:', productId, ready);
+    return ready;
   };
 
   return (
@@ -376,7 +389,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               </Text>
               {!bypassEnabled && (
                 <Text style={styles.testFlightDescription}>
-                  Products ready: {productsReady.join(', ') || 'Loading...'}
+                  Products ready: {productsReady.length > 0 ? productsReady.join(', ') : 'Loading...'}
                 </Text>
               )}
             </View>

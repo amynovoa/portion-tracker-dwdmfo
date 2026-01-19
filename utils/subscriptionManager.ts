@@ -38,7 +38,8 @@ const FALLBACK_PRICES = {
   },
 };
 
-// Store queried products globally so they can be used for purchase
+// Store queried Product objects globally so they can be used for purchase
+// CRITICAL: We store the full Product object, not just the ID
 let queriedProducts: Map<string, any> = new Map();
 
 export interface SubscriptionStatus {
@@ -210,8 +211,9 @@ function getFallbackProduct(productId: string): ProductDetails {
 }
 
 /**
- * Query and store products from StoreKit
- * This MUST be called before attempting to purchase
+ * Query and store Product objects from StoreKit
+ * CRITICAL: This stores the full Product objects returned by StoreKit
+ * These Product objects MUST be used when calling purchaseItemAsync
  * Returns array of product IDs that were successfully queried
  */
 export async function queryProducts(productIds: string[]): Promise<string[]> {
@@ -237,14 +239,19 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.log('🛒 Product query response:', { responseCode, resultsCount: results?.length });
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
-      // Store the queried products for later use in purchase
+      // CRITICAL: Store the full Product objects (not just IDs)
+      // These objects contain the productId and all metadata needed for purchase
       results.forEach((product: any) => {
         queriedProducts.set(product.productId, product);
-        console.log('✅ Stored product for purchase:', product.productId);
+        console.log('✅ Stored Product object for purchase:', {
+          productId: product.productId,
+          price: product.price,
+          priceString: product.priceString,
+        });
       });
       
       const queriedIds = results.map((p: any) => p.productId);
-      console.log('✅ Successfully queried products:', queriedIds);
+      console.log('✅ Successfully queried and stored products:', queriedIds);
       return queriedIds;
     }
 
@@ -258,6 +265,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
 
 /**
  * Check if a product has been queried and is ready for purchase
+ * Returns true if the Product object is stored in memory
  */
 export function isProductReady(productId: string): boolean {
   const ready = queriedProducts.has(productId);
@@ -267,6 +275,7 @@ export function isProductReady(productId: string): boolean {
 
 /**
  * Get product details from App Store via expo-in-app-purchases
+ * This also stores the Product object for later purchase
  * PRODUCTION: Fetches real product details from App Store
  * TESTFLIGHT: Fetches real product details from App Store (sandbox)
  */
@@ -295,8 +304,9 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
       const product = results[0];
       
-      // Store the product for later purchase
+      // CRITICAL: Store the full Product object for later purchase
       queriedProducts.set(product.productId, product);
+      console.log('✅ Stored Product object for purchase:', product.productId);
       
       console.log('✅ Product details fetched from StoreKit:', {
         productId: product.productId,
@@ -333,7 +343,8 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
 
 /**
  * Purchase a product through App Store via expo-in-app-purchases
- * CRITICAL: Product MUST be queried first via queryProducts() or getProductDetails()
+ * CRITICAL: This function uses the Product object stored by queryProducts()
+ * If the product is not in memory, it will re-query before attempting purchase
  * PRODUCTION: Always processes real App Store purchases
  * TESTFLIGHT WITH BYPASS ON: Simulates purchase (no real charge)
  * TESTFLIGHT WITH BYPASS OFF: Processes real sandbox purchases
@@ -365,22 +376,48 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       return { success: true };
     }
 
-    // CRITICAL FIX: Check if product has been queried
+    // CRITICAL FIX: Check if product has been queried and stored
     if (!queriedProducts.has(productId)) {
-      console.error('❌ Product not queried yet:', productId);
-      console.log('🔍 Available products:', Array.from(queriedProducts.keys()));
+      console.warn('⚠️ Product not in memory, re-querying from StoreKit:', productId);
+      
+      // Re-query the product before attempting purchase
+      const queriedIds = await queryProducts([productId]);
+      
+      if (!queriedIds.includes(productId)) {
+        console.error('❌ Product still not available after re-query:', productId);
+        return {
+          success: false,
+          error: 'Product not available. Please check your internet connection and try again.',
+        };
+      }
+      
+      console.log('✅ Product re-queried successfully:', productId);
+    }
+
+    // Get the stored Product object
+    const product = queriedProducts.get(productId);
+    
+    if (!product) {
+      console.error('❌ Product object not found in memory:', productId);
       return {
         success: false,
-        error: 'Product not ready. Please wait for products to load.',
+        error: 'Product not ready. Please try again.',
       };
     }
+
+    console.log('✅ Using stored Product object for purchase:', {
+      productId: product.productId,
+      price: product.price,
+      priceString: product.priceString,
+    });
 
     // Initialize if not already done
     await initializeStoreKit();
 
-    // Initiate purchase (real App Store purchase in production, sandbox in TestFlight)
-    console.log('🛒 Calling purchaseItemAsync for:', productId);
-    const { responseCode, errorCode } = await InAppPurchases.purchaseItemAsync(productId);
+    // CRITICAL: Call purchaseItemAsync with the productId from the stored Product object
+    // This ensures we're using the exact product that was returned from StoreKit
+    console.log('🛒 Calling purchaseItemAsync with productId:', product.productId);
+    const { responseCode, errorCode } = await InAppPurchases.purchaseItemAsync(product.productId);
     
     console.log('📱 Purchase response:', { responseCode, errorCode });
 
