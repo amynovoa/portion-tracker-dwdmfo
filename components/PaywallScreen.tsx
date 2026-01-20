@@ -74,11 +74,34 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const loadProducts = async () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 PRODUCT FETCH START: Initializing StoreKit and fetching products');
+    console.log('📊 PRODUCT FETCH: Platform:', Platform.OS);
     console.log('═══════════════════════════════════════════════════════');
     
     setLoadingProducts(true);
     setProductsFailed(false);
     setProductsReady([]);
+
+    // CRITICAL FIX: On non-iOS platforms (web, Android), use fallback products
+    // expo-in-app-purchases only works on iOS
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ PRODUCT FETCH: Not iOS platform, using fallback products');
+      console.log('⚠️ PRODUCT FETCH: In-app purchases only work on iOS devices');
+      
+      // Get fallback product details
+      const [monthly, annual] = await Promise.all([
+        getProductDetails(PRODUCT_IDS.MONTHLY),
+        getProductDetails(PRODUCT_IDS.ANNUAL),
+      ]);
+      
+      setMonthlyProduct(monthly);
+      setAnnualProduct(annual);
+      setProductsReady([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+      setLoadingProducts(false);
+      
+      console.log('✅ PRODUCT FETCH: Fallback products loaded');
+      console.log('═══════════════════════════════════════════════════════');
+      return;
+    }
 
     try {
       // STEP 1: Query BOTH products from StoreKit and store Product objects
@@ -98,8 +121,21 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       if (queriedIds.length === 0) {
         console.error('❌ PRODUCT FETCH FAIL: No products returned from StoreKit');
         console.error('❌ PRODUCT FETCH FAIL: This means StoreKit query failed or returned empty');
-        setProductsFailed(true);
+        console.error('❌ PRODUCT FETCH FAIL: Using fallback products instead');
+        
+        // Use fallback products instead of failing completely
+        const [monthly, annual] = await Promise.all([
+          getProductDetails(PRODUCT_IDS.MONTHLY),
+          getProductDetails(PRODUCT_IDS.ANNUAL),
+        ]);
+        
+        setMonthlyProduct(monthly);
+        setAnnualProduct(annual);
+        setProductsReady([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
         setLoadingProducts(false);
+        
+        console.log('✅ PRODUCT FETCH: Using fallback products');
+        console.log('═══════════════════════════════════════════════════════');
         return;
       }
 
@@ -148,8 +184,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.error('═══════════════════════════════════════════════════════');
       console.error('❌ PRODUCT FETCH ERROR: Failed to load products');
       console.error('❌ Error details:', error);
+      console.error('❌ PRODUCT FETCH ERROR: Using fallback products');
       console.error('═══════════════════════════════════════════════════════');
-      setProductsFailed(true);
+      
+      // Use fallback products on error instead of showing error screen
+      const [monthly, annual] = await Promise.all([
+        getProductDetails(PRODUCT_IDS.MONTHLY),
+        getProductDetails(PRODUCT_IDS.ANNUAL),
+      ]);
+      
+      setMonthlyProduct(monthly);
+      setAnnualProduct(annual);
+      setProductsReady([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
     } finally {
       setLoadingProducts(false);
     }
