@@ -96,7 +96,7 @@ export default function WelcomeScreen() {
             style={[buttonStyles.primary, styles.button]}
             onPress={handleGetStarted}
           >
-            <Text style={buttonStyles.primaryText}>Get Started</Text>
+            <Text style={buttonStyles.primaryText}>You are all set - Let&apos;s get started</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
