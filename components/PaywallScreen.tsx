@@ -45,81 +45,154 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsFailed, setProductsFailed] = useState(false);
   const [productsReady, setProductsReady] = useState<string[]>([]);
 
   useEffect(() => {
     if (visible) {
-      console.log('PaywallScreen: Paywall opened, loading products...');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔵 PAYWALL MOUNT: Paywall screen opened');
+      console.log('═══════════════════════════════════════════════════════');
       loadInitialState();
       loadProducts();
     }
   }, [visible]);
 
   const loadInitialState = async () => {
-    console.log('PaywallScreen: Loading initial state...');
+    console.log('🔄 PAYWALL INIT: Loading initial state...');
     const testFlight = isTestFlightBuild();
     setIsTestFlight(testFlight);
-    console.log('PaywallScreen: Is TestFlight/Dev:', testFlight);
+    console.log('📱 PAYWALL INIT: Is TestFlight/Dev build:', testFlight);
 
     if (testFlight) {
       const bypass = await getTestFlightBypassEnabled();
       setBypassEnabled(bypass);
-      console.log('PaywallScreen: Bypass enabled:', bypass);
+      console.log('🔧 PAYWALL INIT: TestFlight bypass enabled:', bypass);
     }
   };
 
   const loadProducts = async () => {
-    console.log('PaywallScreen: Loading product details from App Store...');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 PRODUCT FETCH START: Initializing StoreKit and fetching products');
+    console.log('═══════════════════════════════════════════════════════');
+    
     setLoadingProducts(true);
+    setProductsFailed(false);
+    setProductsReady([]);
 
     try {
-      // CRITICAL FIX: Query BOTH products from StoreKit FIRST
-      // This stores the Product objects in memory for later purchase
-      console.log('PaywallScreen: Querying products from StoreKit...');
+      // STEP 1: Query BOTH products from StoreKit and store Product objects
+      console.log('📦 PRODUCT FETCH: Querying products from StoreKit...');
+      console.log('📦 PRODUCT FETCH: SKUs to query:', [PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+      
       const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-      console.log('PaywallScreen: Successfully queried product IDs:', queriedIds);
+      
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('📊 PRODUCT FETCH RESULT:');
+      console.log('  - Total products queried:', queriedIds.length);
+      console.log('  - Product IDs returned:', queriedIds);
+      console.log('  - Monthly SKU ready:', queriedIds.includes(PRODUCT_IDS.MONTHLY));
+      console.log('  - Annual SKU ready:', queriedIds.includes(PRODUCT_IDS.ANNUAL));
+      console.log('═══════════════════════════════════════════════════════');
+
+      if (queriedIds.length === 0) {
+        console.error('❌ PRODUCT FETCH FAIL: No products returned from StoreKit');
+        console.error('❌ PRODUCT FETCH FAIL: This means StoreKit query failed or returned empty');
+        setProductsFailed(true);
+        setLoadingProducts(false);
+        return;
+      }
+
       setProductsReady(queriedIds);
 
-      // Now fetch the product details for display
-      // getProductDetails also stores the Product objects if not already stored
-      console.log('PaywallScreen: Fetching product details for display...');
+      // STEP 2: Get display details for each product
+      console.log('🔄 PRODUCT DETAILS: Fetching display details for products...');
+      
       const [monthly, annual] = await Promise.all([
         getProductDetails(PRODUCT_IDS.MONTHLY),
         getProductDetails(PRODUCT_IDS.ANNUAL),
       ]);
 
-      console.log('PaywallScreen: Monthly product:', monthly);
-      console.log('PaywallScreen: Annual product:', annual);
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('📊 PRODUCT DETAILS RESULT:');
+      console.log('  Monthly Product:');
+      console.log('    - Product ID:', monthly?.productId);
+      console.log('    - Price:', monthly?.price);
+      console.log('    - Price String:', monthly?.priceString);
+      console.log('    - Currency:', monthly?.currencyCode);
+      console.log('    - Has valid price:', !!(monthly?.price && monthly?.priceString));
+      console.log('  Annual Product:');
+      console.log('    - Product ID:', annual?.productId);
+      console.log('    - Price:', annual?.price);
+      console.log('    - Price String:', annual?.priceString);
+      console.log('    - Currency:', annual?.currencyCode);
+      console.log('    - Has valid price:', !!(annual?.price && annual?.priceString));
+      console.log('═══════════════════════════════════════════════════════');
 
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
       
-      console.log('✅ PaywallScreen: Products loaded and ready for purchase');
+      // Verify products have valid prices
+      const monthlyValid = monthly && monthly.price && monthly.priceString;
+      const annualValid = annual && annual.price && annual.priceString;
+      
+      if (!monthlyValid || !annualValid) {
+        console.warn('⚠️ PRODUCT VALIDATION: Some products missing valid price data');
+        console.warn('⚠️ PRODUCT VALIDATION: Monthly valid:', monthlyValid);
+        console.warn('⚠️ PRODUCT VALIDATION: Annual valid:', annualValid);
+      }
+      
+      console.log('✅ PRODUCT FETCH COMPLETE: Products loaded and ready for purchase');
+      console.log('═══════════════════════════════════════════════════════');
     } catch (error) {
-      console.error('PaywallScreen: Error loading products:', error);
+      console.error('═══════════════════════════════════════════════════════');
+      console.error('❌ PRODUCT FETCH ERROR: Failed to load products');
+      console.error('❌ Error details:', error);
+      console.error('═══════════════════════════════════════════════════════');
+      setProductsFailed(true);
     } finally {
       setLoadingProducts(false);
     }
   };
 
   const handleBypassToggle = async (value: boolean) => {
-    console.log('PaywallScreen: Bypass toggle changed to:', value);
+    console.log('🔧 BYPASS TOGGLE: Changed to:', value);
     setBypassEnabled(value);
     await setTestFlightBypassEnabled(value);
   };
 
   const handleSubscribe = async () => {
-    console.log('User tapped Subscribe button');
-    console.log('Selected plan:', selectedPlan);
-
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 PURCHASE TAP: User tapped Subscribe button');
+    console.log('═══════════════════════════════════════════════════════');
+    
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-    console.log('Product ID to purchase:', productId);
+    
+    console.log('📊 PURCHASE TAP INFO:');
+    console.log('  - Selected plan:', selectedPlan);
+    console.log('  - Product ID:', productId);
+    console.log('  - Bypass enabled:', bypassEnabled);
+    console.log('  - Products ready list:', productsReady);
+    console.log('  - Is product ready:', isProductReady(productId));
+    
+    // Check if product object exists in memory
+    const productExists = isProductReady(productId);
+    console.log('  - Product object exists in memory:', productExists);
+    
+    if (!productExists) {
+      console.log('═══════════════════════════════════════════════════════');
+      console.error('❌ PURCHASE BLOCKED: Product object not in memory');
+      console.error('❌ This would cause: "Must query item from store before calling purchase"');
+      console.error('❌ Product ID:', productId);
+      console.error('❌ Available products:', productsReady);
+      console.log('═══════════════════════════════════════════════════════');
+    }
 
-    // CRITICAL FIX: Check if product is ready before attempting purchase
+    // CRITICAL: Check if product is ready before attempting purchase
     // If bypass is enabled, we don't need the product to be ready
-    if (!bypassEnabled && !isProductReady(productId)) {
-      console.warn('⚠️ Product not ready for purchase:', productId);
-      console.log('Available products:', productsReady);
+    if (!bypassEnabled && !productExists) {
+      console.warn('⚠️ PURCHASE BLOCKED: Product not ready for purchase:', productId);
+      console.log('═══════════════════════════════════════════════════════');
       
       Alert.alert(
         'Please Wait',
@@ -129,14 +202,37 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       return;
     }
 
+    // Additional validation: Check if product has valid price
+    const selectedProduct = selectedPlan === 'monthly' ? monthlyProduct : annualProduct;
+    if (!bypassEnabled && (!selectedProduct || !selectedProduct.price || !selectedProduct.priceString)) {
+      console.error('❌ PURCHASE BLOCKED: Selected product missing valid price data');
+      console.error('❌ Product:', selectedProduct);
+      console.log('═══════════════════════════════════════════════════════');
+      
+      Alert.alert(
+        'Product Not Available',
+        'Unable to load product information. Please check your internet connection and try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    console.log('✅ PURCHASE VALIDATION PASSED: Proceeding with purchase');
+    console.log('═══════════════════════════════════════════════════════');
+
     setLoading(true);
 
     try {
-      console.log('Initiating purchase for:', productId);
+      console.log('🔄 PURCHASE REQUEST: Initiating purchase for:', productId);
 
-      // purchaseProduct will re-query if needed
       const result = await purchaseProduct(productId);
-      console.log('Purchase result:', result);
+      
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('📊 PURCHASE RESULT:');
+      console.log('  - Success:', result.success);
+      console.log('  - User cancelled:', result.userCancelled);
+      console.log('  - Error:', result.error);
+      console.log('═══════════════════════════════════════════════════════');
 
       if (result.success) {
         Alert.alert(
@@ -146,7 +242,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             {
               text: 'OK',
               onPress: () => {
-                console.log('User acknowledged subscription success');
+                console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
                 if (onDismiss) {
                   onDismiss();
                 }
@@ -155,8 +251,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           ]
         );
       } else if (result.userCancelled) {
-        console.log('User cancelled purchase');
+        console.log('ℹ️ PURCHASE CANCELLED: User cancelled purchase');
       } else {
+        console.error('❌ PURCHASE FAILED:', result.error);
         Alert.alert(
           'Purchase Failed',
           result.error || 'Unable to complete purchase. Please try again.',
@@ -164,9 +261,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         );
       }
     } catch (error: any) {
-      console.error('Purchase error:', error);
+      console.error('═══════════════════════════════════════════════════════');
+      console.error('❌ PURCHASE ERROR: Unexpected error during purchase');
+      console.error('❌ Error:', error);
+      console.error('❌ Error message:', error?.message);
+      console.error('❌ Error code:', error?.code);
+      console.error('═══════════════════════════════════════════════════════');
       
-      // CRITICAL FIX: Don't reference responseCode on iOS
       const errorMessage = error?.message || 'An unexpected error occurred. Please try again.';
       
       Alert.alert(
@@ -180,13 +281,19 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const handleRestorePurchases = async () => {
-    console.log('User tapped Restore Purchases button');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 RESTORE TAP: User tapped Restore Purchases button');
+    console.log('═══════════════════════════════════════════════════════');
 
     setLoading(true);
 
     try {
       const result = await restorePurchases();
-      console.log('Restore result:', result);
+      
+      console.log('📊 RESTORE RESULT:');
+      console.log('  - Success:', result.success);
+      console.log('  - Error:', result.error);
+      console.log('═══════════════════════════════════════════════════════');
 
       if (result.success) {
         Alert.alert(
@@ -196,7 +303,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             {
               text: 'OK',
               onPress: () => {
-                console.log('User acknowledged restore success');
+                console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
                 if (onDismiss) {
                   onDismiss();
                 }
@@ -212,9 +319,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
         );
       }
     } catch (error: any) {
-      console.error('Restore error:', error);
+      console.error('❌ RESTORE ERROR:', error);
       
-      // CRITICAL FIX: Don't reference responseCode on iOS
       const errorMessage = error?.message || 'Unable to restore purchases. Please try again.';
       
       Alert.alert(
@@ -228,12 +334,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   const openPrivacyPolicy = () => {
-    console.log('Opening privacy policy...');
+    console.log('🔗 Opening privacy policy...');
     Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const openTermsOfService = () => {
-    console.log('Opening terms of service...');
+    console.log('🔗 Opening terms of service...');
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
   };
 
@@ -265,12 +371,79 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
   // Check if selected product is ready for purchase
   const isSelectedProductReady = () => {
-    if (bypassEnabled) return true; // Bypass mode doesn't need products
+    if (bypassEnabled) {
+      console.log('🔧 PRODUCT READY CHECK: Bypass enabled, returning true');
+      return true;
+    }
+    
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-    const ready = productsReady.includes(productId);
-    console.log('Selected product ready check:', productId, ready);
+    const inReadyList = productsReady.includes(productId);
+    const hasProductObject = isProductReady(productId);
+    const selectedProduct = selectedPlan === 'monthly' ? monthlyProduct : annualProduct;
+    const hasValidPrice = !!(selectedProduct?.price && selectedProduct?.priceString);
+    
+    const ready = inReadyList && hasProductObject && hasValidPrice;
+    
+    console.log('🔍 PRODUCT READY CHECK:', {
+      productId,
+      inReadyList,
+      hasProductObject,
+      hasValidPrice,
+      ready
+    });
+    
     return ready;
   };
+
+  // Show retry UI if products failed to load
+  if (productsFailed && !bypassEnabled) {
+    return (
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          if (canDismiss && onDismiss) {
+            console.log('User dismissed paywall (products failed)');
+            onDismiss();
+          }
+        }}
+      >
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+          {canDismiss && (
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => {
+                console.log('User tapped close button (products failed)');
+                if (onDismiss) {
+                  onDismiss();
+                }
+              }}
+            >
+              <MaterialIcons name="close" size={28} color={colors.text} />
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.errorContainer}>
+            <MaterialIcons name="error-outline" size={64} color={colors.error} />
+            <Text style={styles.errorTitle}>Unable to Load Plans</Text>
+            <Text style={styles.errorMessage}>
+              We couldn't load subscription plans from the App Store. Please check your internet connection and try again.
+            </Text>
+            <TouchableOpacity
+              style={[buttonStyles.primary, styles.retryButton]}
+              onPress={() => {
+                console.log('User tapped Retry button');
+                loadProducts();
+              }}
+            >
+              <Text style={buttonStyles.primaryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
+    );
+  }
 
   return (
     <Modal
@@ -636,5 +809,29 @@ const styles = StyleSheet.create({
   footerLink: {
     color: colors.primary,
     textDecorationLine: 'underline',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginTop: 24,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  retryButton: {
+    minWidth: 200,
   },
 });

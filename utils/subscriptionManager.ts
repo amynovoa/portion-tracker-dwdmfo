@@ -134,76 +134,86 @@ export async function setTestFlightBypassEnabled(enabled: boolean): Promise<void
  */
 export async function initializeStoreKit(): Promise<boolean> {
   try {
-    console.log('🔄 IAP INIT: Initializing StoreKit connection via expo-in-app-purchases...');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 STOREKIT INIT: Initializing StoreKit connection');
+    console.log('═══════════════════════════════════════════════════════');
     
     if (Platform.OS !== 'ios') {
-      console.log('⚠️ IAP INIT: StoreKit only available on iOS');
+      console.log('⚠️ STOREKIT INIT: Platform is not iOS, skipping');
       return false;
     }
 
     if (!InAppPurchases) {
-      console.error('❌ IAP INIT: InAppPurchases module not available');
+      console.error('❌ STOREKIT INIT: InAppPurchases module not available');
       return false;
     }
 
     // Check if already initialized
     if (storeKitInitialized) {
-      console.log('✅ IAP INIT: StoreKit already initialized, skipping');
+      console.log('✅ STOREKIT INIT: Already initialized, skipping');
       return true;
     }
 
     // Connect to the App Store
-    console.log('🔄 IAP INIT: Connecting to App Store...');
+    console.log('🔄 STOREKIT INIT: Calling connectAsync...');
     await InAppPurchases.connectAsync();
-    console.log('✅ IAP INIT: Connected to App Store');
+    console.log('✅ STOREKIT INIT: Connected to App Store successfully');
 
     // Set up purchase listener
-    console.log('🔄 IAP INIT: Setting up purchase listener...');
+    console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
     InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
-      console.log('📱 IAP TRANSACTION CALLBACK: Purchase listener triggered');
-      console.log('📱 IAP TRANSACTION CALLBACK: Response code:', responseCode);
-      console.log('📱 IAP TRANSACTION CALLBACK: Error code:', errorCode);
-      console.log('📱 IAP TRANSACTION CALLBACK: Results count:', results?.length || 0);
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔵 TRANSACTION CALLBACK: Purchase listener triggered');
+      console.log('📊 TRANSACTION CALLBACK: Response code:', responseCode);
+      console.log('📊 TRANSACTION CALLBACK: Error code:', errorCode);
+      console.log('📊 TRANSACTION CALLBACK: Results count:', results?.length || 0);
+      console.log('═══════════════════════════════════════════════════════');
       
       if (responseCode === InAppPurchases.IAPResponseCode.OK) {
         if (results && results.length > 0) {
           for (const purchase of results) {
-            console.log('✅ IAP TRANSACTION CALLBACK: Purchase successful for product:', purchase.productId);
-            console.log('📱 IAP TRANSACTION CALLBACK: Purchase acknowledged status:', purchase.acknowledged);
+            console.log('✅ TRANSACTION CALLBACK: Purchase successful');
+            console.log('  - Product ID:', purchase.productId);
+            console.log('  - Acknowledged:', purchase.acknowledged);
             
             // CRITICAL: Finish/acknowledge the transaction
             if (!purchase.acknowledged) {
-              console.log('🔄 IAP FINISH: Acknowledging transaction for:', purchase.productId);
+              console.log('🔄 TRANSACTION FINISH: Acknowledging transaction...');
               try {
                 await InAppPurchases.finishTransactionAsync(purchase, true);
-                console.log('✅ IAP FINISH: Transaction acknowledged successfully');
+                console.log('✅ TRANSACTION FINISH: Acknowledged successfully');
               } catch (finishError) {
-                console.error('❌ IAP FINISH: Error acknowledging transaction:', finishError);
+                console.error('❌ TRANSACTION FINISH: Error:', finishError);
               }
             } else {
-              console.log('ℹ️ IAP FINISH: Transaction already acknowledged');
+              console.log('ℹ️ TRANSACTION FINISH: Already acknowledged');
             }
             
             // Save subscription status
-            console.log('🔄 IAP: Saving subscription status...');
+            console.log('🔄 TRANSACTION CALLBACK: Saving subscription status...');
             await saveSubscriptionStatus(true);
-            console.log('✅ IAP: Subscription status saved');
+            console.log('✅ TRANSACTION CALLBACK: Subscription status saved');
           }
         } else {
-          console.log('⚠️ IAP TRANSACTION CALLBACK: OK response but no results');
+          console.log('⚠️ TRANSACTION CALLBACK: OK response but no results');
         }
       } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
-        console.log('ℹ️ IAP TRANSACTION CALLBACK: User cancelled purchase');
+        console.log('ℹ️ TRANSACTION CALLBACK: User cancelled purchase');
       } else {
-        console.error('❌ IAP TRANSACTION CALLBACK: Purchase error with code:', errorCode);
+        console.error('❌ TRANSACTION CALLBACK: Error code:', errorCode);
       }
+      console.log('═══════════════════════════════════════════════════════');
     });
 
     storeKitInitialized = true;
-    console.log('✅ IAP INIT: StoreKit initialized successfully');
+    console.log('✅ STOREKIT INIT: Initialization complete');
+    console.log('═══════════════════════════════════════════════════════');
     return true;
   } catch (error) {
-    console.error('❌ IAP INIT: StoreKit initialization failed:', error);
+    console.error('═══════════════════════════════════════════════════════');
+    console.error('❌ STOREKIT INIT: Initialization failed');
+    console.error('❌ Error:', error);
+    console.error('═══════════════════════════════════════════════════════');
     storeKitInitialized = false;
     return false;
   }
@@ -220,7 +230,7 @@ function isPriceValid(price: any, priceString: any): boolean {
   // Check if priceString is a non-empty string
   const isValidPriceString = typeof priceString === 'string' && priceString.trim().length > 0 && priceString !== '$0.00' && priceString !== '0';
   
-  console.log('🔍 IAP: Price validation:', { price, priceString, isValidPrice, isValidPriceString });
+  console.log('🔍 PRICE VALIDATION:', { price, priceString, isValidPrice, isValidPriceString });
   
   return isValidPrice && isValidPriceString;
 }
@@ -230,7 +240,7 @@ function isPriceValid(price: any, priceString: any): boolean {
  */
 function getFallbackProduct(productId: string): ProductDetails {
   const fallback = productId === PRODUCT_IDS.MONTHLY ? FALLBACK_PRICES.MONTHLY : FALLBACK_PRICES.ANNUAL;
-  console.log('📦 IAP: Using fallback product details for:', productId, fallback);
+  console.log('📦 FALLBACK: Using fallback product for:', productId);
   return {
     productId,
     ...fallback,
@@ -245,71 +255,101 @@ function getFallbackProduct(productId: string): ProductDetails {
  */
 export async function queryProducts(productIds: string[]): Promise<string[]> {
   try {
-    console.log('🔄 IAP FETCH PRODUCTS: Querying products from StoreKit:', productIds);
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 QUERY PRODUCTS: Starting product query');
+    console.log('📊 QUERY PRODUCTS: Product IDs to query:', productIds);
+    console.log('═══════════════════════════════════════════════════════');
     
     if (Platform.OS !== 'ios') {
-      console.log('⚠️ IAP FETCH PRODUCTS: Product query only available on iOS');
+      console.log('⚠️ QUERY PRODUCTS: Platform is not iOS, skipping');
       return [];
     }
 
     if (!InAppPurchases) {
-      console.error('❌ IAP FETCH PRODUCTS: InAppPurchases module not available');
+      console.error('❌ QUERY PRODUCTS: InAppPurchases module not available');
       return [];
     }
 
     // Initialize if not already done
-    console.log('🔄 IAP FETCH PRODUCTS: Ensuring StoreKit is initialized...');
+    console.log('🔄 QUERY PRODUCTS: Ensuring StoreKit is initialized...');
     const initialized = await initializeStoreKit();
+    
     if (!initialized) {
-      console.error('❌ IAP FETCH PRODUCTS: Failed to initialize StoreKit');
+      console.error('❌ QUERY PRODUCTS: StoreKit initialization failed');
       return [];
     }
-    console.log('✅ IAP FETCH PRODUCTS: StoreKit initialized');
+    
+    console.log('✅ QUERY PRODUCTS: StoreKit initialized');
 
     // Fetch products from App Store
-    console.log('🔄 IAP FETCH PRODUCTS: Calling getProductsAsync...');
+    console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync...');
     const { responseCode, results } = await InAppPurchases.getProductsAsync(productIds);
     
-    console.log('📱 IAP FETCH PRODUCTS: Response code:', responseCode);
-    console.log('📱 IAP FETCH PRODUCTS: Results count:', results?.length || 0);
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📊 QUERY PRODUCTS RESPONSE:');
+    console.log('  - Response code:', responseCode);
+    console.log('  - Results count:', results?.length || 0);
+    console.log('═══════════════════════════════════════════════════════');
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
       // CRITICAL: Store the full Product objects (not just IDs)
       // These objects contain the productId and all metadata needed for purchase
       const queriedIds: string[] = [];
       
+      console.log('🔄 QUERY PRODUCTS: Processing returned products...');
+      
       for (const product of results) {
+        console.log('───────────────────────────────────────────────────────');
+        console.log('📦 PRODUCT:', product.productId);
+        
         // Validate that the product has required fields
         if (!product.productId) {
-          console.warn('⚠️ IAP FETCH PRODUCTS: Product missing productId, skipping');
+          console.warn('⚠️ PRODUCT: Missing productId, skipping');
           continue;
         }
         
+        console.log('  - Price:', product.price);
+        console.log('  - Price String:', product.priceString);
+        console.log('  - Currency:', product.currencyCode);
+        console.log('  - Title:', product.title);
+        
         // Validate price data
-        if (!isPriceValid(product.price, product.priceString)) {
-          console.warn('⚠️ IAP FETCH PRODUCTS: Product has invalid price data:', product.productId);
-          // Still store it, but log the warning
+        const priceValid = isPriceValid(product.price, product.priceString);
+        console.log('  - Price valid:', priceValid);
+        
+        if (!priceValid) {
+          console.warn('⚠️ PRODUCT: Invalid price data, but storing anyway');
         }
         
+        // CRITICAL: Store the full Product object
         queriedProducts.set(product.productId, product);
         queriedIds.push(product.productId);
         
-        console.log('✅ IAP FETCH PRODUCTS SUCCESS: Stored Product object:', {
-          productId: product.productId,
-          price: product.price,
-          priceString: product.priceString,
-          title: product.title,
-        });
+        console.log('✅ PRODUCT: Stored in memory for purchase');
+        console.log('───────────────────────────────────────────────────────');
       }
       
-      console.log('✅ IAP FETCH PRODUCTS SUCCESS: Successfully queried and stored products:', queriedIds);
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('✅ QUERY PRODUCTS SUCCESS:');
+      console.log('  - Total products stored:', queriedIds.length);
+      console.log('  - Product IDs:', queriedIds);
+      console.log('═══════════════════════════════════════════════════════');
+      
       return queriedIds;
     }
 
-    console.log('⚠️ IAP FETCH PRODUCTS FAIL: No products returned from StoreKit');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('⚠️ QUERY PRODUCTS FAIL: No products returned');
+    console.log('  - Response code:', responseCode);
+    console.log('  - This means StoreKit query failed or returned empty');
+    console.log('═══════════════════════════════════════════════════════');
+    
     return [];
   } catch (error) {
-    console.error('❌ IAP FETCH PRODUCTS FAIL: Error querying products:', error);
+    console.error('═══════════════════════════════════════════════════════');
+    console.error('❌ QUERY PRODUCTS ERROR: Exception during query');
+    console.error('❌ Error:', error);
+    console.error('═══════════════════════════════════════════════════════');
     return [];
   }
 }
@@ -320,68 +360,45 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
  */
 export function isProductReady(productId: string): boolean {
   const ready = queriedProducts.has(productId);
-  console.log('🔍 IAP: Product ready check for', productId, ':', ready);
-  if (ready) {
-    const product = queriedProducts.get(productId);
-    console.log('🔍 IAP: Product details:', {
-      productId: product?.productId,
-      hasPrice: !!product?.price,
-      hasPriceString: !!product?.priceString,
-    });
-  }
+  const product = queriedProducts.get(productId);
+  
+  console.log('🔍 PRODUCT READY CHECK:', {
+    productId,
+    inMemory: ready,
+    hasPrice: !!product?.price,
+    hasPriceString: !!product?.priceString,
+  });
+  
   return ready;
 }
 
 /**
  * Get product details from App Store via expo-in-app-purchases
- * This also stores the Product object for later purchase
- * PRODUCTION: Fetches real product details from App Store
- * TESTFLIGHT: Fetches real product details from App Store (sandbox)
+ * This returns the display details for a product
+ * The Product object should already be stored by queryProducts()
  */
 export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
   try {
-    console.log('🔄 IAP: Fetching product details from App Store for:', productId);
+    console.log('🔄 GET DETAILS: Fetching display details for:', productId);
     
     if (Platform.OS !== 'ios') {
-      console.log('⚠️ IAP: Product details only available on iOS - returning fallback');
+      console.log('⚠️ GET DETAILS: Not iOS, returning fallback');
       return getFallbackProduct(productId);
     }
 
     if (!InAppPurchases) {
-      console.error('❌ IAP: InAppPurchases module not available - returning fallback');
+      console.error('❌ GET DETAILS: InAppPurchases not available, returning fallback');
       return getFallbackProduct(productId);
     }
 
-    // Initialize if not already done
-    const initialized = await initializeStoreKit();
-    if (!initialized) {
-      console.error('❌ IAP: Failed to initialize StoreKit - returning fallback');
-      return getFallbackProduct(productId);
-    }
-
-    // Fetch products from App Store
-    const { responseCode, results } = await InAppPurchases.getProductsAsync([productId]);
-    
-    console.log('📱 IAP: Product fetch response:', { responseCode, resultsCount: results?.length });
-    
-    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
-      const product = results[0];
+    // Check if we already have this product in memory from queryProducts()
+    if (queriedProducts.has(productId)) {
+      const product = queriedProducts.get(productId);
+      console.log('✅ GET DETAILS: Using cached product from memory');
       
-      // CRITICAL: Store the full Product object for later purchase
-      queriedProducts.set(product.productId, product);
-      console.log('✅ IAP: Stored Product object for purchase:', product.productId);
-      
-      console.log('✅ IAP: Product details fetched from StoreKit:', {
-        productId: product.productId,
-        price: product.price,
-        priceString: product.priceString,
-        currencyCode: product.currencyCode,
-      });
-      
-      // CRITICAL FIX: Validate that the price data is actually valid
-      // If StoreKit returns 0, null, undefined, or empty string, use fallback
+      // Validate price data
       if (isPriceValid(product.price, product.priceString)) {
-        console.log('✅ IAP: Price data is valid, using StoreKit data');
+        console.log('✅ GET DETAILS: Price data valid');
         return {
           productId: product.productId,
           price: product.price,
@@ -391,15 +408,19 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
           description: product.description || '',
         };
       } else {
-        console.warn('⚠️ IAP: StoreKit returned invalid price data (0 or empty), using fallback');
+        console.warn('⚠️ GET DETAILS: Cached product has invalid price, using fallback');
         return getFallbackProduct(productId);
       }
     }
 
-    console.log('⚠️ IAP: No product found for ID:', productId, '- returning fallback');
+    // If not in memory, this shouldn't happen if queryProducts() was called first
+    console.warn('⚠️ GET DETAILS: Product not in memory, this should not happen');
+    console.warn('⚠️ GET DETAILS: queryProducts() should be called before getProductDetails()');
+    console.log('⚠️ GET DETAILS: Returning fallback');
+    
     return getFallbackProduct(productId);
   } catch (error) {
-    console.error('❌ IAP: Error fetching product details:', error);
+    console.error('❌ GET DETAILS: Error fetching details:', error);
     return getFallbackProduct(productId);
   }
 }
@@ -414,10 +435,13 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
   try {
-    console.log('🔄 IAP REQUEST PURCHASE: Initiating App Store purchase for:', productId);
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 PURCHASE REQUEST: Starting purchase flow');
+    console.log('📊 PURCHASE REQUEST: Product ID:', productId);
+    console.log('═══════════════════════════════════════════════════════');
     
     if (Platform.OS !== 'ios') {
-      console.error('❌ IAP REQUEST PURCHASE: Platform not iOS');
+      console.error('❌ PURCHASE REQUEST: Platform not iOS');
       return {
         success: false,
         error: 'Subscriptions are only available on iOS',
@@ -425,7 +449,7 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     }
 
     if (!InAppPurchases) {
-      console.error('❌ IAP REQUEST PURCHASE: InAppPurchases module not available');
+      console.error('❌ PURCHASE REQUEST: InAppPurchases module not available');
       return {
         success: false,
         error: 'InAppPurchases module not available',
@@ -434,52 +458,68 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 
     // Check if TestFlight bypass is enabled
     const bypassEnabled = await getTestFlightBypassEnabled();
+    console.log('🔧 PURCHASE REQUEST: Bypass enabled:', bypassEnabled);
     
     if (bypassEnabled) {
-      console.log('✅ IAP REQUEST PURCHASE: TestFlight bypass enabled - simulating purchase (no real charge)');
+      console.log('✅ PURCHASE REQUEST: Bypass mode - simulating purchase');
       await saveSubscriptionStatus(true);
+      console.log('✅ PURCHASE REQUEST: Simulated purchase complete');
       return { success: true };
     }
 
     // CRITICAL FIX: Check if product has been queried and stored
-    if (!queriedProducts.has(productId)) {
-      console.warn('⚠️ IAP REQUEST PURCHASE: Product not in memory, re-querying from StoreKit:', productId);
+    const productInMemory = queriedProducts.has(productId);
+    console.log('🔍 PURCHASE REQUEST: Product in memory:', productInMemory);
+    
+    if (!productInMemory) {
+      console.warn('═══════════════════════════════════════════════════════');
+      console.warn('⚠️ PURCHASE REQUEST: Product NOT in memory');
+      console.warn('⚠️ PURCHASE REQUEST: This would cause "Must query item from store"');
+      console.warn('⚠️ PURCHASE REQUEST: Re-querying product from StoreKit...');
+      console.warn('═══════════════════════════════════════════════════════');
       
       // Re-query the product before attempting purchase
       const queriedIds = await queryProducts([productId]);
       
       if (!queriedIds.includes(productId)) {
-        console.error('❌ IAP REQUEST PURCHASE: Product still not available after re-query:', productId);
+        console.error('═══════════════════════════════════════════════════════');
+        console.error('❌ PURCHASE REQUEST: Re-query failed');
+        console.error('❌ PURCHASE REQUEST: Product still not available');
+        console.error('═══════════════════════════════════════════════════════');
         return {
           success: false,
           error: 'Product not available. Please check your internet connection and try again.',
         };
       }
       
-      console.log('✅ IAP REQUEST PURCHASE: Product re-queried successfully:', productId);
+      console.log('✅ PURCHASE REQUEST: Re-query successful, product now in memory');
     }
 
     // Get the stored Product object
     const product = queriedProducts.get(productId);
     
     if (!product) {
-      console.error('❌ IAP REQUEST PURCHASE: Product object not found in memory:', productId);
+      console.error('❌ PURCHASE REQUEST: Product object not found (should not happen)');
       return {
         success: false,
         error: 'Product not ready. Please try again.',
       };
     }
 
-    console.log('✅ IAP SELECTED SKU: Using stored Product object for purchase:', {
-      productId: product.productId,
-      price: product.price,
-      priceString: product.priceString,
-    });
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('✅ PURCHASE REQUEST: Using stored Product object');
+    console.log('📊 SELECTED SKU AT TAP:');
+    console.log('  - Product ID:', product.productId);
+    console.log('  - Price:', product.price);
+    console.log('  - Price String:', product.priceString);
+    console.log('  - Currency:', product.currencyCode);
+    console.log('  - Product object exists:', !!product);
+    console.log('═══════════════════════════════════════════════════════');
 
     // Initialize if not already done
     const initialized = await initializeStoreKit();
     if (!initialized) {
-      console.error('❌ IAP REQUEST PURCHASE: Failed to initialize StoreKit');
+      console.error('❌ PURCHASE REQUEST: StoreKit initialization failed');
       return {
         success: false,
         error: 'Failed to connect to App Store. Please try again.',
@@ -488,70 +528,77 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 
     // CRITICAL: Call purchaseItemAsync with the productId from the stored Product object
     // This ensures we're using the exact product that was returned from StoreKit
-    console.log('🔄 IAP REQUEST PURCHASE: Calling purchaseItemAsync with productId:', product.productId);
+    console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync...');
+    console.log('🔄 PURCHASE REQUEST: Using productId:', product.productId);
+    
     const purchaseResponse = await InAppPurchases.purchaseItemAsync(product.productId);
     
-    console.log('📱 IAP TRANSACTION CALLBACK: Purchase response received');
-    console.log('📱 IAP TRANSACTION CALLBACK: Response code:', purchaseResponse?.responseCode);
-    console.log('📱 IAP TRANSACTION CALLBACK: Error code:', purchaseResponse?.errorCode);
-    console.log('📱 IAP TRANSACTION CALLBACK: Results count:', purchaseResponse?.results?.length || 0);
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📊 PURCHASE RESPONSE:');
+    console.log('  - Response code:', purchaseResponse?.responseCode);
+    console.log('  - Error code:', purchaseResponse?.errorCode);
+    console.log('  - Results count:', purchaseResponse?.results?.length || 0);
+    console.log('═══════════════════════════════════════════════════════');
 
     if (purchaseResponse.responseCode === InAppPurchases.IAPResponseCode.OK) {
-      console.log('✅ IAP TRANSACTION CALLBACK: Purchase successful');
+      console.log('✅ PURCHASE RESPONSE: Purchase successful');
       
       // CRITICAL: Finish/acknowledge all transactions
       if (purchaseResponse.results && purchaseResponse.results.length > 0) {
         for (const purchase of purchaseResponse.results) {
-          console.log('📱 IAP TRANSACTION CALLBACK: Processing purchase:', purchase.productId);
-          console.log('📱 IAP TRANSACTION CALLBACK: Acknowledged status:', purchase.acknowledged);
+          console.log('🔄 PURCHASE FINISH: Processing purchase:', purchase.productId);
+          console.log('🔄 PURCHASE FINISH: Acknowledged:', purchase.acknowledged);
           
           if (!purchase.acknowledged) {
-            console.log('🔄 IAP FINISH: Acknowledging transaction...');
+            console.log('🔄 PURCHASE FINISH: Acknowledging transaction...');
             try {
               await InAppPurchases.finishTransactionAsync(purchase, true);
-              console.log('✅ IAP FINISH: Transaction acknowledged successfully');
+              console.log('✅ PURCHASE FINISH: Acknowledged successfully');
             } catch (finishError) {
-              console.error('❌ IAP FINISH: Error acknowledging transaction:', finishError);
-              // Continue anyway - the purchase listener will handle it
+              console.error('❌ PURCHASE FINISH: Error:', finishError);
             }
           } else {
-            console.log('ℹ️ IAP FINISH: Transaction already acknowledged');
+            console.log('ℹ️ PURCHASE FINISH: Already acknowledged');
           }
         }
       }
       
       // Save subscription status
-      console.log('🔄 IAP: Saving subscription status...');
+      console.log('🔄 PURCHASE RESPONSE: Saving subscription status...');
       await saveSubscriptionStatus(true);
-      console.log('✅ IAP: Subscription status saved');
+      console.log('✅ PURCHASE RESPONSE: Subscription status saved');
+      console.log('═══════════════════════════════════════════════════════');
       
       return { success: true };
     } else if (purchaseResponse.responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
-      console.log('ℹ️ IAP TRANSACTION CALLBACK: User cancelled purchase');
+      console.log('ℹ️ PURCHASE RESPONSE: User cancelled');
+      console.log('═══════════════════════════════════════════════════════');
       return {
         success: false,
         userCancelled: true,
       };
     } else {
-      console.error('❌ IAP TRANSACTION CALLBACK: Purchase failed with error code:', purchaseResponse?.errorCode);
+      console.error('❌ PURCHASE RESPONSE: Failed with error code:', purchaseResponse?.errorCode);
+      console.log('═══════════════════════════════════════════════════════');
       return {
         success: false,
         error: `Purchase failed (Error code: ${purchaseResponse?.errorCode || 'unknown'})`,
       };
     }
   } catch (error: any) {
-    console.error('❌ IAP REQUEST PURCHASE: Purchase error:', error);
+    console.error('═══════════════════════════════════════════════════════');
+    console.error('❌ PURCHASE ERROR: Exception during purchase');
+    console.error('❌ Error:', error);
+    console.error('❌ Error code:', error?.code);
+    console.error('❌ Error message:', error?.message);
+    console.error('═══════════════════════════════════════════════════════');
     
-    // CRITICAL FIX: iOS doesn't return responseCode like Android
-    // Use error.code and error.message with optional chaining
     const errorCode = error?.code;
     const errorMessage = error?.message || 'Purchase failed';
     
-    console.log('🔍 IAP REQUEST PURCHASE: Error details:', { errorCode, errorMessage });
-    
     // Check if user cancelled
     if (errorCode === 'E_USER_CANCELLED' || errorMessage?.includes('cancel')) {
-      console.log('ℹ️ IAP REQUEST PURCHASE: User cancelled (from error)');
+      console.log('ℹ️ PURCHASE ERROR: User cancelled (from error)');
       return {
         success: false,
         userCancelled: true,
@@ -573,10 +620,12 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
  */
 export async function restorePurchases(): Promise<PurchaseResult> {
   try {
-    console.log('🔄 IAP: Restoring purchases from App Store...');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 RESTORE: Starting restore purchases');
+    console.log('═══════════════════════════════════════════════════════');
     
     if (Platform.OS !== 'ios') {
-      console.error('❌ IAP: Restore only available on iOS');
+      console.error('❌ RESTORE: Platform not iOS');
       return {
         success: false,
         error: 'Restore purchases is only available on iOS',
@@ -584,7 +633,7 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     }
 
     if (!InAppPurchases) {
-      console.error('❌ IAP: InAppPurchases module not available');
+      console.error('❌ RESTORE: InAppPurchases module not available');
       return {
         success: false,
         error: 'InAppPurchases module not available',
@@ -593,9 +642,10 @@ export async function restorePurchases(): Promise<PurchaseResult> {
 
     // Check if TestFlight bypass is enabled
     const bypassEnabled = await getTestFlightBypassEnabled();
+    console.log('🔧 RESTORE: Bypass enabled:', bypassEnabled);
     
     if (bypassEnabled) {
-      console.log('✅ IAP: TestFlight bypass enabled - simulating restore');
+      console.log('✅ RESTORE: Bypass mode - simulating restore');
       await saveSubscriptionStatus(true);
       return { success: true };
     }
@@ -603,34 +653,36 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     // Initialize if not already done
     const initialized = await initializeStoreKit();
     if (!initialized) {
-      console.error('❌ IAP: Failed to initialize StoreKit');
+      console.error('❌ RESTORE: StoreKit initialization failed');
       return {
         success: false,
         error: 'Failed to connect to App Store. Please try again.',
       };
     }
 
-    // Get purchase history (real App Store in production, sandbox in TestFlight)
-    console.log('🔄 IAP: Fetching purchase history...');
+    // Get purchase history
+    console.log('🔄 RESTORE: Fetching purchase history...');
     const { responseCode, results } = await InAppPurchases.getPurchaseHistoryAsync();
     
-    console.log('📱 IAP: Purchase history response:', { responseCode, resultsCount: results?.length });
+    console.log('📊 RESTORE RESPONSE:');
+    console.log('  - Response code:', responseCode);
+    console.log('  - Results count:', results?.length || 0);
 
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
-      console.log('✅ IAP: Found', results.length, 'previous purchases');
+      console.log('✅ RESTORE: Found', results.length, 'previous purchases');
       
       // CRITICAL: Finish/acknowledge all restored transactions
       for (const purchase of results) {
-        console.log('📱 IAP: Processing restored purchase:', purchase.productId);
-        console.log('📱 IAP: Acknowledged status:', purchase.acknowledged);
+        console.log('🔄 RESTORE FINISH: Processing:', purchase.productId);
+        console.log('🔄 RESTORE FINISH: Acknowledged:', purchase.acknowledged);
         
         if (!purchase.acknowledged) {
-          console.log('🔄 IAP FINISH: Acknowledging restored transaction...');
+          console.log('🔄 RESTORE FINISH: Acknowledging...');
           try {
             await InAppPurchases.finishTransactionAsync(purchase, true);
-            console.log('✅ IAP FINISH: Restored transaction acknowledged');
+            console.log('✅ RESTORE FINISH: Acknowledged');
           } catch (finishError) {
-            console.error('❌ IAP FINISH: Error acknowledging restored transaction:', finishError);
+            console.error('❌ RESTORE FINISH: Error:', finishError);
           }
         }
       }
@@ -641,33 +693,38 @@ export async function restorePurchases(): Promise<PurchaseResult> {
         purchase.productId === PRODUCT_IDS.ANNUAL
       );
       
+      console.log('📊 RESTORE: Has subscription:', hasSubscription);
+      
       if (hasSubscription) {
-        console.log('✅ IAP: Active subscription found');
+        console.log('✅ RESTORE: Active subscription found');
         await saveSubscriptionStatus(true);
+        console.log('═══════════════════════════════════════════════════════');
         return { success: true };
       } else {
-        console.log('ℹ️ IAP: No active subscription found');
+        console.log('ℹ️ RESTORE: No active subscription found');
+        console.log('═══════════════════════════════════════════════════════');
         return {
           success: false,
           error: 'No active subscription found',
         };
       }
     } else {
-      console.log('ℹ️ IAP: No purchase history found');
+      console.log('ℹ️ RESTORE: No purchase history found');
+      console.log('═══════════════════════════════════════════════════════');
       return {
         success: false,
         error: 'No purchases to restore',
       };
     }
   } catch (error: any) {
-    console.error('❌ IAP: Restore purchases error:', error);
+    console.error('═══════════════════════════════════════════════════════');
+    console.error('❌ RESTORE ERROR: Exception during restore');
+    console.error('❌ Error:', error);
+    console.error('❌ Error code:', error?.code);
+    console.error('❌ Error message:', error?.message);
+    console.error('═══════════════════════════════════════════════════════');
     
-    // CRITICAL FIX: iOS doesn't return responseCode like Android
-    // Use error.code and error.message with optional chaining
-    const errorCode = error?.code;
     const errorMessage = error?.message || 'Failed to restore purchases';
-    
-    console.log('🔍 IAP: Error details:', { errorCode, errorMessage });
     
     return {
       success: false,
