@@ -178,7 +178,7 @@ export default function DailyResetScreen() {
             <Switch
               value={customResetEnabled}
               onValueChange={handleToggleCustomReset}
-              trackColor={{ false: '#4a4a4a', true: colors.primary }}
+              trackColor={{ false: '#2a2a2a', true: colors.primary }}
               thumbColor="#fff"
             />
           </View>

@@ -203,15 +203,21 @@ export async function initializeStoreKit(): Promise<boolean> {
       console.log('📊 TRANSACTION CALLBACK: Results count:', results?.length || 0);
       console.log('═══════════════════════════════════════════════════════');
       
-      if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+      // 🚨 USER REQUESTED: Guard all fields with optional chaining
+      if (responseCode === InAppPurchases?.IAPResponseCode?.OK) {
         if (results && results.length > 0) {
           for (const purchase of results) {
             console.log('✅ TRANSACTION CALLBACK: Purchase successful');
-            console.log('  - Product ID:', purchase.productId);
-            console.log('  - Acknowledged:', purchase.acknowledged);
+            console.log('  - Product ID:', purchase?.productId);
+            console.log('  - Acknowledged:', purchase?.acknowledged);
+            
+            // 🚨 USER REQUESTED: Unlock entitlement on successful purchase
+            console.log('🔄 TRANSACTION CALLBACK: Unlocking entitlement...');
+            await saveSubscriptionStatus(true);
+            console.log('✅ TRANSACTION CALLBACK: Entitlement unlocked');
             
             // 🚨 USER REQUESTED: Finish/acknowledge the transaction
-            if (!purchase.acknowledged) {
+            if (!purchase?.acknowledged) {
               console.log('🔄 TRANSACTION FINISH: Acknowledging transaction...');
               try {
                 await InAppPurchases.finishTransactionAsync(purchase, true);
@@ -222,16 +228,11 @@ export async function initializeStoreKit(): Promise<boolean> {
             } else {
               console.log('ℹ️ TRANSACTION FINISH: Already acknowledged');
             }
-            
-            // Save subscription status
-            console.log('🔄 TRANSACTION CALLBACK: Saving subscription status...');
-            await saveSubscriptionStatus(true);
-            console.log('✅ TRANSACTION CALLBACK: Subscription status saved');
           }
         } else {
           console.log('⚠️ TRANSACTION CALLBACK: OK response but no results');
         }
-      } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+      } else if (responseCode === InAppPurchases?.IAPResponseCode?.USER_CANCELED) {
         console.log('ℹ️ TRANSACTION CALLBACK: User cancelled purchase');
       } else {
         console.error('❌ TRANSACTION CALLBACK: Error code:', errorCode);
@@ -555,8 +556,9 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
 
 /**
  * 🚨 USER REQUESTED: Purchase a product through App Store
- * CRITICAL: Verify productId exists in the fetched results list (exact match)
- * Then call purchaseItemAsync(productId)
+ * Call purchaseItemAsync(productId) without reading or returning any response fields
+ * Do not access .responseCode anywhere in this function
+ * The purchase listener handles success/cancel/failure
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
   try {
@@ -599,8 +601,8 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     if (!productInMemory) {
       console.error('═══════════════════════════════════════════════════════');
       console.error('❌ PURCHASE REQUEST: Product NOT in memory');
-      console.error('❌ PURCHASE REQUEST: Cannot purchase - product not queried from StoreKit');
-      console.error('❌ PURCHASE REQUEST: Product ID:', productId);
+      console.error('❌ Cannot purchase - product not queried from StoreKit');
+      console.error('❌ Product ID:', productId);
       console.error('═══════════════════════════════════════════════════════');
       return {
         success: false,
@@ -639,64 +641,22 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       };
     }
 
-    // 🚨 USER REQUESTED: Call purchaseItemAsync with the productId
+    // 🚨 USER REQUESTED: Call purchaseItemAsync without reading or returning any response fields
+    // Do not access .responseCode - the purchase listener handles everything
     console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync...');
     console.log('🔄 PURCHASE REQUEST: Using productId:', product.productId);
+    console.log('🔄 PURCHASE REQUEST: Purchase listener will handle the result');
     
-    const purchaseResponse = await InAppPurchases.purchaseItemAsync(product.productId);
+    await InAppPurchases.purchaseItemAsync(product.productId);
     
     console.log('═══════════════════════════════════════════════════════');
-    console.log('📊 PURCHASE RESPONSE:');
-    console.log('  - Response code:', purchaseResponse?.responseCode);
-    console.log('  - Error code:', purchaseResponse?.errorCode);
-    console.log('  - Results count:', purchaseResponse?.results?.length || 0);
+    console.log('✅ PURCHASE REQUEST: purchaseItemAsync called');
+    console.log('ℹ️ PURCHASE REQUEST: Waiting for purchase listener callback...');
+    console.log('ℹ️ PURCHASE REQUEST: The listener will handle success/cancel/failure');
     console.log('═══════════════════════════════════════════════════════');
 
-    if (purchaseResponse.responseCode === InAppPurchases.IAPResponseCode.OK) {
-      console.log('✅ PURCHASE RESPONSE: Purchase successful');
-      
-      // 🚨 USER REQUESTED: Finish/acknowledge all transactions
-      if (purchaseResponse.results && purchaseResponse.results.length > 0) {
-        for (const purchase of purchaseResponse.results) {
-          console.log('🔄 PURCHASE FINISH: Processing purchase:', purchase.productId);
-          console.log('🔄 PURCHASE FINISH: Acknowledged:', purchase.acknowledged);
-          
-          if (!purchase.acknowledged) {
-            console.log('🔄 PURCHASE FINISH: Acknowledging transaction...');
-            try {
-              await InAppPurchases.finishTransactionAsync(purchase, true);
-              console.log('✅ PURCHASE FINISH: Acknowledged successfully');
-            } catch (finishError) {
-              console.error('❌ PURCHASE FINISH: Error:', finishError);
-            }
-          } else {
-            console.log('ℹ️ PURCHASE FINISH: Already acknowledged');
-          }
-        }
-      }
-      
-      // Save subscription status
-      console.log('🔄 PURCHASE RESPONSE: Saving subscription status...');
-      await saveSubscriptionStatus(true);
-      console.log('✅ PURCHASE RESPONSE: Subscription status saved');
-      console.log('═══════════════════════════════════════════════════════');
-      
-      return { success: true };
-    } else if (purchaseResponse.responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
-      console.log('ℹ️ PURCHASE RESPONSE: User cancelled');
-      console.log('═══════════════════════════════════════════════════════');
-      return {
-        success: false,
-        userCancelled: true,
-      };
-    } else {
-      console.error('❌ PURCHASE RESPONSE: Failed with error code:', purchaseResponse?.errorCode);
-      console.log('═══════════════════════════════════════════════════════');
-      return {
-        success: false,
-        error: `Purchase failed (Error code: ${purchaseResponse?.errorCode || 'unknown'})`,
-      };
-    }
+    // Return success - the actual result is handled by the purchase listener
+    return { success: true };
   } catch (error: any) {
     console.error('═══════════════════════════════════════════════════════');
     console.error('❌ PURCHASE ERROR: Exception during purchase');
@@ -725,10 +685,8 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 }
 
 /**
- * Restore previous purchases from App Store via expo-in-app-purchases
- * PRODUCTION: Always restores real App Store purchases
- * TESTFLIGHT WITH BYPASS ON: Simulates restore
- * TESTFLIGHT WITH BYPASS OFF: Restores real sandbox purchases
+ * 🚨 USER REQUESTED: Restore previous purchases from App Store
+ * Remove any reliance on .responseCode; handle results defensively
  */
 export async function restorePurchases(): Promise<PurchaseResult> {
   try {
@@ -774,21 +732,26 @@ export async function restorePurchases(): Promise<PurchaseResult> {
 
     // Get purchase history
     console.log('🔄 RESTORE: Fetching purchase history...');
-    const { responseCode, results } = await InAppPurchases.getPurchaseHistoryAsync();
+    const response = await InAppPurchases.getPurchaseHistoryAsync();
+    
+    // 🚨 USER REQUESTED: Handle results defensively with optional chaining
+    const responseCode = response?.responseCode;
+    const results = response?.results;
     
     console.log('📊 RESTORE RESPONSE:');
     console.log('  - Response code:', responseCode);
     console.log('  - Results count:', results?.length || 0);
 
-    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
+    // 🚨 USER REQUESTED: Guard all fields with optional chaining
+    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
       console.log('✅ RESTORE: Found', results.length, 'previous purchases');
       
       // 🚨 USER REQUESTED: Finish/acknowledge all restored transactions
       for (const purchase of results) {
-        console.log('🔄 RESTORE FINISH: Processing:', purchase.productId);
-        console.log('🔄 RESTORE FINISH: Acknowledged:', purchase.acknowledged);
+        console.log('🔄 RESTORE FINISH: Processing:', purchase?.productId);
+        console.log('🔄 RESTORE FINISH: Acknowledged:', purchase?.acknowledged);
         
-        if (!purchase.acknowledged) {
+        if (!purchase?.acknowledged) {
           console.log('🔄 RESTORE FINISH: Acknowledging...');
           try {
             await InAppPurchases.finishTransactionAsync(purchase, true);
@@ -801,8 +764,8 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       
       // Check if any of the purchases are our subscription products
       const hasSubscription = results.some((purchase: any) => 
-        purchase.productId === PRODUCT_IDS.MONTHLY || 
-        purchase.productId === PRODUCT_IDS.ANNUAL
+        purchase?.productId === PRODUCT_IDS.MONTHLY || 
+        purchase?.productId === PRODUCT_IDS.ANNUAL
       );
       
       console.log('📊 RESTORE: Has subscription:', hasSubscription);
@@ -913,13 +876,17 @@ export async function checkAppStoreSubscription(): Promise<boolean> {
     }
 
     // Get purchase history to check for active subscriptions
-    const { responseCode, results } = await InAppPurchases.getPurchaseHistoryAsync();
+    const response = await InAppPurchases.getPurchaseHistoryAsync();
     
-    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
+    // 🚨 USER REQUESTED: Handle results defensively with optional chaining
+    const responseCode = response?.responseCode;
+    const results = response?.results;
+    
+    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
       // Check if any of the purchases are our subscription products
       const hasSubscription = results.some((purchase: any) => 
-        purchase.productId === PRODUCT_IDS.MONTHLY || 
-        purchase.productId === PRODUCT_IDS.ANNUAL
+        purchase?.productId === PRODUCT_IDS.MONTHLY || 
+        purchase?.productId === PRODUCT_IDS.ANNUAL
       );
       
       console.log('✅ IAP: Subscription check complete:', hasSubscription);
