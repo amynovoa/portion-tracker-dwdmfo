@@ -26,7 +26,9 @@ import {
   getProductDetails,
   queryProducts,
   isProductReady,
-  ProductDetails
+  ProductDetails,
+  getIAPDebugInfo,
+  IAPDebugInfo
 } from '@/utils/subscriptionManager';
 
 interface PaywallScreenProps {
@@ -47,6 +49,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsFailed, setProductsFailed] = useState(false);
   const [productsReady, setProductsReady] = useState<string[]>([]);
+  const [iapDebug, setIapDebug] = useState<IAPDebugInfo | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -98,6 +101,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       setProductsReady([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       setLoadingProducts(false);
       
+      // 🚨 USER REQUESTED: Get debug info even on non-iOS
+      const debugInfo = getIAPDebugInfo();
+      setIapDebug(debugInfo);
+      console.log('🚨 USER REQUESTED: IAP Debug Info (non-iOS):', debugInfo);
+      
       console.log('✅ PRODUCT FETCH: Fallback products loaded');
       console.log('═══════════════════════════════════════════════════════');
       return;
@@ -109,6 +117,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('📦 PRODUCT FETCH: SKUs to query:', [PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       
       const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+      
+      // 🚨 USER REQUESTED: Get debug info after query
+      const debugInfo = getIAPDebugInfo();
+      setIapDebug(debugInfo);
+      
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🚨 USER REQUESTED: IAP Debug Info after query:');
+      console.log('  - bundleId:', debugInfo.bundleId);
+      console.log('  - responseCode:', debugInfo.responseCode);
+      console.log('  - resultsLength:', debugInfo.resultsLength);
+      console.log('  - returnedIds:', debugInfo.returnedIds);
+      console.log('═══════════════════════════════════════════════════════');
       
       console.log('═══════════════════════════════════════════════════════');
       console.log('📊 PRODUCT FETCH RESULT:');
@@ -186,6 +206,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.error('❌ Error details:', error);
       console.error('❌ PRODUCT FETCH ERROR: Using fallback products');
       console.error('═══════════════════════════════════════════════════════');
+      
+      // 🚨 USER REQUESTED: Get debug info even on error
+      const debugInfo = getIAPDebugInfo();
+      setIapDebug(debugInfo);
+      console.log('🚨 USER REQUESTED: IAP Debug Info (error case):', debugInfo);
       
       // Use fallback products on error instead of showing error screen
       const [monthly, annual] = await Promise.all([
@@ -614,6 +639,22 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             </View>
           )}
 
+          {/* 🚨 USER REQUESTED: Debug panel showing IAP info */}
+          {isTestFlight && iapDebug && (
+            <View style={styles.debugPanel}>
+              <View style={styles.debugHeader}>
+                <MaterialIcons name="info" size={18} color={colors.primary} />
+                <Text style={styles.debugTitle}>IAP Debug Info</Text>
+              </View>
+              <Text style={styles.debugText}>Bundle: {iapDebug.bundleId}</Text>
+              <Text style={styles.debugText}>IAP code: {iapDebug.responseCode}</Text>
+              <Text style={styles.debugText}>IAP count: {iapDebug.resultsLength}</Text>
+              <Text style={styles.debugText}>
+                IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
+              </Text>
+            </View>
+          )}
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               By clicking I agree to the{' '}
@@ -826,6 +867,31 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  debugPanel: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  debugHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  debugTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginLeft: 8,
+  },
+  debugText: {
+    fontSize: 12,
+    color: colors.text,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    marginBottom: 4,
   },
   subscribeButton: {
     marginBottom: 16,

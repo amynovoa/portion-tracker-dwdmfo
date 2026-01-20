@@ -43,6 +43,29 @@ const FALLBACK_PRICES = {
 let queriedProducts: Map<string, any> = new Map();
 let storeKitInitialized = false;
 
+// 🚨 USER REQUESTED: Store IAP debug information
+export interface IAPDebugInfo {
+  bundleId: string;
+  responseCode: number | string;
+  resultsLength: number;
+  returnedIds: string[];
+}
+
+let iapDebugInfo: IAPDebugInfo = {
+  bundleId: '',
+  responseCode: 'not_queried',
+  resultsLength: 0,
+  returnedIds: [],
+};
+
+/**
+ * 🚨 USER REQUESTED: Get IAP debug information
+ * Returns the debug info captured from the last getSubscriptionsAsync() call
+ */
+export function getIAPDebugInfo(): IAPDebugInfo {
+  return { ...iapDebugInfo };
+}
+
 export interface SubscriptionStatus {
   isSubscribed: boolean;
   isInTrial: boolean;
@@ -266,11 +289,29 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     
     if (Platform.OS !== 'ios') {
       console.log('⚠️ QUERY PRODUCTS: Platform is not iOS, skipping');
+      
+      // 🚨 USER REQUESTED: Store debug info for non-iOS platforms
+      iapDebugInfo = {
+        bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'N/A (not iOS)',
+        responseCode: 'platform_not_ios',
+        resultsLength: 0,
+        returnedIds: [],
+      };
+      
       return [];
     }
 
     if (!InAppPurchases) {
       console.error('❌ QUERY PRODUCTS: InAppPurchases module not available');
+      
+      // 🚨 USER REQUESTED: Store debug info when module unavailable
+      iapDebugInfo = {
+        bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
+        responseCode: 'module_not_available',
+        resultsLength: 0,
+        returnedIds: [],
+      };
+      
       return [];
     }
 
@@ -280,6 +321,15 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     
     if (!initialized) {
       console.error('❌ QUERY PRODUCTS: StoreKit initialization failed');
+      
+      // 🚨 USER REQUESTED: Store debug info when init fails
+      iapDebugInfo = {
+        bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
+        responseCode: 'init_failed',
+        resultsLength: 0,
+        returnedIds: [],
+      };
+      
       return [];
     }
     
@@ -292,25 +342,35 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.log('🔄 QUERY PRODUCTS: Calling getSubscriptionsAsync() for subscriptions...');
     const response = await InAppPurchases.getSubscriptionsAsync(productIds);
     
+    // 🚨 USER REQUESTED: Store debug information from the response
+    const bundleId = Constants.expoConfig?.ios?.bundleIdentifier || 'unknown';
+    const responseCode = response.responseCode;
+    const resultsLength = response.results?.length || 0;
+    const returnedIds = response.results?.map((r: any) => r.productId) || [];
+    
+    iapDebugInfo = {
+      bundleId,
+      responseCode,
+      resultsLength,
+      returnedIds,
+    };
+    
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🚨🚨🚨 USER REQUESTED LOG OUTPUT 🚨🚨🚨');
-    console.log('📊 getSubscriptionsAsync() RAW RESPONSE:');
-    console.log('  - responseCode:', response.responseCode);
-    console.log('  - results.length:', response.results?.length || 0);
-    if (response.results && response.results.length > 0) {
-      console.log('  - results.map(r => r.productId):', response.results.map((r: any) => r.productId));
-    } else {
-      console.log('  - results.map(r => r.productId): [] (no results returned)');
-    }
-    console.log('🚨🚨🚨 END USER REQUESTED LOG OUTPUT 🚨🚨🚨');
+    console.log('🚨🚨🚨 USER REQUESTED DEBUG OUTPUT 🚨🚨🚨');
+    console.log('📊 IAP Debug Info:');
+    console.log('  - bundleId:', bundleId);
+    console.log('  - responseCode:', responseCode);
+    console.log('  - resultsLength:', resultsLength);
+    console.log('  - returnedIds:', returnedIds);
+    console.log('🚨🚨🚨 END USER REQUESTED DEBUG OUTPUT 🚨🚨🚨');
     console.log('═══════════════════════════════════════════════════════');
     
-    const { responseCode, results } = response;
+    const { results } = response;
     
     console.log('═══════════════════════════════════════════════════════');
     console.log('📊 QUERY PRODUCTS RESPONSE:');
     console.log('  - Response code:', responseCode);
-    console.log('  - Results count:', results?.length || 0);
+    console.log('  - Results count:', resultsLength);
     console.log('═══════════════════════════════════════════════════════');
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
@@ -372,6 +432,15 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.error('❌ QUERY PRODUCTS ERROR: Exception during query');
     console.error('❌ Error:', error);
     console.error('═══════════════════════════════════════════════════════');
+    
+    // 🚨 USER REQUESTED: Store debug info on error
+    iapDebugInfo = {
+      bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
+      responseCode: 'exception',
+      resultsLength: 0,
+      returnedIds: [],
+    };
+    
     return [];
   }
 }
