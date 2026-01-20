@@ -38,11 +38,11 @@ const FALLBACK_PRICES = {
   },
 };
 
-// 🚨 USER REQUESTED: Store queried Product objects in memory keyed by productId
+// Store queried Product objects in memory keyed by productId
 let queriedProducts: Map<string, any> = new Map();
 let storeKitInitialized = false;
 
-// 🚨 USER REQUESTED: Store IAP debug information including error details
+// Store IAP debug information including error details
 export interface IAPDebugInfo {
   bundleId: string;
   responseCode: number | string;
@@ -66,7 +66,7 @@ let iapDebugInfo: IAPDebugInfo = {
 };
 
 /**
- * 🚨 USER REQUESTED: Get IAP debug information
+ * Get IAP debug information
  * Returns the debug info captured from the last getProductsAsync() call
  */
 export function getIAPDebugInfo(): IAPDebugInfo {
@@ -84,6 +84,7 @@ export interface PurchaseResult {
   success: boolean;
   userCancelled?: boolean;
   error?: string;
+  bypassMode?: boolean; // NEW: Indicates if bypass mode was used
 }
 
 export interface ProductDetails {
@@ -158,7 +159,7 @@ export async function setTestFlightBypassEnabled(enabled: boolean): Promise<void
 }
 
 /**
- * 🚨 USER REQUESTED: Initialize StoreKit connection via expo-in-app-purchases
+ * Initialize StoreKit connection via expo-in-app-purchases
  * This MUST be called before getProductsAsync()
  */
 export async function initializeStoreKit(): Promise<boolean> {
@@ -183,7 +184,7 @@ export async function initializeStoreKit(): Promise<boolean> {
       return true;
     }
 
-    // 🚨 USER REQUESTED: Connect to the App Store BEFORE querying products
+    // Connect to the App Store BEFORE querying products
     console.log('🔄 STOREKIT INIT: Calling connectAsync...');
     await InAppPurchases.connectAsync();
     console.log('✅ STOREKIT INIT: Connected to App Store successfully');
@@ -203,7 +204,7 @@ export async function initializeStoreKit(): Promise<boolean> {
       console.log('📊 TRANSACTION CALLBACK: Results count:', results?.length || 0);
       console.log('═══════════════════════════════════════════════════════');
       
-      // 🚨 USER REQUESTED: Guard all fields with optional chaining
+      // Guard all fields with optional chaining
       if (responseCode === InAppPurchases?.IAPResponseCode?.OK) {
         if (results && results.length > 0) {
           for (const purchase of results) {
@@ -211,12 +212,20 @@ export async function initializeStoreKit(): Promise<boolean> {
             console.log('  - Product ID:', purchase?.productId);
             console.log('  - Acknowledged:', purchase?.acknowledged);
             
-            // 🚨 USER REQUESTED: Unlock entitlement on successful purchase
-            console.log('🔄 TRANSACTION CALLBACK: Unlocking entitlement...');
-            await saveSubscriptionStatus(true);
-            console.log('✅ TRANSACTION CALLBACK: Entitlement unlocked');
+            // CRITICAL FIX: Only unlock entitlement if the purchase is for our subscription products
+            const isValidSubscription = 
+              purchase?.productId === PRODUCT_IDS.MONTHLY || 
+              purchase?.productId === PRODUCT_IDS.ANNUAL;
             
-            // 🚨 USER REQUESTED: Finish/acknowledge the transaction
+            if (isValidSubscription) {
+              console.log('🔄 TRANSACTION CALLBACK: Valid subscription - Unlocking entitlement...');
+              await saveSubscriptionStatus(true);
+              console.log('✅ TRANSACTION CALLBACK: Entitlement unlocked');
+            } else {
+              console.log('⚠️ TRANSACTION CALLBACK: Not a valid subscription product, skipping unlock');
+            }
+            
+            // Finish/acknowledge the transaction
             if (!purchase?.acknowledged) {
               console.log('🔄 TRANSACTION FINISH: Acknowledging transaction...');
               try {
@@ -252,13 +261,13 @@ export async function initializeStoreKit(): Promise<boolean> {
     console.error('❌ Error code:', error?.code);
     console.error('═══════════════════════════════════════════════════════');
     
-    // 🚨 USER REQUESTED: Store connect error details
+    // Store connect error details
     iapDebugInfo.connectError = {
       message: error?.message || String(error),
       code: error?.code,
     };
     
-    console.log('🚨🚨🚨 USER REQUESTED: connectAsync() ERROR DETAILS 🚨🚨🚨');
+    console.log('🚨🚨🚨 connectAsync() ERROR DETAILS 🚨🚨🚨');
     console.log('  - Error message:', iapDebugInfo.connectError.message);
     console.log('  - Error code:', iapDebugInfo.connectError.code);
     console.log('🚨🚨🚨 END ERROR DETAILS 🚨🚨🚨');
@@ -286,7 +295,7 @@ function isPriceValid(price: any, priceString: any): boolean {
 
 /**
  * Get fallback product details for a given product ID
- * 🚨 USER REQUESTED: Fallback prices can display, but purchase must be disabled unless product exists in memory
+ * Fallback prices can display, but purchase must be disabled unless product exists in memory
  */
 function getFallbackProduct(productId: string): ProductDetails {
   const fallback = productId === PRODUCT_IDS.MONTHLY ? FALLBACK_PRICES.MONTHLY : FALLBACK_PRICES.ANNUAL;
@@ -298,11 +307,8 @@ function getFallbackProduct(productId: string): ProductDetails {
 }
 
 /**
- * 🚨 USER REQUESTED: Query products using getProductsAsync with subscription IDs
+ * Query products using getProductsAsync with subscription IDs
  * Store the returned results objects in memory keyed by productId
- * 
- * CRITICAL CHANGE: Now uses getProductsAsync() instead of getSubscriptionsAsync()
- * Reason: getSubscriptionsAsync() is undefined in the runtime
  */
 export async function queryProducts(productIds: string[]): Promise<string[]> {
   try {
@@ -315,7 +321,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     if (Platform.OS !== 'ios') {
       console.log('⚠️ QUERY PRODUCTS: Platform is not iOS, skipping');
       
-      // 🚨 USER REQUESTED: Store debug info for non-iOS platforms
+      // Store debug info for non-iOS platforms
       iapDebugInfo = {
         bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'N/A (not iOS)',
         responseCode: 'platform_not_ios',
@@ -329,7 +335,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     if (!InAppPurchases) {
       console.error('❌ QUERY PRODUCTS: InAppPurchases module not available');
       
-      // 🚨 USER REQUESTED: Store debug info when module unavailable
+      // Store debug info when module unavailable
       iapDebugInfo = {
         bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
         responseCode: 'module_not_available',
@@ -340,14 +346,14 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       return [];
     }
 
-    // 🚨 USER REQUESTED: Ensure connectAsync() happens immediately before getProductsAsync()
+    // Ensure connectAsync() happens immediately before getProductsAsync()
     console.log('🔄 QUERY PRODUCTS: Ensuring StoreKit is initialized...');
     const initialized = await initializeStoreKit();
     
     if (!initialized) {
       console.error('❌ QUERY PRODUCTS: StoreKit initialization failed');
       
-      // 🚨 USER REQUESTED: Store debug info when init fails
+      // Store debug info when init fails
       iapDebugInfo = {
         bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
         responseCode: 'init_failed',
@@ -362,11 +368,11 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     
     console.log('✅ QUERY PRODUCTS: StoreKit initialized');
 
-    // 🚨 USER REQUESTED: Use getProductsAsync() instead of getSubscriptionsAsync()
+    // Use getProductsAsync() instead of getSubscriptionsAsync()
     console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync() for subscriptions...');
     const response = await InAppPurchases.getProductsAsync(productIds);
     
-    // 🚨 USER REQUESTED: Store debug information from the response
+    // Store debug information from the response
     const bundleId = Constants.expoConfig?.ios?.bundleIdentifier || 'unknown';
     const responseCode = response.responseCode;
     const resultsLength = response.results?.length || 0;
@@ -381,13 +387,13 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     };
     
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🚨🚨🚨 USER REQUESTED DEBUG OUTPUT 🚨🚨🚨');
+    console.log('🚨🚨🚨 IAP DEBUG OUTPUT 🚨🚨🚨');
     console.log('📊 IAP Debug Info:');
     console.log('  - bundleId:', bundleId);
     console.log('  - responseCode:', responseCode);
     console.log('  - resultsLength:', resultsLength);
     console.log('  - returnedIds:', returnedIds);
-    console.log('🚨🚨🚨 END USER REQUESTED DEBUG OUTPUT 🚨🚨🚨');
+    console.log('🚨🚨🚨 END DEBUG OUTPUT 🚨🚨🚨');
     console.log('═══════════════════════════════════════════════════════');
     
     const { results } = response;
@@ -399,7 +405,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.log('═══════════════════════════════════════════════════════');
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
-      // 🚨 USER REQUESTED: Store the full Product objects in memory keyed by productId
+      // Store the full Product objects in memory keyed by productId
       const queriedIds: string[] = [];
       
       console.log('🔄 QUERY PRODUCTS: Processing returned products...');
@@ -427,7 +433,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
           console.warn('⚠️ PRODUCT: Invalid price data, but storing anyway');
         }
         
-        // 🚨 USER REQUESTED: Store the full Product object keyed by productId
+        // Store the full Product object keyed by productId
         queriedProducts.set(product.productId, product);
         queriedIds.push(product.productId);
         
@@ -459,7 +465,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.error('❌ Error code:', error?.code);
     console.error('═══════════════════════════════════════════════════════');
     
-    // 🚨 USER REQUESTED: Store query error details
+    // Store query error details
     const queryError = {
       message: error?.message || String(error),
       code: error?.code,
@@ -475,7 +481,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       ...(iapDebugInfo.connectError && { connectError: iapDebugInfo.connectError }),
     };
     
-    console.log('🚨🚨🚨 USER REQUESTED: getProductsAsync() ERROR DETAILS 🚨🚨🚨');
+    console.log('🚨🚨🚨 getProductsAsync() ERROR DETAILS 🚨🚨🚨');
     console.log('  - Error message:', queryError.message);
     console.log('  - Error code:', queryError.code);
     console.log('🚨🚨🚨 END ERROR DETAILS 🚨🚨🚨');
@@ -485,7 +491,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
 }
 
 /**
- * 🚨 USER REQUESTED: Check if a product has been queried and is ready for purchase
+ * Check if a product has been queried and is ready for purchase
  * Returns true ONLY if the Product object exists in memory from StoreKit
  * Fallback prices do NOT make a product ready
  */
@@ -505,7 +511,7 @@ export function isProductReady(productId: string): boolean {
 
 /**
  * Get product details for display
- * 🚨 USER REQUESTED: Fallback prices can display, but purchase must be disabled unless product exists in memory
+ * Fallback prices can display, but purchase must be disabled unless product exists in memory
  */
 export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
   try {
@@ -555,10 +561,17 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
 }
 
 /**
- * 🚨 USER REQUESTED: Purchase a product through App Store
- * Call purchaseItemAsync(productId) without reading or returning any response fields
- * Do not access .responseCode anywhere in this function
- * The purchase listener handles success/cancel/failure
+ * CRITICAL FIX: Purchase a product through App Store
+ * 
+ * In TestFlight bypass mode:
+ * - Grants Full Access without purchase
+ * - Returns { success: true, bypassMode: true }
+ * - Does NOT claim subscription is active
+ * 
+ * In non-bypass mode:
+ * - Calls purchaseItemAsync(productId) without reading responseCode
+ * - Purchase listener handles success/cancel/failure
+ * - Only unlocks entitlement when StoreKit confirms valid purchase
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
   try {
@@ -583,18 +596,24 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       };
     }
 
-    // Check if TestFlight bypass is enabled
+    // CRITICAL FIX: Check if TestFlight bypass is enabled
     const bypassEnabled = await getTestFlightBypassEnabled();
     console.log('🔧 PURCHASE REQUEST: Bypass enabled:', bypassEnabled);
     
     if (bypassEnabled) {
-      console.log('✅ PURCHASE REQUEST: Bypass mode - simulating purchase');
+      console.log('✅ PURCHASE REQUEST: Bypass mode - granting Full Access for testing');
+      console.log('⚠️ PURCHASE REQUEST: This is NOT a real subscription');
       await saveSubscriptionStatus(true);
-      console.log('✅ PURCHASE REQUEST: Simulated purchase complete');
-      return { success: true };
+      console.log('✅ PURCHASE REQUEST: Full Access granted (bypass mode)');
+      
+      // CRITICAL: Return bypassMode flag so UI can show appropriate message
+      return { 
+        success: true, 
+        bypassMode: true 
+      };
     }
 
-    // 🚨 USER REQUESTED: Verify productId exists in the fetched results list (exact match)
+    // CRITICAL FIX: In non-bypass mode, verify product exists in memory
     const productInMemory = queriedProducts.has(productId);
     console.log('🔍 PURCHASE REQUEST: Product in memory:', productInMemory);
     
@@ -641,8 +660,8 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       };
     }
 
-    // 🚨 USER REQUESTED: Call purchaseItemAsync without reading or returning any response fields
-    // Do not access .responseCode - the purchase listener handles everything
+    // CRITICAL FIX: Call purchaseItemAsync without reading responseCode
+    // The purchase listener handles all success/cancel/failure scenarios
     console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync...');
     console.log('🔄 PURCHASE REQUEST: Using productId:', product.productId);
     console.log('🔄 PURCHASE REQUEST: Purchase listener will handle the result');
@@ -655,7 +674,8 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     console.log('ℹ️ PURCHASE REQUEST: The listener will handle success/cancel/failure');
     console.log('═══════════════════════════════════════════════════════');
 
-    // Return success - the actual result is handled by the purchase listener
+    // CRITICAL: Return success without bypassMode flag
+    // The purchase listener will unlock entitlement if StoreKit confirms purchase
     return { success: true };
   } catch (error: any) {
     console.error('═══════════════════════════════════════════════════════');
@@ -685,8 +705,16 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 }
 
 /**
- * 🚨 USER REQUESTED: Restore previous purchases from App Store
- * Remove any reliance on .responseCode; handle results defensively
+ * CRITICAL FIX: Restore previous purchases from App Store
+ * 
+ * In TestFlight bypass mode:
+ * - Grants Full Access without checking StoreKit
+ * - Returns { success: true, bypassMode: true }
+ * 
+ * In non-bypass mode:
+ * - Only grants Full Access if portiontrack.monthly or portiontrack.annual found
+ * - Otherwise shows "No active subscription found"
+ * - Handles results defensively with optional chaining
  */
 export async function restorePurchases(): Promise<PurchaseResult> {
   try {
@@ -710,14 +738,20 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       };
     }
 
-    // Check if TestFlight bypass is enabled
+    // CRITICAL FIX: Check if TestFlight bypass is enabled
     const bypassEnabled = await getTestFlightBypassEnabled();
     console.log('🔧 RESTORE: Bypass enabled:', bypassEnabled);
     
     if (bypassEnabled) {
-      console.log('✅ RESTORE: Bypass mode - simulating restore');
+      console.log('✅ RESTORE: Bypass mode - granting Full Access for testing');
+      console.log('⚠️ RESTORE: This is NOT a real subscription restore');
       await saveSubscriptionStatus(true);
-      return { success: true };
+      
+      // CRITICAL: Return bypassMode flag so UI can show appropriate message
+      return { 
+        success: true, 
+        bypassMode: true 
+      };
     }
 
     // Initialize if not already done
@@ -734,7 +768,7 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     console.log('🔄 RESTORE: Fetching purchase history...');
     const response = await InAppPurchases.getPurchaseHistoryAsync();
     
-    // 🚨 USER REQUESTED: Handle results defensively with optional chaining
+    // CRITICAL FIX: Handle results defensively with optional chaining
     const responseCode = response?.responseCode;
     const results = response?.results;
     
@@ -742,11 +776,11 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     console.log('  - Response code:', responseCode);
     console.log('  - Results count:', results?.length || 0);
 
-    // 🚨 USER REQUESTED: Guard all fields with optional chaining
+    // Guard all fields with optional chaining
     if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
       console.log('✅ RESTORE: Found', results.length, 'previous purchases');
       
-      // 🚨 USER REQUESTED: Finish/acknowledge all restored transactions
+      // Finish/acknowledge all restored transactions
       for (const purchase of results) {
         console.log('🔄 RESTORE FINISH: Processing:', purchase?.productId);
         console.log('🔄 RESTORE FINISH: Acknowledged:', purchase?.acknowledged);
@@ -762,21 +796,21 @@ export async function restorePurchases(): Promise<PurchaseResult> {
         }
       }
       
-      // Check if any of the purchases are our subscription products
+      // CRITICAL FIX: Only grant Full Access if portiontrack.monthly or portiontrack.annual found
       const hasSubscription = results.some((purchase: any) => 
         purchase?.productId === PRODUCT_IDS.MONTHLY || 
         purchase?.productId === PRODUCT_IDS.ANNUAL
       );
       
-      console.log('📊 RESTORE: Has subscription:', hasSubscription);
+      console.log('📊 RESTORE: Has valid subscription:', hasSubscription);
       
       if (hasSubscription) {
-        console.log('✅ RESTORE: Active subscription found');
+        console.log('✅ RESTORE: Valid subscription found - granting Full Access');
         await saveSubscriptionStatus(true);
         console.log('═══════════════════════════════════════════════════════');
         return { success: true };
       } else {
-        console.log('ℹ️ RESTORE: No active subscription found');
+        console.log('ℹ️ RESTORE: No valid subscription found (portiontrack.monthly or portiontrack.annual)');
         console.log('═══════════════════════════════════════════════════════');
         return {
           success: false,
@@ -878,12 +912,12 @@ export async function checkAppStoreSubscription(): Promise<boolean> {
     // Get purchase history to check for active subscriptions
     const response = await InAppPurchases.getPurchaseHistoryAsync();
     
-    // 🚨 USER REQUESTED: Handle results defensively with optional chaining
+    // Handle results defensively with optional chaining
     const responseCode = response?.responseCode;
     const results = response?.results;
     
     if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
-      // Check if any of the purchases are our subscription products
+      // CRITICAL FIX: Only check for portiontrack.monthly or portiontrack.annual
       const hasSubscription = results.some((purchase: any) => 
         purchase?.productId === PRODUCT_IDS.MONTHLY || 
         purchase?.productId === PRODUCT_IDS.ANNUAL

@@ -98,10 +98,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       setAnnualProduct(annual);
       setLoadingProducts(false);
       
-      // 🚨 USER REQUESTED: Get debug info even on non-iOS
+      // Get debug info even on non-iOS
       const debugInfo = getIAPDebugInfo();
       setIapDebug(debugInfo);
-      console.log('🚨 USER REQUESTED: IAP Debug Info (non-iOS):', debugInfo);
+      console.log('🚨 IAP Debug Info (non-iOS):', debugInfo);
       
       console.log('✅ PRODUCT FETCH: Fallback products loaded');
       console.log('═══════════════════════════════════════════════════════');
@@ -109,18 +109,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     }
 
     try {
-      // 🚨 USER REQUESTED: Query products using getProductsAsync with subscription IDs
+      // Query products using getProductsAsync with subscription IDs
       console.log('📦 PRODUCT FETCH: Querying products from StoreKit...');
       console.log('📦 PRODUCT FETCH: SKUs to query:', [PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       
       const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       
-      // 🚨 USER REQUESTED: Get debug info after query
+      // Get debug info after query
       const debugInfo = getIAPDebugInfo();
       setIapDebug(debugInfo);
       
       console.log('═══════════════════════════════════════════════════════');
-      console.log('🚨 USER REQUESTED: IAP Debug Info after query:');
+      console.log('🚨 IAP Debug Info after query:');
       console.log('  - bundleId:', debugInfo.bundleId);
       console.log('  - responseCode:', debugInfo.responseCode);
       console.log('  - resultsLength:', debugInfo.resultsLength);
@@ -143,7 +143,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('  - Annual SKU ready:', queriedIds.includes(PRODUCT_IDS.ANNUAL));
       console.log('═══════════════════════════════════════════════════════');
 
-      // 🚨 USER REQUESTED: If results are empty or response not OK, show "Unable to load plans" + Retry
+      // If results are empty or response not OK, show "Unable to load plans" + Retry
       if (queriedIds.length === 0) {
         console.error('❌ PRODUCT FETCH FAIL: No products returned from StoreKit');
         console.error('❌ PRODUCT FETCH FAIL: This means StoreKit query failed or returned empty');
@@ -185,12 +185,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.error('❌ Error details:', error);
       console.error('═══════════════════════════════════════════════════════');
       
-      // 🚨 USER REQUESTED: Get debug info even on error
+      // Get debug info even on error
       const debugInfo = getIAPDebugInfo();
       setIapDebug(debugInfo);
-      console.log('🚨 USER REQUESTED: IAP Debug Info (error case):', debugInfo);
+      console.log('🚨 IAP Debug Info (error case):', debugInfo);
       
-      // 🚨 USER REQUESTED: Show "Unable to load plans" + Retry on error
+      // Show "Unable to load plans" + Retry on error
       setProductsFailed(true);
     } finally {
       setLoadingProducts(false);
@@ -215,7 +215,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('  - Product ID:', productId);
     console.log('  - Bypass enabled:', bypassEnabled);
     
-    // 🚨 USER REQUESTED: Verify productId exists in the fetched results list (exact match)
+    // Verify productId exists in the fetched results list (exact match)
     const productExists = isProductReady(productId);
     console.log('  - Product object exists in memory:', productExists);
     
@@ -248,25 +248,45 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('📊 PURCHASE RESULT:');
       console.log('  - Success:', result.success);
       console.log('  - User cancelled:', result.userCancelled);
+      console.log('  - Bypass mode:', result.bypassMode);
       console.log('  - Error:', result.error);
       console.log('═══════════════════════════════════════════════════════');
 
       if (result.success) {
-        Alert.alert(
-          'Success!',
-          'Your subscription is now active. Enjoy unlimited access!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
-                if (onDismiss) {
-                  onDismiss();
-                }
+        // CRITICAL FIX: Different messages for bypass vs real purchase
+        if (result.bypassMode) {
+          Alert.alert(
+            'TestFlight: Full Access Enabled',
+            'Full Access has been enabled for testing. This is NOT a real subscription.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  console.log('✅ PURCHASE SUCCESS: User acknowledged TestFlight bypass');
+                  if (onDismiss) {
+                    onDismiss();
+                  }
+                },
               },
-            },
-          ]
-        );
+            ]
+          );
+        } else {
+          Alert.alert(
+            'Success!',
+            'Your subscription is now active. Enjoy unlimited access!',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
+                  if (onDismiss) {
+                    onDismiss();
+                  }
+                },
+              },
+            ]
+          );
+        }
       } else if (result.userCancelled) {
         console.log('ℹ️ PURCHASE CANCELLED: User cancelled purchase');
       } else {
@@ -309,28 +329,48 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       
       console.log('📊 RESTORE RESULT:');
       console.log('  - Success:', result.success);
+      console.log('  - Bypass mode:', result.bypassMode);
       console.log('  - Error:', result.error);
       console.log('═══════════════════════════════════════════════════════');
 
       if (result.success) {
-        Alert.alert(
-          'Success!',
-          'Your subscription has been restored.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
-                if (onDismiss) {
-                  onDismiss();
-                }
+        // CRITICAL FIX: Different messages for bypass vs real restore
+        if (result.bypassMode) {
+          Alert.alert(
+            'TestFlight: Full Access Enabled',
+            'Full Access has been enabled for testing. This is NOT a real subscription restore.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  console.log('✅ RESTORE SUCCESS: User acknowledged TestFlight bypass');
+                  if (onDismiss) {
+                    onDismiss();
+                  }
+                },
               },
-            },
-          ]
-        );
+            ]
+          );
+        } else {
+          Alert.alert(
+            'Success!',
+            'Your subscription has been restored.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
+                  if (onDismiss) {
+                    onDismiss();
+                  }
+                },
+              },
+            ]
+          );
+        }
       } else {
         Alert.alert(
-          'No Purchases Found',
+          'No Active Subscription Found',
           result.error || 'No previous purchases found to restore.',
           [{ text: 'OK' }]
         );
@@ -386,7 +426,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     return '$2.08';
   };
 
-  // 🚨 USER REQUESTED: Purchase must be disabled unless the product object exists in memory from StoreKit
+  // Purchase must be disabled unless the product object exists in memory from StoreKit
   const isSelectedProductReady = () => {
     if (bypassEnabled) {
       console.log('🔧 PRODUCT READY CHECK: Bypass enabled, returning true');
@@ -404,7 +444,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     return ready;
   };
 
-  // 🚨 USER REQUESTED: Show "Unable to load plans" + Retry if products failed
+  // Show "Unable to load plans" + Retry if products failed
   if (productsFailed && !bypassEnabled) {
     return (
       <Modal
@@ -440,10 +480,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               We couldn't load subscription plans from the App Store. Please check your internet connection and try again.
             </Text>
             
-            {/* 🚨 USER REQUESTED: Show debug info on error screen too */}
+            {/* Show debug info on error screen too */}
             {isTestFlight && iapDebug && (
               <View style={styles.debugPanelError}>
-                <Text style={styles.debugTextError}>IAP responseCode: {iapDebug.responseCode}</Text>
+                <Text style={styles.debugTextError}>IAP responseCode: {iapDebugInfo.responseCode}</Text>
                 <Text style={styles.debugTextError}>IAP results: {iapDebug.resultsLength}</Text>
                 <Text style={styles.debugTextError}>
                   IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
@@ -562,6 +602,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             </TouchableOpacity>
           </View>
 
+          {/* CRITICAL FIX: Show clear TestFlight bypass message */}
           {isTestFlight && (
             <View style={styles.testFlightContainer}>
               <View style={styles.testFlightHeader}>
@@ -579,15 +620,20 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                   thumbColor={colors.surface}
                 />
               </View>
-              <Text style={styles.testFlightDescription}>
-                {bypassEnabled
-                  ? '✅ Simulating purchases (no real charges)'
-                  : '⚠️ Using real StoreKit sandbox purchases'}
-              </Text>
+              {bypassEnabled ? (
+                <Text style={styles.testFlightDescription}>
+                  ✅ TestFlight: Full Access enabled for testing.{'\n'}
+                  This is NOT a real subscription.
+                </Text>
+              ) : (
+                <Text style={styles.testFlightDescription}>
+                  ⚠️ Using real StoreKit sandbox purchases
+                </Text>
+              )}
             </View>
           )}
 
-          {/* 🚨 USER REQUESTED: Debug panel showing IAP info including errors */}
+          {/* Debug panel showing IAP info including errors */}
           {isTestFlight && iapDebug && (
             <View style={styles.debugPanel}>
               <View style={styles.debugHeader}>
@@ -600,7 +646,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                 IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
               </Text>
               
-              {/* 🚨 USER REQUESTED: Show connectAsync() error if present */}
+              {/* Show connectAsync() error if present */}
               {iapDebug.connectError && (
                 <>
                   <Text style={[styles.debugText, styles.debugErrorHeader]}>connectAsync() Error:</Text>
@@ -615,7 +661,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                 </>
               )}
               
-              {/* 🚨 USER REQUESTED: Show getProductsAsync() error if present */}
+              {/* Show getProductsAsync() error if present */}
               {iapDebug.queryError && (
                 <>
                   <Text style={[styles.debugText, styles.debugErrorHeader]}>getProductsAsync() Error:</Text>
@@ -844,6 +890,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontStyle: 'italic',
     marginTop: 4,
+    lineHeight: 18,
   },
   debugPanel: {
     backgroundColor: colors.surface,
