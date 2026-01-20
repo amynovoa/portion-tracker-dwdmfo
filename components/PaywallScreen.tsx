@@ -26,9 +26,7 @@ import {
   getProductDetails,
   queryProducts,
   isProductReady,
-  ProductDetails,
-  getIAPDebugInfo,
-  IAPDebugInfo
+  ProductDetails
 } from '@/utils/subscriptionManager';
 
 interface PaywallScreenProps {
@@ -48,7 +46,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsFailed, setProductsFailed] = useState(false);
-  const [iapDebug, setIapDebug] = useState<IAPDebugInfo | null>(null);
+
 
   useEffect(() => {
     if (visible) {
@@ -97,11 +95,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
       setLoadingProducts(false);
-      
-      // Get debug info even on non-iOS
-      const debugInfo = getIAPDebugInfo();
-      setIapDebug(debugInfo);
-      console.log('🚨 IAP Debug Info (non-iOS):', debugInfo);
+
       
       console.log('✅ PRODUCT FETCH: Fallback products loaded');
       console.log('═══════════════════════════════════════════════════════');
@@ -115,25 +109,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       
       const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       
-      // Get debug info after query
-      const debugInfo = getIAPDebugInfo();
-      setIapDebug(debugInfo);
-      
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🚨 IAP Debug Info after query:');
-      console.log('  - bundleId:', debugInfo.bundleId);
-      console.log('  - responseCode:', debugInfo.responseCode);
-      console.log('  - resultsLength:', debugInfo.resultsLength);
-      console.log('  - returnedIds:', debugInfo.returnedIds);
-      if (debugInfo.connectError) {
-        console.log('  - connectError.message:', debugInfo.connectError.message);
-        console.log('  - connectError.code:', debugInfo.connectError.code);
-      }
-      if (debugInfo.queryError) {
-        console.log('  - queryError.message:', debugInfo.queryError.message);
-        console.log('  - queryError.code:', debugInfo.queryError.code);
-      }
-      console.log('═══════════════════════════════════════════════════════');
+
       
       console.log('═══════════════════════════════════════════════════════');
       console.log('📊 PRODUCT FETCH RESULT:');
@@ -184,11 +160,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.error('❌ PRODUCT FETCH ERROR: Failed to load products');
       console.error('❌ Error details:', error);
       console.error('═══════════════════════════════════════════════════════');
-      
-      // Get debug info even on error
-      const debugInfo = getIAPDebugInfo();
-      setIapDebug(debugInfo);
-      console.log('🚨 IAP Debug Info (error case):', debugInfo);
       
       // Show "Unable to load plans" + Retry on error
       setProductsFailed(true);
@@ -480,20 +451,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               We couldn't load subscription plans from the App Store. Please check your internet connection and try again.
             </Text>
             
-            {/* Show debug info on error screen too */}
-            {isTestFlight && iapDebug && (
-              <View style={styles.debugPanelError}>
-                <Text style={styles.debugTextError}>IAP responseCode: {iapDebugInfo.responseCode}</Text>
-                <Text style={styles.debugTextError}>IAP results: {iapDebug.resultsLength}</Text>
-                <Text style={styles.debugTextError}>
-                  IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
-                </Text>
-                {iapDebug.queryError && (
-                  <Text style={styles.debugTextError}>IAP error: {iapDebug.queryError.message}</Text>
-                )}
-              </View>
-            )}
-            
             <TouchableOpacity
               style={[buttonStyles.primary, styles.retryButton]}
               onPress={() => {
@@ -629,51 +586,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                 <Text style={styles.testFlightDescription}>
                   ⚠️ Using real StoreKit sandbox purchases
                 </Text>
-              )}
-            </View>
-          )}
-
-          {/* Debug panel showing IAP info including errors */}
-          {isTestFlight && iapDebug && (
-            <View style={styles.debugPanel}>
-              <View style={styles.debugHeader}>
-                <MaterialIcons name="info" size={18} color={colors.primary} />
-                <Text style={styles.debugTitle}>IAP Debug Info (Screenshot This)</Text>
-              </View>
-              <Text style={styles.debugText}>IAP responseCode: {iapDebug.responseCode}</Text>
-              <Text style={styles.debugText}>IAP results: {iapDebug.resultsLength}</Text>
-              <Text style={styles.debugText}>
-                IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
-              </Text>
-              
-              {/* Show connectAsync() error if present */}
-              {iapDebug.connectError && (
-                <>
-                  <Text style={[styles.debugText, styles.debugErrorHeader]}>connectAsync() Error:</Text>
-                  <Text style={[styles.debugText, styles.debugError]}>
-                    {iapDebug.connectError.message}
-                  </Text>
-                  {iapDebug.connectError.code && (
-                    <Text style={[styles.debugText, styles.debugError]}>
-                      Code: {iapDebug.connectError.code}
-                    </Text>
-                  )}
-                </>
-              )}
-              
-              {/* Show getProductsAsync() error if present */}
-              {iapDebug.queryError && (
-                <>
-                  <Text style={[styles.debugText, styles.debugErrorHeader]}>getProductsAsync() Error:</Text>
-                  <Text style={[styles.debugText, styles.debugError]}>
-                    {iapDebug.queryError.message}
-                  </Text>
-                  {iapDebug.queryError.code && (
-                    <Text style={[styles.debugText, styles.debugError]}>
-                      Code: {iapDebug.queryError.code}
-                    </Text>
-                  )}
-                </>
               )}
             </View>
           )}
@@ -892,40 +804,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 18,
   },
-  debugPanel: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  debugHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  debugTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginLeft: 8,
-  },
-  debugText: {
-    fontSize: 12,
-    color: colors.text,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    marginBottom: 4,
-  },
-  debugErrorHeader: {
-    fontWeight: 'bold',
-    color: colors.error,
-    marginTop: 8,
-  },
-  debugError: {
-    color: colors.error,
-    marginLeft: 8,
-  },
   subscribeButton: {
     marginBottom: 16,
   },
@@ -975,20 +853,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 32,
-  },
-  debugPanelError: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 16,
-    marginBottom: 16,
-    width: '100%',
-  },
-  debugTextError: {
-    fontSize: 11,
-    color: colors.text,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    marginBottom: 4,
   },
   retryButton: {
     minWidth: 200,
