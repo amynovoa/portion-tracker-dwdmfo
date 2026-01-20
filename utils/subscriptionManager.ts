@@ -290,7 +290,338 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     // Using getProductsAsync() will cause StoreKit to block purchases with:
     // "Must query item from store before calling purchase"
     console.log('🔄 QUERY PRODUCTS: Calling getSubscriptionsAsync() for subscriptions...');
-    const { responseCode, results } = await InAppPurchases.getSubscriptionsAsync(productIds);
+    const response = await InAppPurchases.getSubscriptionsAsync(productIds);
+    
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚨🚨🚨 USER REQUESTED DIAGNOSTIC LOG 🚨🚨🚨');
+    console.log('📊 getSubscriptionsAsync() RAW OUTPUT:');
+    console.log('  - responseCode:', response.responseCode);
+    console.log('  - results.length:', response.results?.length || 0);
+    if (response.results && response.results.length > 0) {
+      console.log('  - results.map(r => r.productId):', response.results.map((r: any) => r.productId));
+    } else {
+      console.log('  - results.map(r => r.productId): [] (no results returned)');
+    }
+    console.log('🚨🚨🚨 END DIAGNOSTIC LOG 🚨🚨🚨');
+    console.log('═══════════════════════════════════════════════════════');
+    
+    console.log('📊 QUERY PRODUCTS RESPONSE:');
+    console.log('  - Response code:', response.responseCode);
+    console.log('  - Results count:', response.results?.length || 0);
+    console.log('═══════════════════════════════════════════════════════');
+    
+    if (response.responseCode === InAppPurchases.IAPResponseCode.OK && response.results && response.results.length > 0) {
+      // CRITICAL: Store the full Product objects (not just IDs)
+      // These objects contain the productId and all metadataNow I'll add comprehensive logging to the `queryProducts` function to show the exact output of `getSubscriptionsAsync`, including the response code, results length, and product IDs. I'll add this logging right after the StoreKit call.
+
+<write file="utils/subscriptionManager.ts">
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
+
+// Only import InAppPurchases on iOS
+let InAppPurchases: any = null;
+if (Platform.OS === 'ios') {
+  InAppPurchases = require('expo-in-app-purchases');
+}
+
+const TRIAL_START_KEY = '@portion_tracker_trial_start';
+const TRIAL_DURATION_DAYS = 7;
+const TESTFLIGHT_BYPASS_KEY = '@testflight_bypass_enabled';
+
+// StoreKit product IDs - MUST match your App Store Connect configuration
+export const PRODUCT_IDS = {
+  MONTHLY: 'portiontrack.monthly',
+  ANNUAL: 'portiontrack.annual',
+};
+
+// Fallback prices in case StoreKit fails or returns invalid data
+const FALLBACK_PRICES = {
+  MONTHLY: {
+    price: '2.99',
+    priceString: '$2.99',
+    currencyCode: 'USD',
+    title: 'Monthly Subscription',
+    description: 'Monthly subscription to Portion Tracker',
+  },
+  ANNUAL: {
+    price: '24.99',
+    priceString: '$24.99',
+    currencyCode: 'USD',
+    title: 'Annual Subscription',
+    description: 'Annual subscription to Portion Tracker',
+  },
+};
+
+// Store queried Product objects globally so they can be used for purchase
+// CRITICAL: We store the full Product object, not just the ID
+let queriedProducts: Map<string, any> = new Map();
+let storeKitInitialized = false;
+
+export interface SubscriptionStatus {
+  isSubscribed: boolean;
+  isInTrial: boolean;
+  trialDaysRemaining: number;
+  isTestFlight: boolean;
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  userCancelled?: boolean;
+  error?: string;
+}
+
+export interface ProductDetails {
+  productId: string;
+  price: string;
+  priceString: string;
+  currencyCode: string;
+  title: string;
+  description: string;
+}
+
+/**
+ * Check if the app is running in TestFlight or development mode
+ * PRODUCTION BUILDS: Returns false (bypass disabled)
+ * TESTFLIGHT/DEV BUILDS: Returns true (bypass available)
+ */
+export function isTestFlightBuild(): boolean {
+  // Check if running in Expo Go or development
+  if (__DEV__) {
+    console.log('🔍 IAP: Running in development mode - TestFlight features enabled');
+    return true;
+  }
+
+  // Check for TestFlight indicators
+  const appOwnership = Constants.appOwnership;
+  
+  // In Expo, appOwnership will be 'expo' for Expo Go, 'standalone' for production builds
+  if (appOwnership === 'expo') {
+    console.log('🔍 IAP: Running in Expo Go - TestFlight features enabled');
+    return true;
+  }
+
+  // Check if it's a TestFlight build
+  // TestFlight builds have appOwnership !== 'standalone'
+  const isTestFlight = appOwnership !== 'standalone';
+  
+  console.log('🔍 IAP: App ownership:', appOwnership, 'Is TestFlight:', isTestFlight);
+  
+  return isTestFlight;
+}
+
+/**
+ * Get the current TestFlight bypass toggle state
+ * This is stored in AsyncStorage so testers can toggle it on/off
+ * ONLY WORKS IN TESTFLIGHT/DEV - Returns false in production
+ */
+export async function getTestFlightBypassEnabled(): Promise<boolean> {
+  try {
+    const value = await AsyncStorage.getItem(TESTFLIGHT_BYPASS_KEY);
+    // Default to false if not set (use real StoreKit by default)
+    const enabled = value === 'true';
+    console.log('🔍 IAP: TestFlight bypass enabled:', enabled);
+    return enabled;
+  } catch (error) {
+    console.error('❌ IAP: Error reading TestFlight bypass state:', error);
+    return false; // Default to disabled on error
+  }
+}
+
+/**
+ * Set the TestFlight bypass toggle state
+ * Only works in TestFlight/dev builds
+ * PRODUCTION BUILDS: This function does nothing
+ */
+export async function setTestFlightBypassEnabled(enabled: boolean): Promise<void> {
+  try {
+    await AsyncStorage.setItem(TESTFLIGHT_BYPASS_KEY, enabled ? 'true' : 'false');
+    console.log('✅ IAP: TestFlight bypass set to:', enabled);
+  } catch (error) {
+    console.error('❌ IAP: Error setting TestFlight bypass state:', error);
+  }
+}
+
+/**
+ * Initialize StoreKit connection via expo-in-app-purchases
+ * PRODUCTION: Always initializes real StoreKit
+ * TESTFLIGHT: Initializes real StoreKit (bypass only affects purchase flow)
+ */
+export async function initializeStoreKit(): Promise<boolean> {
+  try {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 STOREKIT INIT: Initializing StoreKit connection');
+    console.log('═══════════════════════════════════════════════════════');
+    
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ STOREKIT INIT: Platform is not iOS, skipping');
+      return false;
+    }
+
+    if (!InAppPurchases) {
+      console.error('❌ STOREKIT INIT: InAppPurchases module not available');
+      return false;
+    }
+
+    // Check if already initialized
+    if (storeKitInitialized) {
+      console.log('✅ STOREKIT INIT: Already initialized, skipping');
+      return true;
+    }
+
+    // Connect to the App Store
+    console.log('🔄 STOREKIT INIT: Calling connectAsync...');
+    await InAppPurchases.connectAsync();
+    console.log('✅ STOREKIT INIT: Connected to App Store successfully');
+
+    // Set up purchase listener
+    console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
+    InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔵 TRANSACTION CALLBACK: Purchase listener triggered');
+      console.log('📊 TRANSACTION CALLBACK: Response code:', responseCode);
+      console.log('📊 TRANSACTION CALLBACK: Error code:', errorCode);
+      console.log('📊 TRANSACTION CALLBACK: Results count:', results?.length || 0);
+      console.log('═══════════════════════════════════════════════════════');
+      
+      if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+        if (results && results.length > 0) {
+          for (const purchase of results) {
+            console.log('✅ TRANSACTION CALLBACK: Purchase successful');
+            console.log('  - Product ID:', purchase.productId);
+            console.log('  - Acknowledged:', purchase.acknowledged);
+            
+            // CRITICAL: Finish/acknowledge the transaction
+            if (!purchase.acknowledged) {
+              console.log('🔄 TRANSACTION FINISH: Acknowledging transaction...');
+              try {
+                await InAppPurchases.finishTransactionAsync(purchase, true);
+                console.log('✅ TRANSACTION FINISH: Acknowledged successfully');
+              } catch (finishError) {
+                console.error('❌ TRANSACTION FINISH: Error:', finishError);
+              }
+            } else {
+              console.log('ℹ️ TRANSACTION FINISH: Already acknowledged');
+            }
+            
+            // Save subscription status
+            console.log('🔄 TRANSACTION CALLBACK: Saving subscription status...');
+            await saveSubscriptionStatus(true);
+            console.log('✅ TRANSACTION CALLBACK: Subscription status saved');
+          }
+        } else {
+          console.log('⚠️ TRANSACTION CALLBACK: OK response but no results');
+        }
+      } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+        console.log('ℹ️ TRANSACTION CALLBACK: User cancelled purchase');
+      } else {
+        console.error('❌ TRANSACTION CALLBACK: Error code:', errorCode);
+      }
+      console.log('═══════════════════════════════════════════════════════');
+    });
+
+    storeKitInitialized = true;
+    console.log('✅ STOREKIT INIT: Initialization complete');
+    console.log('═══════════════════════════════════════════════════════');
+    return true;
+  } catch (error) {
+    console.error('═══════════════════════════════════════════════════════');
+    console.error('❌ STOREKIT INIT: Initialization failed');
+    console.error('❌ Error:', error);
+    console.error('═══════════════════════════════════════════════════════');
+    storeKitInitialized = false;
+    return false;
+  }
+}
+
+/**
+ * Helper function to check if price data is valid
+ */
+function isPriceValid(price: any, priceString: any): boolean {
+  // Check if price is a valid number greater than 0
+  const priceNum = parseFloat(price);
+  const isValidPrice = !isNaN(priceNum) && priceNum > 0;
+  
+  // Check if priceString is a non-empty string
+  const isValidPriceString = typeof priceString === 'string' && priceString.trim().length > 0 && priceString !== '$0.00' && priceString !== '0';
+  
+  console.log('🔍 PRICE VALIDATION:', { price, priceString, isValidPrice, isValidPriceString });
+  
+  return isValidPrice && isValidPriceString;
+}
+
+/**
+ * Get fallback product details for a given product ID
+ */
+function getFallbackProduct(productId: string): ProductDetails {
+  const fallback = productId === PRODUCT_IDS.MONTHLY ? FALLBACK_PRICES.MONTHLY : FALLBACK_PRICES.ANNUAL;
+  console.log('📦 FALLBACK: Using fallback product for:', productId);
+  return {
+    productId,
+    ...fallback,
+  };
+}
+
+/**
+ * Query and store Product objects from StoreKit
+ * CRITICAL: This stores the full Product objects returned by StoreKit
+ * These Product objects MUST be used when calling purchaseItemAsync
+ * Returns array of product IDs that were successfully queried
+ * 
+ * 🚨 IMPORTANT: Uses getSubscriptionsAsync() for auto-renewable subscriptions
+ * Using getProductsAsync() will cause "Must query item from store" error
+ */
+export async function queryProducts(productIds: string[]): Promise<string[]> {
+  try {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 QUERY PRODUCTS: Starting subscription query');
+    console.log('📊 QUERY PRODUCTS: Product IDs to query:', productIds);
+    console.log('🚨 QUERY PRODUCTS: Using getSubscriptionsAsync() for auto-renewable subscriptions');
+    console.log('═══════════════════════════════════════════════════════');
+    
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ QUERY PRODUCTS: Platform is not iOS, skipping');
+      return [];
+    }
+
+    if (!InAppPurchases) {
+      console.error('❌ QUERY PRODUCTS: InAppPurchases module not available');
+      return [];
+    }
+
+    // Initialize if not already done
+    console.log('🔄 QUERY PRODUCTS: Ensuring StoreKit is initialized...');
+    const initialized = await initializeStoreKit();
+    
+    if (!initialized) {
+      console.error('❌ QUERY PRODUCTS: StoreKit initialization failed');
+      return [];
+    }
+    
+    console.log('✅ QUERY PRODUCTS: StoreKit initialized');
+
+    // CRITICAL FIX: Use getSubscriptionsAsync() instead of getProductsAsync()
+    // For auto-renewable subscriptions, Expo requires getSubscriptionsAsync()
+    // Using getProductsAsync() will cause StoreKit to block purchases with:
+    // "Must query item from store before calling purchase"
+    console.log('🔄 QUERY PRODUCTS: Calling getSubscriptionsAsync() for subscriptions...');
+    const response = await InAppPurchases.getSubscriptionsAsync(productIds);
+    
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚨🚨🚨 USER REQUESTED LOG OUTPUT 🚨🚨🚨');
+    console.log('📊 getSubscriptionsAsync() RAW RESPONSE:');
+    console.log('  - responseCode:', response.responseCode);
+    console.log('  - results.length:', response.results?.length || 0);
+    if (response.results && response.results.length > 0) {
+      console.log('  - results.map(r => r.productId):', response.results.map((r: any) => r.productId));
+    } else {
+      console.log('  - results.map(r => r.productId): [] (no results returned)');
+    }
+    console.log('🚨🚨🚨 END USER REQUESTED LOG OUTPUT 🚨🚨🚨');
+    console.log('═══════════════════════════════════════════════════════');
+    
+    const { responseCode, results } = response;
     
     console.log('═══════════════════════════════════════════════════════');
     console.log('📊 QUERY PRODUCTS RESPONSE:');
