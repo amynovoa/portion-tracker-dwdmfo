@@ -43,12 +43,20 @@ const FALLBACK_PRICES = {
 let queriedProducts: Map<string, any> = new Map();
 let storeKitInitialized = false;
 
-// 🚨 USER REQUESTED: Store IAP debug information
+// 🚨 USER REQUESTED: Store IAP debug information including error details
 export interface IAPDebugInfo {
   bundleId: string;
   responseCode: number | string;
   resultsLength: number;
   returnedIds: string[];
+  connectError?: {
+    message: string;
+    code?: string | number;
+  };
+  queryError?: {
+    message: string;
+    code?: string | number;
+  };
 }
 
 let iapDebugInfo: IAPDebugInfo = {
@@ -182,6 +190,11 @@ export async function initializeStoreKit(): Promise<boolean> {
     await InAppPurchases.connectAsync();
     console.log('✅ STOREKIT INIT: Connected to App Store successfully');
 
+    // Clear any previous connect error
+    if (iapDebugInfo.connectError) {
+      delete iapDebugInfo.connectError;
+    }
+
     // Set up purchase listener
     console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
     InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
@@ -232,11 +245,25 @@ export async function initializeStoreKit(): Promise<boolean> {
     console.log('✅ STOREKIT INIT: Initialization complete');
     console.log('═══════════════════════════════════════════════════════');
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('═══════════════════════════════════════════════════════');
     console.error('❌ STOREKIT INIT: Initialization failed');
     console.error('❌ Error:', error);
+    console.error('❌ Error message:', error?.message);
+    console.error('❌ Error code:', error?.code);
     console.error('═══════════════════════════════════════════════════════');
+    
+    // 🚨 USER REQUESTED: Store connect error details
+    iapDebugInfo.connectError = {
+      message: error?.message || String(error),
+      code: error?.code,
+    };
+    
+    console.log('🚨🚨🚨 USER REQUESTED: connectAsync() ERROR DETAILS 🚨🚨🚨');
+    console.log('  - Error message:', iapDebugInfo.connectError.message);
+    console.log('  - Error code:', iapDebugInfo.connectError.code);
+    console.log('🚨🚨🚨 END ERROR DETAILS 🚨🚨🚨');
+    
     storeKitInitialized = false;
     return false;
   }
@@ -328,6 +355,8 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
         responseCode: 'init_failed',
         resultsLength: 0,
         returnedIds: [],
+        // Include connect error if it exists
+        ...(iapDebugInfo.connectError && { connectError: iapDebugInfo.connectError }),
       };
       
       return [];
@@ -353,6 +382,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       responseCode,
       resultsLength,
       returnedIds,
+      // Clear query error on success
     };
     
     console.log('═══════════════════════════════════════════════════════');
@@ -427,19 +457,34 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.log('═══════════════════════════════════════════════════════');
     
     return [];
-  } catch (error) {
+  } catch (error: any) {
     console.error('═══════════════════════════════════════════════════════');
     console.error('❌ QUERY PRODUCTS ERROR: Exception during query');
     console.error('❌ Error:', error);
+    console.error('❌ Error message:', error?.message);
+    console.error('❌ Error code:', error?.code);
     console.error('═══════════════════════════════════════════════════════');
     
-    // 🚨 USER REQUESTED: Store debug info on error
+    // 🚨 USER REQUESTED: Store query error details
+    const queryError = {
+      message: error?.message || String(error),
+      code: error?.code,
+    };
+    
     iapDebugInfo = {
       bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
       responseCode: 'exception',
       resultsLength: 0,
       returnedIds: [],
+      queryError,
+      // Include connect error if it exists
+      ...(iapDebugInfo.connectError && { connectError: iapDebugInfo.connectError }),
     };
+    
+    console.log('🚨🚨🚨 USER REQUESTED: getSubscriptionsAsync() ERROR DETAILS 🚨🚨🚨');
+    console.log('  - Error message:', queryError.message);
+    console.log('  - Error code:', queryError.code);
+    console.log('🚨🚨🚨 END ERROR DETAILS 🚨🚨🚨');
     
     return [];
   }

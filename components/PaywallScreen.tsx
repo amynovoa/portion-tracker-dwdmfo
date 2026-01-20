@@ -128,6 +128,14 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('  - responseCode:', debugInfo.responseCode);
       console.log('  - resultsLength:', debugInfo.resultsLength);
       console.log('  - returnedIds:', debugInfo.returnedIds);
+      if (debugInfo.connectError) {
+        console.log('  - connectError.message:', debugInfo.connectError.message);
+        console.log('  - connectError.code:', debugInfo.connectError.code);
+      }
+      if (debugInfo.queryError) {
+        console.log('  - queryError.message:', debugInfo.queryError.message);
+        console.log('  - queryError.code:', debugInfo.queryError.code);
+      }
       console.log('═══════════════════════════════════════════════════════');
       
       console.log('═══════════════════════════════════════════════════════');
@@ -639,7 +647,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             </View>
           )}
 
-          {/* 🚨 USER REQUESTED: Debug panel showing IAP info */}
+          {/* 🚨 USER REQUESTED: Debug panel showing IAP info including errors */}
           {isTestFlight && iapDebug && (
             <View style={styles.debugPanel}>
               <View style={styles.debugHeader}>
@@ -652,6 +660,36 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <Text style={styles.debugText}>
                 IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
               </Text>
+              
+              {/* 🚨 USER REQUESTED: Show connectAsync() error if present */}
+              {iapDebug.connectError && (
+                <>
+                  <Text style={[styles.debugText, styles.debugErrorHeader]}>connectAsync() Error:</Text>
+                  <Text style={[styles.debugText, styles.debugError]}>
+                    Message: {iapDebug.connectError.message}
+                  </Text>
+                  {iapDebug.connectError.code && (
+                    <Text style={[styles.debugText, styles.debugError]}>
+                      Code: {iapDebug.connectError.code}
+                    </Text>
+                  )}
+                </>
+              )}
+              
+              {/* 🚨 USER REQUESTED: Show getSubscriptionsAsync() error if present */}
+              {iapDebug.queryError && (
+                <>
+                  <Text style={[styles.debugText, styles.debugErrorHeader]}>getSubscriptionsAsync() Error:</Text>
+                  <Text style={[styles.debugText, styles.debugError]}>
+                    Message: {iapDebug.queryError.message}
+                  </Text>
+                  {iapDebug.queryError.code && (
+                    <Text style={[styles.debugText, styles.debugError]}>
+                      Code: {iapDebug.queryError.code}
+                    </Text>
+                  )}
+                </>
+              )}
             </View>
           )}
 
@@ -892,6 +930,15 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     marginBottom: 4,
+  },
+  debugErrorHeader: {
+    fontWeight: 'bold',
+    color: colors.error,
+    marginTop: 8,
+  },
+  debugError: {
+    color: colors.error,
+    marginLeft: 8,
   },
   subscribeButton: {
     marginBottom: 16,
