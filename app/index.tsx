@@ -21,40 +21,22 @@ export default function Index() {
       const profile = await loadProfile();
       console.log('Index: Profile exists:', !!profile);
       
-      // In development mode, bypass subscription and go straight to welcome or profile setup
-      if (isDevOrTestFlight) {
-        if (profile && profile.portionTargets) {
-          // Profile setup complete, go to main app
-          console.log('Index: Dev mode + Profile complete -> Going to main app');
-          router.replace('/(tabs)/(home)');
-        } else {
-          // Profile not complete, go to welcome screen
-          console.log('Index: Dev mode + No profile -> Going to welcome screen');
-          router.replace('/welcome');
-        }
-        return;
-      }
-      
-      // Production mode: Check subscription status
+      // Check subscription status
       const isSubscribed = await loadSubscriptionStatus();
       console.log('Index: Subscription status:', isSubscribed);
       
-      if (isSubscribed) {
-        // User is subscribed
-        if (profile && profile.portionTargets) {
-          // Profile setup complete, go to main app
-          console.log('Index: Subscribed + Profile complete -> Going to main app');
-          router.replace('/(tabs)/(home)');
-        } else {
-          // Profile not complete, go to profile setup
-          console.log('Index: Subscribed + No profile -> Going to profile setup');
-          router.replace('/setup-profile');
-        }
-      } else {
-        // User is not subscribed, show welcome screen
-        console.log('Index: Not subscribed -> Going to welcome screen');
-        router.replace('/welcome');
+      // If profile is complete, go to main app
+      if (profile && profile.portionTargets) {
+        console.log('Index: Profile complete -> Going to main app');
+        router.replace('/(tabs)/(home)');
+        return;
       }
+      
+      // If no profile, always show welcome screen first
+      // Welcome screen will handle showing "Start Trial" or "Get Started" based on subscription
+      console.log('Index: No profile -> Going to welcome screen');
+      router.replace('/welcome');
+      
     } catch (error) {
       console.error('Index: Error checking app state:', error);
       // On error, default to welcome screen

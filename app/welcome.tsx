@@ -14,6 +14,7 @@ export default function WelcomeScreen() {
   const { isSubscribed, refreshSubscription } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   useEffect(() => {
     // Check if we're in development/TestFlight mode
@@ -25,8 +26,18 @@ export default function WelcomeScreen() {
     checkDevMode();
   }, []);
 
+  useEffect(() => {
+    // Check subscription status on mount and when context updates
+    const checkSubscription = async () => {
+      const subscribed = await loadSubscriptionStatus();
+      console.log('Welcome: Subscription status:', subscribed);
+      setHasSubscription(subscribed || isDevMode);
+    };
+    checkSubscription();
+  }, [isSubscribed, isDevMode]);
+
   const handleStartTrial = () => {
-    console.log('User tapped Start 7-Day Free Trial button');
+    console.log('User tapped Start Your Free Trial button');
     setShowPaywall(true);
   };
 
@@ -57,20 +68,17 @@ export default function WelcomeScreen() {
     
     // Check if user just subscribed
     const subscribed = await loadSubscriptionStatus();
+    console.log('Paywall dismissed - Subscription status:', subscribed);
+    
     if (subscribed) {
-      const profile = await loadProfile();
-      if (profile && profile.portionTargets) {
-        console.log('Paywall: User subscribed + Profile exists -> Going to main app');
-        router.replace('/(tabs)/(home)');
-      } else {
-        console.log('Paywall: User subscribed + No profile -> Going to setup-profile');
-        router.replace('/setup-profile');
-      }
+      // User subscribed - update state to show "Get Started" button
+      setHasSubscription(true);
+      console.log('Paywall: User subscribed - showing Get Started button');
     }
   };
 
-  // In development mode, always show "Get Started" button
-  const shouldShowGetStarted = isDevMode || isSubscribed;
+  // Show "Get Started" if user has subscription OR is in dev mode
+  const shouldShowGetStarted = hasSubscription || isDevMode;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -95,7 +103,7 @@ export default function WelcomeScreen() {
             style={[buttonStyles.primary, styles.button]}
             onPress={handleStartTrial}
           >
-            <Text style={buttonStyles.primaryText}>Start 7-Day Free Trial</Text>
+            <Text style={buttonStyles.primaryText}>Start Your Free Trial</Text>
           </TouchableOpacity>
         )}
       </View>

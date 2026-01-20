@@ -61,7 +61,6 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
             selectedValue={tempValue}
             onValueChange={setTempValue}
             style={styles.pickerModalPicker}
-            itemStyle={styles.pickerModalItem}
           >
             {options.map((num) => (
               <Picker.Item key={num} label={`${num}`} value={num} />
@@ -391,9 +390,5 @@ const styles = StyleSheet.create({
   pickerModalPicker: {
     width: '100%',
     height: 216,
-  },
-  pickerModalItem: {
-    fontSize: 20,
-    color: colors.text,
   },
 });
