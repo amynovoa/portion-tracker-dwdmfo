@@ -48,7 +48,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsFailed, setProductsFailed] = useState(false);
-  const [productsReady, setProductsReady] = useState<string[]>([]);
   const [iapDebug, setIapDebug] = useState<IAPDebugInfo | null>(null);
 
   useEffect(() => {
@@ -82,7 +81,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     
     setLoadingProducts(true);
     setProductsFailed(false);
-    setProductsReady([]);
 
     // CRITICAL FIX: On non-iOS platforms (web, Android), use fallback products
     // expo-in-app-purchases only works on iOS
@@ -98,7 +96,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
-      setProductsReady([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       setLoadingProducts(false);
       
       // 🚨 USER REQUESTED: Get debug info even on non-iOS
@@ -112,7 +109,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     }
 
     try {
-      // STEP 1: Query BOTH products from StoreKit and store Product objects
+      // 🚨 USER REQUESTED: Query products using getProductsAsync with subscription IDs
       console.log('📦 PRODUCT FETCH: Querying products from StoreKit...');
       console.log('📦 PRODUCT FETCH: SKUs to query:', [PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       
@@ -146,30 +143,16 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('  - Annual SKU ready:', queriedIds.includes(PRODUCT_IDS.ANNUAL));
       console.log('═══════════════════════════════════════════════════════');
 
+      // 🚨 USER REQUESTED: If results are empty or response not OK, show "Unable to load plans" + Retry
       if (queriedIds.length === 0) {
         console.error('❌ PRODUCT FETCH FAIL: No products returned from StoreKit');
         console.error('❌ PRODUCT FETCH FAIL: This means StoreKit query failed or returned empty');
-        console.error('❌ PRODUCT FETCH FAIL: Using fallback products instead');
-        
-        // Use fallback products instead of failing completely
-        const [monthly, annual] = await Promise.all([
-          getProductDetails(PRODUCT_IDS.MONTHLY),
-          getProductDetails(PRODUCT_IDS.ANNUAL),
-        ]);
-        
-        setMonthlyProduct(monthly);
-        setAnnualProduct(annual);
-        setProductsReady([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+        setProductsFailed(true);
         setLoadingProducts(false);
-        
-        console.log('✅ PRODUCT FETCH: Using fallback products');
-        console.log('═══════════════════════════════════════════════════════');
         return;
       }
 
-      setProductsReady(queriedIds);
-
-      // STEP 2: Get display details for each product
+      // Get display details for each product
       console.log('🔄 PRODUCT DETAILS: Fetching display details for products...');
       
       const [monthly, annual] = await Promise.all([
@@ -184,27 +167,15 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('    - Price:', monthly?.price);
       console.log('    - Price String:', monthly?.priceString);
       console.log('    - Currency:', monthly?.currencyCode);
-      console.log('    - Has valid price:', !!(monthly?.price && monthly?.priceString));
       console.log('  Annual Product:');
       console.log('    - Product ID:', annual?.productId);
       console.log('    - Price:', annual?.price);
       console.log('    - Price String:', annual?.priceString);
       console.log('    - Currency:', annual?.currencyCode);
-      console.log('    - Has valid price:', !!(annual?.price && annual?.priceString));
       console.log('═══════════════════════════════════════════════════════');
 
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
-      
-      // Verify products have valid prices
-      const monthlyValid = monthly && monthly.price && monthly.priceString;
-      const annualValid = annual && annual.price && annual.priceString;
-      
-      if (!monthlyValid || !annualValid) {
-        console.warn('⚠️ PRODUCT VALIDATION: Some products missing valid price data');
-        console.warn('⚠️ PRODUCT VALIDATION: Monthly valid:', monthlyValid);
-        console.warn('⚠️ PRODUCT VALIDATION: Annual valid:', annualValid);
-      }
       
       console.log('✅ PRODUCT FETCH COMPLETE: Products loaded and ready for purchase');
       console.log('═══════════════════════════════════════════════════════');
@@ -212,7 +183,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.error('═══════════════════════════════════════════════════════');
       console.error('❌ PRODUCT FETCH ERROR: Failed to load products');
       console.error('❌ Error details:', error);
-      console.error('❌ PRODUCT FETCH ERROR: Using fallback products');
       console.error('═══════════════════════════════════════════════════════');
       
       // 🚨 USER REQUESTED: Get debug info even on error
@@ -220,15 +190,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       setIapDebug(debugInfo);
       console.log('🚨 USER REQUESTED: IAP Debug Info (error case):', debugInfo);
       
-      // Use fallback products on error instead of showing error screen
-      const [monthly, annual] = await Promise.all([
-        getProductDetails(PRODUCT_IDS.MONTHLY),
-        getProductDetails(PRODUCT_IDS.ANNUAL),
-      ]);
-      
-      setMonthlyProduct(monthly);
-      setAnnualProduct(annual);
-      setProductsReady([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+      // 🚨 USER REQUESTED: Show "Unable to load plans" + Retry on error
+      setProductsFailed(true);
     } finally {
       setLoadingProducts(false);
     }
@@ -251,42 +214,17 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('  - Selected plan:', selectedPlan);
     console.log('  - Product ID:', productId);
     console.log('  - Bypass enabled:', bypassEnabled);
-    console.log('  - Products ready list:', productsReady);
-    console.log('  - Is product ready:', isProductReady(productId));
     
-    // Check if product object exists in memory
+    // 🚨 USER REQUESTED: Verify productId exists in the fetched results list (exact match)
     const productExists = isProductReady(productId);
     console.log('  - Product object exists in memory:', productExists);
     
-    if (!productExists) {
-      console.log('═══════════════════════════════════════════════════════');
+    if (!productExists && !bypassEnabled) {
+      console.error('═══════════════════════════════════════════════════════');
       console.error('❌ PURCHASE BLOCKED: Product object not in memory');
-      console.error('❌ This would cause: "Must query item from store before calling purchase"');
+      console.error('❌ Cannot purchase - product not queried from StoreKit');
       console.error('❌ Product ID:', productId);
-      console.error('❌ Available products:', productsReady);
-      console.log('═══════════════════════════════════════════════════════');
-    }
-
-    // CRITICAL: Check if product is ready before attempting purchase
-    // If bypass is enabled, we don't need the product to be ready
-    if (!bypassEnabled && !productExists) {
-      console.warn('⚠️ PURCHASE BLOCKED: Product not ready for purchase:', productId);
-      console.log('═══════════════════════════════════════════════════════');
-      
-      Alert.alert(
-        'Please Wait',
-        'Products are still loading. Please try again in a moment.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
-    // Additional validation: Check if product has valid price
-    const selectedProduct = selectedPlan === 'monthly' ? monthlyProduct : annualProduct;
-    if (!bypassEnabled && (!selectedProduct || !selectedProduct.price || !selectedProduct.priceString)) {
-      console.error('❌ PURCHASE BLOCKED: Selected product missing valid price data');
-      console.error('❌ Product:', selectedProduct);
-      console.log('═══════════════════════════════════════════════════════');
+      console.error('═══════════════════════════════════════════════════════');
       
       Alert.alert(
         'Product Not Available',
@@ -448,7 +386,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     return '$2.08';
   };
 
-  // Check if selected product is ready for purchase
+  // 🚨 USER REQUESTED: Purchase must be disabled unless the product object exists in memory from StoreKit
   const isSelectedProductReady = () => {
     if (bypassEnabled) {
       console.log('🔧 PRODUCT READY CHECK: Bypass enabled, returning true');
@@ -456,25 +394,17 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     }
     
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-    const inReadyList = productsReady.includes(productId);
-    const hasProductObject = isProductReady(productId);
-    const selectedProduct = selectedPlan === 'monthly' ? monthlyProduct : annualProduct;
-    const hasValidPrice = !!(selectedProduct?.price && selectedProduct?.priceString);
-    
-    const ready = inReadyList && hasProductObject && hasValidPrice;
+    const ready = isProductReady(productId);
     
     console.log('🔍 PRODUCT READY CHECK:', {
       productId,
-      inReadyList,
-      hasProductObject,
-      hasValidPrice,
       ready
     });
     
     return ready;
   };
 
-  // Show retry UI if products failed to load
+  // 🚨 USER REQUESTED: Show "Unable to load plans" + Retry if products failed
   if (productsFailed && !bypassEnabled) {
     return (
       <Modal
@@ -509,6 +439,21 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             <Text style={styles.errorMessage}>
               We couldn't load subscription plans from the App Store. Please check your internet connection and try again.
             </Text>
+            
+            {/* 🚨 USER REQUESTED: Show debug info on error screen too */}
+            {isTestFlight && iapDebug && (
+              <View style={styles.debugPanelError}>
+                <Text style={styles.debugTextError}>IAP responseCode: {iapDebug.responseCode}</Text>
+                <Text style={styles.debugTextError}>IAP results: {iapDebug.resultsLength}</Text>
+                <Text style={styles.debugTextError}>
+                  IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
+                </Text>
+                {iapDebug.queryError && (
+                  <Text style={styles.debugTextError}>IAP error: {iapDebug.queryError.message}</Text>
+                )}
+              </View>
+            )}
+            
             <TouchableOpacity
               style={[buttonStyles.primary, styles.retryButton]}
               onPress={() => {
@@ -639,11 +584,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                   ? '✅ Simulating purchases (no real charges)'
                   : '⚠️ Using real StoreKit sandbox purchases'}
               </Text>
-              {!bypassEnabled && (
-                <Text style={styles.testFlightDescription}>
-                  Products ready: {productsReady.length > 0 ? productsReady.join(', ') : 'Loading...'}
-                </Text>
-              )}
             </View>
           )}
 
@@ -652,11 +592,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             <View style={styles.debugPanel}>
               <View style={styles.debugHeader}>
                 <MaterialIcons name="info" size={18} color={colors.primary} />
-                <Text style={styles.debugTitle}>IAP Debug Info</Text>
+                <Text style={styles.debugTitle}>IAP Debug Info (Screenshot This)</Text>
               </View>
-              <Text style={styles.debugText}>Bundle: {iapDebug.bundleId}</Text>
-              <Text style={styles.debugText}>IAP code: {iapDebug.responseCode}</Text>
-              <Text style={styles.debugText}>IAP count: {iapDebug.resultsLength}</Text>
+              <Text style={styles.debugText}>IAP responseCode: {iapDebug.responseCode}</Text>
+              <Text style={styles.debugText}>IAP results: {iapDebug.resultsLength}</Text>
               <Text style={styles.debugText}>
                 IAP ids: {iapDebug.returnedIds.length > 0 ? iapDebug.returnedIds.join(', ') : 'none'}
               </Text>
@@ -666,7 +605,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                 <>
                   <Text style={[styles.debugText, styles.debugErrorHeader]}>connectAsync() Error:</Text>
                   <Text style={[styles.debugText, styles.debugError]}>
-                    Message: {iapDebug.connectError.message}
+                    {iapDebug.connectError.message}
                   </Text>
                   {iapDebug.connectError.code && (
                     <Text style={[styles.debugText, styles.debugError]}>
@@ -676,12 +615,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
                 </>
               )}
               
-              {/* 🚨 USER REQUESTED: Show getSubscriptionsAsync() error if present */}
+              {/* 🚨 USER REQUESTED: Show getProductsAsync() error if present */}
               {iapDebug.queryError && (
                 <>
-                  <Text style={[styles.debugText, styles.debugErrorHeader]}>getSubscriptionsAsync() Error:</Text>
+                  <Text style={[styles.debugText, styles.debugErrorHeader]}>getProductsAsync() Error:</Text>
                   <Text style={[styles.debugText, styles.debugError]}>
-                    Message: {iapDebug.queryError.message}
+                    {iapDebug.queryError.message}
                   </Text>
                   {iapDebug.queryError.code && (
                     <Text style={[styles.debugText, styles.debugError]}>
@@ -989,6 +928,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 32,
+  },
+  debugPanelError: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    marginBottom: 16,
+    width: '100%',
+  },
+  debugTextError: {
+    fontSize: 11,
+    color: colors.text,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    marginBottom: 4,
   },
   retryButton: {
     minWidth: 200,

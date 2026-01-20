@@ -20,7 +20,7 @@ export const PRODUCT_IDS = {
   ANNUAL: 'portiontrack.annual',
 };
 
-// Fallback prices in case StoreKit fails or returns invalid data
+// Fallback prices for display only - NOT used for purchase readiness
 const FALLBACK_PRICES = {
   MONTHLY: {
     price: '2.99',
@@ -38,8 +38,7 @@ const FALLBACK_PRICES = {
   },
 };
 
-// Store queried Product objects globally so they can be used for purchase
-// CRITICAL: We store the full Product object, not just the ID
+// 🚨 USER REQUESTED: Store queried Product objects in memory keyed by productId
 let queriedProducts: Map<string, any> = new Map();
 let storeKitInitialized = false;
 
@@ -68,7 +67,7 @@ let iapDebugInfo: IAPDebugInfo = {
 
 /**
  * 🚨 USER REQUESTED: Get IAP debug information
- * Returns the debug info captured from the last getSubscriptionsAsync() call
+ * Returns the debug info captured from the last getProductsAsync() call
  */
 export function getIAPDebugInfo(): IAPDebugInfo {
   return { ...iapDebugInfo };
@@ -159,9 +158,8 @@ export async function setTestFlightBypassEnabled(enabled: boolean): Promise<void
 }
 
 /**
- * Initialize StoreKit connection via expo-in-app-purchases
- * PRODUCTION: Always initializes real StoreKit
- * TESTFLIGHT: Initializes real StoreKit (bypass only affects purchase flow)
+ * 🚨 USER REQUESTED: Initialize StoreKit connection via expo-in-app-purchases
+ * This MUST be called before getProductsAsync()
  */
 export async function initializeStoreKit(): Promise<boolean> {
   try {
@@ -185,7 +183,7 @@ export async function initializeStoreKit(): Promise<boolean> {
       return true;
     }
 
-    // Connect to the App Store
+    // 🚨 USER REQUESTED: Connect to the App Store BEFORE querying products
     console.log('🔄 STOREKIT INIT: Calling connectAsync...');
     await InAppPurchases.connectAsync();
     console.log('✅ STOREKIT INIT: Connected to App Store successfully');
@@ -212,7 +210,7 @@ export async function initializeStoreKit(): Promise<boolean> {
             console.log('  - Product ID:', purchase.productId);
             console.log('  - Acknowledged:', purchase.acknowledged);
             
-            // CRITICAL: Finish/acknowledge the transaction
+            // 🚨 USER REQUESTED: Finish/acknowledge the transaction
             if (!purchase.acknowledged) {
               console.log('🔄 TRANSACTION FINISH: Acknowledging transaction...');
               try {
@@ -287,6 +285,7 @@ function isPriceValid(price: any, priceString: any): boolean {
 
 /**
  * Get fallback product details for a given product ID
+ * 🚨 USER REQUESTED: Fallback prices can display, but purchase must be disabled unless product exists in memory
  */
 function getFallbackProduct(productId: string): ProductDetails {
   const fallback = productId === PRODUCT_IDS.MONTHLY ? FALLBACK_PRICES.MONTHLY : FALLBACK_PRICES.ANNUAL;
@@ -298,20 +297,18 @@ function getFallbackProduct(productId: string): ProductDetails {
 }
 
 /**
- * Query and store Product objects from StoreKit
- * CRITICAL: This stores the full Product objects returned by StoreKit
- * These Product objects MUST be used when calling purchaseItemAsync
- * Returns array of product IDs that were successfully queried
+ * 🚨 USER REQUESTED: Query products using getProductsAsync with subscription IDs
+ * Store the returned results objects in memory keyed by productId
  * 
- * 🚨 IMPORTANT: Uses getSubscriptionsAsync() for auto-renewable subscriptions
- * Using getProductsAsync() will cause "Must query item from store" error
+ * CRITICAL CHANGE: Now uses getProductsAsync() instead of getSubscriptionsAsync()
+ * Reason: getSubscriptionsAsync() is undefined in the runtime
  */
 export async function queryProducts(productIds: string[]): Promise<string[]> {
   try {
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 QUERY PRODUCTS: Starting subscription query');
+    console.log('🔵 QUERY PRODUCTS: Starting product query');
     console.log('📊 QUERY PRODUCTS: Product IDs to query:', productIds);
-    console.log('🚨 QUERY PRODUCTS: Using getSubscriptionsAsync() for auto-renewable subscriptions');
+    console.log('🚨 QUERY PRODUCTS: Using getProductsAsync() for subscriptions');
     console.log('═══════════════════════════════════════════════════════');
     
     if (Platform.OS !== 'ios') {
@@ -342,7 +339,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       return [];
     }
 
-    // Initialize if not already done
+    // 🚨 USER REQUESTED: Ensure connectAsync() happens immediately before getProductsAsync()
     console.log('🔄 QUERY PRODUCTS: Ensuring StoreKit is initialized...');
     const initialized = await initializeStoreKit();
     
@@ -364,12 +361,9 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     
     console.log('✅ QUERY PRODUCTS: StoreKit initialized');
 
-    // CRITICAL FIX: Use getSubscriptionsAsync() instead of getProductsAsync()
-    // For auto-renewable subscriptions, Expo requires getSubscriptionsAsync()
-    // Using getProductsAsync() will cause StoreKit to block purchases with:
-    // "Must query item from store before calling purchase"
-    console.log('🔄 QUERY PRODUCTS: Calling getSubscriptionsAsync() for subscriptions...');
-    const response = await InAppPurchases.getSubscriptionsAsync(productIds);
+    // 🚨 USER REQUESTED: Use getProductsAsync() instead of getSubscriptionsAsync()
+    console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync() for subscriptions...');
+    const response = await InAppPurchases.getProductsAsync(productIds);
     
     // 🚨 USER REQUESTED: Store debug information from the response
     const bundleId = Constants.expoConfig?.ios?.bundleIdentifier || 'unknown';
@@ -404,19 +398,18 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.log('═══════════════════════════════════════════════════════');
     
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
-      // CRITICAL: Store the full Product objects (not just IDs)
-      // These objects contain the productId and all metadata needed for purchase
+      // 🚨 USER REQUESTED: Store the full Product objects in memory keyed by productId
       const queriedIds: string[] = [];
       
-      console.log('🔄 QUERY PRODUCTS: Processing returned subscriptions...');
+      console.log('🔄 QUERY PRODUCTS: Processing returned products...');
       
       for (const product of results) {
         console.log('───────────────────────────────────────────────────────');
-        console.log('📦 SUBSCRIPTION:', product.productId);
+        console.log('📦 PRODUCT:', product.productId);
         
         // Validate that the product has required fields
         if (!product.productId) {
-          console.warn('⚠️ SUBSCRIPTION: Missing productId, skipping');
+          console.warn('⚠️ PRODUCT: Missing productId, skipping');
           continue;
         }
         
@@ -430,20 +423,20 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
         console.log('  - Price valid:', priceValid);
         
         if (!priceValid) {
-          console.warn('⚠️ SUBSCRIPTION: Invalid price data, but storing anyway');
+          console.warn('⚠️ PRODUCT: Invalid price data, but storing anyway');
         }
         
-        // CRITICAL: Store the full Product object
+        // 🚨 USER REQUESTED: Store the full Product object keyed by productId
         queriedProducts.set(product.productId, product);
         queriedIds.push(product.productId);
         
-        console.log('✅ SUBSCRIPTION: Stored in memory for purchase');
+        console.log('✅ PRODUCT: Stored in memory for purchase');
         console.log('───────────────────────────────────────────────────────');
       }
       
       console.log('═══════════════════════════════════════════════════════');
       console.log('✅ QUERY PRODUCTS SUCCESS:');
-      console.log('  - Total subscriptions stored:', queriedIds.length);
+      console.log('  - Total products stored:', queriedIds.length);
       console.log('  - Product IDs:', queriedIds);
       console.log('═══════════════════════════════════════════════════════');
       
@@ -451,7 +444,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     }
 
     console.log('═══════════════════════════════════════════════════════');
-    console.log('⚠️ QUERY PRODUCTS FAIL: No subscriptions returned');
+    console.log('⚠️ QUERY PRODUCTS FAIL: No products returned');
     console.log('  - Response code:', responseCode);
     console.log('  - This means StoreKit query failed or returned empty');
     console.log('═══════════════════════════════════════════════════════');
@@ -481,7 +474,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       ...(iapDebugInfo.connectError && { connectError: iapDebugInfo.connectError }),
     };
     
-    console.log('🚨🚨🚨 USER REQUESTED: getSubscriptionsAsync() ERROR DETAILS 🚨🚨🚨');
+    console.log('🚨🚨🚨 USER REQUESTED: getProductsAsync() ERROR DETAILS 🚨🚨🚨');
     console.log('  - Error message:', queryError.message);
     console.log('  - Error code:', queryError.code);
     console.log('🚨🚨🚨 END ERROR DETAILS 🚨🚨🚨');
@@ -491,8 +484,9 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
 }
 
 /**
- * Check if a product has been queried and is ready for purchase
- * Returns true if the Product object is stored in memory
+ * 🚨 USER REQUESTED: Check if a product has been queried and is ready for purchase
+ * Returns true ONLY if the Product object exists in memory from StoreKit
+ * Fallback prices do NOT make a product ready
  */
 export function isProductReady(productId: string): boolean {
   const ready = queriedProducts.has(productId);
@@ -509,9 +503,8 @@ export function isProductReady(productId: string): boolean {
 }
 
 /**
- * Get product details from App Store via expo-in-app-purchases
- * This returns the display details for a product
- * The Product object should already be stored by queryProducts()
+ * Get product details for display
+ * 🚨 USER REQUESTED: Fallback prices can display, but purchase must be disabled unless product exists in memory
  */
 export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
   try {
@@ -544,15 +537,14 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
           description: product.description || '',
         };
       } else {
-        console.warn('⚠️ GET DETAILS: Cached product has invalid price, using fallback');
+        console.warn('⚠️ GET DETAILS: Cached product has invalid price, using fallback for display');
         return getFallbackProduct(productId);
       }
     }
 
-    // If not in memory, this shouldn't happen if queryProducts() was called first
-    console.warn('⚠️ GET DETAILS: Product not in memory, this should not happen');
+    // If not in memory, return fallback for display
+    console.warn('⚠️ GET DETAILS: Product not in memory, returning fallback for display');
     console.warn('⚠️ GET DETAILS: queryProducts() should be called before getProductDetails()');
-    console.log('⚠️ GET DETAILS: Returning fallback');
     
     return getFallbackProduct(productId);
   } catch (error) {
@@ -562,12 +554,9 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
 }
 
 /**
- * Purchase a product through App Store via expo-in-app-purchases
- * CRITICAL: This function uses the Product object stored by queryProducts()
- * If the product is not in memory, it will re-query before attempting purchase
- * PRODUCTION: Always processes real App Store purchases
- * TESTFLIGHT WITH BYPASS ON: Simulates purchase (no real charge)
- * TESTFLIGHT WITH BYPASS OFF: Processes real sandbox purchases
+ * 🚨 USER REQUESTED: Purchase a product through App Store
+ * CRITICAL: Verify productId exists in the fetched results list (exact match)
+ * Then call purchaseItemAsync(productId)
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
   try {
@@ -603,32 +592,20 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       return { success: true };
     }
 
-    // CRITICAL FIX: Check if product has been queried and stored
+    // 🚨 USER REQUESTED: Verify productId exists in the fetched results list (exact match)
     const productInMemory = queriedProducts.has(productId);
     console.log('🔍 PURCHASE REQUEST: Product in memory:', productInMemory);
     
     if (!productInMemory) {
-      console.warn('═══════════════════════════════════════════════════════');
-      console.warn('⚠️ PURCHASE REQUEST: Product NOT in memory');
-      console.warn('⚠️ PURCHASE REQUEST: This would cause "Must query item from store"');
-      console.warn('⚠️ PURCHASE REQUEST: Re-querying product from StoreKit...');
-      console.warn('═══════════════════════════════════════════════════════');
-      
-      // Re-query the product before attempting purchase
-      const queriedIds = await queryProducts([productId]);
-      
-      if (!queriedIds.includes(productId)) {
-        console.error('═══════════════════════════════════════════════════════');
-        console.error('❌ PURCHASE REQUEST: Re-query failed');
-        console.error('❌ PURCHASE REQUEST: Product still not available');
-        console.error('═══════════════════════════════════════════════════════');
-        return {
-          success: false,
-          error: 'Product not available. Please check your internet connection and try again.',
-        };
-      }
-      
-      console.log('✅ PURCHASE REQUEST: Re-query successful, product now in memory');
+      console.error('═══════════════════════════════════════════════════════');
+      console.error('❌ PURCHASE REQUEST: Product NOT in memory');
+      console.error('❌ PURCHASE REQUEST: Cannot purchase - product not queried from StoreKit');
+      console.error('❌ PURCHASE REQUEST: Product ID:', productId);
+      console.error('═══════════════════════════════════════════════════════');
+      return {
+        success: false,
+        error: 'Product not available. Please check your internet connection and try again.',
+      };
     }
 
     // Get the stored Product object
@@ -662,8 +639,7 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       };
     }
 
-    // CRITICAL: Call purchaseItemAsync with the productId from the stored Product object
-    // This ensures we're using the exact product that was returned from StoreKit
+    // 🚨 USER REQUESTED: Call purchaseItemAsync with the productId
     console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync...');
     console.log('🔄 PURCHASE REQUEST: Using productId:', product.productId);
     
@@ -679,7 +655,7 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     if (purchaseResponse.responseCode === InAppPurchases.IAPResponseCode.OK) {
       console.log('✅ PURCHASE RESPONSE: Purchase successful');
       
-      // CRITICAL: Finish/acknowledge all transactions
+      // 🚨 USER REQUESTED: Finish/acknowledge all transactions
       if (purchaseResponse.results && purchaseResponse.results.length > 0) {
         for (const purchase of purchaseResponse.results) {
           console.log('🔄 PURCHASE FINISH: Processing purchase:', purchase.productId);
@@ -807,7 +783,7 @@ export async function restorePurchases(): Promise<PurchaseResult> {
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
       console.log('✅ RESTORE: Found', results.length, 'previous purchases');
       
-      // CRITICAL: Finish/acknowledge all restored transactions
+      // 🚨 USER REQUESTED: Finish/acknowledge all restored transactions
       for (const purchase of results) {
         console.log('🔄 RESTORE FINISH: Processing:', purchase.productId);
         console.log('🔄 RESTORE FINISH: Acknowledged:', purchase.acknowledged);
