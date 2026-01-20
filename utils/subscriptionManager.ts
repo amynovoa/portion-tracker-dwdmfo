@@ -252,12 +252,16 @@ function getFallbackProduct(productId: string): ProductDetails {
  * CRITICAL: This stores the full Product objects returned by StoreKit
  * These Product objects MUST be used when calling purchaseItemAsync
  * Returns array of product IDs that were successfully queried
+ * 
+ * 🚨 IMPORTANT: Uses getSubscriptionsAsync() for auto-renewable subscriptions
+ * Using getProductsAsync() will cause "Must query item from store" error
  */
 export async function queryProducts(productIds: string[]): Promise<string[]> {
   try {
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 QUERY PRODUCTS: Starting product query');
+    console.log('🔵 QUERY PRODUCTS: Starting subscription query');
     console.log('📊 QUERY PRODUCTS: Product IDs to query:', productIds);
+    console.log('🚨 QUERY PRODUCTS: Using getSubscriptionsAsync() for auto-renewable subscriptions');
     console.log('═══════════════════════════════════════════════════════');
     
     if (Platform.OS !== 'ios') {
@@ -281,9 +285,12 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     
     console.log('✅ QUERY PRODUCTS: StoreKit initialized');
 
-    // Fetch products from App Store
-    console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync...');
-    const { responseCode, results } = await InAppPurchases.getProductsAsync(productIds);
+    // CRITICAL FIX: Use getSubscriptionsAsync() instead of getProductsAsync()
+    // For auto-renewable subscriptions, Expo requires getSubscriptionsAsync()
+    // Using getProductsAsync() will cause StoreKit to block purchases with:
+    // "Must query item from store before calling purchase"
+    console.log('🔄 QUERY PRODUCTS: Calling getSubscriptionsAsync() for subscriptions...');
+    const { responseCode, results } = await InAppPurchases.getSubscriptionsAsync(productIds);
     
     console.log('═══════════════════════════════════════════════════════');
     console.log('📊 QUERY PRODUCTS RESPONSE:');
@@ -296,15 +303,15 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       // These objects contain the productId and all metadata needed for purchase
       const queriedIds: string[] = [];
       
-      console.log('🔄 QUERY PRODUCTS: Processing returned products...');
+      console.log('🔄 QUERY PRODUCTS: Processing returned subscriptions...');
       
       for (const product of results) {
         console.log('───────────────────────────────────────────────────────');
-        console.log('📦 PRODUCT:', product.productId);
+        console.log('📦 SUBSCRIPTION:', product.productId);
         
         // Validate that the product has required fields
         if (!product.productId) {
-          console.warn('⚠️ PRODUCT: Missing productId, skipping');
+          console.warn('⚠️ SUBSCRIPTION: Missing productId, skipping');
           continue;
         }
         
@@ -318,20 +325,20 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
         console.log('  - Price valid:', priceValid);
         
         if (!priceValid) {
-          console.warn('⚠️ PRODUCT: Invalid price data, but storing anyway');
+          console.warn('⚠️ SUBSCRIPTION: Invalid price data, but storing anyway');
         }
         
         // CRITICAL: Store the full Product object
         queriedProducts.set(product.productId, product);
         queriedIds.push(product.productId);
         
-        console.log('✅ PRODUCT: Stored in memory for purchase');
+        console.log('✅ SUBSCRIPTION: Stored in memory for purchase');
         console.log('───────────────────────────────────────────────────────');
       }
       
       console.log('═══════════════════════════════════════════════════════');
       console.log('✅ QUERY PRODUCTS SUCCESS:');
-      console.log('  - Total products stored:', queriedIds.length);
+      console.log('  - Total subscriptions stored:', queriedIds.length);
       console.log('  - Product IDs:', queriedIds);
       console.log('═══════════════════════════════════════════════════════');
       
@@ -339,7 +346,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     }
 
     console.log('═══════════════════════════════════════════════════════');
-    console.log('⚠️ QUERY PRODUCTS FAIL: No products returned');
+    console.log('⚠️ QUERY PRODUCTS FAIL: No subscriptions returned');
     console.log('  - Response code:', responseCode);
     console.log('  - This means StoreKit query failed or returned empty');
     console.log('═══════════════════════════════════════════════════════');
