@@ -11,7 +11,6 @@ import {
   Linking,
   Alert,
   Platform,
-  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -20,9 +19,6 @@ import {
   purchaseProduct, 
   restorePurchases, 
   PRODUCT_IDS, 
-  isTestFlightBuild,
-  getTestFlightBypassEnabled,
-  setTestFlightBypassEnabled,
   getProductDetails,
   queryProducts,
   isProductReady,
@@ -40,36 +36,19 @@ type SubscriptionPlan = 'monthly' | 'annual';
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
   const [loading, setLoading] = useState(false);
-  const [isTestFlight, setIsTestFlight] = useState(false);
-  const [bypassEnabled, setBypassEnabled] = useState(false);
   const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsFailed, setProductsFailed] = useState(false);
-
 
   useEffect(() => {
     if (visible) {
       console.log('═══════════════════════════════════════════════════════');
       console.log('🔵 PAYWALL MOUNT: Paywall screen opened');
       console.log('═══════════════════════════════════════════════════════');
-      loadInitialState();
       loadProducts();
     }
   }, [visible]);
-
-  const loadInitialState = async () => {
-    console.log('🔄 PAYWALL INIT: Loading initial state...');
-    const testFlight = isTestFlightBuild();
-    setIsTestFlight(testFlight);
-    console.log('📱 PAYWALL INIT: Is TestFlight/Dev build:', testFlight);
-
-    if (testFlight) {
-      const bypass = await getTestFlightBypassEnabled();
-      setBypassEnabled(bypass);
-      console.log('🔧 PAYWALL INIT: TestFlight bypass enabled:', bypass);
-    }
-  };
 
   const loadProducts = async () => {
     console.log('═══════════════════════════════════════════════════════');
@@ -80,7 +59,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     setLoadingProducts(true);
     setProductsFailed(false);
 
-    // CRITICAL FIX: On non-iOS platforms (web, Android), use fallback products
+    // On non-iOS platforms (web, Android), use fallback products
     // expo-in-app-purchases only works on iOS
     if (Platform.OS !== 'ios') {
       console.log('⚠️ PRODUCT FETCH: Not iOS platform, using fallback products');
@@ -95,7 +74,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
       setLoadingProducts(false);
-
       
       console.log('✅ PRODUCT FETCH: Fallback products loaded');
       console.log('═══════════════════════════════════════════════════════');
@@ -108,8 +86,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('📦 PRODUCT FETCH: SKUs to query:', [PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
       
       const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-      
-
       
       console.log('═══════════════════════════════════════════════════════');
       console.log('📊 PRODUCT FETCH RESULT:');
@@ -168,12 +144,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     }
   };
 
-  const handleBypassToggle = async (value: boolean) => {
-    console.log('🔧 BYPASS TOGGLE: Changed to:', value);
-    setBypassEnabled(value);
-    await setTestFlightBypassEnabled(value);
-  };
-
   const handleSubscribe = async () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 PURCHASE TAP: User tapped Subscribe button');
@@ -184,13 +154,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('📊 PURCHASE TAP INFO:');
     console.log('  - Selected plan:', selectedPlan);
     console.log('  - Product ID:', productId);
-    console.log('  - Bypass enabled:', bypassEnabled);
     
     // Verify productId exists in the fetched results list (exact match)
     const productExists = isProductReady(productId);
     console.log('  - Product object exists in memory:', productExists);
     
-    if (!productExists && !bypassEnabled) {
+    if (!productExists) {
       console.error('═══════════════════════════════════════════════════════');
       console.error('❌ PURCHASE BLOCKED: Product object not in memory');
       console.error('❌ Cannot purchase - product not queried from StoreKit');
@@ -219,45 +188,25 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       console.log('📊 PURCHASE RESULT:');
       console.log('  - Success:', result.success);
       console.log('  - User cancelled:', result.userCancelled);
-      console.log('  - Bypass mode:', result.bypassMode);
       console.log('  - Error:', result.error);
       console.log('═══════════════════════════════════════════════════════');
 
       if (result.success) {
-        // CRITICAL FIX: Different messages for bypass vs real purchase
-        if (result.bypassMode) {
-          Alert.alert(
-            'TestFlight: Full Access Enabled',
-            'Full Access has been enabled for testing. This is NOT a real subscription.',
-            [
-              {
-                text: 'OK',
-                onPress: () => {
-                  console.log('✅ PURCHASE SUCCESS: User acknowledged TestFlight bypass');
-                  if (onDismiss) {
-                    onDismiss();
-                  }
-                },
+        Alert.alert(
+          'Success!',
+          'Your subscription is now active. Enjoy unlimited access!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
+                if (onDismiss) {
+                  onDismiss();
+                }
               },
-            ]
-          );
-        } else {
-          Alert.alert(
-            'Success!',
-            'Your subscription is now active. Enjoy unlimited access!',
-            [
-              {
-                text: 'OK',
-                onPress: () => {
-                  console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
-                  if (onDismiss) {
-                    onDismiss();
-                  }
-                },
-              },
-            ]
-          );
-        }
+            },
+          ]
+        );
       } else if (result.userCancelled) {
         console.log('ℹ️ PURCHASE CANCELLED: User cancelled purchase');
       } else {
@@ -300,45 +249,25 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       
       console.log('📊 RESTORE RESULT:');
       console.log('  - Success:', result.success);
-      console.log('  - Bypass mode:', result.bypassMode);
       console.log('  - Error:', result.error);
       console.log('═══════════════════════════════════════════════════════');
 
       if (result.success) {
-        // CRITICAL FIX: Different messages for bypass vs real restore
-        if (result.bypassMode) {
-          Alert.alert(
-            'TestFlight: Full Access Enabled',
-            'Full Access has been enabled for testing. This is NOT a real subscription restore.',
-            [
-              {
-                text: 'OK',
-                onPress: () => {
-                  console.log('✅ RESTORE SUCCESS: User acknowledged TestFlight bypass');
-                  if (onDismiss) {
-                    onDismiss();
-                  }
-                },
+        Alert.alert(
+          'Success!',
+          'Your subscription has been restored.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
+                if (onDismiss) {
+                  onDismiss();
+                }
               },
-            ]
-          );
-        } else {
-          Alert.alert(
-            'Success!',
-            'Your subscription has been restored.',
-            [
-              {
-                text: 'OK',
-                onPress: () => {
-                  console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
-                  if (onDismiss) {
-                    onDismiss();
-                  }
-                },
-              },
-            ]
-          );
-        }
+            },
+          ]
+        );
       } else {
         Alert.alert(
           'No Active Subscription Found',
@@ -399,11 +328,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
 
   // Purchase must be disabled unless the product object exists in memory from StoreKit
   const isSelectedProductReady = () => {
-    if (bypassEnabled) {
-      console.log('🔧 PRODUCT READY CHECK: Bypass enabled, returning true');
-      return true;
-    }
-    
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
     const ready = isProductReady(productId);
     
@@ -416,7 +340,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
   };
 
   // Show "Unable to load plans" + Retry if products failed
-  if (productsFailed && !bypassEnabled) {
+  if (productsFailed) {
     return (
       <Modal
         visible={visible}
@@ -559,37 +483,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             </TouchableOpacity>
           </View>
 
-          {/* CRITICAL FIX: Show clear TestFlight bypass message */}
-          {isTestFlight && (
-            <View style={styles.testFlightContainer}>
-              <View style={styles.testFlightHeader}>
-                <MaterialIcons name="bug-report" size={20} color={colors.warning} />
-                <Text style={styles.testFlightTitle}>TestFlight Mode</Text>
-              </View>
-              <View style={styles.testFlightToggle}>
-                <Text style={styles.testFlightLabel}>
-                  Bypass StoreKit (Testing Only)
-                </Text>
-                <Switch
-                  value={bypassEnabled}
-                  onValueChange={handleBypassToggle}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={colors.surface}
-                />
-              </View>
-              {bypassEnabled ? (
-                <Text style={styles.testFlightDescription}>
-                  ✅ TestFlight: Full Access enabled for testing.{'\n'}
-                  This is NOT a real subscription.
-                </Text>
-              ) : (
-                <Text style={styles.testFlightDescription}>
-                  ⚠️ Using real StoreKit sandbox purchases
-                </Text>
-              )}
-            </View>
-          )}
-
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               By clicking I agree to the{' '}
@@ -607,18 +500,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             style={[
               buttonStyles.primary, 
               styles.subscribeButton,
-              (!isSelectedProductReady() && !bypassEnabled) && styles.subscribeButtonDisabled
+              !isSelectedProductReady() && styles.subscribeButtonDisabled
             ]}
             onPress={handleSubscribe}
-            disabled={loading || (loadingProducts && !bypassEnabled) || (!isSelectedProductReady() && !bypassEnabled)}
+            disabled={loading || loadingProducts || !isSelectedProductReady()}
           >
             {loading ? (
               <ActivityIndicator color={colors.surface} />
             ) : (
               <Text style={buttonStyles.primaryText}>
-                {loadingProducts && !bypassEnabled
+                {loadingProducts
                   ? 'Loading products...'
-                  : !isSelectedProductReady() && !bypassEnabled
+                  : !isSelectedProductReady()
                   ? 'Product not available'
                   : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`}
               </Text>
@@ -766,43 +659,6 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: colors.primary,
-  },
-  testFlightContainer: {
-    backgroundColor: colors.warningLight,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: colors.warning,
-  },
-  testFlightHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  testFlightTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.warning,
-    marginLeft: 8,
-  },
-  testFlightToggle: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  testFlightLabel: {
-    fontSize: 14,
-    color: colors.text,
-    flex: 1,
-  },
-  testFlightDescription: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-    marginTop: 4,
-    lineHeight: 18,
   },
   subscribeButton: {
     marginBottom: 16,
