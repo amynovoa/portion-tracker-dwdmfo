@@ -94,35 +94,7 @@ export interface ProductDetails {
   description: string;
 }
 
-/**
- * Check if the app is running in TestFlight or development mode
- * PRODUCTION BUILDS: Returns false
- * TESTFLIGHT/DEV BUILDS: Returns true
- */
-export function isTestFlightBuild(): boolean {
-  // Check if running in Expo Go or development
-  if (__DEV__) {
-    console.log('🔍 IAP: Running in development mode');
-    return true;
-  }
 
-  // Check for TestFlight indicators
-  const appOwnership = Constants.appOwnership;
-  
-  // In Expo, appOwnership will be 'expo' for Expo Go, 'standalone' for production builds
-  if (appOwnership === 'expo') {
-    console.log('🔍 IAP: Running in Expo Go');
-    return true;
-  }
-
-  // Check if it's a TestFlight build
-  // TestFlight builds have appOwnership !== 'standalone'
-  const isTestFlight = appOwnership !== 'standalone';
-  
-  console.log('🔍 IAP: App ownership:', appOwnership, 'Is TestFlight:', isTestFlight);
-  
-  return isTestFlight;
-}
 
 /**
  * Initialize StoreKit connection via expo-in-app-purchases
