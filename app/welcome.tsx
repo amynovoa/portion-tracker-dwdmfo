@@ -7,34 +7,22 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadSubscriptionStatus, loadProfile } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { isTestFlightBuild } from '@/utils/subscriptionManager';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { isSubscribed, refreshSubscription } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
-  const [isDevMode, setIsDevMode] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
-
-  useEffect(() => {
-    // Check if we're in development/TestFlight mode
-    const checkDevMode = async () => {
-      const devMode = isTestFlightBuild();
-      console.log('Welcome: Dev/TestFlight mode:', devMode);
-      setIsDevMode(devMode);
-    };
-    checkDevMode();
-  }, []);
 
   useEffect(() => {
     // Check subscription status on mount and when context updates
     const checkSubscription = async () => {
       const subscribed = await loadSubscriptionStatus();
       console.log('Welcome: Subscription status:', subscribed);
-      setHasSubscription(subscribed || isDevMode);
+      setHasSubscription(subscribed);
     };
     checkSubscription();
-  }, [isSubscribed, isDevMode]);
+  }, [isSubscribed]);
 
   const handleStartTrial = () => {
     console.log('User tapped Start Your Free Trial button');
@@ -77,8 +65,8 @@ export default function WelcomeScreen() {
     }
   };
 
-  // Show "Get Started" if user has subscription OR is in dev mode
-  const shouldShowGetStarted = hasSubscription || isDevMode;
+  // Show "Get Started" if user has subscription
+  const shouldShowGetStarted = hasSubscription;
 
   return (
     <SafeAreaView style={styles.container}>
