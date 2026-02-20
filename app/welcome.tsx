@@ -65,16 +65,19 @@ export default function WelcomeScreen() {
     
     setShowPaywall(false);
     
-    // CRITICAL: Add a small delay to ensure AsyncStorage write from purchase listener has completed
-    // The purchase listener saves subscription status asynchronously
-    console.log('⏳ PAYWALL DISMISS: Waiting 100ms for AsyncStorage to settle...');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // CRITICAL FIX: Wait longer for AsyncStorage write to complete
+    // The purchase listener in subscriptionManager saves subscription status asynchronously
+    console.log('⏳ PAYWALL DISMISS: Waiting 800ms for AsyncStorage to settle...');
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     // Refresh subscription status from context
     console.log('🔄 PAYWALL DISMISS: Refreshing subscription context...');
     await refreshSubscription();
     
-    // Check if user just subscribed by reading from AsyncStorage
+    // Force another small delay to ensure context state propagates
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Check subscription status directly from AsyncStorage
     console.log('🔄 PAYWALL DISMISS: Loading subscription status from AsyncStorage...');
     const subscribed = await loadSubscriptionStatus();
     
@@ -84,10 +87,11 @@ export default function WelcomeScreen() {
     console.log('  - Will show Get Started button:', subscribed);
     console.log('═══════════════════════════════════════════════════════');
     
+    // CRITICAL: Force update local state immediately
+    setHasSubscription(subscribed);
+    
     if (subscribed) {
-      // User subscribed - update state to show "Get Started" button
-      setHasSubscription(true);
-      console.log('✅ PAYWALL DISMISS: User subscribed - updating local state to show Get Started button');
+      console.log('✅ PAYWALL DISMISS: User subscribed - updated local state to show Get Started button');
     } else {
       console.log('ℹ️ PAYWALL DISMISS: No subscription found - keeping Start Free Trial button');
     }
@@ -95,6 +99,10 @@ export default function WelcomeScreen() {
 
   // Show "Get Started" if user has subscription
   const shouldShowGetStarted = hasSubscription;
+  
+  const buttonText = shouldShowGetStarted 
+    ? 'You are all set - Let\'s get started' 
+    : 'Start Your Free Trial';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -107,21 +115,12 @@ export default function WelcomeScreen() {
           </Text>
         </View>
 
-        {shouldShowGetStarted ? (
-          <TouchableOpacity
-            style={[buttonStyles.primary, styles.button]}
-            onPress={handleGetStarted}
-          >
-            <Text style={buttonStyles.primaryText}>You are all set - Let&apos;s get started</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[buttonStyles.primary, styles.button]}
-            onPress={handleStartTrial}
-          >
-            <Text style={buttonStyles.primaryText}>Start Your Free Trial</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[buttonStyles.primary, styles.button]}
+          onPress={shouldShowGetStarted ? handleGetStarted : handleStartTrial}
+        >
+          <Text style={buttonStyles.primaryText}>{buttonText}</Text>
+        </TouchableOpacity>
       </View>
 
       <PaywallScreen

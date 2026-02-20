@@ -200,12 +200,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               text: 'OK',
               onPress: async () => {
                 console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
-                console.log('⏳ PURCHASE SUCCESS: Waiting 500ms for AsyncStorage write to complete...');
+                console.log('⏳ PURCHASE SUCCESS: Waiting 1000ms for AsyncStorage write to complete...');
                 
-                // CRITICAL FIX: Wait for AsyncStorage write to complete
+                // CRITICAL FIX: Wait longer for AsyncStorage write to complete
                 // The purchase listener saves subscription status asynchronously
                 // We need to ensure that write completes before dismissing the paywall
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 console.log('✅ PURCHASE SUCCESS: Wait complete, dismissing paywall');
                 
@@ -270,10 +270,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               text: 'OK',
               onPress: async () => {
                 console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
-                console.log('⏳ RESTORE SUCCESS: Waiting 500ms for AsyncStorage write to complete...');
+                console.log('⏳ RESTORE SUCCESS: Waiting 1000ms for AsyncStorage write to complete...');
                 
-                // CRITICAL FIX: Wait for AsyncStorage write to complete
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // CRITICAL FIX: Wait longer for AsyncStorage write to complete
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 console.log('✅ RESTORE SUCCESS: Wait complete, dismissing paywall');
                 
