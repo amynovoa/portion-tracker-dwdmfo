@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { loadSubscriptionStatus } from '@/utils/storage';
-import { EventEmitter } from 'react-native';
+import { EventEmitter } from 'events';
 
 // Create a global event emitter for subscription updates
 const subscriptionEmitter = new EventEmitter();
