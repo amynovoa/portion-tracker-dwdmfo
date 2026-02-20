@@ -17,8 +17,19 @@ export default function WelcomeScreen() {
   useEffect(() => {
     // Check subscription status on mount and when context updates
     const checkSubscription = async () => {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔵 WELCOME SCREEN: useEffect triggered');
+      console.log('📊 WELCOME SCREEN: isSubscribed from context:', isSubscribed);
+      console.log('═══════════════════════════════════════════════════════');
+      
       const subscribed = await loadSubscriptionStatus();
-      console.log('Welcome: Subscription status:', subscribed);
+      
+      console.log('📊 WELCOME SCREEN RESULT:');
+      console.log('  - Status from AsyncStorage:', subscribed);
+      console.log('  - Status from context:', isSubscribed);
+      console.log('  - Will update local state to:', subscribed);
+      console.log('═══════════════════════════════════════════════════════');
+      
       setHasSubscription(subscribed);
     };
     checkSubscription();
@@ -48,20 +59,37 @@ export default function WelcomeScreen() {
   };
 
   const handlePaywallDismiss = async () => {
-    console.log('Paywall dismissed');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 PAYWALL DISMISS: Paywall dismissed, checking subscription status');
+    console.log('═══════════════════════════════════════════════════════');
+    
     setShowPaywall(false);
     
+    // CRITICAL: Add a small delay to ensure AsyncStorage write from purchase listener has completed
+    // The purchase listener saves subscription status asynchronously
+    console.log('⏳ PAYWALL DISMISS: Waiting 100ms for AsyncStorage to settle...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Refresh subscription status from context
+    console.log('🔄 PAYWALL DISMISS: Refreshing subscription context...');
     await refreshSubscription();
     
-    // Check if user just subscribed
+    // Check if user just subscribed by reading from AsyncStorage
+    console.log('🔄 PAYWALL DISMISS: Loading subscription status from AsyncStorage...');
     const subscribed = await loadSubscriptionStatus();
-    console.log('Paywall dismissed - Subscription status:', subscribed);
+    
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📊 PAYWALL DISMISS RESULT:');
+    console.log('  - Subscription status from AsyncStorage:', subscribed);
+    console.log('  - Will show Get Started button:', subscribed);
+    console.log('═══════════════════════════════════════════════════════');
     
     if (subscribed) {
       // User subscribed - update state to show "Get Started" button
       setHasSubscription(true);
-      console.log('Paywall: User subscribed - showing Get Started button');
+      console.log('✅ PAYWALL DISMISS: User subscribed - updating local state to show Get Started button');
+    } else {
+      console.log('ℹ️ PAYWALL DISMISS: No subscription found - keeping Start Free Trial button');
     }
   };
 

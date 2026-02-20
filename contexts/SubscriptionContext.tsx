@@ -15,16 +15,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshSubscription = async () => {
-    console.log('📱 SubscriptionContext: Checking subscription status...');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 SUBSCRIPTION CONTEXT: Refreshing subscription status');
+    console.log('═══════════════════════════════════════════════════════');
     
     try {
       // Load subscription status from local storage
       // This works in all environments: development, TestFlight, and production
       const localStatus = await loadSubscriptionStatus();
-      console.log('📱 Subscription status from storage:', localStatus);
+      
+      console.log('📊 SUBSCRIPTION CONTEXT RESULT:');
+      console.log('  - Status from AsyncStorage:', localStatus);
+      console.log('  - Previous isSubscribed state:', isSubscribed);
+      console.log('  - Will update to:', localStatus || false);
+      
       setIsSubscribed(localStatus || false);
+      
+      console.log('✅ SUBSCRIPTION CONTEXT: State updated');
+      console.log('═══════════════════════════════════════════════════════');
     } catch (error) {
-      console.error('Error loading subscription status:', error);
+      console.error('═══════════════════════════════════════════════════════');
+      console.error('❌ SUBSCRIPTION CONTEXT ERROR:', error);
+      console.error('═══════════════════════════════════════════════════════');
       setIsSubscribed(false);
     } finally {
       setIsLoading(false);
