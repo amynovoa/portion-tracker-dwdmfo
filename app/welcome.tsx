@@ -10,37 +10,37 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { isSubscribed } = useSubscription();
+  const { isSubscribed, refreshSubscription } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
 
+  // If user becomes subscribed while on this screen, redirect them
   useEffect(() => {
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 WELCOME SCREEN: Context subscription status changed');
+    console.log('🔵 WELCOME SCREEN: Subscription status changed');
     console.log('📊 WELCOME SCREEN: isSubscribed from context:', isSubscribed);
     console.log('═══════════════════════════════════════════════════════');
-  }, [isSubscribed]);
+    
+    if (isSubscribed) {
+      console.log('✅ WELCOME SCREEN: User is subscribed, checking profile...');
+      
+      // Check if profile exists and redirect accordingly
+      loadProfile().then((profile) => {
+        const hasCompleteProfile = profile && profile.portionTargets;
+        
+        if (hasCompleteProfile) {
+          console.log('✅ WELCOME SCREEN: Profile exists -> Redirecting to main app');
+          router.replace('/(tabs)/(home)');
+        } else {
+          console.log('✅ WELCOME SCREEN: No profile -> Redirecting to setup-profile');
+          router.replace('/setup-profile');
+        }
+      });
+    }
+  }, [isSubscribed, router]);
 
   const handleStartTrial = () => {
     console.log('User tapped Start Your Free Trial button');
     setShowPaywall(true);
-  };
-
-  const handleGetStarted = async () => {
-    console.log('User tapped Get Started button (subscribed user)');
-    
-    // Check if profile already exists
-    const profile = await loadProfile();
-    console.log('Welcome: Profile exists:', !!profile);
-    
-    if (profile && profile.portionTargets) {
-      // Profile already exists, go directly to main app
-      console.log('Welcome: Profile exists -> Going to main app');
-      router.replace('/(tabs)/(home)');
-    } else {
-      // No profile, go to setup - this is the correct flow after purchase
-      console.log('Welcome: No profile -> Going to setup-profile to create profile');
-      router.replace('/setup-profile');
-    }
   };
 
   const handlePaywallDismiss = async () => {
@@ -50,22 +50,17 @@ export default function WelcomeScreen() {
     
     setShowPaywall(false);
     
-    // The subscription status is now updated via event emitter from the purchase listener
-    // No need for delays or polling AsyncStorage
-    // The context will automatically update via the event listener
-    console.log('ℹ️ PAYWALL DISMISS: Subscription status will update via event if purchase completed');
+    // Refresh subscription status to ensure we have the latest state
+    await refreshSubscription();
+    
+    console.log('ℹ️ PAYWALL DISMISS: Subscription status refreshed');
+    console.log('ℹ️ PAYWALL DISMISS: If purchase completed, useEffect will handle navigation');
   };
 
-  // Show "Get Started" if user has subscription
-  const shouldShowGetStarted = isSubscribed;
-  
-  const buttonText = shouldShowGetStarted 
-    ? 'You are all set - Let\'s get started' 
-    : 'Start Your Free Trial';
+  const buttonText = 'Start Your Free Trial';
 
   console.log('🔵 WELCOME SCREEN RENDER:', {
     isSubscribed,
-    shouldShowGetStarted,
     buttonText,
   });
 
@@ -82,7 +77,7 @@ export default function WelcomeScreen() {
 
         <TouchableOpacity
           style={[buttonStyles.primary, styles.button]}
-          onPress={shouldShowGetStarted ? handleGetStarted : handleStartTrial}
+          onPress={handleStartTrial}
         >
           <Text style={buttonStyles.primaryText}>{buttonText}</Text>
         </TouchableOpacity>
