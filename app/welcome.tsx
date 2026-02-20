@@ -4,13 +4,13 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadSubscriptionStatus, loadProfile } from '@/utils/storage';
+import { loadProfile } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { isSubscribed, refreshSubscription } = useSubscription();
+  const { isSubscribed } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function WelcomeScreen() {
   };
 
   const handleGetStarted = async () => {
-    console.log('User tapped Get Started button');
+    console.log('User tapped Get Started button (subscribed user)');
     
     // Check if profile already exists
     const profile = await loadProfile();
@@ -37,8 +37,8 @@ export default function WelcomeScreen() {
       console.log('Welcome: Profile exists -> Going to main app');
       router.replace('/(tabs)/(home)');
     } else {
-      // No profile, go to setup
-      console.log('Welcome: No profile -> Going to setup-profile');
+      // No profile, go to setup - this is the correct flow after purchase
+      console.log('Welcome: No profile -> Going to setup-profile to create profile');
       router.replace('/setup-profile');
     }
   };
