@@ -1,162 +1,245 @@
 
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors } from '@/styles/commonStyles';
+import { colors, commonStyles } from '@/styles/commonStyles';
+import AppLogo from '@/components/AppLogo';
 import { IconSymbol } from '@/components/IconSymbol';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-
-interface MoreMenuItem {
-  title: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
-  iosIcon: string;
-  route: string;
-  description?: string;
-}
-
-export default function MoreScreen() {
-  const router = useRouter();
-
-  const menuItems: MoreMenuItem[] = [
-    {
-      title: 'FAQs',
-      icon: 'help',
-      iosIcon: 'questionmark.circle.fill',
-      route: '/(tabs)/faqs',
-      description: 'Frequently asked questions',
-    },
-    {
-      title: 'Profile',
-      icon: 'person',
-      iosIcon: 'person.fill',
-      route: '/(tabs)/profile',
-      description: 'Manage your profile and goals',
-    },
-    {
-      title: 'Settings',
-      icon: 'settings',
-      iosIcon: 'gearshape.fill',
-      route: '/(tabs)/settings',
-      description: 'App settings and preferences',
-    },
-    {
-      title: 'Backup & Restore',
-      icon: 'backup',
-      iosIcon: 'arrow.clockwise.icloud.fill',
-      route: '/backup-restore',
-      description: 'Protect your data with backups',
-    },
-  ];
-
-  const handleItemPress = (route: string) => {
-    console.log('User tapped menu item:', route);
-    router.push(route as any);
-  };
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>More</Text>
-      </View>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.menuItem}
-            onPress={() => handleItemPress(item.route)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.menuItemLeft}>
-              <View style={styles.iconContainer}>
-                <IconSymbol
-                  ios_icon_name={item.iosIcon}
-                  android_material_icon_name={item.icon}
-                  size={24}
-                  color={colors.primary}
-                />
-              </View>
-              <View style={styles.menuItemText}>
-                <Text style={styles.menuItemTitle}>{item.title}</Text>
-                {item.description && (
-                  <Text style={styles.menuItemDescription}>{item.description}</Text>
-                )}
-              </View>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { getIAPDebugInfo } from '@/utils/subscriptionManager';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    paddingTop: Platform.OS === 'android' ? 48 : 60,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  scrollView: {
-    flex: 1,
+    paddingTop: Platform.OS === 'android' ? 48 : 0,
   },
   scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 100,
+    padding: 20,
+    paddingBottom: 180,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 24,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
   },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  menuIcon: {
+    marginRight: 12,
+  },
+  menuContent: {
     flex: 1,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  menuItemText: {
-    flex: 1,
-  },
-  menuItemTitle: {
-    fontSize: 17,
+  menuLabel: {
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 2,
   },
-  menuItemDescription: {
+  menuDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  chevron: {
+    fontSize: 20,
+    color: colors.textSecondary,
+  },
+  statusSection: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  statusTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  statusLabel: {
     fontSize: 14,
     color: colors.textSecondary,
   },
+  statusValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
 });
+
+export default function MoreScreen() {
+  const router = useRouter();
+  const { isSubscribed, refreshSubscription } = useSubscription();
+
+  const handleTestSubscription = async () => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🧪 TEST: Manual subscription status check');
+    console.log('═══════════════════════════════════════════════════════');
+    
+    await refreshSubscription();
+    
+    const debugInfo = getIAPDebugInfo();
+    console.log('📊 IAP Debug Info:', debugInfo);
+    console.log('📊 Current subscription status:', isSubscribed);
+    console.log('═══════════════════════════════════════════════════════');
+  };
+
+  const subscriptionStatusText = isSubscribed ? 'Active' : 'Not Active';
+  const subscriptionStatusColor = isSubscribed ? '#28A745' : '#DC3545';
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView 
+        style={styles.scrollContent}
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+      >
+        <View style={styles.logoContainer}>
+          <AppLogo size={50} />
+        </View>
+        <Text style={styles.headerTitle}>More</Text>
+
+        {/* Subscription Status */}
+        <View style={styles.statusSection}>
+          <Text style={styles.statusTitle}>Subscription Status</Text>
+          <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Status:</Text>
+            <Text style={[styles.statusValue, { color: subscriptionStatusColor }]}>
+              {subscriptionStatusText}
+            </Text>
+          </View>
+          <View style={styles.statusRow}>
+            <Text style={styles.statusLabel}>Platform:</Text>
+            <Text style={styles.statusValue}>{Platform.OS}</Text>
+          </View>
+        </View>
+
+        {/* Test Subscription Button */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={handleTestSubscription}
+        >
+          <IconSymbol
+            ios_icon_name="arrow.clockwise"
+            android_material_icon_name="refresh"
+            size={24}
+            color={colors.primary}
+            style={styles.menuIcon}
+          />
+          <View style={styles.menuContent} pointerEvents="none">
+            <Text style={styles.menuLabel}>Refresh Subscription Status</Text>
+            <Text style={styles.menuDescription}>Check current subscription state</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
+        {/* Profile */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => {
+            console.log('Profile button pressed');
+            router.push('/(tabs)/profile');
+          }}
+        >
+          <IconSymbol
+            ios_icon_name="person.circle"
+            android_material_icon_name="person"
+            size={24}
+            color={colors.primary}
+            style={styles.menuIcon}
+          />
+          <View style={styles.menuContent} pointerEvents="none">
+            <Text style={styles.menuLabel}>Profile</Text>
+            <Text style={styles.menuDescription}>View and edit your profile</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
+        {/* Settings */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => {
+            console.log('Settings button pressed');
+            router.push('/(tabs)/settings');
+          }}
+        >
+          <IconSymbol
+            ios_icon_name="gear"
+            android_material_icon_name="settings"
+            size={24}
+            color={colors.primary}
+            style={styles.menuIcon}
+          />
+          <View style={styles.menuContent} pointerEvents="none">
+            <Text style={styles.menuLabel}>Settings</Text>
+            <Text style={styles.menuDescription}>App preferences and configuration</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
+        {/* FAQs */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => {
+            console.log('FAQs button pressed');
+            router.push('/(tabs)/faqs');
+          }}
+        >
+          <IconSymbol
+            ios_icon_name="questionmark.circle"
+            android_material_icon_name="help"
+            size={24}
+            color={colors.primary}
+            style={styles.menuIcon}
+          />
+          <View style={styles.menuContent} pointerEvents="none">
+            <Text style={styles.menuLabel}>FAQs</Text>
+            <Text style={styles.menuDescription}>Frequently asked questions</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
+        {/* Backup & Restore */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => {
+            console.log('Backup & Restore button pressed');
+            router.push('/backup-restore');
+          }}
+        >
+          <IconSymbol
+            ios_icon_name="arrow.clockwise.icloud"
+            android_material_icon_name="backup"
+            size={24}
+            color={colors.primary}
+            style={styles.menuIcon}
+          />
+          <View style={styles.menuContent} pointerEvents="none">
+            <Text style={styles.menuLabel}>Backup &amp; Restore</Text>
+            <Text style={styles.menuDescription}>Manage your data backups</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
