@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { loadProfile, loadSubscriptionStatus } from '@/utils/storage';
 import { View, ActivityIndicator } from 'react-native';
 import { colors } from '@/styles/commonStyles';
-import { isTestFlightBuild } from '@/utils/subscriptionManager';
 
 export default function Index() {
   const router = useRouter();
@@ -12,10 +11,6 @@ export default function Index() {
   const checkAppState = useCallback(async () => {
     try {
       console.log('Index: Checking app state...');
-      
-      // Check if we're in development/TestFlight mode
-      const isDevOrTestFlight = isTestFlightBuild();
-      console.log('Index: Is Dev/TestFlight:', isDevOrTestFlight);
       
       // Check if profile exists
       const profile = await loadProfile();
