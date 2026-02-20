@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { loadSubscriptionStatus } from '@/utils/storage';
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 
 // Create a global event emitter for subscription updates
 const subscriptionEmitter = new EventEmitter();
@@ -57,7 +57,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('🔔 SUBSCRIPTION CONTEXT: Setting up event listener for subscription updates');
     
-    const listener = subscriptionEmitter.addListener(SUBSCRIPTION_UPDATED_EVENT, (subscribed: boolean) => {
+    const listener = (subscribed: boolean) => {
       console.log('═══════════════════════════════════════════════════════');
       console.log('🔔 SUBSCRIPTION EVENT: Received subscription update event');
       console.log('📊 SUBSCRIPTION EVENT: New status:', subscribed);
@@ -67,11 +67,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setIsSubscribed(subscribed);
       
       console.log('✅ SUBSCRIPTION EVENT: State updated immediately');
-    });
+    };
+
+    subscriptionEmitter.on(SUBSCRIPTION_UPDATED_EVENT, listener);
 
     return () => {
       console.log('🔔 SUBSCRIPTION CONTEXT: Removing event listener');
-      listener.remove();
+      subscriptionEmitter.off(SUBSCRIPTION_UPDATED_EVENT, listener);
     };
   }, []);
 
