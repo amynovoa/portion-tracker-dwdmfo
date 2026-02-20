@@ -55,7 +55,7 @@
         }
       ]
     ],
-    "scheme": "portiontracker",
+    "scheme": "Portion Tracker",
     "experiments": {
       "typedRoutes": true
     },

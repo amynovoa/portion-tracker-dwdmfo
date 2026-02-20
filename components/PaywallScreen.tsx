@@ -198,8 +198,17 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           [
             {
               text: 'OK',
-              onPress: () => {
+              onPress: async () => {
                 console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
+                console.log('⏳ PURCHASE SUCCESS: Waiting 500ms for AsyncStorage write to complete...');
+                
+                // CRITICAL FIX: Wait for AsyncStorage write to complete
+                // The purchase listener saves subscription status asynchronously
+                // We need to ensure that write completes before dismissing the paywall
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                console.log('✅ PURCHASE SUCCESS: Wait complete, dismissing paywall');
+                
                 if (onDismiss) {
                   onDismiss();
                 }
@@ -259,8 +268,15 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           [
             {
               text: 'OK',
-              onPress: () => {
+              onPress: async () => {
                 console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
+                console.log('⏳ RESTORE SUCCESS: Waiting 500ms for AsyncStorage write to complete...');
+                
+                // CRITICAL FIX: Wait for AsyncStorage write to complete
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                console.log('✅ RESTORE SUCCESS: Wait complete, dismissing paywall');
+                
                 if (onDismiss) {
                   onDismiss();
                 }
@@ -372,7 +388,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             <MaterialIcons name="error-outline" size={64} color={colors.error} />
             <Text style={styles.errorTitle}>Unable to Load Plans</Text>
             <Text style={styles.errorMessage}>
-              We couldn't load subscription plans from the App Store. Please check your internet connection and try again.
+              We couldn&apos;t load subscription plans from the App Store. Please check your internet connection and try again.
             </Text>
             
             <TouchableOpacity
