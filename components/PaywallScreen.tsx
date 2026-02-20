@@ -198,17 +198,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           [
             {
               text: 'OK',
-              onPress: async () => {
+              onPress: () => {
                 console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
-                console.log('⏳ PURCHASE SUCCESS: Waiting 1000ms for AsyncStorage write to complete...');
+                console.log('ℹ️ PURCHASE SUCCESS: Subscription status updated via event emitter');
+                console.log('ℹ️ PURCHASE SUCCESS: Dismissing paywall immediately');
                 
-                // CRITICAL FIX: Wait longer for AsyncStorage write to complete
-                // The purchase listener saves subscription status asynchronously
-                // We need to ensure that write completes before dismissing the paywall
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                console.log('✅ PURCHASE SUCCESS: Wait complete, dismissing paywall');
-                
+                // No need for delays - the purchase listener emits an event
+                // that immediately updates the SubscriptionContext
                 if (onDismiss) {
                   onDismiss();
                 }
@@ -268,15 +264,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           [
             {
               text: 'OK',
-              onPress: async () => {
+              onPress: () => {
                 console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
-                console.log('⏳ RESTORE SUCCESS: Waiting 1000ms for AsyncStorage write to complete...');
+                console.log('ℹ️ RESTORE SUCCESS: Subscription status updated via event emitter');
+                console.log('ℹ️ RESTORE SUCCESS: Dismissing paywall immediately');
                 
-                // CRITICAL FIX: Wait longer for AsyncStorage write to complete
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                console.log('✅ RESTORE SUCCESS: Wait complete, dismissing paywall');
-                
+                // No need for delays - the restore function emits an event
+                // that immediately updates the SubscriptionContext
                 if (onDismiss) {
                   onDismiss();
                 }

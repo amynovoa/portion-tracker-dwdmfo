@@ -95,6 +95,28 @@ export interface ProductDetails {
 }
 
 /**
+ * Emit subscription update event to notify context
+ * This allows immediate UI updates without polling AsyncStorage
+ */
+function emitSubscriptionUpdate(subscribed: boolean) {
+  try {
+    // Dynamically import to avoid circular dependency
+    const { subscriptionEmitter, SUBSCRIPTION_UPDATED_EVENT } = require('@/contexts/SubscriptionContext');
+    
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📡 EMIT EVENT: Emitting subscription update event');
+    console.log('📊 EMIT EVENT: New subscription status:', subscribed);
+    console.log('═══════════════════════════════════════════════════════');
+    
+    subscriptionEmitter.emit(SUBSCRIPTION_UPDATED_EVENT, subscribed);
+    
+    console.log('✅ EMIT EVENT: Event emitted successfully');
+  } catch (error) {
+    console.error('❌ EMIT EVENT: Failed to emit subscription update:', error);
+  }
+}
+
+/**
  * Initialize StoreKit connection via expo-in-app-purchases
  * This MUST be called before getProductsAsync()
  */
@@ -155,8 +177,14 @@ export async function initializeStoreKit(): Promise<boolean> {
             
             if (isValidSubscription) {
               console.log('🔄 TRANSACTION CALLBACK: Valid subscription - Unlocking entitlement...');
+              
+              // CRITICAL FIX: Save to AsyncStorage AND emit event immediately
               await saveSubscriptionStatus(true);
-              console.log('✅ TRANSACTION CALLBACK: Entitlement unlocked');
+              console.log('✅ TRANSACTION CALLBACK: Saved to AsyncStorage');
+              
+              // Emit event to immediately update UI
+              emitSubscriptionUpdate(true);
+              console.log('✅ TRANSACTION CALLBACK: Emitted subscription update event');
             } else {
               console.log('⚠️ TRANSACTION CALLBACK: Not a valid subscription product, skipping unlock');
             }
@@ -695,7 +723,15 @@ export async function restorePurchases(): Promise<PurchaseResult> {
       
       if (hasSubscription) {
         console.log('✅ RESTORE: Valid subscription found - granting Full Access');
+        
+        // CRITICAL FIX: Save to AsyncStorage AND emit event immediately
         await saveSubscriptionStatus(true);
+        console.log('✅ RESTORE: Saved to AsyncStorage');
+        
+        // Emit event to immediately update UI
+        emitSubscriptionUpdate(true);
+        console.log('✅ RESTORE: Emitted subscription update event');
+        
         console.log('═══════════════════════════════════════════════════════');
         return { success: true };
       } else {
@@ -797,6 +833,9 @@ export async function checkAppStoreSubscription(): Promise<boolean> {
       
       // Update local storage
       await saveSubscriptionStatus(hasSubscription);
+      
+      // Emit event to update UI
+      emitSubscriptionUpdate(hasSubscription);
       
       return hasSubscription;
     }

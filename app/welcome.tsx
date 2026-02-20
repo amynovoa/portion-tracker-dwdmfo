@@ -12,27 +12,12 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const { isSubscribed, refreshSubscription } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
-  const [hasSubscription, setHasSubscription] = useState(false);
 
   useEffect(() => {
-    // Check subscription status on mount and when context updates
-    const checkSubscription = async () => {
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🔵 WELCOME SCREEN: useEffect triggered');
-      console.log('📊 WELCOME SCREEN: isSubscribed from context:', isSubscribed);
-      console.log('═══════════════════════════════════════════════════════');
-      
-      const subscribed = await loadSubscriptionStatus();
-      
-      console.log('📊 WELCOME SCREEN RESULT:');
-      console.log('  - Status from AsyncStorage:', subscribed);
-      console.log('  - Status from context:', isSubscribed);
-      console.log('  - Will update local state to:', subscribed);
-      console.log('═══════════════════════════════════════════════════════');
-      
-      setHasSubscription(subscribed);
-    };
-    checkSubscription();
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 WELCOME SCREEN: Context subscription status changed');
+    console.log('📊 WELCOME SCREEN: isSubscribed from context:', isSubscribed);
+    console.log('═══════════════════════════════════════════════════════');
   }, [isSubscribed]);
 
   const handleStartTrial = () => {
@@ -60,49 +45,29 @@ export default function WelcomeScreen() {
 
   const handlePaywallDismiss = async () => {
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 PAYWALL DISMISS: Paywall dismissed, checking subscription status');
+    console.log('🔵 PAYWALL DISMISS: Paywall dismissed');
     console.log('═══════════════════════════════════════════════════════');
     
     setShowPaywall(false);
     
-    // CRITICAL FIX: Wait longer for AsyncStorage write to complete
-    // The purchase listener in subscriptionManager saves subscription status asynchronously
-    console.log('⏳ PAYWALL DISMISS: Waiting 800ms for AsyncStorage to settle...');
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Refresh subscription status from context
-    console.log('🔄 PAYWALL DISMISS: Refreshing subscription context...');
-    await refreshSubscription();
-    
-    // Force another small delay to ensure context state propagates
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Check subscription status directly from AsyncStorage
-    console.log('🔄 PAYWALL DISMISS: Loading subscription status from AsyncStorage...');
-    const subscribed = await loadSubscriptionStatus();
-    
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📊 PAYWALL DISMISS RESULT:');
-    console.log('  - Subscription status from AsyncStorage:', subscribed);
-    console.log('  - Will show Get Started button:', subscribed);
-    console.log('═══════════════════════════════════════════════════════');
-    
-    // CRITICAL: Force update local state immediately
-    setHasSubscription(subscribed);
-    
-    if (subscribed) {
-      console.log('✅ PAYWALL DISMISS: User subscribed - updated local state to show Get Started button');
-    } else {
-      console.log('ℹ️ PAYWALL DISMISS: No subscription found - keeping Start Free Trial button');
-    }
+    // The subscription status is now updated via event emitter from the purchase listener
+    // No need for delays or polling AsyncStorage
+    // The context will automatically update via the event listener
+    console.log('ℹ️ PAYWALL DISMISS: Subscription status will update via event if purchase completed');
   };
 
   // Show "Get Started" if user has subscription
-  const shouldShowGetStarted = hasSubscription;
+  const shouldShowGetStarted = isSubscribed;
   
   const buttonText = shouldShowGetStarted 
     ? 'You are all set - Let\'s get started' 
     : 'Start Your Free Trial';
+
+  console.log('🔵 WELCOME SCREEN RENDER:', {
+    isSubscribed,
+    shouldShowGetStarted,
+    buttonText,
+  });
 
   return (
     <SafeAreaView style={styles.container}>

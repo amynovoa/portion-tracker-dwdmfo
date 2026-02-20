@@ -1,6 +1,11 @@
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { loadSubscriptionStatus } from '@/utils/storage';
+import { EventEmitter } from 'react-native';
+
+// Create a global event emitter for subscription updates
+const subscriptionEmitter = new EventEmitter();
+export const SUBSCRIPTION_UPDATED_EVENT = 'subscription_updated';
 
 interface SubscriptionContextType {
   isSubscribed: boolean;
@@ -14,7 +19,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshSubscription = async () => {
+  const refreshSubscription = useCallback(async () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 SUBSCRIPTION CONTEXT: Refreshing subscription status');
     console.log('═══════════════════════════════════════════════════════');
@@ -41,11 +46,33 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Initial load
   useEffect(() => {
     refreshSubscription();
+  }, [refreshSubscription]);
+
+  // Listen for subscription update events from the purchase listener
+  useEffect(() => {
+    console.log('🔔 SUBSCRIPTION CONTEXT: Setting up event listener for subscription updates');
+    
+    const listener = subscriptionEmitter.addListener(SUBSCRIPTION_UPDATED_EVENT, (subscribed: boolean) => {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔔 SUBSCRIPTION EVENT: Received subscription update event');
+      console.log('📊 SUBSCRIPTION EVENT: New status:', subscribed);
+      console.log('═══════════════════════════════════════════════════════');
+      
+      // Immediately update state without polling AsyncStorage
+      setIsSubscribed(subscribed);
+      
+      console.log('✅ SUBSCRIPTION EVENT: State updated immediately');
+    });
+
+    return () => {
+      console.log('🔔 SUBSCRIPTION CONTEXT: Removing event listener');
+      listener.remove();
+    };
   }, []);
 
   console.log('📱 SubscriptionContext: isSubscribed =', isSubscribed, ', isLoading =', isLoading);
@@ -68,3 +95,6 @@ export function useSubscription() {
   }
   return context;
 }
+
+// Export the emitter so subscriptionManager can emit events
+export { subscriptionEmitter };
