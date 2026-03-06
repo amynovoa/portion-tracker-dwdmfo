@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "name": "Portion Tracker",
@@ -56,7 +55,7 @@
         }
       ]
     ],
-    "scheme": "portion-tracker",
+    "scheme": "portiontracker",
     "experiments": {
       "typedRoutes": true
     },
