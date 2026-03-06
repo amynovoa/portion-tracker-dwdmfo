@@ -123,6 +123,7 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions> {
             nutsSeeds: parsed.portions.nutsSeeds || 0,
             fats: parsed.portions.fats || 0,
             exercise: parsed.portions.exercise || 0,
+            alcohol: parsed.portions.alcohol || 0,
           },
         };
       }
@@ -144,6 +145,7 @@ export async function loadDailyPortions(date: string): Promise<DailyPortions> {
       nutsSeeds: 0,
       fats: 0,
       exercise: 0,
+      alcohol: 0,
     },
   };
 }
@@ -172,6 +174,7 @@ export async function getAllDailyPortions(): Promise<DailyPortions[]> {
                   nutsSeeds: parsed.portions.nutsSeeds || 0,
                   fats: parsed.portions.fats || 0,
                   exercise: parsed.portions.exercise || 0,
+                  alcohol: parsed.portions.alcohol || 0,
                 },
               } as DailyPortions;
             }

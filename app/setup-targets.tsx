@@ -57,15 +57,17 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
               <Text style={[styles.pickerModalButtonText, styles.pickerModalDoneButton]}>Done</Text>
             </TouchableOpacity>
           </View>
-          <Picker
-            selectedValue={tempValue}
-            onValueChange={setTempValue}
-            style={styles.pickerModalPicker}
-          >
-            {options.map((num) => (
-              <Picker.Item key={num} label={`${num}`} value={num} />
-            ))}
-          </Picker>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={tempValue}
+              onValueChange={setTempValue}
+              style={styles.pickerModalPicker}
+            >
+              {options.map((num) => (
+                <Picker.Item key={num} label={`${num}`} value={num} />
+              ))}
+            </Picker>
+          </View>
         </View>
       </View>
     </Modal>
@@ -359,7 +361,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 34,
+    maxHeight: '50%',
   },
   pickerModalHeader: {
     flexDirection: 'row',
@@ -387,8 +389,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
+  pickerContainer: {
+    height: 216,
+  },
   pickerModalPicker: {
     width: '100%',
-    height: 216,
+    height: '100%',
   },
 });
