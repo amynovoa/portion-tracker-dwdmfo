@@ -1,8 +1,9 @@
+
 {
   "expo": {
     "name": "Portion Tracker",
     "slug": "portion-tracker",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
     "userInterfaceStyle": "automatic",
@@ -23,7 +24,7 @@
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library.",
         "SKStoreKitConfigurationFile": "Configuration"
       },
-      "buildNumber": "9"
+      "buildNumber": "10"
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +33,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.portiontracker.app",
-      "versionCode": 9,
+      "versionCode": 10,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
