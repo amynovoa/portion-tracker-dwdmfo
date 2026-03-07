@@ -187,7 +187,7 @@ export default function SetupTargetsScreen() {
       fats: 'Fats',
       water: 'Water (cups)',
       exercise: 'Exercise',
-      alcohol: 'Alcohol (servings)',
+      alcohol: 'Alcohol',
     };
     return labels[key];
   };
