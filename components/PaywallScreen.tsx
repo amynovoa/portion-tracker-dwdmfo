@@ -337,14 +337,14 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     if (loadingProducts) {
       return '...';
     }
-    return monthlyProduct?.priceString || '$2.99';
+    return monthlyProduct?.priceString || '$3.99';
   };
 
   const getAnnualPrice = () => {
     if (loadingProducts) {
       return '...';
     }
-    return annualProduct?.priceString || '$24.99';
+    return annualProduct?.priceString || '$29.99';
   };
 
   const getAnnualMonthlyPrice = () => {
@@ -356,7 +356,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
       const monthlyEquivalent = (annualPrice / 12).toFixed(2);
       return `${annualProduct.currencyCode === 'USD' ? '$' : ''}${monthlyEquivalent}`;
     }
-    return '$2.08';
+    return '$2.49';
   };
 
   // Purchase must be disabled unless the product object exists in memory from StoreKit
