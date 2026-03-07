@@ -22,15 +22,15 @@ export const PRODUCT_IDS = {
 // Fallback prices for display only - NOT used for purchase readiness
 const FALLBACK_PRICES = {
   MONTHLY: {
-    price: '2.99',
-    priceString: '$2.99',
+    price: '3.99',
+    priceString: '$3.99',
     currencyCode: 'USD',
     title: 'Monthly Subscription',
     description: 'Monthly subscription to Portion Tracker',
   },
   ANNUAL: {
-    price: '24.99',
-    priceString: '$24.99',
+    price: '29.99',
+    priceString: '$29.99',
     currencyCode: 'USD',
     title: 'Annual Subscription',
     description: 'Annual subscription to Portion Tracker',
