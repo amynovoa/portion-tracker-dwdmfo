@@ -13,7 +13,8 @@ import { IconSymbol } from '@/components/IconSymbol';
 const { height: screenHeight } = Dimensions.get('window');
 const PICKER_HEIGHT = 216;
 const HEADER_HEIGHT = 60;
-const MODAL_MAX_HEIGHT = Math.min(screenHeight * 0.5, PICKER_HEIGHT + HEADER_HEIGHT + 40);
+// Ensure modal is tall enough to show header + picker, but not too tall
+const MODAL_HEIGHT = PICKER_HEIGHT + HEADER_HEIGHT + 20;
 
 type PickerModalProps = {
   visible: boolean;
@@ -140,7 +141,7 @@ export default function SetupTargetsScreen() {
     } else {
       console.log('Missing required params, using defaults');
     }
-  }, [sex, weight, goal, activityLevel, includeAlcohol, alcoholGoal]); // Use specific values, not params object
+  }, [sex, weight, goal, activityLevel, includeAlcohol, alcoholGoal]);
 
   const handleSave = async () => {
     console.log('Saving profile with targets:', targets);
@@ -379,8 +380,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: MODAL_MAX_HEIGHT,
-    overflow: 'hidden',
+    height: MODAL_HEIGHT,
   },
   pickerModalHeader: {
     flexDirection: 'row',
