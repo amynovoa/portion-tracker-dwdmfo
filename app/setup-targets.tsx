@@ -10,11 +10,7 @@ import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel, PortionTargets, FOOD_GROUPS } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
 
-const { height: screenHeight } = Dimensions.get('window');
 const PICKER_HEIGHT = 216;
-const HEADER_HEIGHT = 60;
-// Ensure modal is tall enough to show header + picker, but not too tall
-const MODAL_HEIGHT = PICKER_HEIGHT + HEADER_HEIGHT + 20;
 
 type PickerModalProps = {
   visible: boolean;
@@ -54,7 +50,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
           activeOpacity={1} 
           onPress={onClose}
         />
-        <SafeAreaView style={styles.pickerModalSafeArea} edges={['bottom']}>
+        <View style={styles.pickerModalContainer}>
           <View style={styles.pickerModalContent}>
             <View style={styles.pickerModalHeader}>
               <TouchableOpacity onPress={onClose} style={styles.pickerModalButton}>
@@ -77,7 +73,8 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
               </Picker>
             </View>
           </View>
-        </SafeAreaView>
+          <SafeAreaView edges={['bottom']} style={styles.safeAreaBottom} />
+        </View>
       </View>
     </Modal>
   );
@@ -373,14 +370,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  pickerModalSafeArea: {
-    backgroundColor: 'transparent',
-  },
-  pickerModalContent: {
+  pickerModalContainer: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    height: MODAL_HEIGHT,
+  },
+  pickerModalContent: {
+    backgroundColor: colors.surface,
   },
   pickerModalHeader: {
     flexDirection: 'row',
@@ -390,7 +386,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
-    height: HEADER_HEIGHT,
+    minHeight: 56,
   },
   pickerModalButton: {
     paddingVertical: 8,
@@ -415,5 +411,8 @@ const styles = StyleSheet.create({
   pickerModalPicker: {
     width: '100%',
     height: '100%',
+  },
+  safeAreaBottom: {
+    backgroundColor: colors.surface,
   },
 });
