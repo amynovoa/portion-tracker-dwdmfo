@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Dimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +9,11 @@ import { saveProfile } from '@/utils/storage';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel, PortionTargets, FOOD_GROUPS } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
+
+const { height: screenHeight } = Dimensions.get('window');
+const PICKER_HEIGHT = 216;
+const HEADER_HEIGHT = 60;
+const MODAL_MAX_HEIGHT = Math.min(screenHeight * 0.5, PICKER_HEIGHT + HEADER_HEIGHT + 40);
 
 type PickerModalProps = {
   visible: boolean;
@@ -30,6 +35,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
   }, [visible, selectedValue]);
 
   const handleDone = () => {
+    console.log('PickerModal Done button pressed, value:', tempValue);
     onSelect(tempValue);
     onClose();
   };
@@ -47,28 +53,30 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
           activeOpacity={1} 
           onPress={onClose}
         />
-        <View style={styles.pickerModalContent}>
-          <View style={styles.pickerModalHeader}>
-            <TouchableOpacity onPress={onClose} style={styles.pickerModalButton}>
-              <Text style={styles.pickerModalButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.pickerModalTitle}>{title}</Text>
-            <TouchableOpacity onPress={handleDone} style={styles.pickerModalButton}>
-              <Text style={[styles.pickerModalButtonText, styles.pickerModalDoneButton]}>Done</Text>
-            </TouchableOpacity>
+        <SafeAreaView style={styles.pickerModalSafeArea} edges={['bottom']}>
+          <View style={styles.pickerModalContent}>
+            <View style={styles.pickerModalHeader}>
+              <TouchableOpacity onPress={onClose} style={styles.pickerModalButton}>
+                <Text style={styles.pickerModalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.pickerModalTitle}>{title}</Text>
+              <TouchableOpacity onPress={handleDone} style={styles.pickerModalButton}>
+                <Text style={[styles.pickerModalButtonText, styles.pickerModalDoneButton]}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={tempValue}
+                onValueChange={setTempValue}
+                style={styles.pickerModalPicker}
+              >
+                {options.map((num) => (
+                  <Picker.Item key={num} label={`${num}`} value={num} />
+                ))}
+              </Picker>
+            </View>
           </View>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={tempValue}
-              onValueChange={setTempValue}
-              style={styles.pickerModalPicker}
-            >
-              {options.map((num) => (
-                <Picker.Item key={num} label={`${num}`} value={num} />
-              ))}
-            </Picker>
-          </View>
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
@@ -213,7 +221,10 @@ export default function SetupTargetsScreen() {
             </View>
             <TouchableOpacity 
               style={styles.valueButton}
-              onPress={() => setActivePickerKey(key)}
+              onPress={() => {
+                console.log(`Opening picker for ${key}`);
+                setActivePickerKey(key);
+              }}
             >
               <Text style={styles.valueText}>{targets[key]}</Text>
               <IconSymbol 
@@ -249,8 +260,12 @@ export default function SetupTargetsScreen() {
       {activePickerKey && (
         <PickerModal
           visible={activePickerKey !== null}
-          onClose={() => setActivePickerKey(null)}
+          onClose={() => {
+            console.log('Closing picker modal');
+            setActivePickerKey(null);
+          }}
           onSelect={(value) => {
+            console.log(`Selected value ${value} for ${activePickerKey}`);
             updateTarget(activePickerKey, value);
             setActivePickerKey(null);
           }}
@@ -357,20 +372,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
+  pickerModalSafeArea: {
+    backgroundColor: 'transparent',
+  },
   pickerModalContent: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '50%',
+    maxHeight: MODAL_MAX_HEIGHT,
+    overflow: 'hidden',
   },
   pickerModalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+    height: HEADER_HEIGHT,
   },
   pickerModalButton: {
     paddingVertical: 8,
@@ -390,7 +410,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   pickerContainer: {
-    height: 216,
+    height: PICKER_HEIGHT,
   },
   pickerModalPicker: {
     width: '100%',
