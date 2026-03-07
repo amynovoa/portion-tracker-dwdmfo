@@ -6,6 +6,7 @@ import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile } from '@/utils/storage';
+import { recordTargetsSaved } from '@/utils/reviewManager';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel, PortionTargets, FOOD_GROUPS } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -159,6 +160,9 @@ export default function SetupTargetsScreen() {
       console.log('Profile to save:', profile);
       await saveProfile(profile);
       console.log('Profile saved successfully');
+      
+      // Record that targets were saved for review metrics
+      await recordTargetsSaved();
       
       router.replace('/(tabs)/(home)');
     } catch (error) {

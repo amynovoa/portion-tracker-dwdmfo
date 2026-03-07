@@ -3,6 +3,7 @@ import DailyCompletionCelebration from '@/components/DailyCompletionCelebration'
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
+import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
@@ -46,6 +47,9 @@ export default function HomeScreen() {
     if (!hasSeenHint) {
       setShowInfoHint(true);
     }
+
+    // Record app open for review metrics
+    await recordAppOpen();
   }, [router, selectedDate, loadDateData]);
 
   useFocusEffect(
@@ -110,6 +114,12 @@ export default function HomeScreen() {
     await saveDailyPortions(updatedDailyPortions);
 
     if (increment) {
+      // Record tracking action for review metrics
+      await recordTrackingAction();
+      
+      // Check if we should request a review
+      await requestReviewIfEligible();
+      
       await checkAndShowCelebration(updatedPortions);
     }
   };

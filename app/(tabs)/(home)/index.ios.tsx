@@ -3,14 +3,15 @@ import DailyCompletionCelebration from '@/components/DailyCompletionCelebration'
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
-import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
+import InfoHintTooltip from '@/components/InfoHintTooltip.ios';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
-import FoodGroupRow from '@/components/FoodGroupRow';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
-import DaySelector from '@/components/DaySelector';
-import InfoHintTooltip from '@/components/InfoHintTooltip.ios';
+import DaySelector from '@/components/DaySelector.ios';
+import FoodGroupRow from '@/components/FoodGroupRow';
 import AppLogo from '@/components/AppLogo';
 
 export default function HomeScreen() {
@@ -20,8 +21,6 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-
-  const params = useLocalSearchParams();
   const router = useRouter();
 
   const loadDateData = useCallback(async (date: string) => {
@@ -48,24 +47,21 @@ export default function HomeScreen() {
     if (!hasSeenHint) {
       setShowInfoHint(true);
     }
-  }, [router, selectedDate, loadDateData]);
 
-  useEffect(() => {
-    loadDateData(selectedDate);
-  }, [selectedDate, loadDateData]);
+    // Record app open for review metrics
+    await recordAppOpen();
+  }, [router, selectedDate, loadDateData]);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('HomeScreen (iOS) focused, loading data...');
+      console.log('HomeScreen focused, loading data...');
       loadData();
     }, [loadData])
   );
 
   useEffect(() => {
-    if (params.reload) {
-      loadData();
-    }
-  }, [params.reload, loadData]);
+    loadDateData(selectedDate);
+  }, [selectedDate, loadDateData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -118,6 +114,12 @@ export default function HomeScreen() {
     await saveDailyPortions(updatedDailyPortions);
 
     if (increment) {
+      // Record tracking action for review metrics
+      await recordTrackingAction();
+      
+      // Check if we should request a review
+      await requestReviewIfEligible();
+      
       await checkAndShowCelebration(updatedPortions);
     }
   };
