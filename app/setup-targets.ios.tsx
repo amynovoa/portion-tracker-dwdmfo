@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +28,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
 
   useEffect(() => {
     if (visible) {
+      console.log('PickerModal opened with value:', selectedValue);
       setTempValue(selectedValue);
     }
   }, [visible, selectedValue]);
@@ -45,7 +46,10 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.pickerModalOverlay}>
+      <KeyboardAvoidingView 
+        behavior="padding"
+        style={styles.pickerModalOverlay}
+      >
         <TouchableOpacity 
           style={styles.pickerModalBackdrop} 
           activeOpacity={1} 
@@ -57,7 +61,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
               <TouchableOpacity onPress={onClose} style={styles.pickerModalButton}>
                 <Text style={styles.pickerModalButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <Text style={styles.pickerModalTitle}>{title}</Text>
+              <Text style={styles.pickerModalTitle} numberOfLines={1}>{title}</Text>
               <TouchableOpacity onPress={handleDone} style={styles.pickerModalButton}>
                 <Text style={[styles.pickerModalButtonText, styles.pickerModalDoneButton]}>Done</Text>
               </TouchableOpacity>
@@ -65,8 +69,12 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={tempValue}
-                onValueChange={setTempValue}
+                onValueChange={(value) => {
+                  console.log('Picker value changed to:', value);
+                  setTempValue(value);
+                }}
                 style={styles.pickerModalPicker}
+                itemStyle={styles.pickerItem}
               >
                 {options.map((num) => (
                   <Picker.Item key={num} label={`${num}`} value={num} />
@@ -76,7 +84,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
           </View>
           <SafeAreaView edges={['bottom']} style={styles.safeAreaBottom} />
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -209,54 +217,68 @@ export default function SetupTargetsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Set Your Daily Targets</Text>
-        <Text style={styles.subtitle}>
-          We&apos;ve recommended targets based on your profile. You can adjust them to fit your preferences.
-        </Text>
+      <KeyboardAvoidingView 
+        behavior="padding"
+        style={styles.keyboardAvoidingView}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.title}>Set Your Daily Targets</Text>
+          <Text style={styles.subtitle}>
+            We&apos;ve recommended targets based on your profile. You can adjust them to fit your preferences.
+          </Text>
 
-        {targetKeys.map((key) => (
-          <View key={key} style={styles.row}>
-            <View style={styles.labelContainer}>
-              <Text style={styles.icon}>{getIconForFoodGroup(key)}</Text>
-              <Text style={styles.rowLabel}>{getLabelForKey(key)}</Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.valueButton}
-              onPress={() => {
-                console.log(`Opening picker for ${key}`);
-                setActivePickerKey(key);
-              }}
-            >
-              <Text style={styles.valueText}>{targets[key]}</Text>
-              <IconSymbol 
-                ios_icon_name="chevron.down" 
-                android_material_icon_name="arrow-drop-down" 
-                size={20} 
-                color={colors.text} 
-              />
-            </TouchableOpacity>
+          {targetKeys.map((key) => {
+            const targetValue = targets[key];
+            const labelText = getLabelForKey(key);
+            const iconEmoji = getIconForFoodGroup(key);
+            
+            return (
+              <View key={key} style={styles.row}>
+                <View style={styles.labelContainer}>
+                  <Text style={styles.icon}>{iconEmoji}</Text>
+                  <Text style={styles.rowLabel}>{labelText}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.valueButton}
+                  onPress={() => {
+                    console.log(`Opening picker for ${key}, current value: ${targetValue}`);
+                    setActivePickerKey(key);
+                  }}
+                >
+                  <Text style={styles.valueText}>{targetValue}</Text>
+                  <IconSymbol 
+                    ios_icon_name="chevron.down" 
+                    android_material_icon_name="arrow-drop-down" 
+                    size={20} 
+                    color={colors.text} 
+                  />
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+
+          <View style={styles.noteSection}>
+            <Text style={styles.noteIcon}>💪</Text>
+            <Text style={styles.noteText}>
+              Exercise can be tracked daily on the tracking page, but doesn&apos;t have a numeric target.
+            </Text>
           </View>
-        ))}
 
-        <View style={styles.noteSection}>
-          <Text style={styles.noteIcon}>💪</Text>
-          <Text style={styles.noteText}>
-            Exercise can be tracked daily on the tracking page, but doesn&apos;t have a numeric target.
-          </Text>
-        </View>
+          <View style={styles.noteSection}>
+            <Text style={styles.noteIcon}>🍷</Text>
+            <Text style={styles.noteText}>
+              You can set your alcohol target to 0 if you don&apos;t drink, or adjust it to match your goals. Recommended maximum is 2 servings per day.
+            </Text>
+          </View>
 
-        <View style={styles.noteSection}>
-          <Text style={styles.noteIcon}>🍷</Text>
-          <Text style={styles.noteText}>
-            You can set your alcohol target to 0 if you don&apos;t drink, or adjust it to match your goals. Recommended maximum is 2 servings per day.
-          </Text>
-        </View>
-
-        <TouchableOpacity style={buttonStyles.primary} onPress={handleSave}>
-          <Text style={buttonStyles.primaryText}>Save & Continue</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity style={buttonStyles.primary} onPress={handleSave}>
+            <Text style={buttonStyles.primaryText}>Save & Continue</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Picker Modal */}
       {activePickerKey && (
@@ -284,6 +306,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollContent: {
     padding: 20,
@@ -327,6 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    flexShrink: 1,
   },
   valueButton: {
     flexDirection: 'row',
@@ -378,6 +404,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    maxHeight: '50%',
   },
   pickerModalContent: {
     backgroundColor: colors.surface,
@@ -408,13 +435,21 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: colors.text,
+    flex: 1,
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
   pickerContainer: {
     height: PICKER_HEIGHT,
+    justifyContent: 'center',
   },
   pickerModalPicker: {
     width: '100%',
     height: '100%',
+  },
+  pickerItem: {
+    fontSize: 20,
+    height: 120,
   },
   safeAreaBottom: {
     backgroundColor: colors.surface,
