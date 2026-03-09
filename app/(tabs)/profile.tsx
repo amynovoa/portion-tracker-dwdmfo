@@ -60,6 +60,10 @@ export default function ProfileScreen() {
         return 'Maintain Weight';
       case 'build':
         return 'Build Muscle';
+      case 'eat-healthier':
+        return 'Eat Healthier';
+      case 'have-more-energy':
+        return 'Have More Energy';
       default:
         return 'Not set';
     }

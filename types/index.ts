@@ -1,6 +1,6 @@
 
 export type Sex = 'male' | 'female' | 'prefer-not-to-say';
-export type Goal = 'lose' | 'maintain' | 'build';
+export type Goal = 'lose' | 'maintain' | 'build' | 'eat-healthier' | 'have-more-energy';
 export type SizeCategory = 'small' | 'medium' | 'large';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive';
 

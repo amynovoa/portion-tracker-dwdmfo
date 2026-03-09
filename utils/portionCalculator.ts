@@ -126,7 +126,12 @@ export function calculateRecommendedTargets(
     portions.fats = Math.min(4, portions.fats + 1);
     // Encourage exercise for muscle building
     portions.exercise = Math.min(7, portions.exercise + 2);
+  } else if (goal === 'eat-healthier' || goal === 'have-more-energy') {
+    // These goals use the same logic as 'maintain' - no additional adjustments needed
+    // The portions have already been set by the baseline and size adjustment
+    console.log('Using maintain weight logic for goal:', goal);
   }
+  // 'maintain' goal has no additional adjustments
 
   // Apply activity level adjustment
   portions = applyActivityAdjustment(portions, activityLevel);

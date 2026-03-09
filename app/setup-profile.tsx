@@ -110,6 +110,8 @@ export default function SetupProfileScreen() {
     { label: 'Lose Weight', value: 'lose' as Goal },
     { label: 'Maintain Weight', value: 'maintain' as Goal },
     { label: 'Build Muscle', value: 'build' as Goal },
+    { label: 'Eat Healthier', value: 'eat-healthier' as Goal },
+    { label: 'Have More Energy', value: 'have-more-energy' as Goal },
   ];
 
   const activityOptions = [
