@@ -77,7 +77,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
                 itemStyle={styles.pickerItem}
               >
                 {options.map((num) => (
-                  <Picker.Item key={num} label={`${num}`} value={num} />
+                  <Picker.Item key={num} label={`${num}`} value={num} color={colors.text} />
                 ))}
               </Picker>
             </View>
@@ -450,6 +450,7 @@ const styles = StyleSheet.create({
   pickerItem: {
     fontSize: 20,
     height: 120,
+    color: colors.text,
   },
   safeAreaBottom: {
     backgroundColor: colors.surface,
