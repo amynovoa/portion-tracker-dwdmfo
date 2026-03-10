@@ -381,6 +381,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     ? 'Product not available'
     : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
 
+  const disclosureText = 'Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.';
+
   // Show "Unable to load plans" + Retry if products failed
   if (productsFailed) {
     return (
@@ -470,9 +472,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               {'\n'}
               {subtitleText}
             </Text>
-            <Text style={styles.subtitle}>
-              Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.
-            </Text>
           </View>
 
           <View style={styles.featuresContainer}>
@@ -561,6 +560,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
             )}
           </TouchableOpacity>
 
+          <View style={styles.disclosureContainer}>
+            <Text style={styles.disclosureText}>
+              {disclosureText}
+            </Text>
+          </View>
+
           <TouchableOpacity
             style={styles.restoreButton}
             onPress={handleRestorePurchases}
@@ -617,12 +622,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 16,
     textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   featuresContainer: {
     marginBottom: 32,
@@ -709,6 +708,16 @@ const styles = StyleSheet.create({
   },
   subscribeButtonDisabled: {
     opacity: 0.5,
+  },
+  disclosureContainer: {
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  disclosureText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   restoreButton: {
     padding: 16,
