@@ -463,11 +463,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           </View>
 
           <View style={styles.featuresContainer}>
-            <Text style={styles.featuresTitle}>Subscription includes:</Text>
+            <Text style={styles.featuresTitle}>A simple way to eat well and build healthy habits for life.</Text>
             <FeatureItem text="Unlimited portion tracking" />
             <FeatureItem text="Custom portion targets" />
             <FeatureItem text="Weight tracking & charts" />
-            <FeatureItem text="Adherence history & trends" />
+            <FeatureItem text="Progress history & trends" />
             <FeatureItem text="Daily reminders" />
           </View>
 
