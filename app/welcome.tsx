@@ -59,7 +59,7 @@ export default function WelcomeScreen() {
 
   const titleText = 'Welcome to Portion Track';
   const subtitleText = 'Simple Portions. Balanced Eating.';
-  const descriptionText = 'Track your meals using simple portions and support a healthy variety of foods that help you feel your best and support long-term wellness.';
+  const descriptionText = 'A simple way to eat well and build healthy habits for life.';
   const buttonText = 'Start Your Free Trial';
 
   console.log('🔵 WELCOME SCREEN RENDER:', {
