@@ -372,6 +372,15 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     return ready;
   };
 
+  const titleText = '7 day free trial.';
+  const subtitleText = 'Cancel anytime.';
+
+  const buttonText = loadingProducts
+    ? 'Loading products...'
+    : !isSelectedProductReady()
+    ? 'Product not available'
+    : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
+
   // Show "Unable to load plans" + Retry if products failed
   if (productsFailed) {
     return (
@@ -456,7 +465,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>7-day free trial.{'\n'}Cancel anytime.</Text>
+            <Text style={styles.title}>
+              {titleText}
+              {'\n'}
+              {subtitleText}
+            </Text>
             <Text style={styles.subtitle}>
               Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.
             </Text>
@@ -542,11 +555,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
               <ActivityIndicator color={colors.surface} />
             ) : (
               <Text style={buttonStyles.primaryText}>
-                {loadingProducts
-                  ? 'Loading products...'
-                  : !isSelectedProductReady()
-                  ? 'Product not available'
-                  : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`}
+                {buttonText}
               </Text>
             )}
           </TouchableOpacity>
