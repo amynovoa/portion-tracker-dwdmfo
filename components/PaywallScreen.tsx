@@ -478,6 +478,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
           <View style={styles.featuresContainer}>
             <Text style={styles.featuresTitle}>A simple way to eat well and build healthy habits for life.</Text>
             <FeatureItem text="Unlimited portion tracking" />
+            <FeatureItem text="Healthy portion guidance" />
             <FeatureItem text="Custom portion targets" />
             <FeatureItem text="Weight tracking & charts" />
             <FeatureItem text="Progress history & trends" />
