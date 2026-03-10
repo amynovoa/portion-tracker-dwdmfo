@@ -7,6 +7,7 @@ import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { loadProfile } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import AppLogo from '@/components/AppLogo';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -71,6 +72,9 @@ export default function WelcomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <AppLogo size={80} />
+          </View>
           <Text style={styles.title}>{titleText}</Text>
           <Text style={styles.subtitle}>{subtitleText}</Text>
           <Text style={styles.description}>
@@ -110,6 +114,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logoContainer: {
+    marginBottom: 32,
   },
   title: {
     fontSize: 32,
