@@ -632,6 +632,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 16,
+    textAlign: 'center',
   },
   featureItem: {
     flexDirection: 'row',
