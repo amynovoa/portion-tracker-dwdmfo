@@ -57,6 +57,9 @@ export default function WelcomeScreen() {
     console.log('ℹ️ PAYWALL DISMISS: If purchase completed, useEffect will handle navigation');
   };
 
+  const titleText = 'Welcome to Portion Track';
+  const subtitleText = 'Simple Portions. Balanced Eating.';
+  const descriptionText = 'Track your meals using simple portions and support a healthy variety of foods that help you feel your best and support long-term wellness.';
   const buttonText = 'Start Your Free Trial';
 
   console.log('🔵 WELCOME SCREEN RENDER:', {
@@ -68,10 +71,10 @@ export default function WelcomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome to Portion Track</Text>
-          <Text style={styles.subtitle}>Simple Portions. Real-life Flexibility.</Text>
+          <Text style={styles.title}>{titleText}</Text>
+          <Text style={styles.subtitle}>{subtitleText}</Text>
           <Text style={styles.description}>
-            Track what you eat using portions instead of calories - and adjust them to fit your goals with ease.
+            {descriptionText}
           </Text>
         </View>
 
