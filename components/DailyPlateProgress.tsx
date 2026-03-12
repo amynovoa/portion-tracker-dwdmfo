@@ -49,7 +49,7 @@ function calculateIconPosition(
   angle: number
 ): { x: number; y: number } {
   const angleRad = (angle - 90) * (Math.PI / 180);
-  const iconRadius = radius * 0.6; // Position icons 60% from center
+  const iconRadius = radius * 0.65; // Position icons 65% from center
   
   const iconX = centerX + iconRadius * Math.cos(angleRad);
   const iconY = centerY + iconRadius * Math.sin(angleRad);
@@ -85,56 +85,56 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
     <View style={styles.container}>
       <Text style={styles.title}>Today's Balance</Text>
       
-      <View style={styles.plateContainer}>
-        <Svg width={plateSize} height={plateSize} viewBox={`0 0 ${plateSize} ${plateSize}`}>
-          {/* Background circle */}
-          <Circle
-            cx={centerX}
-            cy={centerY}
-            r={outerRadius}
-            fill={colors.cardBackground}
-            stroke={colors.border}
-            strokeWidth="3"
-          />
+      <View style={styles.plateWrapper}>
+        <View style={styles.plateContainer}>
+          <Svg width={plateSize} height={plateSize} viewBox={`0 0 ${plateSize} ${plateSize}`}>
+            {/* Background circle */}
+            <Circle
+              cx={centerX}
+              cy={centerY}
+              r={outerRadius}
+              fill={colors.cardBackground}
+              stroke={colors.border}
+              strokeWidth="3"
+            />
+            
+            {/* Pie slices for each food group */}
+            {PLATE_SECTIONS.map((section, index) => {
+              const progress = getSectionProgress(section.key);
+              const isComplete = isSectionComplete(section.key);
+              
+              const startAngle = index * anglePerSection;
+              const endAngle = startAngle + anglePerSection;
+              const midAngle = startAngle + anglePerSection / 2;
+              
+              const path = createPieSlicePath(centerX, centerY, outerRadius, startAngle, endAngle);
+              const opacity = 0.2 + (progress * 0.8);
+              
+              return (
+                <G key={section.key}>
+                  <Path
+                    d={path}
+                    fill={section.color}
+                    fillOpacity={opacity}
+                    stroke={colors.border}
+                    strokeWidth="0.5"
+                  />
+                </G>
+              );
+            })}
+            
+            {/* Center circle */}
+            <Circle
+              cx={centerX}
+              cy={centerY}
+              r={innerRadius}
+              fill={colors.background}
+              stroke={colors.border}
+              strokeWidth="2"
+            />
+          </Svg>
           
-          {/* Pie slices for each food group */}
-          {PLATE_SECTIONS.map((section, index) => {
-            const progress = getSectionProgress(section.key);
-            const isComplete = isSectionComplete(section.key);
-            
-            const startAngle = index * anglePerSection;
-            const endAngle = startAngle + anglePerSection;
-            const midAngle = startAngle + anglePerSection / 2;
-            
-            const path = createPieSlicePath(centerX, centerY, outerRadius, startAngle, endAngle);
-            const opacity = 0.2 + (progress * 0.8);
-            
-            return (
-              <G key={section.key}>
-                <Path
-                  d={path}
-                  fill={section.color}
-                  fillOpacity={opacity}
-                  stroke={colors.border}
-                  strokeWidth="0.5"
-                />
-              </G>
-            );
-          })}
-          
-          {/* Center circle */}
-          <Circle
-            cx={centerX}
-            cy={centerY}
-            r={innerRadius}
-            fill={colors.background}
-            stroke={colors.border}
-            strokeWidth="2"
-          />
-        </Svg>
-        
-        {/* Icons positioned absolutely on top of SVG */}
-        <View style={styles.iconsContainer}>
+          {/* Icons positioned absolutely on top of SVG */}
           {PLATE_SECTIONS.map((section, index) => {
             const isComplete = isSectionComplete(section.key);
             if (!isComplete) return null;
@@ -149,8 +149,8 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
                 style={[
                   styles.iconContainer,
                   {
-                    left: iconPos.x - 15,
-                    top: iconPos.y - 15,
+                    left: iconPos.x,
+                    top: iconPos.y,
                   },
                 ]}
               >
@@ -160,7 +160,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
           })}
           
           {/* Center emoji */}
-          <View style={styles.centerEmoji}>
+          <View style={[styles.centerEmoji, { left: centerX, top: centerY }]}>
             <Text style={styles.centerEmojiText}>🍽️</Text>
           </View>
         </View>
@@ -182,22 +182,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  plateContainer: {
+  plateWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
-  iconsContainer: {
-    position: 'absolute',
+  plateContainer: {
     width: 280,
     height: 280,
-    top: 0,
-    left: 0,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconContainer: {
     position: 'absolute',
     width: 30,
     height: 30,
+    marginLeft: -15,
+    marginTop: -15,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -207,14 +208,14 @@ const styles = StyleSheet.create({
   },
   centerEmoji: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 60,
+    height: 60,
+    marginLeft: -30,
+    marginTop: -30,
+    borderRadius: 30,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    top: 100,
-    left: 100,
     borderWidth: 2,
     borderColor: colors.border,
     zIndex: 15,
