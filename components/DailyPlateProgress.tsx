@@ -149,7 +149,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
     const midAngle = startAngle + segmentAngle / 2;
     const iconPos = calculateIconPosition(centerX, centerY, outerRadius, midAngle);
     
-    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%`);
+    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%, iconPos=(${iconPos.x.toFixed(1)}, ${iconPos.y.toFixed(1)})`);
     
     return {
       section,
@@ -236,10 +236,8 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             />
           </Svg>
           
-          {/* Icons positioned absolutely on top of SVG - only show when section is complete */}
+          {/* Icons positioned absolutely on top of SVG - ALWAYS VISIBLE */}
           {segments.map((seg) => {
-            if (!seg.isComplete) return null;
-            
             return (
               <View
                 key={`icon-${seg.section.key}`}
