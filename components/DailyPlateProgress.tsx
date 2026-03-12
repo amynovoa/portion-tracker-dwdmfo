@@ -11,22 +11,26 @@ interface DailyPlateProgressProps {
   targets: PortionTargets;
 }
 
-// Brand color palette for the plate (black, red, white, grey variations)
-// These colors are ONLY for the plate segments and the small indicator in the tracking list
+// Updated brand color palette with white and green progress fill
+// Background colors: black, red, white, grey variations
+// Progress fill: green (#4CAF50) for all sections
 const PLATE_SECTIONS = [
-  { key: 'protein' as keyof PortionTargets, label: 'Protein', color: '#C94A3D', icon: '🍗' }, // Brand Red
-  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', color: '#1C1C1E', icon: '🥦' }, // Black
-  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', color: '#FF3B30', icon: '🍎' }, // Bright Red
-  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', color: '#3A3A3C', icon: '🌾' }, // Dark Grey
-  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', color: '#8E8E93', icon: '🥜' }, // Medium Grey
-  { key: 'fats' as keyof PortionTargets, label: 'Fats', color: '#52525b', icon: '🥑' }, // Zinc 600 Grey
+  { key: 'protein' as keyof PortionTargets, label: 'Protein', backgroundColor: '#C94A3D', icon: '🍗' }, // Brand Red
+  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', backgroundColor: '#1C1C1E', icon: '🥦' }, // Black
+  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' }, // White
+  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', backgroundColor: '#3A3A3C', icon: '🌾' }, // Dark Grey
+  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#8E8E93', icon: '🥜' }, // Medium Grey
+  { key: 'fats' as keyof PortionTargets, label: 'Fats', backgroundColor: '#52525b', icon: '🥑' }, // Zinc 600 Grey
 ];
+
+// Progress fill color - green for all sections
+const PROGRESS_FILL_COLOR = '#4CAF50'; // Green
 
 // Export the color mapping so FoodGroupRow can use it for the indicator dots
 export const FOOD_GROUP_COLORS: Record<string, string> = {
   protein: '#C94A3D', // Brand Red
   veggies: '#1C1C1E', // Black
-  fruits: '#FF3B30', // Bright Red
+  fruits: '#FFFFFF', // White
   wholeGrains: '#3A3A3C', // Dark Grey
   nutsSeeds: '#8E8E93', // Medium Grey
   fats: '#52525b', // Zinc 600 Grey
@@ -166,7 +170,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             
             {/* Pie slices for each food group - TWO LAYERS */}
             {segments.map((seg) => {
-              // Background layer: light tint (20% opacity) of the food group color
+              // Background layer: section's background color (full opacity)
               const backgroundPath = createPieSlicePath(
                 centerX,
                 centerY,
@@ -175,7 +179,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
                 seg.endAngle
               );
               
-              // Progress layer: full color, but only fills based on progress
+              // Progress layer: green fill, only fills based on progress
               const progressPath = createProgressSlicePath(
                 centerX,
                 centerY,
@@ -187,21 +191,21 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
               
               return (
                 <G key={seg.section.key}>
-                  {/* Background layer - light tint */}
+                  {/* Background layer - section's background color */}
                   <Path
                     d={backgroundPath}
-                    fill={seg.section.color}
-                    fillOpacity={0.15}
+                    fill={seg.section.backgroundColor}
+                    fillOpacity={1.0}
                     stroke={colors.border}
-                    strokeWidth="0.5"
+                    strokeWidth="1"
                   />
                   
-                  {/* Progress layer - full color */}
+                  {/* Progress layer - green fill */}
                   {seg.progress > 0 && (
                     <Path
                       d={progressPath}
-                      fill={seg.section.color}
-                      fillOpacity={1.0}
+                      fill={PROGRESS_FILL_COLOR}
+                      fillOpacity={0.85}
                       stroke={colors.border}
                       strokeWidth="0.5"
                     />
