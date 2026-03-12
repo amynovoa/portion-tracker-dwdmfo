@@ -66,7 +66,14 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
                   ]}
                 />
                 {isComplete && (
-                  <View style={styles.completionIconContainer}>
+                  <View 
+                    style={[
+                      styles.completionIconContainer,
+                      {
+                        transform: [{ rotate: `${-angle}deg` }], // Counter-rotate to keep icon upright
+                      },
+                    ]}
+                  >
                     <Text style={styles.completionIcon}>{section.icon}</Text>
                   </View>
                 )}
@@ -79,26 +86,6 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             <Text style={styles.plateCenterEmoji}>🍽️</Text>
           </View>
         </View>
-      </View>
-
-      {/* Legend */}
-      <View style={styles.legend}>
-        {PLATE_SECTIONS.map((section) => {
-          const progress = getSectionProgress(section.key);
-          const progressPercent = Math.round(progress * 100);
-          const completedCount = completed[section.key] || 0;
-          const targetCount = targets[section.key];
-          
-          return (
-            <View key={section.key} style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: section.color }]} />
-              <Text style={styles.legendLabel}>{section.label}</Text>
-              <Text style={styles.legendProgress}>
-                {completedCount}/{targetCount}
-              </Text>
-            </View>
-          );
-        })}
       </View>
     </View>
   );
@@ -123,7 +110,6 @@ const styles = StyleSheet.create({
   plateContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
   },
   plate: {
     width: PLATE_SIZE,
@@ -155,11 +141,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 40,
     left: '50%',
-    transform: [{ translateX: -15 }],
+    marginLeft: -15,
     width: 30,
     height: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 5,
   },
   completionIcon: {
     fontSize: 24,
@@ -177,33 +164,5 @@ const styles = StyleSheet.create({
   },
   plateCenterEmoji: {
     fontSize: 32,
-  },
-  legend: {
-    gap: 8,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: colors.cardBackground,
-    borderRadius: 8,
-  },
-  legendColor: {
-    width: 16,
-    height: 16,
-    borderRadius: 4,
-    marginRight: 10,
-  },
-  legendLabel: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  legendProgress: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: '600',
   },
 });
