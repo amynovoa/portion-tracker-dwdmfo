@@ -11,29 +11,31 @@ interface DailyPlateProgressProps {
   targets: PortionTargets;
 }
 
-// Updated brand color palette with alternating red, black, white pattern
-// Background colors: red, black, white, red, black, white
+// All segments now use white background with black outlines
 // Progress fill: green (#4CAF50) for all sections
 const PLATE_SECTIONS = [
-  { key: 'protein' as keyof PortionTargets, label: 'Protein', backgroundColor: '#C94A3D', icon: '🍗' }, // Red
-  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', backgroundColor: '#1C1C1E', icon: '🥦' }, // Black
-  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' }, // White
-  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', backgroundColor: '#C94A3D', icon: '🌾' }, // Red
-  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#1C1C1E', icon: '🥜' }, // Black
-  { key: 'fats' as keyof PortionTargets, label: 'Fats', backgroundColor: '#FFFFFF', icon: '🥑' }, // White
+  { key: 'protein' as keyof PortionTargets, label: 'Protein', backgroundColor: '#FFFFFF', icon: '🍗' },
+  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', backgroundColor: '#FFFFFF', icon: '🥦' },
+  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' },
+  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', backgroundColor: '#FFFFFF', icon: '🌾' },
+  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#FFFFFF', icon: '🥜' },
+  { key: 'fats' as keyof PortionTargets, label: 'Fats', backgroundColor: '#FFFFFF', icon: '🥑' },
 ];
 
 // Progress fill color - green for all sections
 const PROGRESS_FILL_COLOR = '#4CAF50'; // Green
 
+// Black outline color
+const OUTLINE_COLOR = '#1C1C1E'; // Black
+
 // Export the color mapping so FoodGroupRow can use it for the indicator dots
 export const FOOD_GROUP_COLORS: Record<string, string> = {
-  protein: '#C94A3D', // Red
-  veggies: '#1C1C1E', // Black
-  fruits: '#FFFFFF', // White
-  wholeGrains: '#C94A3D', // Red
-  nutsSeeds: '#1C1C1E', // Black
-  fats: '#FFFFFF', // White
+  protein: '#FFFFFF',
+  veggies: '#FFFFFF',
+  fruits: '#FFFFFF',
+  wholeGrains: '#FFFFFF',
+  nutsSeeds: '#FFFFFF',
+  fats: '#FFFFFF',
 };
 
 // Helper function to create SVG path for a pie slice
@@ -158,19 +160,19 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
       <View style={styles.plateWrapper}>
         <View style={styles.plateContainer}>
           <Svg width={plateSize} height={plateSize} viewBox={`0 0 ${plateSize} ${plateSize}`}>
-            {/* Background circle */}
+            {/* Outer plate circle with black outline */}
             <Circle
               cx={centerX}
               cy={centerY}
               r={outerRadius}
-              fill={colors.cardBackground}
-              stroke={colors.border}
-              strokeWidth="3"
+              fill="none"
+              stroke={OUTLINE_COLOR}
+              strokeWidth="2"
             />
             
             {/* Pie slices for each food group - TWO LAYERS */}
             {segments.map((seg) => {
-              // Background layer: section's background color (full opacity)
+              // Background layer: white (full opacity)
               const backgroundPath = createPieSlicePath(
                 centerX,
                 centerY,
@@ -191,13 +193,13 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
               
               return (
                 <G key={seg.section.key}>
-                  {/* Background layer - section's background color */}
+                  {/* Background layer - white with black outline between segments */}
                   <Path
                     d={backgroundPath}
                     fill={seg.section.backgroundColor}
                     fillOpacity={1.0}
-                    stroke={colors.border}
-                    strokeWidth="1"
+                    stroke={OUTLINE_COLOR}
+                    strokeWidth="2"
                   />
                   
                   {/* Progress layer - green fill */}
@@ -206,21 +208,21 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
                       d={progressPath}
                       fill={PROGRESS_FILL_COLOR}
                       fillOpacity={0.85}
-                      stroke={colors.border}
-                      strokeWidth="0.5"
+                      stroke={OUTLINE_COLOR}
+                      strokeWidth="1"
                     />
                   )}
                 </G>
               );
             })}
             
-            {/* Center circle */}
+            {/* Center circle with black outline */}
             <Circle
               cx={centerX}
               cy={centerY}
               r={innerRadius}
               fill={colors.background}
-              stroke={colors.border}
+              stroke={OUTLINE_COLOR}
               strokeWidth="2"
             />
           </Svg>
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: OUTLINE_COLOR,
     zIndex: 15,
   },
 });
