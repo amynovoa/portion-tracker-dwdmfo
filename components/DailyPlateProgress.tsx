@@ -101,17 +101,8 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
   const outerRadius = plateSize / 2 - 10;
   const innerRadius = 40;
   
-  // Calculate total target portions across all food groups
-  const totalTarget = PLATE_SECTIONS.reduce((sum, section) => {
-    return sum + (targets[section.key] || 0);
-  }, 0);
-
-  console.log('DailyPlateProgress - Total target:', totalTarget);
   console.log('DailyPlateProgress - Targets:', targets);
   console.log('DailyPlateProgress - Completed:', completed);
-
-  // If no targets set, show equal sections
-  const useEqualSections = totalTarget === 0;
 
   // Calculate progress for each section (0 to 1)
   const getSectionProgress = (key: keyof PortionTargets): number => {
@@ -127,20 +118,13 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
     return done >= target && target > 0;
   };
 
-  // Build segments with proportional angles based on targets
+  // Build segments with EQUAL angles (60 degrees each for 6 sections)
+  const segmentAngle = 360 / PLATE_SECTIONS.length; // 60 degrees per section
   let currentAngle = 0;
+  
   const segments = PLATE_SECTIONS.map((section) => {
-    const target = targets[section.key] || 0;
     const progress = getSectionProgress(section.key);
     const isComplete = isSectionComplete(section.key);
-    
-    // Calculate angle for this segment based on its proportion of total targets
-    let segmentAngle: number;
-    if (useEqualSections) {
-      segmentAngle = 360 / PLATE_SECTIONS.length;
-    } else {
-      segmentAngle = (target / totalTarget) * 360;
-    }
     
     const startAngle = currentAngle;
     const endAngle = currentAngle + segmentAngle;
