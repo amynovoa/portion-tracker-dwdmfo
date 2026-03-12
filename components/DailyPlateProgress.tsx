@@ -75,8 +75,17 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
   const outerRadius = plateSize / 2 - 10;
   const innerRadius = 40;
   
-  const totalSections = PLATE_SECTIONS.length;
-  const anglePerSection = 360 / totalSections;
+  // Calculate total target portions across all food groups
+  const totalTarget = PLATE_SECTIONS.reduce((sum, section) => {
+    return sum + (targets[section.key] || 0);
+  }, 0);
+
+  console.log('DailyPlateProgress - Total target:', totalTarget);
+  console.log('DailyPlateProgress - Targets:', targets);
+  console.log('DailyPlateProgress - Completed:', completed);
+
+  // If no targets set, show equal sections
+  const useEqualSections = totalTarget === 0;
 
   // Calculate progress for each section (0 to 1)
   const getSectionProgress = (key: keyof PortionTargets): number => {
@@ -91,6 +100,46 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
     const done = completed[key] || 0;
     return done >= target && target > 0;
   };
+
+  // Build segments with proportional angles based on targets
+  let currentAngle = 0;
+  const segments = PLATE_SECTIONS.map((section) => {
+    const target = targets[section.key] || 0;
+    const progress = getSectionProgress(section.key);
+    const isComplete = isSectionComplete(section.key);
+    
+    // Calculate angle for this segment based on its proportion of total targets
+    let segmentAngle: number;
+    if (useEqualSections) {
+      segmentAngle = 360 / PLATE_SECTIONS.length;
+    } else {
+      segmentAngle = (target / totalTarget) * 360;
+    }
+    
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + segmentAngle;
+    currentAngle = endAngle;
+    
+    // Calculate midpoint angle for icon positioning
+    const midAngle = startAngle + segmentAngle / 2;
+    const iconPos = calculateIconPosition(centerX, centerY, outerRadius, midAngle);
+    
+    // Fill opacity: 20% base, fills to 100% based on progress
+    const fillOpacity = 0.2 + (progress * 0.8);
+    
+    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%, opacity=${fillOpacity.toFixed(2)}`);
+    
+    return {
+      section,
+      startAngle,
+      endAngle,
+      segmentAngle,
+      progress,
+      isComplete,
+      iconPos,
+      fillOpacity,
+    };
+  });
 
   return (
     <View style={styles.container}>
@@ -110,23 +159,21 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             />
             
             {/* Pie slices for each food group */}
-            {PLATE_SECTIONS.map((section, index) => {
-              const progress = getSectionProgress(section.key);
-              
-              const startAngle = index * anglePerSection;
-              const endAngle = startAngle + anglePerSection;
-              
-              const path = createPieSlicePath(centerX, centerY, outerRadius, startAngle, endAngle);
-              
-              // Fill gradually based on progress: 20% base opacity, fills to 100%
-              const opacity = 0.2 + (progress * 0.8);
+            {segments.map((seg) => {
+              const path = createPieSlicePath(
+                centerX,
+                centerY,
+                outerRadius,
+                seg.startAngle,
+                seg.endAngle
+              );
               
               return (
-                <G key={section.key}>
+                <G key={seg.section.key}>
                   <Path
                     d={path}
-                    fill={section.color}
-                    fillOpacity={opacity}
+                    fill={seg.section.color}
+                    fillOpacity={seg.fillOpacity}
                     stroke={colors.border}
                     strokeWidth="0.5"
                   />
@@ -146,26 +193,21 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
           </Svg>
           
           {/* Icons positioned absolutely on top of SVG - only show when section is complete */}
-          {PLATE_SECTIONS.map((section, index) => {
-            const isComplete = isSectionComplete(section.key);
-            if (!isComplete) return null;
-            
-            const startAngle = index * anglePerSection;
-            const midAngle = startAngle + anglePerSection / 2;
-            const iconPos = calculateIconPosition(centerX, centerY, outerRadius, midAngle);
+          {segments.map((seg) => {
+            if (!seg.isComplete) return null;
             
             return (
               <View
-                key={`icon-${section.key}`}
+                key={`icon-${seg.section.key}`}
                 style={[
                   styles.iconContainer,
                   {
-                    left: iconPos.x,
-                    top: iconPos.y,
+                    left: seg.iconPos.x,
+                    top: seg.iconPos.y,
                   },
                 ]}
               >
-                <Text style={styles.icon}>{section.icon}</Text>
+                <Text style={styles.icon}>{seg.section.icon}</Text>
               </View>
             );
           })}
