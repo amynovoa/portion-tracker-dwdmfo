@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Circle, Path, G } from 'react-native-svg';
+import Svg, { Circle, Path, G, Defs, ClipPath } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { PortionTargets } from '@/types';
 
@@ -48,6 +48,31 @@ function createPieSlicePath(
   const y2 = centerY + radius * Math.sin(endAngleRad);
 
   const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+  return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+}
+
+// Helper function to create a partial pie slice based on progress (0 to 1)
+function createProgressSlicePath(
+  centerX: number,
+  centerY: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+  progress: number
+): string {
+  // Calculate the actual end angle based on progress
+  const actualEndAngle = startAngle + (endAngle - startAngle) * progress;
+  
+  const startAngleRad = (startAngle - 90) * (Math.PI / 180);
+  const endAngleRad = (actualEndAngle - 90) * (Math.PI / 180);
+
+  const x1 = centerX + radius * Math.cos(startAngleRad);
+  const y1 = centerY + radius * Math.sin(startAngleRad);
+  const x2 = centerX + radius * Math.cos(endAngleRad);
+  const y2 = centerY + radius * Math.sin(endAngleRad);
+
+  const largeArcFlag = actualEndAngle - startAngle > 180 ? 1 : 0;
 
   return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
 }
@@ -124,10 +149,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
     const midAngle = startAngle + segmentAngle / 2;
     const iconPos = calculateIconPosition(centerX, centerY, outerRadius, midAngle);
     
-    // Fill opacity: 20% base, fills to 100% based on progress
-    const fillOpacity = 0.2 + (progress * 0.8);
-    
-    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%, opacity=${fillOpacity.toFixed(2)}`);
+    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%`);
     
     return {
       section,
@@ -137,7 +159,6 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
       progress,
       isComplete,
       iconPos,
-      fillOpacity,
     };
   });
 
@@ -158,9 +179,10 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
               strokeWidth="3"
             />
             
-            {/* Pie slices for each food group */}
+            {/* Pie slices for each food group - TWO LAYERS */}
             {segments.map((seg) => {
-              const path = createPieSlicePath(
+              // Background layer: light tint (20% opacity) of the food group color
+              const backgroundPath = createPieSlicePath(
                 centerX,
                 centerY,
                 outerRadius,
@@ -168,15 +190,37 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
                 seg.endAngle
               );
               
+              // Progress layer: full color, but only fills based on progress
+              const progressPath = createProgressSlicePath(
+                centerX,
+                centerY,
+                outerRadius,
+                seg.startAngle,
+                seg.endAngle,
+                seg.progress
+              );
+              
               return (
                 <G key={seg.section.key}>
+                  {/* Background layer - light tint */}
                   <Path
-                    d={path}
+                    d={backgroundPath}
                     fill={seg.section.color}
-                    fillOpacity={seg.fillOpacity}
+                    fillOpacity={0.15}
                     stroke={colors.border}
                     strokeWidth="0.5"
                   />
+                  
+                  {/* Progress layer - full color */}
+                  {seg.progress > 0 && (
+                    <Path
+                      d={progressPath}
+                      fill={seg.section.color}
+                      fillOpacity={1.0}
+                      stroke={colors.border}
+                      strokeWidth="0.5"
+                    />
+                  )}
                 </G>
               );
             })}
