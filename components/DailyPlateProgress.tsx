@@ -11,25 +11,25 @@ interface DailyPlateProgressProps {
   targets: PortionTargets;
 }
 
-// Fixed color palette for the plate (muted, calm colors)
+// Brand color palette for the plate (black, red, white, grey variations)
 // These colors are ONLY for the plate segments and the small indicator in the tracking list
 const PLATE_SECTIONS = [
-  { key: 'protein' as keyof PortionTargets, label: 'Protein', color: '#E76F51', icon: '🍗' },
-  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', color: '#4CAF50', icon: '🥦' },
-  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', color: '#F4A261', icon: '🍎' },
-  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', color: '#E9C46A', icon: '🌾' },
-  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', color: '#C8A97E', icon: '🥜' },
-  { key: 'fats' as keyof PortionTargets, label: 'Fats', color: '#9B5DE5', icon: '🥑' },
+  { key: 'protein' as keyof PortionTargets, label: 'Protein', color: '#C94A3D', icon: '🍗' }, // Brand Red
+  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', color: '#1C1C1E', icon: '🥦' }, // Black
+  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', color: '#FF3B30', icon: '🍎' }, // Bright Red
+  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', color: '#3A3A3C', icon: '🌾' }, // Dark Grey
+  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', color: '#8E8E93', icon: '🥜' }, // Medium Grey
+  { key: 'fats' as keyof PortionTargets, label: 'Fats', color: '#52525b', icon: '🥑' }, // Zinc 600 Grey
 ];
 
 // Export the color mapping so FoodGroupRow can use it for the indicator dots
 export const FOOD_GROUP_COLORS: Record<string, string> = {
-  protein: '#E76F51',
-  veggies: '#4CAF50',
-  fruits: '#F4A261',
-  wholeGrains: '#E9C46A',
-  nutsSeeds: '#C8A97E',
-  fats: '#9B5DE5',
+  protein: '#C94A3D', // Brand Red
+  veggies: '#1C1C1E', // Black
+  fruits: '#FF3B30', // Bright Red
+  wholeGrains: '#3A3A3C', // Dark Grey
+  nutsSeeds: '#8E8E93', // Medium Grey
+  fats: '#52525b', // Zinc 600 Grey
 };
 
 // Helper function to create SVG path for a pie slice
