@@ -25,6 +25,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     console.log('═══════════════════════════════════════════════════════');
     
     try {
+      // 🚀 DEVELOPMENT MODE BYPASS: Auto-grant subscription in preview/dev
+      const isDevelopment = __DEV__;
+      
+      if (isDevelopment) {
+        console.log('🚀 DEV MODE: Auto-granting subscription access for preview/testing');
+        setIsSubscribed(true);
+        setIsLoading(false);
+        console.log('✅ DEV MODE: Subscription granted automatically');
+        console.log('═══════════════════════════════════════════════════════');
+        return;
+      }
+      
       // Load subscription status from local storage
       // This works in all environments: development, TestFlight, and production
       const localStatus = await loadSubscriptionStatus();
