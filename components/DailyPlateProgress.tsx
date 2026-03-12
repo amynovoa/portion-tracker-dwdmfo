@@ -11,16 +11,16 @@ interface DailyPlateProgressProps {
   targets: PortionTargets;
 }
 
-// Updated brand color palette with white and green progress fill
-// Background colors: black, red, white, grey variations
+// Updated brand color palette with alternating red, black, white pattern
+// Background colors: red, black, white, red, black, white
 // Progress fill: green (#4CAF50) for all sections
 const PLATE_SECTIONS = [
-  { key: 'protein' as keyof PortionTargets, label: 'Protein', backgroundColor: '#C94A3D', icon: '🍗' }, // Brand Red
+  { key: 'protein' as keyof PortionTargets, label: 'Protein', backgroundColor: '#C94A3D', icon: '🍗' }, // Red
   { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', backgroundColor: '#1C1C1E', icon: '🥦' }, // Black
   { key: 'fruits' as keyof PortionTargets, label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' }, // White
-  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', backgroundColor: '#3A3A3C', icon: '🌾' }, // Dark Grey
-  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#8E8E93', icon: '🥜' }, // Medium Grey
-  { key: 'fats' as keyof PortionTargets, label: 'Fats', backgroundColor: '#52525b', icon: '🥑' }, // Zinc 600 Grey
+  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', backgroundColor: '#C94A3D', icon: '🌾' }, // Red
+  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#1C1C1E', icon: '🥜' }, // Black
+  { key: 'fats' as keyof PortionTargets, label: 'Fats', backgroundColor: '#FFFFFF', icon: '🥑' }, // White
 ];
 
 // Progress fill color - green for all sections
@@ -28,12 +28,12 @@ const PROGRESS_FILL_COLOR = '#4CAF50'; // Green
 
 // Export the color mapping so FoodGroupRow can use it for the indicator dots
 export const FOOD_GROUP_COLORS: Record<string, string> = {
-  protein: '#C94A3D', // Brand Red
+  protein: '#C94A3D', // Red
   veggies: '#1C1C1E', // Black
   fruits: '#FFFFFF', // White
-  wholeGrains: '#3A3A3C', // Dark Grey
-  nutsSeeds: '#8E8E93', // Medium Grey
-  fats: '#52525b', // Zinc 600 Grey
+  wholeGrains: '#C94A3D', // Red
+  nutsSeeds: '#1C1C1E', // Black
+  fats: '#FFFFFF', // White
 };
 
 // Helper function to create SVG path for a pie slice
@@ -138,7 +138,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
     const midAngle = startAngle + segmentAngle / 2;
     const iconPos = calculateIconPosition(centerX, centerY, outerRadius, midAngle);
     
-    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%, iconPos=(${iconPos.x.toFixed(1)}, ${iconPos.y.toFixed(1)})`);
+    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%, color=${section.backgroundColor}`);
     
     return {
       section,
