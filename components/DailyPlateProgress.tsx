@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle, Path, G, Defs, ClipPath } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { PortionTargets } from '@/types';
+import AppLogo from './AppLogo';
 
 interface DailyPlateProgressProps {
   completed: PortionTargets;
@@ -164,7 +165,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Today's Balance</Text>
+      <Text style={styles.title}>Today&apos;s Balance</Text>
       
       <View style={styles.plateWrapper}>
         <View style={styles.plateContainer}>
@@ -254,9 +255,9 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             );
           })}
           
-          {/* Center emoji */}
-          <View style={[styles.centerEmoji, { left: centerX, top: centerY }]}>
-            <Text style={styles.centerEmojiText}>🍽️</Text>
+          {/* Center logo - Portion Track branding */}
+          <View style={[styles.centerLogo, { left: centerX, top: centerY }]}>
+            <AppLogo size={50} />
           </View>
         </View>
       </View>
@@ -301,21 +302,18 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 24,
   },
-  centerEmoji: {
+  centerLogo: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    marginLeft: -30,
-    marginTop: -30,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    marginLeft: -35,
+    marginTop: -35,
+    borderRadius: 35,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: colors.border,
     zIndex: 15,
-  },
-  centerEmojiText: {
-    fontSize: 32,
   },
 });
