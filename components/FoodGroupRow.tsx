@@ -5,6 +5,7 @@ import { colors } from '@/styles/commonStyles';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import { foodGroupInfo } from '@/constants/foodGroupInfo';
 import { FoodGroup } from '@/types';
+import { FOOD_GROUP_COLORS } from './DailyPlateProgress';
 
 interface FoodGroupRowProps {
   foodGroup: FoodGroup;
@@ -31,6 +32,9 @@ export default function FoodGroupRow({
 }: FoodGroupRowProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const info = foodGroupInfo[foodGroup];
+
+  // Get the color indicator for this food group (only for plate food groups)
+  const categoryColor = FOOD_GROUP_COLORS[foodGroup];
 
   const getSlotColor = (index: number, isFilled: boolean) => {
     // Only show color if the slot is filled
@@ -78,6 +82,10 @@ export default function FoodGroupRow({
       <View style={styles.header}>
         <View style={styles.labelContainer}>
           <Text style={styles.icon}>{icon}</Text>
+          {/* Add small color indicator next to label for plate food groups */}
+          {categoryColor && (
+            <View style={[styles.colorIndicator, { backgroundColor: categoryColor }]} />
+          )}
           <Text style={styles.label}>{label}</Text>
         </View>
         <View style={styles.rightContainer}>
@@ -153,6 +161,12 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 24,
+    marginRight: 8,
+  },
+  colorIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: 8,
   },
   label: {

@@ -10,15 +10,26 @@ interface DailyPlateProgressProps {
   targets: PortionTargets;
 }
 
-// Food groups to display on the plate (excluding water and alcohol)
+// Fixed color palette for the plate (muted, calm colors)
+// These colors are ONLY for the plate segments and the small indicator in the tracking list
 const PLATE_SECTIONS = [
-  { key: 'protein' as keyof PortionTargets, label: 'Protein', color: '#E57373', icon: '🍗' },
-  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', color: '#81C784', icon: '🥦' },
-  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', color: '#FFB74D', icon: '🍎' },
-  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', color: '#FFD54F', icon: '🌾' },
-  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', color: '#A1887F', icon: '🥜' },
-  { key: 'fats' as keyof PortionTargets, label: 'Fats', color: '#AED581', icon: '🥑' },
+  { key: 'protein' as keyof PortionTargets, label: 'Protein', color: '#E76F51', icon: '🍗' },
+  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', color: '#4CAF50', icon: '🥦' },
+  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', color: '#F4A261', icon: '🍎' },
+  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', color: '#E9C46A', icon: '🌾' },
+  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', color: '#C8A97E', icon: '🥜' },
+  { key: 'fats' as keyof PortionTargets, label: 'Fats', color: '#9B5DE5', icon: '🥑' },
 ];
+
+// Export the color mapping so FoodGroupRow can use it for the indicator dots
+export const FOOD_GROUP_COLORS: Record<string, string> = {
+  protein: '#E76F51',
+  veggies: '#4CAF50',
+  fruits: '#F4A261',
+  wholeGrains: '#E9C46A',
+  nutsSeeds: '#C8A97E',
+  fats: '#9B5DE5',
+};
 
 // Helper function to create SVG path for a pie slice
 function createPieSlicePath(
@@ -67,7 +78,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
   const totalSections = PLATE_SECTIONS.length;
   const anglePerSection = 360 / totalSections;
 
-  // Calculate progress for each section
+  // Calculate progress for each section (0 to 1)
   const getSectionProgress = (key: keyof PortionTargets): number => {
     const target = targets[key];
     const done = completed[key] || 0;
@@ -101,13 +112,13 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             {/* Pie slices for each food group */}
             {PLATE_SECTIONS.map((section, index) => {
               const progress = getSectionProgress(section.key);
-              const isComplete = isSectionComplete(section.key);
               
               const startAngle = index * anglePerSection;
               const endAngle = startAngle + anglePerSection;
-              const midAngle = startAngle + anglePerSection / 2;
               
               const path = createPieSlicePath(centerX, centerY, outerRadius, startAngle, endAngle);
+              
+              // Fill gradually based on progress: 20% base opacity, fills to 100%
               const opacity = 0.2 + (progress * 0.8);
               
               return (
@@ -134,7 +145,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             />
           </Svg>
           
-          {/* Icons positioned absolutely on top of SVG */}
+          {/* Icons positioned absolutely on top of SVG - only show when section is complete */}
           {PLATE_SECTIONS.map((section, index) => {
             const isComplete = isSectionComplete(section.key);
             if (!isComplete) return null;
