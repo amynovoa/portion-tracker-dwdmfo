@@ -1,5 +1,6 @@
 
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
+import DailyPlateProgress from '@/components/DailyPlateProgress';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
@@ -163,6 +164,15 @@ export default function HomeScreen() {
           {!isToday && <Text style={styles.pastDateLabel}>Past Day</Text>}
         </View>
 
+        {/* Daily Plate Progress - Visual Summary */}
+        <DailyPlateProgress 
+          completed={dailyPortions.portions} 
+          targets={profile.portionTargets} 
+        />
+
+        {/* Divider */}
+        <View style={styles.divider} />
+
         <View style={styles.portionsContainer}>
           {FOOD_GROUPS.map((foodGroupItem, index) => (
             <FoodGroupRow
@@ -216,6 +226,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textSecondary,
     fontStyle: 'italic',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginHorizontal: 16,
+    marginVertical: 20,
   },
   portionsContainer: {
     paddingHorizontal: 16,
