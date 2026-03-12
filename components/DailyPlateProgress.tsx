@@ -153,7 +153,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Today&apos;s Balance</Text>
+      <Text style={styles.title}>Your Plate Today</Text>
       
       <View style={styles.plateWrapper}>
         <View style={styles.plateContainer}>
