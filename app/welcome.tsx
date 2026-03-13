@@ -8,11 +8,55 @@ import { loadProfile } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import AppLogo from '@/components/AppLogo';
+import { isNewUser, hasTrialExpired, recordFirstLaunch } from '@/utils/trialManager';
+
+type WelcomeMode = 'loading' | 'new_user' | 'trial_expired';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { isSubscribed, refreshSubscription } = useSubscription();
+  const [mode, setMode] = useState<WelcomeMode>('loading');
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // Determine which mode to show on mount
+  useEffect(() => {
+    async function determineMode() {
+      console.log('🔵 WELCOME SCREEN: Determining mode...');
+
+      const newUser = await isNewUser();
+      console.log('📅 WELCOME SCREEN: isNewUser =', newUser);
+
+      if (newUser) {
+        console.log('✅ WELCOME SCREEN: New user — showing Get Started mode');
+        setMode('new_user');
+        return;
+      }
+
+      const expired = await hasTrialExpired();
+      console.log('📅 WELCOME SCREEN: hasTrialExpired =', expired);
+
+      if (expired && !isSubscribed) {
+        console.log('⏰ WELCOME SCREEN: Trial expired and not subscribed — showing paywall immediately');
+        setMode('trial_expired');
+        setShowPaywall(true);
+        return;
+      }
+
+      // Trial still active or subscribed — the _layout routing logic handles redirect,
+      // but as a safety net redirect here too
+      console.log('✅ WELCOME SCREEN: Trial active or subscribed — redirecting to app');
+      loadProfile().then((profile) => {
+        const hasCompleteProfile = profile && profile.portionTargets;
+        if (hasCompleteProfile) {
+          router.replace('/(tabs)/(home)');
+        } else {
+          router.replace('/setup-profile');
+        }
+      });
+    }
+
+    determineMode();
+  }, []);
 
   // If user becomes subscribed while on this screen, redirect them
   useEffect(() => {
@@ -24,7 +68,6 @@ export default function WelcomeScreen() {
     if (isSubscribed) {
       console.log('✅ WELCOME SCREEN: User is subscribed, checking profile...');
       
-      // Check if profile exists and redirect accordingly
       loadProfile().then((profile) => {
         const hasCompleteProfile = profile && profile.portionTargets;
         
@@ -39,19 +82,20 @@ export default function WelcomeScreen() {
     }
   }, [isSubscribed, router]);
 
-  const handleStartTrial = () => {
-    console.log('User tapped Start Your Free Trial button');
-    setShowPaywall(true);
+  const handleGetStarted = async () => {
+    console.log('🟢 WELCOME SCREEN: Get Started button tapped — recording first launch');
+    await recordFirstLaunch();
+    router.replace('/setup-profile');
   };
 
   const handlePaywallDismiss = async () => {
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 PAYWALL DISMISS: Paywall dismissed');
+    console.log('🔵 PAYWALL DISMISS: Paywall dismissed (trial expired mode)');
     console.log('═══════════════════════════════════════════════════════');
     
     setShowPaywall(false);
     
-    // Refresh subscription status to ensure we have the latest state
+    // Refresh subscription status — if purchased, the isSubscribed useEffect handles navigation
     await refreshSubscription();
     
     console.log('ℹ️ PAYWALL DISMISS: Subscription status refreshed');
@@ -61,12 +105,11 @@ export default function WelcomeScreen() {
   const titleText = 'Welcome to Portion Track';
   const subtitleText = 'Simple Portions. Balanced Eating.';
   const descriptionText = 'A simple way to eat well and build healthy habits for life.';
-  const buttonText = 'Start Your Free Trial';
+  const buttonText = 'Get Started';
 
-  console.log('🔵 WELCOME SCREEN RENDER:', {
-    isSubscribed,
-    buttonText,
-  });
+  const canDismissPaywall = mode !== 'trial_expired';
+
+  console.log('🔵 WELCOME SCREEN RENDER:', { isSubscribed, mode, showPaywall });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,18 +125,20 @@ export default function WelcomeScreen() {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={[buttonStyles.primary, styles.button]}
-          onPress={handleStartTrial}
-        >
-          <Text style={buttonStyles.primaryText}>{buttonText}</Text>
-        </TouchableOpacity>
+        {mode === 'new_user' && (
+          <TouchableOpacity
+            style={[buttonStyles.primary, styles.button]}
+            onPress={handleGetStarted}
+          >
+            <Text style={buttonStyles.primaryText}>{buttonText}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <PaywallScreen
         visible={showPaywall}
         onDismiss={handlePaywallDismiss}
-        canDismiss={true}
+        canDismiss={canDismissPaywall}
       />
     </SafeAreaView>
   );

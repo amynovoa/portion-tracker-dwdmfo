@@ -5,18 +5,21 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { loadProfile } from '@/utils/storage';
+import { loadProfile, loadSubscriptionStatus } from '@/utils/storage';
 import { View, ActivityIndicator, AppState, AppStateStatus, Platform } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { hasTrialExpired, isWithinTrialPeriod, isNewUser } from '@/utils/trialManager';
 
 SplashScreen.preventAutoHideAsync();
 
+type InitialRoute = 'welcome' | '(tabs)';
+
 function AppContent() {
   const [isReady, setIsReady] = useState(false);
-  const [hasProfile, setHasProfile] = useState(false);
+  const [initialRoute, setInitialRoute] = useState<InitialRoute>('welcome');
 
   useEffect(() => {
     async function prepare() {
@@ -31,10 +34,40 @@ function AppContent() {
         // Check for profile
         console.log('Checking for existing profile...');
         const profile = await loadProfile();
-        console.log('Profile loaded:', profile ? 'Found' : 'Not found');
-        setHasProfile(!!profile);
+        const hasProfile = !!profile;
+        console.log('Profile loaded:', hasProfile ? 'Found' : 'Not found');
 
-        // Mark app as ready
+        if (!hasProfile) {
+          console.log('🔀 ROUTING: No profile → welcome');
+          setInitialRoute('welcome');
+          setIsReady(true);
+          return;
+        }
+
+        // Profile exists — check subscription and trial status
+        const [subscribed, trialExpired, newUser, withinTrial] = await Promise.all([
+          loadSubscriptionStatus(),
+          hasTrialExpired(),
+          isNewUser(),
+          isWithinTrialPeriod(),
+        ]);
+
+        console.log('🔀 ROUTING: hasProfile =', hasProfile, ', subscribed =', subscribed, ', trialExpired =', trialExpired, ', newUser =', newUser, ', withinTrial =', withinTrial);
+
+        if (subscribed || withinTrial) {
+          // Subscribed or still within free trial — go straight to app
+          console.log('🔀 ROUTING: Subscribed or within trial → (tabs)');
+          setInitialRoute('(tabs)');
+        } else if (trialExpired && !subscribed) {
+          // Trial has expired and not subscribed — send back to welcome (auto-shows paywall)
+          console.log('🔀 ROUTING: Trial expired, not subscribed → welcome (paywall will show)');
+          setInitialRoute('welcome');
+        } else {
+          // New user with a profile somehow (edge case) — go to tabs
+          console.log('🔀 ROUTING: Edge case (new user with profile) → (tabs)');
+          setInitialRoute('(tabs)');
+        }
+
         setIsReady(true);
 
         // Do backup in background AFTER the app is ready
@@ -50,7 +83,7 @@ function AppContent() {
         }
       } catch (e) {
         console.error('Error during app initialization:', e);
-        setHasProfile(false);
+        setInitialRoute('welcome');
         setIsReady(true); // Still mark as ready even if there's an error
       }
     }
@@ -99,7 +132,7 @@ function AppContent() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack 
         screenOptions={{ headerShown: false }}
-        initialRouteName={hasProfile ? '(tabs)' : 'welcome'}
+        initialRouteName={initialRoute}
       >
         <Stack.Screen name="welcome" />
         <Stack.Screen name="setup-profile" />

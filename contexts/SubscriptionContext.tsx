@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { loadSubscriptionStatus } from '@/utils/storage';
+import { isWithinTrialPeriod } from '@/utils/trialManager';
 import EventEmitter from 'eventemitter3';
 
 // Create a global event emitter for subscription updates
@@ -9,6 +10,7 @@ export const SUBSCRIPTION_UPDATED_EVENT = 'subscription_updated';
 
 interface SubscriptionContextType {
   isSubscribed: boolean;
+  hasAccess: boolean;
   isLoading: boolean;
   refreshSubscription: () => Promise<void>;
 }
@@ -17,6 +19,7 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshSubscription = useCallback(async () => {
@@ -31,22 +34,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (isDevelopment) {
         console.log('🚀 DEV MODE: Auto-granting subscription access for preview/testing');
         setIsSubscribed(true);
+        setHasAccess(true);
         setIsLoading(false);
-        console.log('✅ DEV MODE: Subscription granted automatically');
+        console.log('✅ DEV MODE: Subscription and hasAccess granted automatically');
         console.log('═══════════════════════════════════════════════════════');
         return;
       }
       
       // Load subscription status from local storage
-      // This works in all environments: development, TestFlight, and production
       const localStatus = await loadSubscriptionStatus();
-      
+      const subscribed = localStatus || false;
+
+      // Check trial period
+      const withinTrial = await isWithinTrialPeriod();
+
       console.log('📊 SUBSCRIPTION CONTEXT RESULT:');
       console.log('  - Status from AsyncStorage:', localStatus);
-      console.log('  - Previous isSubscribed state:', isSubscribed);
-      console.log('  - Will update to:', localStatus || false);
+      console.log('  - isSubscribed:', subscribed);
+      console.log('  - withinTrial:', withinTrial);
+      console.log('  - hasAccess:', subscribed || withinTrial);
       
-      setIsSubscribed(localStatus || false);
+      setIsSubscribed(subscribed);
+      setHasAccess(subscribed || withinTrial);
       
       console.log('✅ SUBSCRIPTION CONTEXT: State updated');
       console.log('═══════════════════════════════════════════════════════');
@@ -55,6 +64,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.error('❌ SUBSCRIPTION CONTEXT ERROR:', error);
       console.error('═══════════════════════════════════════════════════════');
       setIsSubscribed(false);
+      setHasAccess(false);
     } finally {
       setIsLoading(false);
     }
@@ -69,16 +79,18 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('🔔 SUBSCRIPTION CONTEXT: Setting up event listener for subscription updates');
     
-    const listener = (subscribed: boolean) => {
+    const listener = async (subscribed: boolean) => {
       console.log('═══════════════════════════════════════════════════════');
       console.log('🔔 SUBSCRIPTION EVENT: Received subscription update event');
       console.log('📊 SUBSCRIPTION EVENT: New status:', subscribed);
       console.log('═══════════════════════════════════════════════════════');
       
-      // Immediately update state without polling AsyncStorage
+      // Recalculate hasAccess with latest trial status
+      const withinTrial = await isWithinTrialPeriod();
       setIsSubscribed(subscribed);
+      setHasAccess(subscribed || withinTrial);
       
-      console.log('✅ SUBSCRIPTION EVENT: State updated immediately');
+      console.log('✅ SUBSCRIPTION EVENT: State updated, hasAccess =', subscribed || withinTrial);
     };
 
     subscriptionEmitter.on(SUBSCRIPTION_UPDATED_EVENT, listener);
@@ -89,11 +101,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  console.log('📱 SubscriptionContext: isSubscribed =', isSubscribed, ', isLoading =', isLoading);
+  console.log('📱 SubscriptionContext: isSubscribed =', isSubscribed, ', hasAccess =', hasAccess, ', isLoading =', isLoading);
 
   return (
     <SubscriptionContext.Provider value={{ 
-      isSubscribed, 
+      isSubscribed,
+      hasAccess,
       isLoading,
       refreshSubscription
     }}>
