@@ -124,6 +124,8 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
     return done >= target && target > 0;
   };
 
+  const isPlateComplete = PLATE_SECTIONS.every((section) => isSectionComplete(section.key));
+
   // Build segments with EQUAL angles (60 degrees each for 6 sections)
   const segmentAngle = 360 / PLATE_SECTIONS.length; // 60 degrees per section
   let currentAngle = 0;
@@ -251,6 +253,10 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
           </View>
         </View>
       </View>
+
+      {isPlateComplete && (
+        <Text style={styles.congratsMessage}>Congratulations on a balanced day!</Text>
+      )}
     </View>
   );
 }
@@ -291,6 +297,13 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 24,
+  },
+  congratsMessage: {
+    marginTop: 16,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4CAF50',
   },
   centerLogo: {
     position: 'absolute',
