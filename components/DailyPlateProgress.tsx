@@ -125,6 +125,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
   };
 
   const isPlateComplete = PLATE_SECTIONS.every((section) => isSectionComplete(section.key));
+  const isPlateEmpty = PLATE_SECTIONS.every((section) => (completed[section.key] || 0) === 0);
 
   // Build segments with EQUAL angles (60 degrees each for 6 sections)
   const segmentAngle = 360 / PLATE_SECTIONS.length; // 60 degrees per section
@@ -158,6 +159,10 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your Plate Today</Text>
+
+      {isPlateEmpty && (
+        <Text style={styles.hintText}>Tap the portions below to build your plate</Text>
+      )}
       
       <View style={styles.plateWrapper}>
         <View style={styles.plateContainer}>
@@ -297,6 +302,12 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 24,
+  },
+  hintText: {
+    fontSize: 13,
+    color: '#555555',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   congratsMessage: {
     marginTop: 16,
