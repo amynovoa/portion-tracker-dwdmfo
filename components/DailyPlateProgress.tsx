@@ -260,7 +260,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
       </View>
 
       {isPlateComplete && (
-        <Text style={styles.congratsMessage}>Congratulations! You've built a balanced plate.</Text>
+        <Text style={styles.congratsMessage}>Congratulations! You've built a balanced plate!</Text>
       )}
     </View>
   );
