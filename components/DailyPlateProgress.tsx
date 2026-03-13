@@ -255,7 +255,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
       </View>
 
       {isPlateComplete && (
-        <Text style={styles.congratsMessage}>Congratulations on a balanced day!</Text>
+        <Text style={styles.congratsMessage}>Congratulations! You've built a balanced plate.</Text>
       )}
     </View>
   );
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '700',
-    color: '#4CAF50',
+    color: '#000000',
   },
   centerLogo: {
     position: 'absolute',
