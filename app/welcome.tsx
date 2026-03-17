@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { loadProfile } from '@/utils/storage';
+import { loadProfile, loadSubscriptionStatus } from '@/utils/storage';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import AppLogo from '@/components/AppLogo';
@@ -90,16 +90,27 @@ export default function WelcomeScreen() {
 
   const handlePaywallDismiss = async () => {
     console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 PAYWALL DISMISS: Paywall dismissed (trial expired mode)');
+    console.log('🔵 PAYWALL DISMISS: Paywall dismissed, mode =', mode);
     console.log('═══════════════════════════════════════════════════════');
-    
+
     setShowPaywall(false);
-    
+
     // Refresh subscription status — if purchased, the isSubscribed useEffect handles navigation
     await refreshSubscription();
-    
-    console.log('ℹ️ PAYWALL DISMISS: Subscription status refreshed');
-    console.log('ℹ️ PAYWALL DISMISS: If purchase completed, useEffect will handle navigation');
+
+    // Read fresh status directly from storage — do NOT use the `isSubscribed` closure value
+    // here because React state hasn't re-rendered yet after refreshSubscription().
+    const freshSubscribed = await loadSubscriptionStatus();
+    console.log('ℹ️ PAYWALL DISMISS: Subscription status refreshed, freshSubscribed =', freshSubscribed);
+
+    // For trial_expired users: if they dismissed without subscribing, re-show the paywall
+    // immediately — they must not be able to escape it
+    if (mode === 'trial_expired' && !freshSubscribed) {
+      console.log('⚠️ PAYWALL DISMISS: Trial expired and not subscribed — re-showing paywall');
+      setShowPaywall(true);
+    } else {
+      console.log('ℹ️ PAYWALL DISMISS: Purchase confirmed or non-expired mode — navigation handled by useEffect');
+    }
   };
 
   const titleText = 'Welcome to Portion Track';

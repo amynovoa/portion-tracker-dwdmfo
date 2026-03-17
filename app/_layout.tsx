@@ -62,10 +62,14 @@ function AppContent() {
           // Trial has expired and not subscribed — send back to welcome (auto-shows paywall)
           console.log('🔀 ROUTING: Trial expired, not subscribed → welcome (paywall will show)');
           setInitialRoute('welcome');
+        } else if (newUser) {
+          // No trial timestamp recorded yet — treat as new user
+          console.log('🔀 ROUTING: New user (no timestamp) → welcome');
+          setInitialRoute('welcome');
         } else {
-          // New user with a profile somehow (edge case) — go to tabs
-          console.log('🔀 ROUTING: Edge case (new user with profile) → (tabs)');
-          setInitialRoute('(tabs)');
+          // Safe default: no timestamp, has profile, not subscribed — do NOT grant access
+          console.log('🔀 ROUTING: Unknown state (no timestamp, not subscribed) → welcome (safe default)');
+          setInitialRoute('welcome');
         }
 
         setIsReady(true);
