@@ -35,7 +35,8 @@ export default function WelcomeScreen() {
       const expired = await hasTrialExpired();
       console.log('📅 WELCOME SCREEN: hasTrialExpired =', expired);
 
-      if (expired && !isSubscribed) {
+      const currentlySubscribed = await loadSubscriptionStatus();
+      if (expired && !currentlySubscribed) {
         console.log('⏰ WELCOME SCREEN: Trial expired and not subscribed — showing paywall immediately');
         setMode('trial_expired');
         setShowPaywall(true);
