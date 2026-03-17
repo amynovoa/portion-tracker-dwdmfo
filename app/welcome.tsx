@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, AppState, AppStateStatus } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
@@ -65,13 +65,13 @@ export default function WelcomeScreen() {
     console.log('🔵 WELCOME SCREEN: Subscription status changed');
     console.log('📊 WELCOME SCREEN: isSubscribed from context:', isSubscribed);
     console.log('═══════════════════════════════════════════════════════');
-    
+
     if (isSubscribed) {
       console.log('✅ WELCOME SCREEN: User is subscribed, checking profile...');
-      
+
       loadProfile().then((profile) => {
         const hasCompleteProfile = profile && profile.portionTargets;
-        
+
         if (hasCompleteProfile) {
           console.log('✅ WELCOME SCREEN: Profile exists -> Redirecting to main app');
           router.replace('/(tabs)/(home)');
@@ -83,36 +83,56 @@ export default function WelcomeScreen() {
     }
   }, [isSubscribed, router]);
 
+  // When in trial_expired mode, re-enforce the paywall every time the app foregrounds
+  useEffect(() => {
+    if (mode !== 'trial_expired') return;
+
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        console.log('🔒 WELCOME SCREEN: App foregrounded in trial_expired mode — re-checking subscription');
+        const freshSubscribed = await loadSubscriptionStatus();
+        if (!freshSubscribed) {
+          console.log('🔒 WELCOME SCREEN: Still not subscribed — ensuring paywall is visible');
+          setShowPaywall(true);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
+  }, [mode]);
+
   const handleGetStarted = async () => {
     console.log('🟢 WELCOME SCREEN: Get Started button tapped — recording first launch');
     await recordFirstLaunch();
     router.replace('/setup-profile');
   };
 
-  const handlePaywallDismiss = async () => {
+  const handlePaywallDismiss = useCallback(async () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 PAYWALL DISMISS: Paywall dismissed, mode =', mode);
     console.log('═══════════════════════════════════════════════════════');
 
+    // Read fresh status directly from storage BEFORE hiding the paywall
+    // so we never flash the underlying screen to an expired-trial user
+    const freshSubscribed = await loadSubscriptionStatus();
+    console.log('ℹ️ PAYWALL DISMISS: freshSubscribed =', freshSubscribed);
+
+    if (mode === 'trial_expired' && !freshSubscribed) {
+      // Do NOT hide the paywall — re-show it immediately so there is no escape
+      console.log('⚠️ PAYWALL DISMISS: Trial expired and not subscribed — keeping paywall visible');
+      setShowPaywall(true);
+      return;
+    }
+
     setShowPaywall(false);
 
-    // Refresh subscription status — if purchased, the isSubscribed useEffect handles navigation
+    // Refresh context so the isSubscribed effect can fire and navigate
     await refreshSubscription();
-
-    // Read fresh status directly from storage — do NOT use the `isSubscribed` closure value
-    // here because React state hasn't re-rendered yet after refreshSubscription().
-    const freshSubscribed = await loadSubscriptionStatus();
-    console.log('ℹ️ PAYWALL DISMISS: Subscription status refreshed, freshSubscribed =', freshSubscribed);
-
-    // For trial_expired users: if they dismissed without subscribing, re-show the paywall
-    // immediately — they must not be able to escape it
-    if (mode === 'trial_expired' && !freshSubscribed) {
-      console.log('⚠️ PAYWALL DISMISS: Trial expired and not subscribed — re-showing paywall');
-      setShowPaywall(true);
-    } else {
-      console.log('ℹ️ PAYWALL DISMISS: Purchase confirmed or non-expired mode — navigation handled by useEffect');
-    }
-  };
+    console.log('ℹ️ PAYWALL DISMISS: Purchase confirmed — navigation handled by isSubscribed effect');
+  }, [mode, refreshSubscription]);
 
   const titleText = 'Welcome to Portion Track';
   const subtitleText = 'Simple Portions. Balanced Eating.';

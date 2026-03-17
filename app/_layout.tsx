@@ -1,8 +1,8 @@
 
 import 'react-native-reanimated';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { loadProfile, loadSubscriptionStatus } from '@/utils/storage';
@@ -20,6 +20,9 @@ type InitialRoute = 'welcome' | '(tabs)';
 function AppContent() {
   const [isReady, setIsReady] = useState(false);
   const [initialRoute, setInitialRoute] = useState<InitialRoute>('welcome');
+  const router = useRouter();
+  const pathname = usePathname();
+  const isReadyRef = useRef(false);
 
   useEffect(() => {
     async function prepare() {
@@ -72,6 +75,7 @@ function AppContent() {
           setInitialRoute('welcome');
         }
 
+        isReadyRef.current = true;
         setIsReady(true);
 
         // Do backup in background AFTER the app is ready
@@ -88,6 +92,7 @@ function AppContent() {
       } catch (e) {
         console.error('Error during app initialization:', e);
         setInitialRoute('welcome');
+        isReadyRef.current = true;
         setIsReady(true); // Still mark as ready even if there's an error
       }
     }
@@ -95,10 +100,11 @@ function AppContent() {
     prepare();
   }, []);
 
-  // Create backup when app comes to foreground (in background)
+  // On every foreground event, re-check trial/subscription and redirect if access lost
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
+        // Always run backup
         console.log('App came to foreground, creating backup in background...');
         setTimeout(async () => {
           try {
@@ -107,6 +113,27 @@ function AppContent() {
             console.error('Error creating automatic backup:', error);
           }
         }, 2000);
+
+        // Only enforce access gate once the app is fully initialised
+        if (!isReadyRef.current) return;
+
+        console.log('🔒 LAYOUT: App foregrounded — re-checking trial/subscription access');
+        const [subscribed, withinTrial] = await Promise.all([
+          loadSubscriptionStatus(),
+          isWithinTrialPeriod(),
+        ]);
+        const currentHasAccess = subscribed || withinTrial;
+        console.log('🔒 LAYOUT: foreground access check — subscribed:', subscribed, 'withinTrial:', withinTrial, 'hasAccess:', currentHasAccess);
+
+        if (!currentHasAccess) {
+          // Check we are not already on a safe screen (welcome handles the paywall)
+          const safeScreens = ['/welcome', '/setup-profile', '/setup-targets'];
+          const onSafeScreen = safeScreens.some((s) => pathname === s || pathname.startsWith(s));
+          if (!onSafeScreen) {
+            console.log('🔒 LAYOUT: Trial expired / not subscribed — redirecting to /welcome');
+            router.replace('/welcome');
+          }
+        }
       }
     };
 
@@ -115,7 +142,7 @@ function AppContent() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [pathname, router]);
 
   useEffect(() => {
     if (isReady) {

@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { loadSubscriptionStatus } from '@/utils/storage';
 import { isWithinTrialPeriod } from '@/utils/trialManager';
 import EventEmitter from 'eventemitter3';
@@ -73,6 +74,21 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // Initial load
   useEffect(() => {
     refreshSubscription();
+  }, [refreshSubscription]);
+
+  // Re-check access every time the app comes to the foreground
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        console.log('📱 SUBSCRIPTION CONTEXT: App foregrounded — re-checking access');
+        refreshSubscription();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
   }, [refreshSubscription]);
 
   // Listen for subscription update events from the purchase listener
