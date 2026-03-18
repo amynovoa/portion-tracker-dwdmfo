@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,11 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
+import PaywallScreen from '@/components/PaywallScreen';
+import { loadProfile } from '@/utils/storage';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 const { width } = Dimensions.get('window');
 
@@ -41,8 +44,13 @@ const DARK = {
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const scheme = useColorScheme();
   const C = scheme === 'dark' ? DARK : LIGHT;
+  const { hasAccess, isLoading: subscriptionLoading, refreshSubscription } = useSubscription();
+
+  const [paywallVisible, setPaywallVisible] = useState(false);
+  const [profileChecked, setProfileChecked] = useState(false);
 
   // Entrance animations
   const logoOpacity = useRef(new Animated.Value(0)).current;
@@ -78,6 +86,32 @@ export default function WelcomeScreen() {
     ]).start();
   }, []);
 
+  // Check if returning user with a profile but no subscription → show paywall immediately
+  useEffect(() => {
+    if (subscriptionLoading) return;
+
+    async function checkReturningUser() {
+      console.log('[WelcomeScreen] Checking returning user state...');
+      const profile = await loadProfile();
+      const hasProfile = !!(profile && profile.portionTargets);
+      console.log('[WelcomeScreen] hasProfile:', hasProfile, 'hasAccess:', hasAccess);
+
+      setProfileChecked(true);
+
+      if (hasProfile && !hasAccess) {
+        // Returning user without subscription — show paywall immediately
+        console.log('[WelcomeScreen] Returning user without subscription — showing paywall');
+        setPaywallVisible(true);
+      } else if (params.showPaywall === 'true' && !hasAccess) {
+        // Just finished setup — show paywall
+        console.log('[WelcomeScreen] Post-setup flow — showing paywall');
+        setPaywallVisible(true);
+      }
+    }
+
+    checkReturningUser();
+  }, [subscriptionLoading, hasAccess, params.showPaywall]);
+
   const handlePressIn = () => {
     Animated.spring(buttonScale, { toValue: 0.97, speed: 50, bounciness: 4, useNativeDriver: true }).start();
   };
@@ -90,6 +124,24 @@ export default function WelcomeScreen() {
     console.log('[WelcomeScreen] "Get Started" button pressed — navigating to /setup-profile');
     router.replace('/setup-profile');
   };
+
+  // Called when paywall is dismissed without subscribing — keep paywall visible (re-show it)
+  const handlePaywallDismiss = useCallback(() => {
+    console.log('[WelcomeScreen] Paywall dismissed without subscribing — re-showing paywall');
+    // Close and immediately re-open so the modal re-mounts cleanly
+    setPaywallVisible(false);
+    setTimeout(() => {
+      setPaywallVisible(true);
+    }, 300);
+  }, []);
+
+  // Called after a successful purchase — navigate into the app
+  const handleSubscribeSuccess = useCallback(async () => {
+    console.log('[WelcomeScreen] Subscription confirmed — refreshing context and navigating to /(tabs)');
+    await refreshSubscription();
+    setPaywallVisible(false);
+    router.replace('/(tabs)');
+  }, [refreshSubscription, router]);
 
   const appName = 'Welcome to Portion Track';
   const tagline = 'Simple Portions. Balanced Eating.';
@@ -164,6 +216,14 @@ export default function WelcomeScreen() {
         </Animated.View>
 
       </View>
+
+      {/* Non-dismissable paywall — dismissing returns to welcome which re-shows it */}
+      <PaywallScreen
+        visible={paywallVisible}
+        canDismiss={true}
+        onDismiss={handlePaywallDismiss}
+        onSubscribeSuccess={handleSubscribeSuccess}
+      />
     </SafeAreaView>
   );
 }

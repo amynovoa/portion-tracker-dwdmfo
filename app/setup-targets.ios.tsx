@@ -172,7 +172,9 @@ export default function SetupTargetsScreen() {
       // Record that targets were saved for review metrics
       await recordTargetsSaved();
       
-      router.replace('/(tabs)/(home)');
+      // Navigate to welcome with showPaywall flag — paywall is the next step after setup
+      console.log('[SetupTargets] Profile saved — navigating to /welcome to show paywall');
+      router.replace({ pathname: '/welcome', params: { showPaywall: 'true' } });
     } catch (error) {
       console.error('Error saving profile:', error);
       Alert.alert('Error', 'Failed to save profile. Please try again.');

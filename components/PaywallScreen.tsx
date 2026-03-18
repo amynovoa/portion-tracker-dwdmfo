@@ -31,11 +31,12 @@ interface PaywallScreenProps {
   visible: boolean;
   onDismiss?: () => void;
   canDismiss?: boolean;
+  onSubscribeSuccess?: () => void;
 }
 
 type SubscriptionPlan = 'monthly' | 'annual';
 
-export default function PaywallScreen({ visible, onDismiss, canDismiss = true }: PaywallScreenProps) {
+export default function PaywallScreen({ visible, onDismiss, canDismiss = true, onSubscribeSuccess }: PaywallScreenProps) {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
   const [loading, setLoading] = useState(false);
@@ -151,22 +152,28 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true }:
     console.log('═══════════════════════════════════════════════════════');
     console.log('🎉 PURCHASE SUCCESS HANDLER: Starting post-purchase navigation');
     console.log('═══════════════════════════════════════════════════════');
-    
-    // Check if profile exists
+
+    if (onSubscribeSuccess) {
+      // Caller (welcome screen) handles navigation
+      console.log('✅ PURCHASE SUCCESS: Delegating navigation to onSubscribeSuccess callback');
+      console.log('═══════════════════════════════════════════════════════');
+      onSubscribeSuccess();
+      return;
+    }
+
+    // Fallback: check profile and navigate directly
     const profile = await loadProfile();
     const hasProfile = profile && profile.portionTargets;
-    
+
     console.log('📊 PURCHASE SUCCESS: Profile check');
     console.log('  - Profile exists:', !!profile);
-    console.log('  - Has portion targets:', hasProfile);
-    
+    console.log('  - Has portion targets:', !!hasProfile);
+
     if (hasProfile) {
-      // Profile exists, go directly to main app (Profile tab)
-      console.log('✅ PURCHASE SUCCESS: Profile exists -> Navigating to Profile tab');
+      console.log('✅ PURCHASE SUCCESS: Profile exists -> Navigating to (tabs)');
       console.log('═══════════════════════════════════════════════════════');
-      router.replace('/(tabs)/profile');
+      router.replace('/(tabs)');
     } else {
-      // No profile, go to setup
       console.log('✅ PURCHASE SUCCESS: No profile -> Navigating to setup-profile');
       console.log('═══════════════════════════════════════════════════════');
       router.replace('/setup-profile');
