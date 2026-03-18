@@ -51,7 +51,6 @@ export default function WelcomeScreen() {
   const titleY = useRef(new Animated.Value(16)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
   const taglineY = useRef(new Animated.Value(12)).current;
-  const pillsOpacity = useRef(new Animated.Value(0)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const buttonY = useRef(new Animated.Value(20)).current;
 
@@ -72,7 +71,6 @@ export default function WelcomeScreen() {
         Animated.timing(taglineOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
         Animated.timing(taglineY, { toValue: 0, duration: 320, useNativeDriver: true }),
       ]),
-      Animated.timing(pillsOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
       Animated.parallel([
         Animated.timing(buttonOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
         Animated.timing(buttonY, { toValue: 0, duration: 300, useNativeDriver: true }),
@@ -93,10 +91,9 @@ export default function WelcomeScreen() {
     router.replace('/setup-profile');
   };
 
-  const appName = 'Portion Tracker';
-  const tagline = 'Build balanced plates, every day';
-
-  const pillLabels = ['Vegetables', 'Proteins', 'Grains', 'Fruits'];
+  const appName = 'Welcome to Portion Track';
+  const tagline = 'Simple Portions. Balanced Eating.';
+  const subtitle = 'A simple way to eat well and build healthy habits for life.';
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
@@ -125,36 +122,20 @@ export default function WelcomeScreen() {
           <Animated.Text
             style={[
               styles.tagline,
-              { color: C.textSecondary, opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
+              { color: C.primary, opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
             ]}
           >
             {tagline}
           </Animated.Text>
 
-          {/* Food group pills */}
-          <Animated.View style={[styles.pillsRow, { opacity: pillsOpacity }]}>
-            {pillLabels.map((label, i) => (
-              <View
-                key={label}
-                style={[
-                  styles.pill,
-                  {
-                    backgroundColor: i === 0 ? C.primaryMuted : C.surface,
-                    borderColor: i === 0 ? C.primary : C.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.pillText,
-                    { color: i === 0 ? C.primary : C.textSecondary },
-                  ]}
-                >
-                  {label}
-                </Text>
-              </View>
-            ))}
-          </Animated.View>
+          <Animated.Text
+            style={[
+              styles.subtitle,
+              { color: C.textSecondary, opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
+            ]}
+          >
+            {subtitle}
+          </Animated.Text>
         </View>
 
         {/* Bottom section */}
@@ -226,27 +207,17 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 17,
-    fontWeight: '400',
+    fontWeight: '600',
     textAlign: 'center',
     lineHeight: 24,
     maxWidth: width * 0.7,
   },
-  pillsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 8,
-  },
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  pillText: {
-    fontSize: 13,
-    fontWeight: '500',
+  subtitle: {
+    fontSize: 15,
+    fontWeight: '400',
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: width * 0.75,
   },
   bottom: {
     paddingBottom: 16,
