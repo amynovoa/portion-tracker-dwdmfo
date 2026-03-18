@@ -2,7 +2,6 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { loadSubscriptionStatus } from '@/utils/storage';
-import { isWithinTrialPeriod } from '@/utils/trialManager';
 import EventEmitter from 'eventemitter3';
 
 // Create a global event emitter for subscription updates
@@ -20,44 +19,23 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshSubscription = useCallback(async () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 SUBSCRIPTION CONTEXT: Refreshing subscription status');
     console.log('═══════════════════════════════════════════════════════');
-    
+
     try {
-      // 🚀 DEVELOPMENT MODE BYPASS: Auto-grant subscription in preview/dev
-      const isDevelopment = __DEV__;
-      
-      if (isDevelopment) {
-        console.log('🚀 DEV MODE: Auto-granting subscription access for preview/testing');
-        setIsSubscribed(true);
-        setHasAccess(true);
-        setIsLoading(false);
-        console.log('✅ DEV MODE: Subscription and hasAccess granted automatically');
-        console.log('═══════════════════════════════════════════════════════');
-        return;
-      }
-      
-      // Load subscription status from local storage
       const localStatus = await loadSubscriptionStatus();
       const subscribed = localStatus || false;
-
-      // Check trial period
-      const withinTrial = await isWithinTrialPeriod();
 
       console.log('📊 SUBSCRIPTION CONTEXT RESULT:');
       console.log('  - Status from AsyncStorage:', localStatus);
       console.log('  - isSubscribed:', subscribed);
-      console.log('  - withinTrial:', withinTrial);
-      console.log('  - hasAccess:', subscribed || withinTrial);
-      
+
       setIsSubscribed(subscribed);
-      setHasAccess(subscribed || withinTrial);
-      
+
       console.log('✅ SUBSCRIPTION CONTEXT: State updated');
       console.log('═══════════════════════════════════════════════════════');
     } catch (error) {
@@ -65,7 +43,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.error('❌ SUBSCRIPTION CONTEXT ERROR:', error);
       console.error('═══════════════════════════════════════════════════════');
       setIsSubscribed(false);
-      setHasAccess(false);
     } finally {
       setIsLoading(false);
     }
@@ -76,11 +53,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     refreshSubscription();
   }, [refreshSubscription]);
 
-  // Re-check access every time the app comes to the foreground
+  // Re-check subscription every time the app comes to the foreground
+  // This ensures Apple's subscription status (including Apple free trial) is always fresh
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        console.log('📱 SUBSCRIPTION CONTEXT: App foregrounded — re-checking access');
+        console.log('📱 SUBSCRIPTION CONTEXT: App foregrounded — re-checking subscription');
         refreshSubscription();
       }
     };
@@ -94,19 +72,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // Listen for subscription update events from the purchase listener
   useEffect(() => {
     console.log('🔔 SUBSCRIPTION CONTEXT: Setting up event listener for subscription updates');
-    
-    const listener = async (subscribed: boolean) => {
+
+    const listener = (subscribed: boolean) => {
       console.log('═══════════════════════════════════════════════════════');
       console.log('🔔 SUBSCRIPTION EVENT: Received subscription update event');
       console.log('📊 SUBSCRIPTION EVENT: New status:', subscribed);
       console.log('═══════════════════════════════════════════════════════');
-      
-      // Recalculate hasAccess with latest trial status
-      const withinTrial = await isWithinTrialPeriod();
+
       setIsSubscribed(subscribed);
-      setHasAccess(subscribed || withinTrial);
-      
-      console.log('✅ SUBSCRIPTION EVENT: State updated, hasAccess =', subscribed || withinTrial);
+
+      console.log('✅ SUBSCRIPTION EVENT: State updated, isSubscribed =', subscribed);
     };
 
     subscriptionEmitter.on(SUBSCRIPTION_UPDATED_EVENT, listener);
@@ -117,10 +92,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // hasAccess is purely derived from isSubscribed — RevenueCat reports Apple free trials as active
+  const hasAccess = isSubscribed;
+
   console.log('📱 SubscriptionContext: isSubscribed =', isSubscribed, ', hasAccess =', hasAccess, ', isLoading =', isLoading);
 
   return (
-    <SubscriptionContext.Provider value={{ 
+    <SubscriptionContext.Provider value={{
       isSubscribed,
       hasAccess,
       isLoading,

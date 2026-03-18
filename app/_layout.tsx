@@ -11,7 +11,6 @@ import { colors } from '@/styles/commonStyles';
 import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
-import { hasTrialExpired, isWithinTrialPeriod, isNewUser } from '@/utils/trialManager';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,11 +28,11 @@ function AppContent() {
       try {
         console.log('🚀 App starting up...');
         console.log('📱 Platform:', Platform.OS);
-        
+
         // Initialize notifications early (creates channel on Android)
         console.log('Initializing notifications...');
         await initializeNotifications();
-        
+
         // Check for profile
         console.log('Checking for existing profile...');
         const profile = await loadProfile();
@@ -47,31 +46,17 @@ function AppContent() {
           return;
         }
 
-        // Profile exists — check subscription and trial status
-        const [subscribed, trialExpired, newUser, withinTrial] = await Promise.all([
-          loadSubscriptionStatus(),
-          hasTrialExpired(),
-          isNewUser(),
-          isWithinTrialPeriod(),
-        ]);
+        // Profile exists — check subscription status only
+        const subscribed = await loadSubscriptionStatus();
+        console.log('🔀 ROUTING: hasProfile =', hasProfile, ', subscribed =', subscribed);
 
-        console.log('🔀 ROUTING: hasProfile =', hasProfile, ', subscribed =', subscribed, ', trialExpired =', trialExpired, ', newUser =', newUser, ', withinTrial =', withinTrial);
-
-        if (subscribed || withinTrial) {
-          // Subscribed or still within free trial — go straight to app
-          console.log('🔀 ROUTING: Subscribed or within trial → (tabs)');
+        if (subscribed) {
+          // Subscribed (RevenueCat reports Apple free trial as active) — go straight to app
+          console.log('🔀 ROUTING: Subscribed → (tabs)');
           setInitialRoute('(tabs)');
-        } else if (trialExpired && !subscribed) {
-          // Trial has expired and not subscribed — send back to welcome (auto-shows paywall)
-          console.log('🔀 ROUTING: Trial expired, not subscribed → welcome (paywall will show)');
-          setInitialRoute('welcome');
-        } else if (newUser) {
-          // No trial timestamp recorded yet — treat as new user
-          console.log('🔀 ROUTING: New user (no timestamp) → welcome');
-          setInitialRoute('welcome');
         } else {
-          // Safe default: no timestamp, has profile, not subscribed — do NOT grant access
-          console.log('🔀 ROUTING: Unknown state (no timestamp, not subscribed) → welcome (safe default)');
+          // Not subscribed — send to welcome to show paywall
+          console.log('🔀 ROUTING: Not subscribed → welcome (paywall will show)');
           setInitialRoute('welcome');
         }
 
@@ -93,14 +78,14 @@ function AppContent() {
         console.error('Error during app initialization:', e);
         setInitialRoute('welcome');
         isReadyRef.current = true;
-        setIsReady(true); // Still mark as ready even if there's an error
+        setIsReady(true);
       }
     }
 
     prepare();
   }, []);
 
-  // On every foreground event, re-check trial/subscription and redirect if access lost
+  // On every foreground event, re-check subscription and redirect if access lost
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
@@ -117,20 +102,16 @@ function AppContent() {
         // Only enforce access gate once the app is fully initialised
         if (!isReadyRef.current) return;
 
-        console.log('🔒 LAYOUT: App foregrounded — re-checking trial/subscription access');
-        const [subscribed, withinTrial] = await Promise.all([
-          loadSubscriptionStatus(),
-          isWithinTrialPeriod(),
-        ]);
-        const currentHasAccess = subscribed || withinTrial;
-        console.log('🔒 LAYOUT: foreground access check — subscribed:', subscribed, 'withinTrial:', withinTrial, 'hasAccess:', currentHasAccess);
+        console.log('🔒 LAYOUT: App foregrounded — re-checking subscription access');
+        const subscribed = await loadSubscriptionStatus();
+        console.log('🔒 LAYOUT: foreground access check — subscribed:', subscribed);
 
-        if (!currentHasAccess) {
+        if (!subscribed) {
           // Check we are not already on a safe screen (welcome handles the paywall)
           const safeScreens = ['/welcome', '/setup-profile', '/setup-targets'];
           const onSafeScreen = safeScreens.some((s) => pathname === s || pathname.startsWith(s));
           if (!onSafeScreen) {
-            console.log('🔒 LAYOUT: Trial expired / not subscribed — redirecting to /welcome');
+            console.log('🔒 LAYOUT: Not subscribed — redirecting to /welcome');
             router.replace('/welcome');
           }
         }
@@ -161,7 +142,7 @@ function AppContent() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack 
+      <Stack
         screenOptions={{ headerShown: false }}
         initialRouteName={initialRoute}
       >
