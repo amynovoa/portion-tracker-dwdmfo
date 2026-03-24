@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Animated,
   useColorScheme,
@@ -13,6 +12,7 @@ import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { markSubscribed } from '@/utils/userStateManager';
 import { loadProfile } from '@/utils/storage';
 
 const { width } = Dimensions.get('window');
@@ -79,26 +79,34 @@ export default function WelcomeScreen() {
     });
   }, []);
 
-  // Paywall dismissed without subscribing — re-show immediately (inescapable)
+  // Paywall dismissed without subscribing — re-show after 300ms (inescapable)
   const handlePaywallDismiss = useCallback(() => {
-    console.log('[WelcomeScreen] Paywall dismissed without subscribing — re-showing paywall');
+    console.log('[WelcomeScreen] Paywall dismissed without subscribing — re-showing paywall in 300ms');
     setPaywallVisible(false);
     setTimeout(() => {
       setPaywallVisible(true);
     }, 300);
   }, []);
 
-  // Successful purchase — refresh context, verify, then route
+  // Successful purchase — persist, refresh context, then route
   const handleSubscribeSuccess = useCallback(async () => {
-    console.log('[WelcomeScreen] Purchase confirmed — refreshing subscription context');
+    console.log('[WelcomeScreen] Purchase confirmed — persisting subscription and refreshing context');
+
+    // 1. Persist subscription flag via userStateManager (single source of truth)
+    await markSubscribed();
+
+    // 2. Refresh SubscriptionContext so in-app access checks are up to date
     await refreshSubscription();
 
+    // 3. Check onboarding completion using the existing profile key
     const profile = await loadProfile();
     const onboardingComplete = !!(profile && profile.portionTargets);
     console.log('[WelcomeScreen] Post-purchase onboarding check — complete:', onboardingComplete);
 
+    // 4. Close paywall before navigating
     setPaywallVisible(false);
 
+    // 5. Route based on onboarding state
     if (onboardingComplete) {
       console.log('[WelcomeScreen] Onboarding done → navigating to /(tabs)');
       router.replace('/(tabs)');
