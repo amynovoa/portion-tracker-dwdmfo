@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
+  Text,
+  TouchableOpacity,
   StyleSheet,
   Animated,
   useColorScheme,
@@ -47,7 +49,7 @@ export default function WelcomeScreen() {
   const C = scheme === 'dark' ? DARK : LIGHT;
   const { refreshSubscription } = useSubscription();
 
-  // Paywall is shown immediately on mount — inescapable
+  // Paywall is only shown when user taps "Get Started"
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   // Entrance animations
@@ -57,9 +59,11 @@ export default function WelcomeScreen() {
   const titleY = useRef(new Animated.Value(16)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
   const taglineY = useRef(new Animated.Value(12)).current;
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
+  const buttonY = useRef(new Animated.Value(12)).current;
 
   useEffect(() => {
-    // Run branding animation, then show paywall immediately after
+    // Run branding animation only — do NOT auto-show paywall
     Animated.sequence([
       Animated.parallel([
         Animated.timing(logoOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -73,13 +77,22 @@ export default function WelcomeScreen() {
         Animated.timing(taglineOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
         Animated.timing(taglineY, { toValue: 0, duration: 320, useNativeDriver: true }),
       ]),
+      Animated.parallel([
+        Animated.timing(buttonOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(buttonY, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]),
     ]).start(() => {
-      console.log('[WelcomeScreen] Branding animation complete — showing paywall immediately');
-      setPaywallVisible(true);
+      console.log('[WelcomeScreen] Branding animation complete — waiting for user to tap Get Started');
     });
   }, []);
 
-  // Paywall dismissed without subscribing — re-show after 300ms (inescapable)
+  // "Get Started" button — only entry point to the paywall
+  const handleGetStarted = useCallback(() => {
+    console.log('[WelcomeScreen] Get Started tapped — showing paywall');
+    setPaywallVisible(true);
+  }, []);
+
+  // Paywall dismissed without subscribing — re-show after 300ms (inescapable once opened)
   const handlePaywallDismiss = useCallback(() => {
     console.log('[WelcomeScreen] Paywall dismissed without subscribing — re-showing paywall in 300ms');
     setPaywallVisible(false);
@@ -119,6 +132,7 @@ export default function WelcomeScreen() {
   const appName = 'Welcome to Portion Track';
   const tagline = 'Simple Portions. Balanced Eating.';
   const subtitle = 'A simple way to eat well and build healthy habits for life.';
+  const getStartedLabel = 'Get Started';
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
@@ -163,9 +177,20 @@ export default function WelcomeScreen() {
           </Animated.Text>
         </View>
 
+        {/* Get Started button — only way to open the paywall */}
+        <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity, transform: [{ translateY: buttonY }] }]}>
+          <TouchableOpacity
+            style={[styles.getStartedButton, { backgroundColor: C.primary }]}
+            onPress={handleGetStarted}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.getStartedText}>{getStartedLabel}</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
       </View>
 
-      {/* Inescapable paywall — shown immediately on mount, dismissing re-shows it */}
+      {/* Paywall — only shown after Get Started tap; dismissing re-shows it */}
       <PaywallScreen
         visible={paywallVisible}
         canDismiss={true}
@@ -226,5 +251,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: width * 0.75,
+  },
+  buttonContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+  },
+  getStartedButton: {
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  getStartedText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });

@@ -46,16 +46,32 @@ export async function resolveUserState(): Promise<Exclude<UserState, 'loading'>>
   }
 
   // Step 2: attempt live check via App Store
+  // IMPORTANT: the live check can return false on non-iOS or when StoreKit is unavailable
+  // without throwing. We must NOT let a false live result downgrade a true persisted value.
+  // A live true result upgrades the persisted value; a live false result is ignored in favour
+  // of the persisted flag (the user may have purchased and the live check may be unreliable).
   let isSubscribed = persistedSubscribed;
   try {
     const { checkAppStoreSubscription } = await import('./subscriptionManager');
     console.log('[UserStateManager] Calling checkAppStoreSubscription() for live status...');
     const liveResult = await checkAppStoreSubscription();
     console.log('[UserStateManager] Live subscription result:', liveResult);
-    isSubscribed = liveResult;
 
-    // Step 3: persist result
-    await markSubscribed(isSubscribed);
+    if (liveResult === true) {
+      // Live confirms subscribed — trust it and persist
+      isSubscribed = true;
+      await markSubscribed(true);
+      console.log('[UserStateManager] Live check confirmed subscribed — persisted true');
+    } else if (persistedSubscribed) {
+      // Live returned false but we have a persisted true — keep the persisted value.
+      // The live check may be unreliable (non-iOS, StoreKit unavailable, network issue).
+      console.log('[UserStateManager] Live check returned false but persisted flag is true — keeping persisted value');
+      isSubscribed = true;
+    } else {
+      // Both live and persisted say not subscribed
+      isSubscribed = false;
+      console.log('[UserStateManager] Live check and persisted flag both indicate not subscribed');
+    }
   } catch (err) {
     // Step 4: fall back to persisted value
     console.warn('[UserStateManager] Live subscription check failed — using persisted value:', persistedSubscribed, err);
