@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   Animated,
-  Pressable,
   useColorScheme,
   Dimensions,
 } from 'react-native';
@@ -14,6 +13,7 @@ import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
 import PaywallScreen from '@/components/PaywallScreen';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { loadProfile } from '@/utils/storage';
 
 const { width } = Dimensions.get('window');
 
@@ -45,8 +45,9 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const C = scheme === 'dark' ? DARK : LIGHT;
-  const { isSubscribed, isLoading: subscriptionLoading, refreshSubscription } = useSubscription();
+  const { refreshSubscription } = useSubscription();
 
+  // Paywall is shown immediately on mount — inescapable
   const [paywallVisible, setPaywallVisible] = useState(false);
 
   // Entrance animations
@@ -56,11 +57,9 @@ export default function WelcomeScreen() {
   const titleY = useRef(new Animated.Value(16)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
   const taglineY = useRef(new Animated.Value(12)).current;
-  const buttonOpacity = useRef(new Animated.Value(0)).current;
-  const buttonY = useRef(new Animated.Value(20)).current;
-  const buttonScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Run branding animation, then show paywall immediately after
     Animated.sequence([
       Animated.parallel([
         Animated.timing(logoOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -74,33 +73,11 @@ export default function WelcomeScreen() {
         Animated.timing(taglineOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
         Animated.timing(taglineY, { toValue: 0, duration: 320, useNativeDriver: true }),
       ]),
-      Animated.parallel([
-        Animated.timing(buttonOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(buttonY, { toValue: 0, duration: 300, useNativeDriver: true }),
-      ]),
-    ]).start();
+    ]).start(() => {
+      console.log('[WelcomeScreen] Branding animation complete — showing paywall immediately');
+      setPaywallVisible(true);
+    });
   }, []);
-
-  // If subscription becomes active while on this screen, navigate into the app
-  useEffect(() => {
-    if (!subscriptionLoading && isSubscribed) {
-      console.log('[WelcomeScreen] Subscription active — navigating to /(tabs)');
-      router.replace('/(tabs)');
-    }
-  }, [isSubscribed, subscriptionLoading, router]);
-
-  const handlePressIn = () => {
-    Animated.spring(buttonScale, { toValue: 0.97, speed: 50, bounciness: 4, useNativeDriver: true }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(buttonScale, { toValue: 1, speed: 50, bounciness: 4, useNativeDriver: true }).start();
-  };
-
-  const handleGetStarted = () => {
-    console.log('[WelcomeScreen] "Get Started" tapped — showing paywall');
-    setPaywallVisible(true);
-  };
 
   // Paywall dismissed without subscribing — re-show immediately (inescapable)
   const handlePaywallDismiss = useCallback(() => {
@@ -111,12 +88,24 @@ export default function WelcomeScreen() {
     }, 300);
   }, []);
 
-  // Successful purchase — refresh context and navigate into the app
+  // Successful purchase — refresh context, verify, then route
   const handleSubscribeSuccess = useCallback(async () => {
-    console.log('[WelcomeScreen] Subscription confirmed — refreshing and navigating to /(tabs)');
+    console.log('[WelcomeScreen] Purchase confirmed — refreshing subscription context');
     await refreshSubscription();
+
+    const profile = await loadProfile();
+    const onboardingComplete = !!(profile && profile.portionTargets);
+    console.log('[WelcomeScreen] Post-purchase onboarding check — complete:', onboardingComplete);
+
     setPaywallVisible(false);
-    router.replace('/(tabs)');
+
+    if (onboardingComplete) {
+      console.log('[WelcomeScreen] Onboarding done → navigating to /(tabs)');
+      router.replace('/(tabs)');
+    } else {
+      console.log('[WelcomeScreen] Onboarding not done → navigating to /setup-profile');
+      router.replace('/setup-profile');
+    }
   }, [refreshSubscription, router]);
 
   const appName = 'Welcome to Portion Track';
@@ -166,34 +155,9 @@ export default function WelcomeScreen() {
           </Animated.Text>
         </View>
 
-        {/* Bottom section */}
-        <Animated.View
-          style={[
-            styles.bottom,
-            { opacity: buttonOpacity, transform: [{ translateY: buttonY }] },
-          ]}
-        >
-          <Text style={[styles.hint, { color: C.textTertiary }]}>
-            Takes less than a minute to set up
-          </Text>
-
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-            <Pressable
-              style={[styles.button, { backgroundColor: C.primary }]}
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
-              onPress={handleGetStarted}
-              accessibilityRole="button"
-              accessibilityLabel="Get started with Portion Tracker"
-            >
-              <Text style={styles.buttonText}>Get started</Text>
-            </Pressable>
-          </Animated.View>
-        </Animated.View>
-
       </View>
 
-      {/* Inescapable paywall — dismissing re-shows it */}
+      {/* Inescapable paywall — shown immediately on mount, dismissing re-shows it */}
       <PaywallScreen
         visible={paywallVisible}
         canDismiss={true}
@@ -254,27 +218,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: width * 0.75,
-  },
-  bottom: {
-    paddingBottom: 16,
-    gap: 12,
-    alignItems: 'stretch',
-  },
-  hint: {
-    fontSize: 13,
-    textAlign: 'center',
-    fontWeight: '400',
-  },
-  button: {
-    borderRadius: 14,
-    paddingVertical: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.1,
   },
 });

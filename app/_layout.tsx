@@ -5,16 +5,15 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
-import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
-  const { refreshSubscription } = useSubscription();
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -44,13 +43,11 @@ function AppContent() {
     prepare();
   }, []);
 
-  // Re-check subscription and run backup whenever app comes to foreground
+  // Foreground backup (subscription refresh is handled by SubscriptionContext's AppState listener)
   useEffect(() => {
-    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+    const { AppState } = require('react-native');
+    const handleAppStateChange = async (nextAppState: string) => {
       if (nextAppState === 'active') {
-        console.log('[Layout] App foregrounded — refreshing subscription status');
-        await refreshSubscription();
-
         setTimeout(async () => {
           try {
             await createAutomaticBackup();
@@ -63,7 +60,7 @@ function AppContent() {
 
     const sub = AppState.addEventListener('change', handleAppStateChange);
     return () => sub.remove();
-  }, [refreshSubscription]);
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { loadSubscriptionStatus } from '@/utils/storage';
+import { loadSubscriptionStatus, saveSubscriptionStatus } from '@/utils/storage';
 import EventEmitter from 'eventemitter3';
 
 // Create a global event emitter for subscription updates
@@ -21,44 +21,36 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // refreshSubscription re-fetches from AsyncStorage (the source of truth written by
+  // subscriptionManager after StoreKit confirms a purchase) and updates state synchronously
+  // before returning, so callers can await it and immediately read the new value.
   const refreshSubscription = useCallback(async () => {
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 SUBSCRIPTION CONTEXT: Refreshing subscription status');
-    console.log('═══════════════════════════════════════════════════════');
+    console.log('[SubscriptionContext] Refreshing subscription status');
 
     try {
-      const localStatus = await loadSubscriptionStatus();
-      const subscribed = localStatus || false;
-
-      console.log('📊 SUBSCRIPTION CONTEXT RESULT:');
-      console.log('  - Status from AsyncStorage:', localStatus);
-      console.log('  - isSubscribed:', subscribed);
-
+      const subscribed = await loadSubscriptionStatus();
+      console.log('[SubscriptionContext] Loaded status from AsyncStorage:', subscribed);
       setIsSubscribed(subscribed);
-
-      console.log('✅ SUBSCRIPTION CONTEXT: State updated');
-      console.log('═══════════════════════════════════════════════════════');
+      console.log('[SubscriptionContext] State updated — isSubscribed:', subscribed);
     } catch (error) {
-      console.error('═══════════════════════════════════════════════════════');
-      console.error('❌ SUBSCRIPTION CONTEXT ERROR:', error);
-      console.error('═══════════════════════════════════════════════════════');
+      console.error('[SubscriptionContext] Error refreshing subscription:', error);
       setIsSubscribed(false);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Initial load
+  // Initial load on mount
   useEffect(() => {
     refreshSubscription();
   }, [refreshSubscription]);
 
-  // Re-check subscription every time the app comes to the foreground
-  // This ensures Apple's subscription status (including Apple free trial) is always fresh
+  // Secondary refresh: re-check whenever app comes to foreground.
+  // This is NOT the primary gate — index.tsx handles the authoritative check on launch.
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        console.log('📱 SUBSCRIPTION CONTEXT: App foregrounded — re-checking subscription');
+        console.log('[SubscriptionContext] App foregrounded — secondary subscription refresh');
         refreshSubscription();
       }
     };
@@ -69,40 +61,36 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshSubscription]);
 
-  // Listen for subscription update events from the purchase listener
+  // Listen for immediate subscription update events emitted by subscriptionManager
+  // after a StoreKit purchase completes (before AsyncStorage write propagates).
   useEffect(() => {
-    console.log('🔔 SUBSCRIPTION CONTEXT: Setting up event listener for subscription updates');
+    console.log('[SubscriptionContext] Setting up subscription event listener');
 
-    const listener = (subscribed: boolean) => {
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🔔 SUBSCRIPTION EVENT: Received subscription update event');
-      console.log('📊 SUBSCRIPTION EVENT: New status:', subscribed);
-      console.log('═══════════════════════════════════════════════════════');
-
+    const listener = async (subscribed: boolean) => {
+      console.log('[SubscriptionContext] Received subscription update event — subscribed:', subscribed);
+      // Persist the new status so future launches read it correctly
+      await saveSubscriptionStatus(subscribed);
       setIsSubscribed(subscribed);
-
-      console.log('✅ SUBSCRIPTION EVENT: State updated, isSubscribed =', subscribed);
+      console.log('[SubscriptionContext] State updated via event — isSubscribed:', subscribed);
     };
 
     subscriptionEmitter.on(SUBSCRIPTION_UPDATED_EVENT, listener);
 
     return () => {
-      console.log('🔔 SUBSCRIPTION CONTEXT: Removing event listener');
+      console.log('[SubscriptionContext] Removing subscription event listener');
       subscriptionEmitter.off(SUBSCRIPTION_UPDATED_EVENT, listener);
     };
   }, []);
 
-  // hasAccess is purely derived from isSubscribed — RevenueCat reports Apple free trials as active
+  // hasAccess is purely derived from isSubscribed — no trial bypass, no __DEV__ override
   const hasAccess = isSubscribed;
-
-  console.log('📱 SubscriptionContext: isSubscribed =', isSubscribed, ', hasAccess =', hasAccess, ', isLoading =', isLoading);
 
   return (
     <SubscriptionContext.Provider value={{
       isSubscribed,
       hasAccess,
       isLoading,
-      refreshSubscription
+      refreshSubscription,
     }}>
       {children}
     </SubscriptionContext.Provider>
