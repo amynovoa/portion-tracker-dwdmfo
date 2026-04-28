@@ -22,15 +22,15 @@ export const PRODUCT_IDS = {
 // Fallback prices for display only - NOT used for purchase readiness
 const FALLBACK_PRICES = {
   MONTHLY: {
-    price: '3.99',
-    priceString: '$3.99',
+    price: '4.99',
+    priceString: '$4.99',
     currencyCode: 'USD',
     title: 'Monthly Subscription',
     description: 'Monthly subscription to Portion Tracker',
   },
   ANNUAL: {
-    price: '29.99',
-    priceString: '$29.99',
+    price: '39.99',
+    priceString: '$39.99',
     currencyCode: 'USD',
     title: 'Annual Subscription',
     description: 'Annual subscription to Portion Tracker',
@@ -152,66 +152,9 @@ export async function initializeStoreKit(): Promise<boolean> {
       delete iapDebugInfo.connectError;
     }
 
-    // Set up purchase listener
+    // Set up the persistent background purchase listener
     console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
-    InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🔵 TRANSACTION CALLBACK: Purchase listener triggered');
-      console.log('📊 TRANSACTION CALLBACK: Response code:', responseCode);
-      console.log('📊 TRANSACTION CALLBACK: Error code:', errorCode);
-      console.log('📊 TRANSACTION CALLBACK: Results count:', results?.length || 0);
-      console.log('═══════════════════════════════════════════════════════');
-      
-      // Guard all fields with optional chaining
-      if (responseCode === InAppPurchases?.IAPResponseCode?.OK) {
-        if (results && results.length > 0) {
-          for (const purchase of results) {
-            console.log('✅ TRANSACTION CALLBACK: Purchase successful');
-            console.log('  - Product ID:', purchase?.productId);
-            console.log('  - Acknowledged:', purchase?.acknowledged);
-            
-            // Only unlock entitlement if the purchase is for our subscription products
-            const isValidSubscription = 
-              purchase?.productId === PRODUCT_IDS.MONTHLY || 
-              purchase?.productId === PRODUCT_IDS.ANNUAL;
-            
-            if (isValidSubscription) {
-              console.log('🔄 TRANSACTION CALLBACK: Valid subscription - Unlocking entitlement...');
-              
-              // CRITICAL FIX: Save to AsyncStorage AND emit event immediately
-              await saveSubscriptionStatus(true);
-              console.log('✅ TRANSACTION CALLBACK: Saved to AsyncStorage');
-              
-              // Emit event to immediately update UI
-              emitSubscriptionUpdate(true);
-              console.log('✅ TRANSACTION CALLBACK: Emitted subscription update event');
-            } else {
-              console.log('⚠️ TRANSACTION CALLBACK: Not a valid subscription product, skipping unlock');
-            }
-            
-            // Finish/acknowledge the transaction
-            if (!purchase?.acknowledged) {
-              console.log('🔄 TRANSACTION FINISH: Acknowledging transaction...');
-              try {
-                await InAppPurchases.finishTransactionAsync(purchase, true);
-                console.log('✅ TRANSACTION FINISH: Acknowledged successfully');
-              } catch (finishError) {
-                console.error('❌ TRANSACTION FINISH: Error:', finishError);
-              }
-            } else {
-              console.log('ℹ️ TRANSACTION FINISH: Already acknowledged');
-            }
-          }
-        } else {
-          console.log('⚠️ TRANSACTION CALLBACK: OK response but no results');
-        }
-      } else if (responseCode === InAppPurchases?.IAPResponseCode?.USER_CANCELED) {
-        console.log('ℹ️ TRANSACTION CALLBACK: User cancelled purchase');
-      } else {
-        console.error('❌ TRANSACTION CALLBACK: Error code:', errorCode);
-      }
-      console.log('═══════════════════════════════════════════════════════');
-    });
+    registerPersistentListener();
 
     storeKitInitialized = true;
     console.log('✅ STOREKIT INIT: Initialization complete');
@@ -524,11 +467,65 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
   }
 }
 
+// Holds the resolve function for the in-flight one-shot purchase promise.
+// Only one purchase can be in flight at a time.
+let pendingPurchaseResolve: ((result: PurchaseResult) => void) | null = null;
+
 /**
- * Purchase a product through App Store
- * Calls purchaseItemAsync(productId) without reading responseCode
- * Purchase listener handles success/cancel/failure
- * Only unlocks entitlement when StoreKit confirms valid purchase
+ * Re-register the persistent background listener.
+ * Called after a one-shot purchase promise resolves so that background
+ * transaction events (e.g. deferred purchases, renewals) are still handled.
+ */
+function registerPersistentListener() {
+  if (!InAppPurchases) return;
+
+  InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔵 PERSISTENT LISTENER: Purchase event received');
+    console.log('📊 PERSISTENT LISTENER: Response code:', responseCode);
+    console.log('📊 PERSISTENT LISTENER: Error code:', errorCode);
+    console.log('📊 PERSISTENT LISTENER: Results count:', results?.length || 0);
+    console.log('═══════════════════════════════════════════════════════');
+
+    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
+      for (const purchase of results) {
+        const isValidSubscription =
+          purchase?.productId === PRODUCT_IDS.MONTHLY ||
+          purchase?.productId === PRODUCT_IDS.ANNUAL;
+
+        if (isValidSubscription) {
+          console.log('🔄 PERSISTENT LISTENER: Valid subscription - Unlocking entitlement...');
+          await saveSubscriptionStatus(true);
+          emitSubscriptionUpdate(true);
+          console.log('✅ PERSISTENT LISTENER: Entitlement unlocked');
+        }
+
+        if (!purchase?.acknowledged) {
+          try {
+            await InAppPurchases.finishTransactionAsync(purchase, true);
+            console.log('✅ PERSISTENT LISTENER: Transaction acknowledged');
+          } catch (finishError) {
+            console.error('❌ PERSISTENT LISTENER: Error acknowledging transaction:', finishError);
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Purchase a product through App Store.
+ *
+ * Returns a Promise that resolves ONLY after the StoreKit purchase listener
+ * fires — not immediately after purchaseItemAsync() returns. This prevents
+ * the "cancel = fake success" bug where the UI showed "Success!" before
+ * StoreKit had confirmed (or denied) the purchase.
+ *
+ * Flow:
+ *   purchaseItemAsync() → Apple payment sheet → listener fires →
+ *     OK + valid productId  → { success: true }  (entitlement unlocked)
+ *     USER_CANCELED         → { success: false, userCancelled: true }
+ *     any other code        → { success: false, error: ... }
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
   try {
@@ -536,7 +533,7 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     console.log('🔵 PURCHASE REQUEST: Starting purchase flow');
     console.log('📊 PURCHASE REQUEST: Product ID:', productId);
     console.log('═══════════════════════════════════════════════════════');
-    
+
     if (Platform.OS !== 'ios') {
       console.error('❌ PURCHASE REQUEST: Platform not iOS');
       return {
@@ -556,66 +553,106 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     // Verify product exists in memory
     const productInMemory = queriedProducts.has(productId);
     console.log('🔍 PURCHASE REQUEST: Product in memory:', productInMemory);
-    
+
     if (!productInMemory) {
-      console.error('═══════════════════════════════════════════════════════');
-      console.error('❌ PURCHASE REQUEST: Product NOT in memory');
-      console.error('❌ Cannot purchase - product not queried from StoreKit');
-      console.error('❌ Product ID:', productId);
-      console.error('═══════════════════════════════════════════════════════');
+      console.error('❌ PURCHASE REQUEST: Product NOT in memory — cannot purchase');
       return {
         success: false,
         error: 'Product not available. Please check your internet connection and try again.',
       };
     }
 
-    // Get the stored Product object
     const product = queriedProducts.get(productId);
-    
     if (!product) {
       console.error('❌ PURCHASE REQUEST: Product object not found (should not happen)');
-      return {
-        success: false,
-        error: 'Product not ready. Please try again.',
-      };
+      return { success: false, error: 'Product not ready. Please try again.' };
     }
 
-    console.log('═══════════════════════════════════════════════════════');
     console.log('✅ PURCHASE REQUEST: Using stored Product object');
-    console.log('📊 SELECTED SKU AT TAP:');
     console.log('  - Product ID:', product.productId);
-    console.log('  - Price:', product.price);
     console.log('  - Price String:', product.priceString);
-    console.log('  - Currency:', product.currencyCode);
-    console.log('  - Product object exists:', !!product);
-    console.log('═══════════════════════════════════════════════════════');
 
     // Initialize if not already done
     const initialized = await initializeStoreKit();
     if (!initialized) {
       console.error('❌ PURCHASE REQUEST: StoreKit initialization failed');
-      return {
-        success: false,
-        error: 'Failed to connect to App Store. Please try again.',
-      };
+      return { success: false, error: 'Failed to connect to App Store. Please try again.' };
     }
 
-    // Call purchaseItemAsync without reading responseCode
-    // The purchase listener handles all success/cancel/failure scenarios
-    console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync...');
-    console.log('🔄 PURCHASE REQUEST: Using productId:', product.productId);
-    console.log('🔄 PURCHASE REQUEST: Purchase listener will handle the result');
-    
-    await InAppPurchases.purchaseItemAsync(product.productId);
-    
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('✅ PURCHASE REQUEST: purchaseItemAsync called');
-    console.log('ℹ️ PURCHASE REQUEST: Waiting for purchase listener callback...');
-    console.log('ℹ️ PURCHASE REQUEST: The listener will handle success/cancel/failure');
-    console.log('═══════════════════════════════════════════════════════');
+    // Build a Promise that resolves from the one-shot listener callback.
+    // expo-in-app-purchases only supports ONE active listener at a time, so we
+    // replace the persistent listener here and restore it after resolution.
+    const purchasePromise = new Promise<PurchaseResult>((resolve) => {
+      pendingPurchaseResolve = resolve;
 
-    // Return success - the purchase listener will unlock entitlement if StoreKit confirms purchase
-    return { success: true };
+      InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('🔵 ONE-SHOT LISTENER: Purchase event received');
+        console.log('📊 ONE-SHOT LISTENER: Response code:', responseCode);
+        console.log('📊 ONE-SHOT LISTENER: Error code:', errorCode);
+        console.log('📊 ONE-SHOT LISTENER: Results count:', results?.length || 0);
+        console.log('═══════════════════════════════════════════════════════');
+
+        // Capture and clear the pending resolver so it fires exactly once.
+        const resolveOnce = pendingPurchaseResolve;
+        pendingPurchaseResolve = null;
+
+        if (responseCode === InAppPurchases?.IAPResponseCode?.OK) {
+          if (results && results.length > 0) {
+            for (const purchase of results) {
+              const isValidSubscription =
+                purchase?.productId === PRODUCT_IDS.MONTHLY ||
+                purchase?.productId === PRODUCT_IDS.ANNUAL;
+
+              if (isValidSubscription) {
+                console.log('🔄 ONE-SHOT LISTENER: Valid subscription — unlocking entitlement');
+                await saveSubscriptionStatus(true);
+                emitSubscriptionUpdate(true);
+                console.log('✅ ONE-SHOT LISTENER: Entitlement unlocked');
+              } else {
+                console.warn('⚠️ ONE-SHOT LISTENER: Unexpected product ID, skipping unlock:', purchase?.productId);
+              }
+
+              if (!purchase?.acknowledged) {
+                try {
+                  await InAppPurchases.finishTransactionAsync(purchase, true);
+                  console.log('✅ ONE-SHOT LISTENER: Transaction acknowledged');
+                } catch (finishError) {
+                  console.error('❌ ONE-SHOT LISTENER: Error acknowledging transaction:', finishError);
+                }
+              }
+            }
+
+            // Re-register the persistent listener before resolving
+            registerPersistentListener();
+            console.log('✅ ONE-SHOT LISTENER: Resolving with success: true');
+            resolveOnce?.({ success: true });
+          } else {
+            console.warn('⚠️ ONE-SHOT LISTENER: OK response but no results');
+            registerPersistentListener();
+            resolveOnce?.({ success: false, error: 'Purchase completed but no transaction data received.' });
+          }
+        } else if (responseCode === InAppPurchases?.IAPResponseCode?.USER_CANCELED) {
+          console.log('ℹ️ ONE-SHOT LISTENER: User cancelled purchase');
+          registerPersistentListener();
+          resolveOnce?.({ success: false, userCancelled: true });
+        } else {
+          console.error('❌ ONE-SHOT LISTENER: Purchase failed — response code:', responseCode, 'error code:', errorCode);
+          registerPersistentListener();
+          resolveOnce?.({ success: false, error: `Purchase failed (code: ${responseCode ?? errorCode ?? 'unknown'})` });
+        }
+      });
+    });
+
+    // Present the Apple payment sheet
+    console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', product.productId);
+    await InAppPurchases.purchaseItemAsync(product.productId);
+    console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync returned — waiting for listener...');
+
+    // Wait for the listener to resolve the promise
+    const result = await purchasePromise;
+    console.log('📊 PURCHASE REQUEST: Final result:', result);
+    return result;
   } catch (error: any) {
     console.error('═══════════════════════════════════════════════════════');
     console.error('❌ PURCHASE ERROR: Exception during purchase');
@@ -623,23 +660,21 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     console.error('❌ Error code:', error?.code);
     console.error('❌ Error message:', error?.message);
     console.error('═══════════════════════════════════════════════════════');
-    
+
+    // Clear any pending resolver so it doesn't fire later
+    pendingPurchaseResolve = null;
+    // Restore the persistent listener
+    registerPersistentListener();
+
     const errorCode = error?.code;
     const errorMessage = error?.message || 'Purchase failed';
-    
-    // Check if user cancelled
+
     if (errorCode === 'E_USER_CANCELLED' || errorMessage?.includes('cancel')) {
-      console.log('ℹ️ PURCHASE ERROR: User cancelled (from error)');
-      return {
-        success: false,
-        userCancelled: true,
-      };
+      console.log('ℹ️ PURCHASE ERROR: User cancelled (from thrown error)');
+      return { success: false, userCancelled: true };
     }
-    
-    return {
-      success: false,
-      error: errorMessage,
-    };
+
+    return { success: false, error: errorMessage };
   }
 }
 

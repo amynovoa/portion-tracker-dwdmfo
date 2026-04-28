@@ -341,29 +341,28 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const getMonthlyPrice = () => {
-    if (loadingProducts) {
-      return '...';
-    }
-    return monthlyProduct?.priceString || '$3.99';
+    if (loadingProducts) return '...';
+    if (Platform.OS !== 'ios') return monthlyProduct?.priceString || '$4.99';
+    // On iOS: never show hardcoded price — show '...' until live product is loaded
+    return monthlyProduct?.priceString || '...';
   };
 
   const getAnnualPrice = () => {
-    if (loadingProducts) {
-      return '...';
-    }
-    return annualProduct?.priceString || '$29.99';
+    if (loadingProducts) return '...';
+    if (Platform.OS !== 'ios') return annualProduct?.priceString || '$39.99';
+    // On iOS: never show hardcoded price — show '...' until live product is loaded
+    return annualProduct?.priceString || '...';
   };
 
   const getAnnualMonthlyPrice = () => {
-    if (loadingProducts) {
-      return '...';
-    }
+    if (loadingProducts) return '...';
     if (annualProduct) {
       const annualPrice = parseFloat(annualProduct.price);
       const monthlyEquivalent = (annualPrice / 12).toFixed(2);
       return `${annualProduct.currencyCode === 'USD' ? '$' : ''}${monthlyEquivalent}`;
     }
-    return '$2.49';
+    if (Platform.OS !== 'ios') return '$3.33';
+    return '...';
   };
 
   // Purchase must be disabled unless the product object exists in memory from StoreKit
