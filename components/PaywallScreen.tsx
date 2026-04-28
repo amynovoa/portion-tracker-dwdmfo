@@ -342,14 +342,14 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   const getMonthlyPrice = () => {
     if (loadingProducts) return '...';
-    if (Platform.OS !== 'ios') return monthlyProduct?.priceString || '$4.99';
+    if (Platform.OS !== 'ios') return monthlyProduct?.priceString || '$3.99';
     // On iOS: never show hardcoded price — show '...' until live product is loaded
     return monthlyProduct?.priceString || '...';
   };
 
   const getAnnualPrice = () => {
     if (loadingProducts) return '...';
-    if (Platform.OS !== 'ios') return annualProduct?.priceString || '$39.99';
+    if (Platform.OS !== 'ios') return annualProduct?.priceString || '$29.99';
     // On iOS: never show hardcoded price — show '...' until live product is loaded
     return annualProduct?.priceString || '...';
   };
