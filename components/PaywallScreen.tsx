@@ -228,6 +228,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       console.log('═══════════════════════════════════════════════════════');
 
       if (result.success) {
+        setLoading(false);
         Alert.alert(
           'Success!',
           'Your subscription is now active. Enjoy unlimited access!',
