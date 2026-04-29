@@ -54,6 +54,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
     }
   }, [visible]);
 
+  useEffect(() => {
+    if (!visible) {
+      setLoading(false);
+    }
+  }, [visible]);
+
   const loadProducts = async () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 PRODUCT FETCH START: Initializing StoreKit and fetching products');

@@ -528,6 +528,7 @@ function registerPersistentListener() {
  *     any other code        → { success: false, error: ... }
  */
 export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
+  let purchaseTimeoutId: ReturnType<typeof setTimeout> | null = null;
   try {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 PURCHASE REQUEST: Starting purchase flow');
@@ -648,16 +649,16 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     // Race the purchase promise against a timeout so the spinner never hangs
     // forever when Apple's payment sheet is dismissed silently (e.g. TestFlight
     // sandbox plan-switch) without firing the listener.
-    const timeoutPromise = new Promise<PurchaseResult>((resolve) =>
-      setTimeout(() => {
+    const timeoutPromise = new Promise<PurchaseResult>((resolve) => {
+      purchaseTimeoutId = setTimeout(() => {
         console.warn('⏱️ PURCHASE TIMEOUT: No listener response after', PURCHASE_TIMEOUT_MS / 1000, 'seconds — resolving as cancelled');
         // Clear the pending resolver so a late-firing listener is a no-op
         pendingPurchaseResolve = null;
         // Restore the persistent listener so background events still work
         registerPersistentListener();
         resolve({ success: false, userCancelled: true });
-      }, PURCHASE_TIMEOUT_MS)
-    );
+      }, PURCHASE_TIMEOUT_MS);
+    });
 
     // Present the Apple payment sheet
     console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', product.productId);
@@ -684,6 +685,8 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 
     // Clear any pending resolver so it doesn't fire later
     pendingPurchaseResolve = null;
+    // Cancel the timeout so it doesn't call registerPersistentListener() again later
+    if (purchaseTimeoutId) clearTimeout(purchaseTimeoutId);
     // Restore the persistent listener
     registerPersistentListener();
 
