@@ -661,8 +661,14 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
 
     // Present the Apple payment sheet
     console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', product.productId);
-    await InAppPurchases.purchaseItemAsync(product.productId);
-    console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync returned — waiting for listener...');
+    try {
+      await InAppPurchases.purchaseItemAsync(product.productId);
+      console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync returned normally — waiting for listener...');
+    } catch (purchaseError: any) {
+      // On TestFlight sandbox, purchaseItemAsync often throws even on successful purchases.
+      // We intentionally swallow this error and let the listener/timeout determine the real outcome.
+      console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw (common on sandbox) — still waiting for listener:', purchaseError?.message);
+    }
 
     // Wait for whichever settles first: the listener or the timeout
     const result = await Promise.race([purchasePromise, timeoutPromise]);
