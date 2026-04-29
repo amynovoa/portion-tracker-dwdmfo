@@ -582,6 +582,7 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
     // Build a Promise that resolves from the one-shot listener callback.
     // expo-in-app-purchases only supports ONE active listener at a time, so we
     // replace the persistent listener here and restore it after resolution.
+    const PURCHASE_TIMEOUT_MS = 60_000;
     const purchasePromise = new Promise<PurchaseResult>((resolve) => {
       pendingPurchaseResolve = resolve;
 
@@ -644,13 +645,27 @@ export async function purchaseProduct(productId: string): Promise<PurchaseResult
       });
     });
 
+    // Race the purchase promise against a timeout so the spinner never hangs
+    // forever when Apple's payment sheet is dismissed silently (e.g. TestFlight
+    // sandbox plan-switch) without firing the listener.
+    const timeoutPromise = new Promise<PurchaseResult>((resolve) =>
+      setTimeout(() => {
+        console.warn('⏱️ PURCHASE TIMEOUT: No listener response after', PURCHASE_TIMEOUT_MS / 1000, 'seconds — resolving as cancelled');
+        // Clear the pending resolver so a late-firing listener is a no-op
+        pendingPurchaseResolve = null;
+        // Restore the persistent listener so background events still work
+        registerPersistentListener();
+        resolve({ success: false, userCancelled: true });
+      }, PURCHASE_TIMEOUT_MS)
+    );
+
     // Present the Apple payment sheet
     console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', product.productId);
     await InAppPurchases.purchaseItemAsync(product.productId);
     console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync returned — waiting for listener...');
 
-    // Wait for the listener to resolve the promise
-    const result = await purchasePromise;
+    // Wait for whichever settles first: the listener or the timeout
+    const result = await Promise.race([purchasePromise, timeoutPromise]);
     console.log('📊 PURCHASE REQUEST: Final result:', result);
     return result;
   } catch (error: any) {

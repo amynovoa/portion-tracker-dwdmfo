@@ -263,6 +263,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       console.error('❌ Error code:', error?.code);
       console.error('═══════════════════════════════════════════════════════');
       
+      // Safety net: ensure spinner stops even if finally is somehow skipped
+      setLoading(false);
+      
       const errorMessage = error?.message || 'An unexpected error occurred. Please try again.';
       
       Alert.alert(
