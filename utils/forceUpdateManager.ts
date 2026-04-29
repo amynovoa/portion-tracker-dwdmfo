@@ -1,7 +1,7 @@
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
+const MINIMUM_VERSION = '1.2.0';
+const APP_STORE_URL = 'https://apps.apple.com/app/id6744042838';
 
 export type VersionCheckResult =
   | { forceUpdate: false }
@@ -18,34 +18,12 @@ function semverCompare(a: string, b: string): number {
 }
 
 export async function checkForceUpdate(): Promise<VersionCheckResult> {
-  console.log('[ForceUpdate] Checking for force update...');
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/app-version`, {
-      signal: AbortSignal.timeout(5000),
-    });
-    console.log('[ForceUpdate] /api/app-version response status:', res.status);
-    if (!res.ok) {
-      console.log('[ForceUpdate] Non-ok response, skipping force update check');
-      return { forceUpdate: false };
-    }
-    const data = await res.json();
-    console.log('[ForceUpdate] Version data received:', data);
-    const platform = Platform.OS === 'ios' ? 'ios' : 'android';
-    const info = data[platform];
-    if (!info) {
-      console.log('[ForceUpdate] No platform info for', platform, '— skipping');
-      return { forceUpdate: false };
-    }
-    const installedVersion = Constants.expoConfig?.version ?? '0.0.0';
-    console.log('[ForceUpdate] Installed:', installedVersion, '| Minimum required:', info.minimum_version);
-    if (semverCompare(installedVersion, info.minimum_version) < 0) {
-      console.log('[ForceUpdate] Force update required. Store URL:', info.store_url);
-      return { forceUpdate: true, storeUrl: info.store_url, currentVersion: info.current_version };
-    }
-    console.log('[ForceUpdate] App is up to date');
-    return { forceUpdate: false };
-  } catch (err) {
-    console.log('[ForceUpdate] Check failed (network/timeout), allowing app to proceed:', err);
-    return { forceUpdate: false };
+  const installedVersion = Constants.expoConfig?.version ?? '0.0.0';
+  console.log('[ForceUpdate] Installed version:', installedVersion, '| Minimum required:', MINIMUM_VERSION);
+  if (semverCompare(installedVersion, MINIMUM_VERSION) < 0) {
+    console.log('[ForceUpdate] Force update required. Store URL:', APP_STORE_URL);
+    return { forceUpdate: true, storeUrl: APP_STORE_URL, currentVersion: MINIMUM_VERSION };
   }
+  console.log('[ForceUpdate] App is up to date');
+  return { forceUpdate: false };
 }
