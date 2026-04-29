@@ -47,6 +47,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   useEffect(() => {
     if (visible) {
+      setLoading(false); // reset spinner state on every open
       console.log('═══════════════════════════════════════════════════════');
       console.log('🔵 PAYWALL MOUNT: Paywall screen opened');
       console.log('═══════════════════════════════════════════════════════');
@@ -155,6 +156,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const handlePurchaseSuccess = async () => {
+    setLoading(false); // ensure spinner stops before navigation
     console.log('═══════════════════════════════════════════════════════');
     console.log('🎉 PURCHASE SUCCESS HANDLER: Starting post-purchase navigation');
     console.log('═══════════════════════════════════════════════════════');
