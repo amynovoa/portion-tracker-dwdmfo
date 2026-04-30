@@ -1,5 +1,4 @@
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
@@ -10,44 +9,36 @@ if (Platform.OS === 'ios') {
   InAppPurchases = require('expo-in-app-purchases');
 }
 
-const TRIAL_START_KEY = '@portion_tracker_trial_start';
-const TRIAL_DURATION_DAYS = 7;
-
-// StoreKit product IDs - MUST match your App Store Connect configuration
 export const PRODUCT_IDS = {
   MONTHLY: 'portiontrack.monthly',
   ANNUAL: 'portiontrack.annual',
 };
 
-
-
-// Store queried Product objects in memory keyed by productId
-let queriedProducts: Map<string, any> = new Map();
-let storeKitInitialized = false;
-// Guard so the persistent listener is only registered once per app session
+// ─── Single persistent session ───────────────────────────────────────────────
+// Connect once, never disconnect. Product objects are only valid while the
+// same native session is alive — disconnecting invalidates them and causes
+// "Must query item from store before calling purchase."
+let sessionConnected = false;
 let listenerRegistered = false;
 
-// Active purchase callbacks — set before purchaseItemAsync, cleared after listener fires
+// Product objects from the CURRENT session — only valid while sessionConnected is true
+const loadedProducts = new Map<string, any>();
+
+// Callbacks for the active purchase — set before purchaseItemAsync, cleared after listener fires
 let activePurchaseCallbacks: {
   onSuccess: () => void;
   onCancelled: () => void;
   onError: (msg: string) => void;
 } | null = null;
 
-// Store IAP debug information including error details
+// ─── Debug info ───────────────────────────────────────────────────────────────
 export interface IAPDebugInfo {
   bundleId: string;
   responseCode: number | string;
   resultsLength: number;
   returnedIds: string[];
-  connectError?: {
-    message: string;
-    code?: string | number;
-  };
-  queryError?: {
-    message: string;
-    code?: string | number;
-  };
+  connectError?: { message: string; code?: string | number };
+  queryError?: { message: string; code?: string | number };
 }
 
 let iapDebugInfo: IAPDebugInfo = {
@@ -57,14 +48,11 @@ let iapDebugInfo: IAPDebugInfo = {
   returnedIds: [],
 };
 
-/**
- * Get IAP debug information
- * Returns the debug info captured from the last getProductsAsync() call
- */
 export function getIAPDebugInfo(): IAPDebugInfo {
   return { ...iapDebugInfo };
 }
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 export interface SubscriptionStatus {
   isSubscribed: boolean;
   isInTrial: boolean;
@@ -87,307 +75,42 @@ export interface ProductDetails {
   description: string;
 }
 
-/**
- * Emit subscription update event to notify context
- * This allows immediate UI updates without polling AsyncStorage
- */
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function emitSubscriptionUpdate(subscribed: boolean) {
   try {
-    // Dynamically import to avoid circular dependency
     const { subscriptionEmitter, SUBSCRIPTION_UPDATED_EVENT } = require('@/contexts/SubscriptionContext');
-    
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📡 EMIT EVENT: Emitting subscription update event');
-    console.log('📊 EMIT EVENT: New subscription status:', subscribed);
-    console.log('═══════════════════════════════════════════════════════');
-    
+    console.log('[IAP] Emitting subscription update:', subscribed);
     subscriptionEmitter.emit(SUBSCRIPTION_UPDATED_EVENT, subscribed);
-    
-    console.log('✅ EMIT EVENT: Event emitted successfully');
   } catch (error) {
-    console.error('❌ EMIT EVENT: Failed to emit subscription update:', error);
+    console.error('[IAP] Failed to emit subscription update:', error);
   }
 }
 
 /**
- * Initialize StoreKit connection via expo-in-app-purchases
- * This MUST be called before getProductsAsync()
+ * Register the purchase listener ONCE after the first successful connectAsync.
+ * Never called again — the listener persists for the entire app session.
  */
-export async function initializeStoreKit(): Promise<boolean> {
-  try {
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 STOREKIT INIT: Initializing StoreKit connection');
-    console.log('═══════════════════════════════════════════════════════');
-    
-    if (Platform.OS !== 'ios') {
-      console.log('⚠️ STOREKIT INIT: Platform is not iOS, skipping');
-      return false;
-    }
-
-    if (!InAppPurchases) {
-      console.error('❌ STOREKIT INIT: InAppPurchases module not available');
-      return false;
-    }
-
-    // Connect to App Store. If already connected, treat as success and continue —
-    // do NOT disconnect first. Disconnecting tears down the native session and
-    // invalidates product objects for purchaseItemAsync.
-    console.log('🔄 STOREKIT INIT: Calling connectAsync...');
-    try {
-      await InAppPurchases.connectAsync();
-      console.log('✅ STOREKIT INIT: Connected to App Store successfully');
-    } catch (connectError: any) {
-      const msg = connectError?.message || String(connectError);
-      const code = connectError?.code;
-      if (code === 3 || msg.toLowerCase().includes('already')) {
-        console.log('✅ STOREKIT INIT: Already connected — continuing with existing session');
-      } else {
-        throw connectError;
-      }
-    }
-
-    // Clear any previous connect error
-    if (iapDebugInfo.connectError) {
-      delete iapDebugInfo.connectError;
-    }
-
-    // Set up the persistent background purchase listener — always register on fresh connection
-    if (!listenerRegistered) {
-      console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
-      registerPersistentListener();
-      listenerRegistered = true;
-      console.log('✅ STOREKIT INIT: Purchase listener registered');
-    } else {
-      console.log('ℹ️ STOREKIT INIT: Purchase listener already registered — skipping');
-    }
-
-    storeKitInitialized = true;
-    console.log('✅ STOREKIT INIT: Initialization complete');
-    console.log('═══════════════════════════════════════════════════════');
-    return true;
-  } catch (error: any) {
-    console.error('═══════════════════════════════════════════════════════');
-    console.error('❌ STOREKIT INIT: Initialization failed');
-    console.error('❌ Error:', error);
-    console.error('❌ Error message:', error?.message);
-    console.error('❌ Error code:', error?.code);
-    console.error('═══════════════════════════════════════════════════════');
-    
-    // Store connect error details
-    iapDebugInfo.connectError = {
-      message: error?.message || String(error),
-      code: error?.code,
-    };
-    
-    console.log('🚨🚨🚨 connectAsync() ERROR DETAILS 🚨🚨🚨');
-    console.log('  - Error message:', iapDebugInfo.connectError.message);
-    console.log('  - Error code:', iapDebugInfo.connectError.code);
-    console.log('🚨🚨🚨 END ERROR DETAILS 🚨🚨🚨');
-    
-    storeKitInitialized = false;
-    return false;
-  }
-}
-
-/**
- * Helper function to check if price data is valid
- */
-function isPriceValid(price: any, priceString: any): boolean {
-  // Check if price is a valid number greater than 0
-  const priceNum = parseFloat(price);
-  const isValidPrice = !isNaN(priceNum) && priceNum > 0;
-  
-  // Check if priceString is a non-empty string
-  const isValidPriceString = typeof priceString === 'string' && priceString.trim().length > 0 && priceString !== '$0.00' && priceString !== '0';
-  
-  console.log('🔍 PRICE VALIDATION:', { price, priceString, isValidPrice, isValidPriceString });
-  
-  return isValidPrice && isValidPriceString;
-}
-
-/**
- * Query products using getProductsAsync with subscription IDs.
- * Always disconnects first so connectAsync runs on a fresh session —
- * this is required for the returned product objects to be valid for purchaseItemAsync.
- */
-export async function queryProducts(productIds: string[]): Promise<string[]> {
-  try {
-    console.log('🔵 QUERY PRODUCTS: Starting product query for:', productIds);
-
-    if (Platform.OS !== 'ios') {
-      iapDebugInfo = {
-        bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'N/A (not iOS)',
-        responseCode: 'platform_not_ios',
-        resultsLength: 0,
-        returnedIds: [],
-      };
-      return [];
-    }
-
-    if (!InAppPurchases) {
-      iapDebugInfo = {
-        bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
-        responseCode: 'module_not_available',
-        resultsLength: 0,
-        returnedIds: [],
-      };
-      return [];
-    }
-
-    // Clear stale products before querying
-    queriedProducts.clear();
-    console.log('🔄 QUERY PRODUCTS: Cleared stale product cache');
-
-    // Step 1: Disconnect any existing session so connectAsync always runs fresh.
-    // This is required here (not in initializeStoreKit) because only queryProducts
-    // needs a fresh session — restorePurchases and checkAppStoreSubscription do not.
-    console.log('🔄 QUERY PRODUCTS: Disconnecting existing session...');
-    try {
-      await InAppPurchases.disconnectAsync();
-      console.log('✅ QUERY PRODUCTS: Disconnected');
-    } catch (_) {
-      console.log('ℹ️ QUERY PRODUCTS: Nothing to disconnect');
-    }
-
-    // Step 2: Connect fresh
-    console.log('🔄 QUERY PRODUCTS: Connecting to App Store...');
-    await InAppPurchases.connectAsync();
-    console.log('✅ QUERY PRODUCTS: Connected');
-
-    // Step 3: Register listener on the fresh connection (reset flag so it re-registers)
-    listenerRegistered = false;
-    if (!listenerRegistered) {
-      registerPersistentListener();
-      listenerRegistered = true;
-      console.log('✅ QUERY PRODUCTS: Listener registered on fresh connection');
-    }
-
-    storeKitInitialized = true;
-
-    // Step 4: Query products immediately — same session, no gap
-    console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync...');
-    const response = await InAppPurchases.getProductsAsync(productIds);
-
-    const bundleId = Constants.expoConfig?.ios?.bundleIdentifier || 'unknown';
-    const responseCode = response.responseCode;
-    const results = response.results || [];
-    const returnedIds = results.map((r: any) => r.productId);
-
-    iapDebugInfo = { bundleId, responseCode, resultsLength: results.length, returnedIds };
-
-    console.log('📊 QUERY PRODUCTS: responseCode:', responseCode, 'results:', results.length, 'ids:', returnedIds);
-
-    if (responseCode === InAppPurchases.IAPResponseCode.OK && results.length > 0) {
-      const queriedIds: string[] = [];
-      for (const product of results) {
-        if (!product.productId) continue;
-        queriedProducts.set(product.productId, product);
-        queriedIds.push(product.productId);
-        console.log('✅ QUERY PRODUCTS: Stored product:', product.productId, 'price:', product.priceString);
-      }
-      console.log('✅ QUERY PRODUCTS: Total stored:', queriedIds.length);
-      return queriedIds;
-    }
-
-    console.warn('⚠️ QUERY PRODUCTS: No products returned. responseCode:', responseCode);
-    return [];
-
-  } catch (error: any) {
-    console.error('❌ QUERY PRODUCTS ERROR:', error?.message, 'code:', error?.code);
-    iapDebugInfo = {
-      bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
-      responseCode: 'exception',
-      resultsLength: 0,
-      returnedIds: [],
-      queryError: { message: error?.message || String(error), code: error?.code },
-    };
-    return [];
-  }
-}
-
-/**
- * Check if a product has been queried and is ready for purchase
- * Returns true ONLY if the Product object exists in memory from StoreKit
- * Fallback prices do NOT make a product ready
- */
-export function isProductReady(productId: string): boolean {
-  const ready = queriedProducts.has(productId);
-  const product = queriedProducts.get(productId);
-  
-  console.log('🔍 PRODUCT READY CHECK:', {
-    productId,
-    inMemory: ready,
-    hasPrice: !!product?.price,
-    hasPriceString: !!product?.priceString,
-  });
-  
-  return ready;
-}
-
-/**
- * Get product details for display
- * Returns Apple's live product data only — never substitutes hardcoded prices
- */
-export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
-  try {
-    // On non-iOS, no StoreKit — return null (no prices shown)
-    if (Platform.OS !== 'ios') {
-      return null;
-    }
-
-    if (!InAppPurchases) {
-      return null;
-    }
-
-    // Return whatever Apple gave us — never substitute hardcoded prices
-    if (queriedProducts.has(productId)) {
-      const product = queriedProducts.get(productId);
-      console.log('✅ GET DETAILS: Using cached product from memory for:', productId);
-      return {
-        productId: product.productId,
-        price: String(product.price ?? ''),
-        priceString: product.priceString ?? '',
-        currencyCode: product.currencyCode || 'USD',
-        title: product.title || '',
-        description: product.description || '',
-      };
-    }
-
-    // Product not yet queried — return null so UI shows '...'
-    console.log('ℹ️ GET DETAILS: Product not in memory yet, returning null for:', productId);
-    return null;
-  } catch (error) {
-    console.error('❌ GET DETAILS: Error fetching details:', error);
-    return null;
-  }
-}
-
-/**
- * Register the single persistent purchase listener.
- * This is the ONLY listener ever registered. It checks activePurchaseCallbacks
- * to route events to the active purchase flow, or handles them silently as
- * background/renewal events.
- */
-function registerPersistentListener() {
-  if (!InAppPurchases) return;
+function registerListener() {
+  if (!InAppPurchases || listenerRegistered) return;
+  listenerRegistered = true;
 
   InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
-    console.log('🔵 LISTENER: Purchase event received, responseCode:', responseCode);
+    console.log('[IAP] Purchase listener fired, responseCode:', responseCode);
 
     const callbacks = activePurchaseCallbacks;
     activePurchaseCallbacks = null; // clear immediately so re-entrant events are ignored
 
-    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
-      let foundValidSubscription = false;
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results?.length > 0) {
+      let foundValid = false;
 
       for (const purchase of results) {
-        const isValidSubscription =
+        const isValid =
           purchase?.productId === PRODUCT_IDS.MONTHLY ||
           purchase?.productId === PRODUCT_IDS.ANNUAL;
 
-        if (isValidSubscription) {
-          foundValidSubscription = true;
-          console.log('✅ LISTENER: Valid subscription — unlocking entitlement');
+        if (isValid) {
+          foundValid = true;
+          console.log('[IAP] Valid subscription purchase:', purchase.productId);
           await saveSubscriptionStatus(true);
           emitSubscriptionUpdate(true);
         }
@@ -395,38 +118,154 @@ function registerPersistentListener() {
         if (!purchase?.acknowledged) {
           try {
             await InAppPurchases.finishTransactionAsync(purchase, true);
-            console.log('✅ LISTENER: Transaction acknowledged');
-          } catch (finishError) {
-            console.error('❌ LISTENER: Error acknowledging transaction:', finishError);
-          }
+            console.log('[IAP] Transaction acknowledged:', purchase?.productId);
+          } catch (_) {}
         }
       }
 
       if (callbacks) {
-        if (foundValidSubscription) {
+        if (foundValid) {
           callbacks.onSuccess();
         } else {
-          callbacks.onError('Purchase completed but no valid subscription was found.');
+          callbacks.onError('Purchase completed but no valid subscription found.');
         }
       }
-    } else if (responseCode === InAppPurchases?.IAPResponseCode?.USER_CANCELED) {
-      console.log('ℹ️ LISTENER: User cancelled purchase');
-      if (callbacks) callbacks.onCancelled();
+    } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+      console.log('[IAP] User cancelled purchase');
+      callbacks?.onCancelled();
     } else {
       const msg = `Purchase failed (code: ${responseCode ?? errorCode ?? 'unknown'})`;
-      console.error('❌ LISTENER: Purchase failed —', msg);
-      if (callbacks) callbacks.onError(msg);
+      console.error('[IAP] Purchase failed:', msg);
+      callbacks?.onError(msg);
     }
   });
 }
 
+/**
+ * Ensure we have a live StoreKit session.
+ * Connects once and NEVER disconnects. Safe to call multiple times.
+ */
+async function ensureConnected(): Promise<boolean> {
+  if (!InAppPurchases || Platform.OS !== 'ios') return false;
+  if (sessionConnected) return true;
+
+  try {
+    console.log('[IAP] Calling connectAsync...');
+    await InAppPurchases.connectAsync();
+    sessionConnected = true;
+    registerListener();
+    console.log('[IAP] Connected to App Store');
+    return true;
+  } catch (e: any) {
+    const msg = e?.message || String(e);
+    // Error code 3 or "already connected" means we ARE connected — treat as success
+    if (e?.code === 3 || msg.toLowerCase().includes('already')) {
+      sessionConnected = true;
+      registerListener();
+      console.log('[IAP] Already connected — session reused');
+      return true;
+    }
+    console.error('[IAP] connectAsync failed:', msg, 'code:', e?.code);
+    iapDebugInfo.connectError = { message: msg, code: e?.code };
+    return false;
+  }
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Query StoreKit products. Connects if needed, then fetches products.
+ * Returns array of loaded product IDs.
+ * NEVER calls disconnectAsync — that would invalidate the product objects.
+ */
+export async function queryProducts(productIds: string[]): Promise<string[]> {
+  loadedProducts.clear();
+  iapDebugInfo = {
+    bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
+    responseCode: 'not_queried',
+    resultsLength: 0,
+    returnedIds: [],
+  };
+
+  if (Platform.OS !== 'ios') {
+    iapDebugInfo.responseCode = 'platform_not_ios';
+    return [];
+  }
+
+  if (!InAppPurchases) {
+    iapDebugInfo.responseCode = 'module_not_available';
+    return [];
+  }
+
+  const connected = await ensureConnected();
+  if (!connected) {
+    iapDebugInfo.responseCode = 'connect_failed';
+    return [];
+  }
+
+  try {
+    console.log('[IAP] Calling getProductsAsync for:', productIds);
+    const response = await InAppPurchases.getProductsAsync(productIds);
+    const results = response?.results || [];
+    const responseCode = response?.responseCode;
+
+    iapDebugInfo = {
+      bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
+      responseCode,
+      resultsLength: results.length,
+      returnedIds: results.map((r: any) => r.productId),
+    };
+
+    console.log('[IAP] getProductsAsync responseCode:', responseCode, 'count:', results.length);
+
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results.length > 0) {
+      for (const product of results) {
+        if (product?.productId) {
+          loadedProducts.set(product.productId, product);
+          console.log('[IAP] Stored product:', product.productId, product.priceString);
+        }
+      }
+      return Array.from(loadedProducts.keys());
+    }
+
+    console.warn('[IAP] No products returned, responseCode:', responseCode);
+    return [];
+  } catch (e: any) {
+    console.error('[IAP] getProductsAsync error:', e?.message, 'code:', e?.code);
+    iapDebugInfo.queryError = { message: e?.message || String(e), code: e?.code };
+    return [];
+  }
+}
+
+export function isProductReady(productId: string): boolean {
+  return loadedProducts.has(productId);
+}
+
+export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
+  if (Platform.OS !== 'ios' || !InAppPurchases) return null;
+  const product = loadedProducts.get(productId);
+  if (!product) return null;
+  return {
+    productId: product.productId,
+    price: String(product.price ?? ''),
+    priceString: product.priceString ?? '',
+    currencyCode: product.currencyCode || 'USD',
+    title: product.title || '',
+    description: product.description || '',
+  };
+}
+
+/**
+ * Purchase a product. The product MUST already be in loadedProducts (from queryProducts).
+ * NEVER calls connectAsync here — session must already be live from queryProducts.
+ */
 export function purchaseProduct(
   productId: string,
   onSuccess: () => void,
   onCancelled: () => void,
   onError: (message: string) => void
 ): void {
-  console.log('🔵 PURCHASE REQUEST: Product ID:', productId);
+  console.log('[IAP] purchaseProduct called for:', productId);
 
   if (Platform.OS !== 'ios') {
     onError('Subscriptions are only available on iOS');
@@ -438,241 +277,127 @@ export function purchaseProduct(
     return;
   }
 
-  const product = queriedProducts.get(productId);
-  if (!product) {
-    console.error('❌ PURCHASE REQUEST: Product not in queriedProducts map');
-    onError('Product not available. Please close and reopen the paywall, then try again.');
+  if (!sessionConnected) {
+    onError('Not connected to App Store. Please close and reopen the paywall.');
     return;
   }
 
-  console.log('📦 PURCHASE REQUEST: Using product:', product.productId, 'price:', product.priceString);
+  const product = loadedProducts.get(productId);
+  if (!product) {
+    console.error('[IAP] Product not in loadedProducts:', productId);
+    onError('Product not loaded. Please tap Retry on the paywall.');
+    return;
+  }
+
+  console.log('[IAP] purchaseItemAsync for:', product.productId, product.priceString);
 
   // Set callbacks BEFORE calling purchaseItemAsync so the persistent listener can find them
   activePurchaseCallbacks = { onSuccess, onCancelled, onError };
 
-  console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync...');
-  InAppPurchases.purchaseItemAsync(product).then(() => {
-    console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener event...');
-  }).catch((purchaseError: any) => {
-    const msg = purchaseError?.message || String(purchaseError);
-    console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg, 'code:', purchaseError?.code);
-    const isCancelError = msg.toLowerCase().includes('cancel') || purchaseError?.code === 2;
-    const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.toLowerCase().includes('sandbox');
-    if (isCancelError) {
-      activePurchaseCallbacks = null;
-      onCancelled();
-    } else if (isRealError) {
-      activePurchaseCallbacks = null;
-      onError(msg);
-    }
-    // Otherwise: sandbox quirk — leave callbacks set, listener will fire
-  });
+  InAppPurchases.purchaseItemAsync(product)
+    .then(() => {
+      console.log('[IAP] purchaseItemAsync resolved — waiting for listener...');
+    })
+    .catch((e: any) => {
+      const msg = e?.message || String(e);
+      const isCancelled = msg.toLowerCase().includes('cancel') || e?.code === 2;
+      console.warn('[IAP] purchaseItemAsync threw:', msg, 'code:', e?.code);
+      if (isCancelled) {
+        activePurchaseCallbacks = null;
+        onCancelled();
+      }
+      // Otherwise: leave callbacks set — listener may still fire (sandbox quirk)
+    });
 }
 
-/**
- * Restore previous purchases from App Store
- * Only grants Full Access if portiontrack.monthly or portiontrack.annual found
- * Otherwise shows "No active subscription found"
- * Handles results defensively with optional chaining
- */
 export async function restorePurchases(): Promise<PurchaseResult> {
+  console.log('[IAP] restorePurchases called');
+
+  if (Platform.OS !== 'ios') {
+    return { success: false, error: 'Restore purchases is only available on iOS' };
+  }
+
+  if (!InAppPurchases) {
+    return { success: false, error: 'InAppPurchases module not available' };
+  }
+
+  const connected = await ensureConnected();
+  if (!connected) {
+    return { success: false, error: 'Failed to connect to App Store. Please try again.' };
+  }
+
   try {
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 RESTORE: Starting restore purchases');
-    console.log('═══════════════════════════════════════════════════════');
-    
-    if (Platform.OS !== 'ios') {
-      console.error('❌ RESTORE: Platform not iOS');
-      return {
-        success: false,
-        error: 'Restore purchases is only available on iOS',
-      };
-    }
-
-    if (!InAppPurchases) {
-      console.error('❌ RESTORE: InAppPurchases module not available');
-      return {
-        success: false,
-        error: 'InAppPurchases module not available',
-      };
-    }
-
-    // Initialize if not already done
-    const initialized = await initializeStoreKit();
-    if (!initialized) {
-      console.error('❌ RESTORE: StoreKit initialization failed');
-      return {
-        success: false,
-        error: 'Failed to connect to App Store. Please try again.',
-      };
-    }
-
-    // Get purchase history
-    console.log('🔄 RESTORE: Fetching purchase history...');
+    console.log('[IAP] Calling getPurchaseHistoryAsync...');
     const response = await InAppPurchases.getPurchaseHistoryAsync();
-    
-    // Handle results defensively with optional chaining
-    const responseCode = response?.responseCode;
     const results = response?.results;
-    
-    console.log('📊 RESTORE RESPONSE:');
-    console.log('  - Response code:', responseCode);
-    console.log('  - Results count:', results?.length || 0);
+    const responseCode = response?.responseCode;
 
-    // Guard all fields with optional chaining
-    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
-      console.log('✅ RESTORE: Found', results.length, 'previous purchases');
-      
-      // Finish/acknowledge all restored transactions
+    console.log('[IAP] Restore responseCode:', responseCode, 'count:', results?.length ?? 0);
+
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results?.length > 0) {
       for (const purchase of results) {
-        console.log('🔄 RESTORE FINISH: Processing:', purchase?.productId);
-        console.log('🔄 RESTORE FINISH: Acknowledged:', purchase?.acknowledged);
-        
         if (!purchase?.acknowledged) {
-          console.log('🔄 RESTORE FINISH: Acknowledging...');
           try {
             await InAppPurchases.finishTransactionAsync(purchase, true);
-            console.log('✅ RESTORE FINISH: Acknowledged');
-          } catch (finishError) {
-            console.error('❌ RESTORE FINISH: Error:', finishError);
-          }
+          } catch (_) {}
         }
       }
-      
-      // Only grant Full Access if portiontrack.monthly or portiontrack.annual found
-      const hasSubscription = results.some((purchase: any) => 
-        purchase?.productId === PRODUCT_IDS.MONTHLY || 
-        purchase?.productId === PRODUCT_IDS.ANNUAL
+
+      const hasSubscription = results.some(
+        (p: any) => p?.productId === PRODUCT_IDS.MONTHLY || p?.productId === PRODUCT_IDS.ANNUAL
       );
-      
-      console.log('📊 RESTORE: Has valid subscription:', hasSubscription);
-      
+
+      console.log('[IAP] Restore hasSubscription:', hasSubscription);
+
       if (hasSubscription) {
-        console.log('✅ RESTORE: Valid subscription found - granting Full Access');
-        
-        // CRITICAL FIX: Save to AsyncStorage AND emit event immediately
         await saveSubscriptionStatus(true);
-        console.log('✅ RESTORE: Saved to AsyncStorage');
-        
-        // Emit event to immediately update UI
         emitSubscriptionUpdate(true);
-        console.log('✅ RESTORE: Emitted subscription update event');
-        
-        console.log('═══════════════════════════════════════════════════════');
         return { success: true };
-      } else {
-        console.log('ℹ️ RESTORE: No valid subscription found (portiontrack.monthly or portiontrack.annual)');
-        console.log('═══════════════════════════════════════════════════════');
-        return {
-          success: false,
-          error: 'No active subscription found',
-        };
       }
-    } else {
-      console.log('ℹ️ RESTORE: No purchase history found');
-      console.log('═══════════════════════════════════════════════════════');
-      return {
-        success: false,
-        error: 'No purchases to restore',
-      };
+
+      return { success: false, error: 'No active subscription found' };
     }
-  } catch (error: any) {
-    console.error('═══════════════════════════════════════════════════════');
-    console.error('❌ RESTORE ERROR: Exception during restore');
-    console.error('❌ Error:', error);
-    console.error('❌ Error code:', error?.code);
-    console.error('❌ Error message:', error?.message);
-    console.error('═══════════════════════════════════════════════════════');
-    
-    const errorMessage = error?.message || 'Failed to restore purchases';
-    
-    return {
-      success: false,
-      error: errorMessage,
-    };
+
+    return { success: false, error: 'No purchases to restore' };
+  } catch (e: any) {
+    console.error('[IAP] restorePurchases error:', e?.message);
+    return { success: false, error: e?.message || 'Failed to restore purchases' };
   }
 }
 
-/**
- * Validate receipt with App Store
- * TODO: Implement server-side receipt validation for production
- */
-export async function validateReceipt(receiptData: string): Promise<boolean> {
-  try {
-    console.log('🔄 IAP: Validating receipt with App Store...');
-    
-    // TODO: Implement server-side receipt validation for production
-    // This should send the receipt to your backend server
-    // which validates it with Apple's servers
-    
-    console.log('⚠️ IAP: Server-side receipt validation not implemented');
-    console.log('📋 IAP: For production, implement backend validation at /api/validate-receipt');
-    
-    return false;
-  } catch (error) {
-    console.error('❌ IAP: Receipt validation error:', error);
-    return false;
-  }
-}
-
-/**
- * Check current subscription status with App Store
- * Always checks real App Store subscription status
- */
 export async function checkAppStoreSubscription(): Promise<boolean> {
+  console.log('[IAP] checkAppStoreSubscription called');
+
+  if (Platform.OS !== 'ios' || !InAppPurchases) {
+    return loadSubscriptionStatus();
+  }
+
+  const connected = await ensureConnected();
+  if (!connected) {
+    return loadSubscriptionStatus();
+  }
+
   try {
-    console.log('🔄 IAP: Checking subscription status with App Store...');
-    
-    if (Platform.OS !== 'ios') {
-      console.log('⚠️ IAP: Not iOS platform');
-      return false;
-    }
-
-    if (!InAppPurchases) {
-      console.log('⚠️ IAP: InAppPurchases module not available');
-      return false;
-    }
-
-    // Initialize if not already done
-    const initialized = await initializeStoreKit();
-    if (!initialized) {
-      console.error('❌ IAP: Failed to initialize StoreKit');
-      const localStatus = await loadSubscriptionStatus();
-      return localStatus;
-    }
-
-    // Get purchase history to check for active subscriptions
     const response = await InAppPurchases.getPurchaseHistoryAsync();
-    
-    // Handle results defensively with optional chaining
-    const responseCode = response?.responseCode;
     const results = response?.results;
-    
-    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
-      // Only check for portiontrack.monthly or portiontrack.annual
-      const hasSubscription = results.some((purchase: any) => 
-        purchase?.productId === PRODUCT_IDS.MONTHLY || 
-        purchase?.productId === PRODUCT_IDS.ANNUAL
+    const responseCode = response?.responseCode;
+
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results?.length > 0) {
+      const hasSubscription = results.some(
+        (p: any) => p?.productId === PRODUCT_IDS.MONTHLY || p?.productId === PRODUCT_IDS.ANNUAL
       );
-      
-      console.log('✅ IAP: Subscription check complete:', hasSubscription);
-      
-      // Update local storage
+      console.log('[IAP] checkAppStoreSubscription result:', hasSubscription);
       await saveSubscriptionStatus(hasSubscription);
-      
-      // Emit event to update UI
       emitSubscriptionUpdate(hasSubscription);
-      
       return hasSubscription;
     }
 
-    console.log('ℹ️ IAP: No active subscription found');
     return false;
-  } catch (error) {
-    console.error('❌ IAP: Subscription check error:', error);
-    
-    // Fall back to local storage on error
-    const localStatus = await loadSubscriptionStatus();
-    return localStatus;
+  } catch (_) {
+    return loadSubscriptionStatus();
   }
+}
+
+export async function validateReceipt(_receiptData: string): Promise<boolean> {
+  return false;
 }

@@ -16,10 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { 
-  purchaseProduct, 
-  restorePurchases, 
-  PRODUCT_IDS, 
+import {
+  purchaseProduct,
+  restorePurchases,
+  PRODUCT_IDS,
   getProductDetails,
   queryProducts,
   isProductReady,
@@ -60,10 +60,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   useEffect(() => {
     if (visible) {
-      setLoading(false); // reset spinner state on every open
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🔵 PAYWALL MOUNT: Paywall screen opened');
-      console.log('═══════════════════════════════════════════════════════');
+      setLoading(false);
+      console.log('[Paywall] Paywall opened — loading products');
       loadProducts();
     }
   }, [visible]);
@@ -75,137 +73,76 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   }, [visible]);
 
   const loadProducts = async () => {
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 PRODUCT FETCH START: Initializing StoreKit and fetching products');
-    console.log('📊 PRODUCT FETCH: Platform:', Platform.OS);
-    console.log('═══════════════════════════════════════════════════════');
-    
+    console.log('[Paywall] loadProducts called, platform:', Platform.OS);
+
     setLoadingProducts(true);
     setProductsFailed(false);
-    setDebugInfo(prev => ({ ...prev, status: 'loading', productCount: 0, loadedIds: [], monthlyReady: false, annualReady: false }));
+    setDebugInfo({ status: 'loading', productCount: 0, loadedIds: [], monthlyReady: false, annualReady: false });
 
-    // On non-iOS platforms (web, Android), use fallback products
     // expo-in-app-purchases only works on iOS
     if (Platform.OS !== 'ios') {
-      console.log('⚠️ PRODUCT FETCH: Not iOS platform, using fallback products');
-      console.log('⚠️ PRODUCT FETCH: In-app purchases only work on iOS devices');
-      
-      // Get fallback product details
-      const [monthly, annual] = await Promise.all([
-        getProductDetails(PRODUCT_IDS.MONTHLY),
-        getProductDetails(PRODUCT_IDS.ANNUAL),
-      ]);
-      
-      setMonthlyProduct(monthly);
-      setAnnualProduct(annual);
+      console.log('[Paywall] Not iOS — skipping StoreKit query');
       setLoadingProducts(false);
-      
-      console.log('✅ PRODUCT FETCH: Fallback products loaded');
-      console.log('═══════════════════════════════════════════════════════');
       return;
     }
 
     try {
-      // Query products using getProductsAsync with subscription IDs
-      console.log('📦 PRODUCT FETCH: Querying products from StoreKit...');
-      console.log('📦 PRODUCT FETCH: SKUs to query:', [PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-      
-      const queriedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-      
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('📊 PRODUCT FETCH RESULT:');
-      console.log('  - Total products queried:', queriedIds.length);
-      console.log('  - Product IDs returned:', queriedIds);
-      console.log('  - Monthly SKU ready:', queriedIds.includes(PRODUCT_IDS.MONTHLY));
-      console.log('  - Annual SKU ready:', queriedIds.includes(PRODUCT_IDS.ANNUAL));
-      console.log('═══════════════════════════════════════════════════════');
+      console.log('[Paywall] Querying products from StoreKit...');
+      const loadedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+      console.log('[Paywall] First attempt returned:', loadedIds.length, 'products:', loadedIds);
 
-      {
-        const monthlyReady = isProductReady(PRODUCT_IDS.MONTHLY);
-        const annualReady = isProductReady(PRODUCT_IDS.ANNUAL);
-        setDebugInfo({
-          status: queriedIds.length > 0 ? 'loaded' : 'failed',
-          productCount: queriedIds.length,
-          loadedIds: queriedIds,
-          monthlyReady,
-          annualReady,
-        });
-      }
-
-      // If results are empty, retry once after 2 s before showing the error state.
-      // Many TestFlight failures are transient (StoreKit not yet warmed up).
-      if (queriedIds.length === 0) {
-        console.warn('⚠️ PRODUCT FETCH: No products on first attempt — retrying in 2 s...');
+      // If first attempt returns nothing, wait 2s and retry once (StoreKit warm-up)
+      if (loadedIds.length === 0) {
+        console.warn('[Paywall] No products on first attempt — retrying in 2s...');
         await new Promise<void>((resolve) => setTimeout(resolve, 2000));
 
         const retryIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-        console.log('📊 PRODUCT FETCH RETRY RESULT:', retryIds);
+        console.log('[Paywall] Retry returned:', retryIds.length, 'products:', retryIds);
 
         if (retryIds.length === 0) {
-          console.error('❌ PRODUCT FETCH FAIL: No products returned after retry');
+          console.error('[Paywall] No products after retry — showing error state');
           setDebugInfo({ status: 'failed', productCount: 0, loadedIds: [], monthlyReady: false, annualReady: false });
           setProductsFailed(true);
           setLoadingProducts(false);
           return;
         }
 
-        // Retry succeeded — continue with retryIds
+        // Retry succeeded
         const [monthly, annual] = await Promise.all([
           getProductDetails(PRODUCT_IDS.MONTHLY),
           getProductDetails(PRODUCT_IDS.ANNUAL),
         ]);
         setMonthlyProduct(monthly);
         setAnnualProduct(annual);
-        {
-          const monthlyReady = isProductReady(PRODUCT_IDS.MONTHLY);
-          const annualReady = isProductReady(PRODUCT_IDS.ANNUAL);
-          setDebugInfo({
-            status: retryIds.length > 0 ? 'loaded' : 'failed',
-            productCount: retryIds.length,
-            loadedIds: retryIds,
-            monthlyReady,
-            annualReady,
-          });
-        }
-        console.log('✅ PRODUCT FETCH RETRY COMPLETE: Products loaded on second attempt');
+        setDebugInfo({
+          status: 'loaded',
+          productCount: retryIds.length,
+          loadedIds: retryIds,
+          monthlyReady: isProductReady(PRODUCT_IDS.MONTHLY),
+          annualReady: isProductReady(PRODUCT_IDS.ANNUAL),
+        });
+        console.log('[Paywall] Products loaded on retry — monthly:', monthly?.priceString, 'annual:', annual?.priceString);
         setLoadingProducts(false);
         return;
       }
 
-      // Get display details for each product
-      console.log('🔄 PRODUCT DETAILS: Fetching display details for products...');
-      
+      // First attempt succeeded
       const [monthly, annual] = await Promise.all([
         getProductDetails(PRODUCT_IDS.MONTHLY),
         getProductDetails(PRODUCT_IDS.ANNUAL),
       ]);
-
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('📊 PRODUCT DETAILS RESULT:');
-      console.log('  Monthly Product:');
-      console.log('    - Product ID:', monthly?.productId);
-      console.log('    - Price:', monthly?.price);
-      console.log('    - Price String:', monthly?.priceString);
-      console.log('    - Currency:', monthly?.currencyCode);
-      console.log('  Annual Product:');
-      console.log('    - Product ID:', annual?.productId);
-      console.log('    - Price:', annual?.price);
-      console.log('    - Price String:', annual?.priceString);
-      console.log('    - Currency:', annual?.currencyCode);
-      console.log('═══════════════════════════════════════════════════════');
-
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
-      
-      console.log('✅ PRODUCT FETCH COMPLETE: Products loaded and ready for purchase');
-      console.log('═══════════════════════════════════════════════════════');
+      setDebugInfo({
+        status: 'loaded',
+        productCount: loadedIds.length,
+        loadedIds,
+        monthlyReady: isProductReady(PRODUCT_IDS.MONTHLY),
+        annualReady: isProductReady(PRODUCT_IDS.ANNUAL),
+      });
+      console.log('[Paywall] Products loaded — monthly:', monthly?.priceString, 'annual:', annual?.priceString);
     } catch (error) {
-      console.error('═══════════════════════════════════════════════════════');
-      console.error('❌ PRODUCT FETCH ERROR: Failed to load products');
-      console.error('❌ Error details:', error);
-      console.error('═══════════════════════════════════════════════════════');
-      
-      // Show "Unable to load plans" + Retry on error
+      console.error('[Paywall] loadProducts error:', error);
       setDebugInfo({ status: 'failed', productCount: 0, loadedIds: [], monthlyReady: false, annualReady: false });
       setProductsFailed(true);
     } finally {
@@ -214,34 +151,24 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const handlePurchaseSuccess = async () => {
-    setLoading(false); // safety net — ensure spinner stops before navigation
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🎉 PURCHASE SUCCESS HANDLER: Starting post-purchase navigation');
-    console.log('═══════════════════════════════════════════════════════');
+    setLoading(false);
+    console.log('[Paywall] handlePurchaseSuccess — post-purchase navigation');
 
     if (onSubscribeSuccess) {
-      // Caller (welcome screen) handles navigation
-      console.log('✅ PURCHASE SUCCESS: Delegating navigation to onSubscribeSuccess callback');
-      console.log('═══════════════════════════════════════════════════════');
+      console.log('[Paywall] Delegating navigation to onSubscribeSuccess callback');
       onSubscribeSuccess();
       return;
     }
 
-    // Fallback: check profile and navigate directly
     const profile = await loadProfile();
     const hasProfile = profile && profile.portionTargets;
-
-    console.log('📊 PURCHASE SUCCESS: Profile check');
-    console.log('  - Profile exists:', !!profile);
-    console.log('  - Has portion targets:', !!hasProfile);
+    console.log('[Paywall] Profile exists:', !!profile, 'hasTargets:', !!hasProfile);
 
     if (hasProfile) {
-      console.log('✅ PURCHASE SUCCESS: Profile exists -> Navigating to (tabs)');
-      console.log('═══════════════════════════════════════════════════════');
+      console.log('[Paywall] Navigating to (tabs)');
       router.replace('/(tabs)');
     } else {
-      console.log('✅ PURCHASE SUCCESS: No profile -> Navigating to setup-profile');
-      console.log('═══════════════════════════════════════════════════════');
+      console.log('[Paywall] Navigating to setup-profile');
       router.replace('/setup-profile');
     }
   };
@@ -249,34 +176,25 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   const handleSubscribe = () => {
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
 
-    console.log('🔵 PURCHASE TAP: selectedPlan:', selectedPlan, 'productId:', productId);
-    console.log('🔵 PURCHASE TAP: debugInfo:', JSON.stringify(debugInfo));
+    console.log('[Paywall] Subscribe tapped — plan:', selectedPlan, 'productId:', productId);
 
-    // Hard guard: do not proceed if products are still loading
     if (loadingProducts) {
       Alert.alert('Loading', 'Please wait while subscription plans load.');
       return;
     }
 
-    // Hard guard: do not proceed if product count is 0
-    if (debugInfo.productCount === 0) {
-      Alert.alert('Products Not Loaded', 'StoreKit products have not loaded yet. Please tap Retry or wait a moment.');
-      return;
-    }
-
-    // Hard guard: do not proceed if this specific product is not ready
     if (!isProductReady(productId)) {
       const loadedDisplay = debugInfo.loadedIds.join(', ') || 'none';
-      Alert.alert('Product Not Ready', `The ${selectedPlan} product (${productId}) is not loaded. Loaded: ${loadedDisplay}`);
+      console.warn('[Paywall] Product not ready:', productId, 'loaded:', loadedDisplay);
+      Alert.alert('Product Not Ready', `The ${selectedPlan} plan is not available yet. Loaded: ${loadedDisplay}`);
       return;
     }
 
-    console.log('✅ PURCHASE GUARD PASSED: productId:', productId, 'loadedIds:', debugInfo.loadedIds);
-
+    console.log('[Paywall] Purchase guard passed — calling purchaseProduct');
     setLoading(true);
 
     const safetyTimer = setTimeout(() => {
-      console.warn('⚠️ PURCHASE SAFETY TIMER: No listener response after 90s — stopping spinner');
+      console.warn('[Paywall] Safety timer fired — no listener response after 90s');
       setLoading(false);
       Alert.alert('Purchase Timed Out', 'The purchase did not complete. Please try again.', [{ text: 'OK' }]);
     }, 90000);
@@ -285,18 +203,18 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       productId,
       () => {
         clearTimeout(safetyTimer);
-        console.log('✅ PURCHASE CALLBACK: onSuccess fired');
+        console.log('[Paywall] onSuccess fired');
         setLoading(false);
         handlePurchaseSuccess();
       },
       () => {
         clearTimeout(safetyTimer);
-        console.log('ℹ️ PURCHASE CALLBACK: onCancelled fired');
+        console.log('[Paywall] onCancelled fired');
         setLoading(false);
       },
       (message) => {
         clearTimeout(safetyTimer);
-        console.error('❌ PURCHASE CALLBACK: onError fired —', message);
+        console.error('[Paywall] onError fired:', message);
         setLoading(false);
         Alert.alert('Purchase Failed', message, [{ text: 'OK' }]);
       }
@@ -304,19 +222,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const handleRestorePurchases = async () => {
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 RESTORE TAP: User tapped Restore Purchases button');
-    console.log('═══════════════════════════════════════════════════════');
-
+    console.log('[Paywall] Restore Purchases tapped');
     setLoading(true);
 
     try {
       const result = await restorePurchases();
-      
-      console.log('📊 RESTORE RESULT:');
-      console.log('  - Success:', result.success);
-      console.log('  - Error:', result.error);
-      console.log('═══════════════════════════════════════════════════════');
+      console.log('[Paywall] Restore result — success:', result.success, 'error:', result.error);
 
       if (result.success) {
         Alert.alert(
@@ -326,11 +237,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
             {
               text: 'OK',
               onPress: () => {
-                console.log('✅ RESTORE SUCCESS: User acknowledged restore success');
-                console.log('ℹ️ RESTORE SUCCESS: Subscription status updated via event emitter');
-                console.log('ℹ️ RESTORE SUCCESS: Navigating to Profile/Setup');
-                
-                // Navigate directly to Profile or Setup based on profile existence
+                console.log('[Paywall] Restore acknowledged — navigating');
                 handlePurchaseSuccess();
               },
             },
@@ -344,15 +251,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
         );
       }
     } catch (error: any) {
-      console.error('❌ RESTORE ERROR:', error);
-      
-      const errorMessage = error?.message || 'Unable to restore purchases. Please try again.';
-      
-      Alert.alert(
-        'Error',
-        errorMessage,
-        [{ text: 'OK' }]
-      );
+      console.error('[Paywall] Restore error:', error);
+      Alert.alert('Error', error?.message || 'Unable to restore purchases. Please try again.', [{ text: 'OK' }]);
     } finally {
       setLoading(false);
     }
