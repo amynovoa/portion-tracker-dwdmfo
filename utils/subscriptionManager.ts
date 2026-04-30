@@ -206,191 +206,101 @@ function isPriceValid(price: any, priceString: any): boolean {
 }
 
 /**
- * Query products using getProductsAsync with subscription IDs
- * Store the returned results objects in memory keyed by productId
+ * Query products using getProductsAsync with subscription IDs.
+ * Always disconnects first so connectAsync runs on a fresh session —
+ * this is required for the returned product objects to be valid for purchaseItemAsync.
  */
 export async function queryProducts(productIds: string[]): Promise<string[]> {
   try {
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🔵 QUERY PRODUCTS: Starting product query');
-    console.log('📊 QUERY PRODUCTS: Product IDs to query:', productIds);
-    console.log('🚨 QUERY PRODUCTS: Using getProductsAsync() for subscriptions');
-    console.log('═══════════════════════════════════════════════════════');
-    
+    console.log('🔵 QUERY PRODUCTS: Starting product query for:', productIds);
+
     if (Platform.OS !== 'ios') {
-      console.log('⚠️ QUERY PRODUCTS: Platform is not iOS, skipping');
-      
-      // Store debug info for non-iOS platforms
       iapDebugInfo = {
         bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'N/A (not iOS)',
         responseCode: 'platform_not_ios',
         resultsLength: 0,
         returnedIds: [],
       };
-      
       return [];
     }
 
     if (!InAppPurchases) {
-      console.error('❌ QUERY PRODUCTS: InAppPurchases module not available');
-      
-      // Store debug info when module unavailable
       iapDebugInfo = {
         bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
         responseCode: 'module_not_available',
         resultsLength: 0,
         returnedIds: [],
       };
-      
       return [];
     }
 
-    // Clear stale products FIRST — before connect — so there is never a window
-    // where a stale product object could be used for purchase.
+    // Clear stale products before querying
     queriedProducts.clear();
     console.log('🔄 QUERY PRODUCTS: Cleared stale product cache');
 
-    // connectAsync() must happen immediately before getProductsAsync() — no other
-    // async work between them. initializeStoreKit() does exactly that.
-    console.log('🔄 QUERY PRODUCTS: Calling initializeStoreKit (connectAsync → listener)...');
-    const initialized = await initializeStoreKit();
-    
-    if (!initialized) {
-      console.error('❌ QUERY PRODUCTS: StoreKit initialization failed');
-      
-      // Store debug info when init fails
-      iapDebugInfo = {
-        bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
-        responseCode: 'init_failed',
-        resultsLength: 0,
-        returnedIds: [],
-        // Include connect error if it exists
-        ...(iapDebugInfo.connectError && { connectError: iapDebugInfo.connectError }),
-      };
-      
-      return [];
+    // Step 1: Disconnect any existing session so connectAsync always runs fresh.
+    // This is required here (not in initializeStoreKit) because only queryProducts
+    // needs a fresh session — restorePurchases and checkAppStoreSubscription do not.
+    console.log('🔄 QUERY PRODUCTS: Disconnecting existing session...');
+    try {
+      await InAppPurchases.disconnectAsync();
+      console.log('✅ QUERY PRODUCTS: Disconnected');
+    } catch (_) {
+      console.log('ℹ️ QUERY PRODUCTS: Nothing to disconnect');
     }
-    
-    console.log('✅ QUERY PRODUCTS: StoreKit initialized — calling getProductsAsync immediately');
 
-    // Use getProductsAsync() instead of getSubscriptionsAsync()
-    console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync() for subscriptions...');
+    // Step 2: Connect fresh
+    console.log('🔄 QUERY PRODUCTS: Connecting to App Store...');
+    await InAppPurchases.connectAsync();
+    console.log('✅ QUERY PRODUCTS: Connected');
+
+    // Step 3: Register listener on the fresh connection (reset flag so it re-registers)
+    listenerRegistered = false;
+    if (!listenerRegistered) {
+      registerPersistentListener();
+      listenerRegistered = true;
+      console.log('✅ QUERY PRODUCTS: Listener registered on fresh connection');
+    }
+
+    storeKitInitialized = true;
+
+    // Step 4: Query products immediately — same session, no gap
+    console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync...');
     const response = await InAppPurchases.getProductsAsync(productIds);
-    
-    // Store debug information from the response
+
     const bundleId = Constants.expoConfig?.ios?.bundleIdentifier || 'unknown';
     const responseCode = response.responseCode;
-    const resultsLength = response.results?.length || 0;
-    const returnedIds = response.results?.map((r: any) => r.productId) || [];
-    
-    iapDebugInfo = {
-      bundleId,
-      responseCode,
-      resultsLength,
-      returnedIds,
-      // Clear query error on success
-    };
-    
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🚨🚨🚨 IAP DEBUG OUTPUT 🚨🚨🚨');
-    console.log('📊 IAP Debug Info:');
-    console.log('  - bundleId:', bundleId);
-    console.log('  - responseCode:', responseCode);
-    console.log('  - resultsLength:', resultsLength);
-    console.log('  - returnedIds:', returnedIds);
-    console.log('🚨🚨🚨 END DEBUG OUTPUT 🚨🚨🚨');
-    console.log('═══════════════════════════════════════════════════════');
-    
-    const { results } = response;
-    
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📊 QUERY PRODUCTS RESPONSE:');
-    console.log('  - Response code:', responseCode);
-    console.log('  - Results count:', resultsLength);
-    console.log('═══════════════════════════════════════════════════════');
-    
-    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
-      // Store the full Product objects in memory keyed by productId
+    const results = response.results || [];
+    const returnedIds = results.map((r: any) => r.productId);
+
+    iapDebugInfo = { bundleId, responseCode, resultsLength: results.length, returnedIds };
+
+    console.log('📊 QUERY PRODUCTS: responseCode:', responseCode, 'results:', results.length, 'ids:', returnedIds);
+
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results.length > 0) {
       const queriedIds: string[] = [];
-      
-      console.log('🔄 QUERY PRODUCTS: Processing returned products...');
-      
       for (const product of results) {
-        console.log('───────────────────────────────────────────────────────');
-        console.log('📦 PRODUCT:', product.productId);
-        
-        // Validate that the product has required fields
-        if (!product.productId) {
-          console.warn('⚠️ PRODUCT: Missing productId, skipping');
-          continue;
-        }
-        
-        console.log('  - Price:', product.price);
-        console.log('  - Price String:', product.priceString);
-        console.log('  - Currency:', product.currencyCode);
-        console.log('  - Title:', product.title);
-        
-        // Validate price data
-        const priceValid = isPriceValid(product.price, product.priceString);
-        console.log('  - Price valid:', priceValid);
-        
-        if (!priceValid) {
-          console.warn('⚠️ PRODUCT: Invalid price data, but storing anyway');
-        }
-        
-        // Store the full Product object keyed by productId
+        if (!product.productId) continue;
         queriedProducts.set(product.productId, product);
         queriedIds.push(product.productId);
-        
-        console.log('✅ PRODUCT: Stored in memory for purchase');
-        console.log('───────────────────────────────────────────────────────');
+        console.log('✅ QUERY PRODUCTS: Stored product:', product.productId, 'price:', product.priceString);
       }
-      
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('✅ QUERY PRODUCTS SUCCESS:');
-      console.log('  - Total products stored:', queriedIds.length);
-      console.log('  - Product IDs:', queriedIds);
-      console.log('═══════════════════════════════════════════════════════');
-      
+      console.log('✅ QUERY PRODUCTS: Total stored:', queriedIds.length);
       return queriedIds;
     }
 
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('⚠️ QUERY PRODUCTS FAIL: No products returned');
-    console.log('  - Response code:', responseCode);
-    console.log('  - This means StoreKit query failed or returned empty');
-    console.log('═══════════════════════════════════════════════════════');
-    
+    console.warn('⚠️ QUERY PRODUCTS: No products returned. responseCode:', responseCode);
     return [];
+
   } catch (error: any) {
-    console.error('═══════════════════════════════════════════════════════');
-    console.error('❌ QUERY PRODUCTS ERROR: Exception during query');
-    console.error('❌ Error:', error);
-    console.error('❌ Error message:', error?.message);
-    console.error('❌ Error code:', error?.code);
-    console.error('═══════════════════════════════════════════════════════');
-    
-    // Store query error details
-    const queryError = {
-      message: error?.message || String(error),
-      code: error?.code,
-    };
-    
+    console.error('❌ QUERY PRODUCTS ERROR:', error?.message, 'code:', error?.code);
     iapDebugInfo = {
       bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
       responseCode: 'exception',
       resultsLength: 0,
       returnedIds: [],
-      queryError,
-      // Include connect error if it exists
-      ...(iapDebugInfo.connectError && { connectError: iapDebugInfo.connectError }),
+      queryError: { message: error?.message || String(error), code: error?.code },
     };
-    
-    console.log('🚨🚨🚨 getProductsAsync() ERROR DETAILS 🚨🚨🚨');
-    console.log('  - Error message:', queryError.message);
-    console.log('  - Error code:', queryError.code);
-    console.log('🚨🚨🚨 END ERROR DETAILS 🚨🚨🚨');
-    
     return [];
   }
 }
