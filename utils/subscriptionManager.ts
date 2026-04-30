@@ -531,11 +531,27 @@ export function purchaseProduct(
   activePurchaseCallbacks = { onSuccess, onCancelled, onError };
 
   console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', product.productId);
-  InAppPurchases.purchaseItemAsync(product.productId).then(() => {
+  InAppPurchases.purchaseItemAsync(product).then(() => {
     console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
   }).catch((purchaseError: any) => {
-    console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw (expected on sandbox):', purchaseError?.message);
-    // Do NOT clear activePurchaseCallbacks here — the listener will still fire
+    const msg = purchaseError?.message || String(purchaseError);
+    console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg);
+    // Only clear callbacks and call onError if this is NOT a sandbox "expected" throw.
+    // On TestFlight sandbox, purchaseItemAsync throws even on success — the listener
+    // will still fire. We detect a real failure by checking if the error code indicates
+    // a genuine StoreKit error (not the sandbox quirk).
+    // The safest heuristic: if the error message contains "SKError" with a non-cancel code,
+    // treat it as a real error. Otherwise leave callbacks in place for the listener.
+    const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
+    const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
+    if (isCancelError) {
+      activePurchaseCallbacks = null;
+      onCancelled();
+    } else if (isRealError) {
+      activePurchaseCallbacks = null;
+      onError(msg);
+    }
+    // Otherwise: leave activePurchaseCallbacks set — listener will fire with the real result
   });
 }
 
