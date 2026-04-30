@@ -106,11 +106,30 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       console.log('  - Annual SKU ready:', queriedIds.includes(PRODUCT_IDS.ANNUAL));
       console.log('═══════════════════════════════════════════════════════');
 
-      // If results are empty or response not OK, show "Unable to load plans" + Retry
+      // If results are empty, retry once after 2 s before showing the error state.
+      // Many TestFlight failures are transient (StoreKit not yet warmed up).
       if (queriedIds.length === 0) {
-        console.error('❌ PRODUCT FETCH FAIL: No products returned from StoreKit');
-        console.error('❌ PRODUCT FETCH FAIL: This means StoreKit query failed or returned empty');
-        setProductsFailed(true);
+        console.warn('⚠️ PRODUCT FETCH: No products on first attempt — retrying in 2 s...');
+        await new Promise<void>((resolve) => setTimeout(resolve, 2000));
+
+        const retryIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
+        console.log('📊 PRODUCT FETCH RETRY RESULT:', retryIds);
+
+        if (retryIds.length === 0) {
+          console.error('❌ PRODUCT FETCH FAIL: No products returned after retry');
+          setProductsFailed(true);
+          setLoadingProducts(false);
+          return;
+        }
+
+        // Retry succeeded — continue with retryIds
+        const [monthly, annual] = await Promise.all([
+          getProductDetails(PRODUCT_IDS.MONTHLY),
+          getProductDetails(PRODUCT_IDS.ANNUAL),
+        ]);
+        setMonthlyProduct(monthly);
+        setAnnualProduct(annual);
+        console.log('✅ PRODUCT FETCH RETRY COMPLETE: Products loaded on second attempt');
         setLoadingProducts(false);
         return;
       }
@@ -209,7 +228,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       return;
     }
 
+    const productForPurchase = selectedPlan === 'monthly' ? monthlyProduct : annualProduct;
     console.log('✅ PURCHASE VALIDATION PASSED: Proceeding with purchase');
+    console.log('📦 PURCHASE TAP: Product object being passed to purchaseProduct:', {
+      productId: productForPurchase?.productId,
+      price: productForPurchase?.price,
+      priceString: productForPurchase?.priceString,
+    });
     console.log('═══════════════════════════════════════════════════════');
 
     setLoading(true);

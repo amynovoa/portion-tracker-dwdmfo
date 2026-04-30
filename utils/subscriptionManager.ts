@@ -24,6 +24,8 @@ export const PRODUCT_IDS = {
 // Store queried Product objects in memory keyed by productId
 let queriedProducts: Map<string, any> = new Map();
 let storeKitInitialized = false;
+// Guard so the persistent listener is only registered once per app session
+let listenerRegistered = false;
 
 // Active purchase callbacks — set before purchaseItemAsync, cleared after listener fires
 let activePurchaseCallbacks: {
@@ -150,9 +152,15 @@ export async function initializeStoreKit(): Promise<boolean> {
       delete iapDebugInfo.connectError;
     }
 
-    // Set up the persistent background purchase listener
-    console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
-    registerPersistentListener();
+    // Set up the persistent background purchase listener — only once per session
+    if (!listenerRegistered) {
+      console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
+      registerPersistentListener();
+      listenerRegistered = true;
+      console.log('✅ STOREKIT INIT: Purchase listener registered');
+    } else {
+      console.log('ℹ️ STOREKIT INIT: Purchase listener already registered — skipping');
+    }
 
     storeKitInitialized = true;
     console.log('✅ STOREKIT INIT: Initialization complete');
@@ -238,8 +246,14 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       return [];
     }
 
-    // Ensure connectAsync() happens immediately before getProductsAsync()
-    console.log('🔄 QUERY PRODUCTS: Ensuring StoreKit is initialized...');
+    // Clear stale products FIRST — before connect — so there is never a window
+    // where a stale product object could be used for purchase.
+    queriedProducts.clear();
+    console.log('🔄 QUERY PRODUCTS: Cleared stale product cache');
+
+    // connectAsync() must happen immediately before getProductsAsync() — no other
+    // async work between them. initializeStoreKit() does exactly that.
+    console.log('🔄 QUERY PRODUCTS: Calling initializeStoreKit (connectAsync → listener)...');
     const initialized = await initializeStoreKit();
     
     if (!initialized) {
@@ -258,11 +272,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
       return [];
     }
     
-    console.log('✅ QUERY PRODUCTS: StoreKit initialized');
-
-    // Clear stale products before re-querying
-    queriedProducts.clear();
-    console.log('🔄 QUERY PRODUCTS: Cleared stale product cache');
+    console.log('✅ QUERY PRODUCTS: StoreKit initialized — calling getProductsAsync immediately');
 
     // Use getProductsAsync() instead of getSubscriptionsAsync()
     console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync() for subscriptions...');
@@ -527,22 +537,28 @@ export function purchaseProduct(
     return;
   }
 
-  if (!queriedProducts.has(productId)) {
-    onError('Product not available. Please check your internet connection and try again.');
+  // Always re-fetch from the map at the last possible moment — never use a
+  // stale reference captured earlier. This is the final guard against
+  // "Must query item from store before calling purchase".
+  const freshProduct = queriedProducts.get(productId);
+  if (!freshProduct) {
+    console.error('❌ PURCHASE REQUEST: Product not in queriedProducts map — cannot purchase');
+    activePurchaseCallbacks = null;
+    onError('Product not available. Please reload the paywall and try again.');
     return;
   }
 
-  const product = queriedProducts.get(productId);
-  if (!product) {
-    onError('Product not ready. Please try again.');
-    return;
-  }
+  console.log('📦 PURCHASE REQUEST: Fresh product object retrieved from map:', {
+    productId: freshProduct.productId,
+    price: freshProduct.price,
+    priceString: freshProduct.priceString,
+  });
 
   // Set callbacks BEFORE calling purchaseItemAsync so the listener can find them
   activePurchaseCallbacks = { onSuccess, onCancelled, onError };
 
-  console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', product.productId);
-  InAppPurchases.purchaseItemAsync(product).then(() => {
+  console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', freshProduct.productId);
+  InAppPurchases.purchaseItemAsync(freshProduct).then(() => {
     console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
   }).catch((purchaseError: any) => {
     const msg = purchaseError?.message || String(purchaseError);
