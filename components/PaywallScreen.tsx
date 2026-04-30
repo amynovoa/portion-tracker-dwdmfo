@@ -194,10 +194,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
     setLoading(true);
 
     const safetyTimer = setTimeout(() => {
-      console.warn('[Paywall] Safety timer fired — no listener response after 90s');
+      console.warn('[Paywall] Safety timer fired — no listener response after 30s');
       setLoading(false);
       Alert.alert('Purchase Timed Out', 'The purchase did not complete. Please try again.', [{ text: 'OK' }]);
-    }, 90000);
+    }, 30000);
 
     purchaseProduct(
       productId,

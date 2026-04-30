@@ -26,6 +26,7 @@ const loadedProducts = new Map<string, any>();
 
 // Callbacks for the active purchase — set before purchaseItemAsync, cleared after listener fires
 let activePurchaseCallbacks: {
+  productId: string;
   onSuccess: () => void;
   onCancelled: () => void;
   onError: (msg: string) => void;
@@ -95,31 +96,50 @@ function registerListener() {
   listenerRegistered = true;
 
   InAppPurchases.setPurchaseListener(async ({ responseCode, results, errorCode }: any) => {
-    console.log('[IAP] Purchase listener fired, responseCode:', responseCode);
+    console.log('[IAP] Purchase listener fired, responseCode:', responseCode, 'results:', results?.length);
 
-    const callbacks = activePurchaseCallbacks;
-    activePurchaseCallbacks = null; // clear immediately so re-entrant events are ignored
-
+    // Handle pending/deferred transactions that arrive before user taps
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results?.length > 0) {
-      let foundValid = false;
+      // Check if any result matches our active purchase
+      const activeId = activePurchaseCallbacks?.productId;
+      const matchingResults = activeId
+        ? results.filter((r: any) => r.productId === activeId)
+        : results;
+      const nonMatchingResults = activeId
+        ? results.filter((r: any) => r.productId !== activeId)
+        : [];
 
-      for (const purchase of results) {
+      // Silently finish non-matching (stale) transactions without touching callbacks
+      for (const purchase of nonMatchingResults) {
+        console.log('[IAP] Finishing stale pending transaction:', purchase.productId);
+        if (!purchase?.acknowledged) {
+          try { await InAppPurchases.finishTransactionAsync(purchase, true); } catch (_) {}
+        }
+      }
+
+      // If no matching results, this was entirely a stale event — do not clear callbacks
+      if (matchingResults.length === 0) {
+        console.log('[IAP] No matching results for active purchase — ignoring event');
+        return;
+      }
+
+      // We have matching results — this is the real purchase response
+      const callbacks = activePurchaseCallbacks;
+      activePurchaseCallbacks = null;
+
+      let foundValid = false;
+      for (const purchase of matchingResults) {
         const isValid =
           purchase?.productId === PRODUCT_IDS.MONTHLY ||
           purchase?.productId === PRODUCT_IDS.ANNUAL;
-
         if (isValid) {
           foundValid = true;
           console.log('[IAP] Valid subscription purchase:', purchase.productId);
           await saveSubscriptionStatus(true);
           emitSubscriptionUpdate(true);
         }
-
         if (!purchase?.acknowledged) {
-          try {
-            await InAppPurchases.finishTransactionAsync(purchase, true);
-            console.log('[IAP] Transaction acknowledged:', purchase?.productId);
-          } catch (_) {}
+          try { await InAppPurchases.finishTransactionAsync(purchase, true); } catch (_) {}
         }
       }
 
@@ -130,12 +150,25 @@ function registerListener() {
           callbacks.onError('Purchase completed but no valid subscription found.');
         }
       }
+
     } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
       console.log('[IAP] User cancelled purchase');
+      const callbacks = activePurchaseCallbacks;
+      activePurchaseCallbacks = null;
       callbacks?.onCancelled();
+
+    } else if (responseCode === InAppPurchases.IAPResponseCode.DEFERRED) {
+      // Ask to Buy / parental approval pending — treat as cancel for UI purposes
+      console.log('[IAP] Purchase deferred (Ask to Buy)');
+      const callbacks = activePurchaseCallbacks;
+      activePurchaseCallbacks = null;
+      callbacks?.onCancelled();
+
     } else {
       const msg = `Purchase failed (code: ${responseCode ?? errorCode ?? 'unknown'})`;
       console.error('[IAP] Purchase failed:', msg);
+      const callbacks = activePurchaseCallbacks;
+      activePurchaseCallbacks = null;
       callbacks?.onError(msg);
     }
   });
@@ -292,7 +325,7 @@ export function purchaseProduct(
   console.log('[IAP] purchaseItemAsync for:', product.productId, product.priceString);
 
   // Set callbacks BEFORE calling purchaseItemAsync so the persistent listener can find them
-  activePurchaseCallbacks = { onSuccess, onCancelled, onError };
+  activePurchaseCallbacks = { productId, onSuccess, onCancelled, onError };
 
   InAppPurchases.purchaseItemAsync(product)
     .then(() => {
@@ -302,11 +335,14 @@ export function purchaseProduct(
       const msg = e?.message || String(e);
       const isCancelled = msg.toLowerCase().includes('cancel') || e?.code === 2;
       console.warn('[IAP] purchaseItemAsync threw:', msg, 'code:', e?.code);
+      // Always clear callbacks on throw — listener will NOT fire after a throw
+      const callbacks = activePurchaseCallbacks;
+      activePurchaseCallbacks = null;
       if (isCancelled) {
-        activePurchaseCallbacks = null;
-        onCancelled();
+        callbacks?.onCancelled();
+      } else {
+        callbacks?.onError(msg);
       }
-      // Otherwise: leave callbacks set — listener may still fire (sandbox quirk)
     });
 }
 
