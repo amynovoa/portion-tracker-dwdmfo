@@ -214,21 +214,31 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
     setLoading(true);
 
+    // Safety-net: if listener never fires within 90s, stop the spinner
+    const safetyTimer = setTimeout(() => {
+      console.warn('⚠️ PURCHASE SAFETY TIMER: No listener response after 90s — stopping spinner');
+      setLoading(false);
+      Alert.alert('Purchase Timed Out', 'The purchase did not complete. Please try again.', [{ text: 'OK' }]);
+    }, 90000);
+
     purchaseProduct(
       productId,
       // onSuccess — listener confirmed a valid subscription
       () => {
+        clearTimeout(safetyTimer);
         console.log('✅ PURCHASE CALLBACK: onSuccess fired — navigating immediately');
         setLoading(false);
         handlePurchaseSuccess();
       },
       // onCancelled — user dismissed the payment sheet
       () => {
+        clearTimeout(safetyTimer);
         console.log('ℹ️ PURCHASE CALLBACK: onCancelled fired — user dismissed sheet');
         setLoading(false);
       },
       // onError — StoreKit returned a non-OK, non-cancel response
       (message) => {
+        clearTimeout(safetyTimer);
         console.error('❌ PURCHASE CALLBACK: onError fired —', message);
         setLoading(false);
         Alert.alert('Purchase Failed', message, [{ text: 'OK' }]);
