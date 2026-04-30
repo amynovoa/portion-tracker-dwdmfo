@@ -152,6 +152,12 @@ export async function initializeStoreKit(): Promise<boolean> {
     await InAppPurchases.connectAsync();
     console.log('✅ STOREKIT INIT: Connected to App Store successfully');
 
+    // Give StoreKit time to fully establish the session before querying products.
+    // Without this delay, getProductsAsync may return objects that StoreKit's native
+    // layer hasn't registered yet, causing "Must query item from store" at purchase time.
+    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('✅ STOREKIT INIT: Session stabilization delay complete');
+
     // Clear any previous connect error
     if (iapDebugInfo.connectError) {
       delete iapDebugInfo.connectError;
@@ -519,10 +525,9 @@ function registerPersistentListener() {
 /**
  * Purchase a product through App Store using a single persistent listener.
  *
- * Sets activePurchaseCallbacks BEFORE calling purchaseItemAsync so the
- * persistent listener (registered once in initializeStoreKit) can find them
- * regardless of when the event fires. No second setPurchaseListener call is
- * made here — that was the root cause of the stuck-spinner bug on TestFlight.
+ * Re-queries the product immediately before purchasing to ensure the native
+ * StoreKit session has the freshest possible product object. Falls back to
+ * the cached object if the pre-query fails.
  */
 export function purchaseProduct(
   productId: string,
@@ -542,48 +547,98 @@ export function purchaseProduct(
     return;
   }
 
-  // Always re-fetch from the map at the last possible moment — never use a
-  // stale reference captured earlier. This is the final guard against
-  // "Must query item from store before calling purchase".
-  const freshProduct = queriedProducts.get(productId);
-  if (!freshProduct) {
-    console.error('❌ PURCHASE REQUEST: Product not in queriedProducts map — cannot purchase');
-    activePurchaseCallbacks = null;
-    onError('Product not available. Please reload the paywall and try again.');
-    return;
-  }
+  // Re-query products immediately before purchasing to ensure the native StoreKit
+  // session has the freshest possible product objects. This is the most reliable
+  // way to prevent "Must query item from store before calling purchase".
+  console.log('🔄 PURCHASE REQUEST: Re-querying products before purchase...');
 
-  console.log('📦 PURCHASE REQUEST: Fresh product object retrieved from map:', {
-    productId: freshProduct.productId,
-    price: freshProduct.price,
-    priceString: freshProduct.priceString,
-  });
+  // We do this inline (not via queryProducts) to avoid the full disconnect/connect cycle
+  // which would reset the listener. We just need a fresh getProductsAsync result.
+  InAppPurchases.getProductsAsync([productId]).then((response: any) => {
+    const responseCode = response?.responseCode;
+    const results = response?.results;
 
-  // Set callbacks BEFORE calling purchaseItemAsync so the listener can find them
-  activePurchaseCallbacks = { onSuccess, onCancelled, onError };
+    console.log('📊 PURCHASE PRE-QUERY: responseCode:', responseCode, 'results:', results?.length);
 
-  console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync for:', freshProduct.productId);
-  InAppPurchases.purchaseItemAsync(freshProduct).then(() => {
-    console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
-  }).catch((purchaseError: any) => {
-    const msg = purchaseError?.message || String(purchaseError);
-    console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg);
-    // Only clear callbacks and call onError if this is NOT a sandbox "expected" throw.
-    // On TestFlight sandbox, purchaseItemAsync throws even on success — the listener
-    // will still fire. We detect a real failure by checking if the error code indicates
-    // a genuine StoreKit error (not the sandbox quirk).
-    // The safest heuristic: if the error message contains "SKError" with a non-cancel code,
-    // treat it as a real error. Otherwise leave callbacks in place for the listener.
-    const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
-    const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
-    if (isCancelError) {
-      activePurchaseCallbacks = null;
-      onCancelled();
-    } else if (isRealError) {
-      activePurchaseCallbacks = null;
-      onError(msg);
+    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
+      const freshProduct = results[0];
+      console.log('✅ PURCHASE PRE-QUERY: Got fresh product:', freshProduct?.productId, 'price:', freshProduct?.priceString);
+
+      // Update the map with the freshest object
+      queriedProducts.set(productId, freshProduct);
+
+      // Set callbacks BEFORE calling purchaseItemAsync
+      activePurchaseCallbacks = { onSuccess, onCancelled, onError };
+
+      console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync with fresh product...');
+      InAppPurchases.purchaseItemAsync(freshProduct).then(() => {
+        console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
+      }).catch((purchaseError: any) => {
+        const msg = purchaseError?.message || String(purchaseError);
+        console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg);
+        const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
+        const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
+        if (isCancelError) {
+          activePurchaseCallbacks = null;
+          onCancelled();
+        } else if (isRealError) {
+          activePurchaseCallbacks = null;
+          onError(msg);
+        }
+        // Otherwise: leave activePurchaseCallbacks set — listener will fire with the real result
+      });
+    } else {
+      // Pre-query failed — fall back to the cached product object
+      console.warn('⚠️ PURCHASE PRE-QUERY: Failed to get fresh product, falling back to cached object');
+      const cachedProduct = queriedProducts.get(productId);
+      if (!cachedProduct) {
+        onError('Product not available. Please close and reopen the paywall, then try again.');
+        return;
+      }
+
+      activePurchaseCallbacks = { onSuccess, onCancelled, onError };
+
+      console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync with cached product...');
+      InAppPurchases.purchaseItemAsync(cachedProduct).then(() => {
+        console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
+      }).catch((purchaseError: any) => {
+        const msg = purchaseError?.message || String(purchaseError);
+        console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg);
+        const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
+        const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
+        if (isCancelError) {
+          activePurchaseCallbacks = null;
+          onCancelled();
+        } else if (isRealError) {
+          activePurchaseCallbacks = null;
+          onError(msg);
+        }
+      });
     }
-    // Otherwise: leave activePurchaseCallbacks set — listener will fire with the real result
+  }).catch((queryError: any) => {
+    console.error('❌ PURCHASE PRE-QUERY: Exception during pre-query:', queryError?.message);
+    // Fall back to cached product
+    const cachedProduct = queriedProducts.get(productId);
+    if (!cachedProduct) {
+      onError('Product not available. Please close and reopen the paywall, then try again.');
+      return;
+    }
+
+    activePurchaseCallbacks = { onSuccess, onCancelled, onError };
+    InAppPurchases.purchaseItemAsync(cachedProduct).then(() => {
+      console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
+    }).catch((purchaseError: any) => {
+      const msg = purchaseError?.message || String(purchaseError);
+      const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
+      const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
+      if (isCancelError) {
+        activePurchaseCallbacks = null;
+        onCancelled();
+      } else if (isRealError) {
+        activePurchaseCallbacks = null;
+        onError(msg);
+      }
+    });
   });
 }
 
