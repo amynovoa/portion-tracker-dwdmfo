@@ -23,7 +23,7 @@ import {
   getProductDetails,
   queryProducts,
   isProductReady,
-  ProductDetails
+  ProductDetails,
 } from '@/utils/subscriptionManager';
 import { loadProfile } from '@/utils/storage';
 
@@ -156,7 +156,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const handlePurchaseSuccess = async () => {
-    setLoading(false); // ensure spinner stops before navigation
+    setLoading(false); // safety net — ensure spinner stops before navigation
     console.log('═══════════════════════════════════════════════════════');
     console.log('🎉 PURCHASE SUCCESS HANDLER: Starting post-purchase navigation');
     console.log('═══════════════════════════════════════════════════════');
@@ -188,28 +188,19 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
     }
   };
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🔵 PURCHASE TAP: User tapped Subscribe button');
     console.log('═══════════════════════════════════════════════════════');
-    
+
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-    
+
     console.log('📊 PURCHASE TAP INFO:');
     console.log('  - Selected plan:', selectedPlan);
     console.log('  - Product ID:', productId);
-    
-    // Verify productId exists in the fetched results list (exact match)
-    const productExists = isProductReady(productId);
-    console.log('  - Product object exists in memory:', productExists);
-    
-    if (!productExists) {
-      console.error('═══════════════════════════════════════════════════════');
-      console.error('❌ PURCHASE BLOCKED: Product object not in memory');
-      console.error('❌ Cannot purchase - product not queried from StoreKit');
-      console.error('❌ Product ID:', productId);
-      console.error('═══════════════════════════════════════════════════════');
-      
+
+    if (!isProductReady(productId)) {
+      console.error('❌ PURCHASE BLOCKED: Product object not in memory — product ID:', productId);
       Alert.alert(
         'Product Not Available',
         'Unable to load product information. Please check your internet connection and try again.',
@@ -223,68 +214,26 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
     setLoading(true);
 
-    try {
-      console.log('🔄 PURCHASE REQUEST: Initiating purchase for:', productId);
-
-      const result = await purchaseProduct(productId);
-      
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('📊 PURCHASE RESULT:');
-      console.log('  - Success:', result.success);
-      console.log('  - User cancelled:', result.userCancelled);
-      console.log('  - Error:', result.error);
-      console.log('═══════════════════════════════════════════════════════');
-
-      if (result.success) {
+    purchaseProduct(
+      productId,
+      // onSuccess — listener confirmed a valid subscription
+      () => {
+        console.log('✅ PURCHASE CALLBACK: onSuccess fired — navigating immediately');
         setLoading(false);
-        Alert.alert(
-          'Success!',
-          'Your subscription is now active. Enjoy unlimited access!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                console.log('✅ PURCHASE SUCCESS: User acknowledged subscription success');
-                console.log('ℹ️ PURCHASE SUCCESS: Subscription status updated via event emitter');
-                console.log('ℹ️ PURCHASE SUCCESS: Navigating to Profile/Setup');
-                
-                // Navigate directly to Profile or Setup based on profile existence
-                handlePurchaseSuccess();
-              },
-            },
-          ]
-        );
-      } else if (result.userCancelled) {
-        console.log('ℹ️ PURCHASE CANCELLED: User cancelled purchase');
-      } else {
-        console.error('❌ PURCHASE FAILED:', result.error);
-        Alert.alert(
-          'Purchase Failed',
-          result.error || 'Unable to complete purchase. Please try again.',
-          [{ text: 'OK' }]
-        );
+        handlePurchaseSuccess();
+      },
+      // onCancelled — user dismissed the payment sheet
+      () => {
+        console.log('ℹ️ PURCHASE CALLBACK: onCancelled fired — user dismissed sheet');
+        setLoading(false);
+      },
+      // onError — StoreKit returned a non-OK, non-cancel response
+      (message) => {
+        console.error('❌ PURCHASE CALLBACK: onError fired —', message);
+        setLoading(false);
+        Alert.alert('Purchase Failed', message, [{ text: 'OK' }]);
       }
-    } catch (error: any) {
-      console.error('═══════════════════════════════════════════════════════');
-      console.error('❌ PURCHASE ERROR: Unexpected error during purchase');
-      console.error('❌ Error:', error);
-      console.error('❌ Error message:', error?.message);
-      console.error('❌ Error code:', error?.code);
-      console.error('═══════════════════════════════════════════════════════');
-      
-      // Safety net: ensure spinner stops even if finally is somehow skipped
-      setLoading(false);
-      
-      const errorMessage = error?.message || 'An unexpected error occurred. Please try again.';
-      
-      Alert.alert(
-        'Error',
-        errorMessage,
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   const handleRestorePurchases = async () => {

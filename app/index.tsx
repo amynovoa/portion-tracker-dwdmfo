@@ -66,7 +66,7 @@ export default function Index() {
           </View>
           <Text style={styles.title}>Update Required</Text>
           <Text style={styles.body}>
-            A new version of Portion Tracker is available. Please update to continue.
+            A new version of Portion Track is available. Please update to continue.
           </Text>
           <TouchableOpacity style={styles.button} onPress={handleUpdatePress} activeOpacity={0.85}>
             <Text style={styles.buttonText}>Update Now</Text>
