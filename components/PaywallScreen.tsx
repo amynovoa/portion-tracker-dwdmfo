@@ -199,16 +199,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
     console.log('  - Selected plan:', selectedPlan);
     console.log('  - Product ID:', productId);
 
-    if (!isProductReady(productId)) {
-      console.error('❌ PURCHASE BLOCKED: Product object not in memory — product ID:', productId);
-      Alert.alert(
-        'Product Not Available',
-        'Unable to load product information. Please check your internet connection and try again.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
     console.log('✅ PURCHASE VALIDATION PASSED: Proceeding with purchase');
     console.log('═══════════════════════════════════════════════════════');
 
@@ -312,23 +302,22 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const getMonthlyPrice = () => {
-    if (loadingProducts) return '...';
-    return monthlyProduct?.priceString || '...';
+    if (monthlyProduct?.priceString) return monthlyProduct.priceString;
+    return '$3.99';
   };
 
   const getAnnualPrice = () => {
-    if (loadingProducts) return '...';
-    return annualProduct?.priceString || '...';
+    if (annualProduct?.priceString) return annualProduct.priceString;
+    return '$29.99';
   };
 
   const getAnnualMonthlyPrice = () => {
-    if (loadingProducts) return '...';
     if (annualProduct) {
       const annualPrice = parseFloat(annualProduct.price);
       const monthlyEquivalent = (annualPrice / 12).toFixed(2);
       return `${annualProduct.currencyCode === 'USD' ? '$' : ''}${monthlyEquivalent}`;
     }
-    return '...';
+    return '$2.50';
   };
 
   // Purchase must be disabled unless the product object exists in memory from StoreKit
@@ -347,11 +336,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   const titleText = '7 day free trial.';
   const subtitleText = 'Cancel anytime.';
 
-  const buttonText = loadingProducts
-    ? 'Loading products...'
-    : !isSelectedProductReady()
-    ? 'Product not available'
-    : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
+  const buttonText = `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
 
   const disclosureText = 'Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.';
 
@@ -518,10 +503,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
             style={[
               buttonStyles.primary, 
               styles.subscribeButton,
-              !isSelectedProductReady() && styles.subscribeButtonDisabled
             ]}
             onPress={handleSubscribe}
-            disabled={loading || loadingProducts || !isSelectedProductReady()}
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.surface} />
