@@ -127,16 +127,23 @@ export async function initializeStoreKit(): Promise<boolean> {
       return false;
     }
 
-    // Check if already initialized
-    if (storeKitInitialized) {
-      console.log('✅ STOREKIT INIT: Already initialized, skipping');
-      return true;
-    }
-
     // Connect to the App Store BEFORE querying products
+    // connectAsync() must be called before EVERY getProductsAsync() — the connection
+    // is not persistent across paywall opens. If already connected, treat it as success.
     console.log('🔄 STOREKIT INIT: Calling connectAsync...');
-    await InAppPurchases.connectAsync();
-    console.log('✅ STOREKIT INIT: Connected to App Store successfully');
+    try {
+      await InAppPurchases.connectAsync();
+      console.log('✅ STOREKIT INIT: Connected to App Store successfully');
+    } catch (connectError: any) {
+      const msg = connectError?.message || String(connectError);
+      const code = connectError?.code;
+      // "Already connected" (code 3 or message contains "already") is fine — treat as success
+      if (code === 3 || msg.toLowerCase().includes('already')) {
+        console.log('✅ STOREKIT INIT: Already connected — continuing');
+      } else {
+        throw connectError; // real error — let the outer catch handle it
+      }
+    }
 
     // Clear any previous connect error
     if (iapDebugInfo.connectError) {
@@ -252,6 +259,10 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     }
     
     console.log('✅ QUERY PRODUCTS: StoreKit initialized');
+
+    // Clear stale products before re-querying
+    queriedProducts.clear();
+    console.log('🔄 QUERY PRODUCTS: Cleared stale product cache');
 
     // Use getProductsAsync() instead of getSubscriptionsAsync()
     console.log('🔄 QUERY PRODUCTS: Calling getProductsAsync() for subscriptions...');

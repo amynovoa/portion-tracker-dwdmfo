@@ -199,6 +199,16 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
     console.log('  - Selected plan:', selectedPlan);
     console.log('  - Product ID:', productId);
 
+    if (!isProductReady(productId)) {
+      console.log('⚠️ PURCHASE TAP: Product not ready — showing alert');
+      Alert.alert(
+        'Products Still Loading',
+        'Please wait a moment while we load subscription plans, then try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     console.log('✅ PURCHASE VALIDATION PASSED: Proceeding with purchase');
     console.log('═══════════════════════════════════════════════════════');
 
@@ -336,7 +346,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   const titleText = '7 day free trial.';
   const subtitleText = 'Cancel anytime.';
 
-  const buttonText = `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
+  const buttonText = loadingProducts
+    ? 'Loading plans...'
+    : !isSelectedProductReady()
+    ? 'Product not available'
+    : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
 
   const disclosureText = 'Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.';
 
@@ -501,11 +515,12 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
           <TouchableOpacity
             style={[
-              buttonStyles.primary, 
+              buttonStyles.primary,
               styles.subscribeButton,
+              (!isSelectedProductReady() || loadingProducts) && styles.subscribeButtonDisabled,
             ]}
             onPress={handleSubscribe}
-            disabled={loading}
+            disabled={loading || loadingProducts || !isSelectedProductReady()}
           >
             {loading ? (
               <ActivityIndicator color={colors.surface} />
