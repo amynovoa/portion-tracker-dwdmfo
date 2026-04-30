@@ -129,34 +129,22 @@ export async function initializeStoreKit(): Promise<boolean> {
       return false;
     }
 
-    // Reset listener flag so it is always re-registered on the fresh connection.
-    // Product objects from a stale/reconnected session are rejected by StoreKit at
-    // purchaseItemAsync time even though they appear valid in memory. Forcing a full
-    // disconnect → connect cycle guarantees fresh, valid product objects every time.
-    listenerRegistered = false;
-
-    // Always disconnect first to ensure a clean session.
-    // expo-in-app-purchases product objects from a stale/reconnected session
-    // are rejected by StoreKit at purchaseItemAsync time even though they
-    // appear valid in memory. A fresh connect guarantees valid objects.
-    console.log('🔄 STOREKIT INIT: Disconnecting any existing session...');
-    try {
-      await InAppPurchases.disconnectAsync();
-      console.log('✅ STOREKIT INIT: Disconnected successfully');
-    } catch (disconnectError: any) {
-      // Not connected yet — this is fine, continue
-      console.log('ℹ️ STOREKIT INIT: Nothing to disconnect (not connected yet)');
-    }
-
+    // Connect to App Store. If already connected, treat as success and continue —
+    // do NOT disconnect first. Disconnecting tears down the native session and
+    // invalidates product objects for purchaseItemAsync.
     console.log('🔄 STOREKIT INIT: Calling connectAsync...');
-    await InAppPurchases.connectAsync();
-    console.log('✅ STOREKIT INIT: Connected to App Store successfully');
-
-    // Give StoreKit time to fully establish the session before querying products.
-    // Without this delay, getProductsAsync may return objects that StoreKit's native
-    // layer hasn't registered yet, causing "Must query item from store" at purchase time.
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('✅ STOREKIT INIT: Session stabilization delay complete');
+    try {
+      await InAppPurchases.connectAsync();
+      console.log('✅ STOREKIT INIT: Connected to App Store successfully');
+    } catch (connectError: any) {
+      const msg = connectError?.message || String(connectError);
+      const code = connectError?.code;
+      if (code === 3 || msg.toLowerCase().includes('already')) {
+        console.log('✅ STOREKIT INIT: Already connected — continuing with existing session');
+      } else {
+        throw connectError;
+      }
+    }
 
     // Clear any previous connect error
     if (iapDebugInfo.connectError) {
@@ -522,13 +510,6 @@ function registerPersistentListener() {
   });
 }
 
-/**
- * Purchase a product through App Store using a single persistent listener.
- *
- * Re-queries the product immediately before purchasing to ensure the native
- * StoreKit session has the freshest possible product object. Falls back to
- * the cached object if the pre-query fails.
- */
 export function purchaseProduct(
   productId: string,
   onSuccess: () => void,
@@ -547,98 +528,34 @@ export function purchaseProduct(
     return;
   }
 
-  // Re-query products immediately before purchasing to ensure the native StoreKit
-  // session has the freshest possible product objects. This is the most reliable
-  // way to prevent "Must query item from store before calling purchase".
-  console.log('🔄 PURCHASE REQUEST: Re-querying products before purchase...');
+  const product = queriedProducts.get(productId);
+  if (!product) {
+    console.error('❌ PURCHASE REQUEST: Product not in queriedProducts map');
+    onError('Product not available. Please close and reopen the paywall, then try again.');
+    return;
+  }
 
-  // We do this inline (not via queryProducts) to avoid the full disconnect/connect cycle
-  // which would reset the listener. We just need a fresh getProductsAsync result.
-  InAppPurchases.getProductsAsync([productId]).then((response: any) => {
-    const responseCode = response?.responseCode;
-    const results = response?.results;
+  console.log('📦 PURCHASE REQUEST: Using product:', product.productId, 'price:', product.priceString);
 
-    console.log('📊 PURCHASE PRE-QUERY: responseCode:', responseCode, 'results:', results?.length);
+  // Set callbacks BEFORE calling purchaseItemAsync so the persistent listener can find them
+  activePurchaseCallbacks = { onSuccess, onCancelled, onError };
 
-    if (responseCode === InAppPurchases?.IAPResponseCode?.OK && results && results.length > 0) {
-      const freshProduct = results[0];
-      console.log('✅ PURCHASE PRE-QUERY: Got fresh product:', freshProduct?.productId, 'price:', freshProduct?.priceString);
-
-      // Update the map with the freshest object
-      queriedProducts.set(productId, freshProduct);
-
-      // Set callbacks BEFORE calling purchaseItemAsync
-      activePurchaseCallbacks = { onSuccess, onCancelled, onError };
-
-      console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync with fresh product...');
-      InAppPurchases.purchaseItemAsync(freshProduct).then(() => {
-        console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
-      }).catch((purchaseError: any) => {
-        const msg = purchaseError?.message || String(purchaseError);
-        console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg);
-        const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
-        const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
-        if (isCancelError) {
-          activePurchaseCallbacks = null;
-          onCancelled();
-        } else if (isRealError) {
-          activePurchaseCallbacks = null;
-          onError(msg);
-        }
-        // Otherwise: leave activePurchaseCallbacks set — listener will fire with the real result
-      });
-    } else {
-      // Pre-query failed — fall back to the cached product object
-      console.warn('⚠️ PURCHASE PRE-QUERY: Failed to get fresh product, falling back to cached object');
-      const cachedProduct = queriedProducts.get(productId);
-      if (!cachedProduct) {
-        onError('Product not available. Please close and reopen the paywall, then try again.');
-        return;
-      }
-
-      activePurchaseCallbacks = { onSuccess, onCancelled, onError };
-
-      console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync with cached product...');
-      InAppPurchases.purchaseItemAsync(cachedProduct).then(() => {
-        console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
-      }).catch((purchaseError: any) => {
-        const msg = purchaseError?.message || String(purchaseError);
-        console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg);
-        const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
-        const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
-        if (isCancelError) {
-          activePurchaseCallbacks = null;
-          onCancelled();
-        } else if (isRealError) {
-          activePurchaseCallbacks = null;
-          onError(msg);
-        }
-      });
+  console.log('🔄 PURCHASE REQUEST: Calling purchaseItemAsync...');
+  InAppPurchases.purchaseItemAsync(product).then(() => {
+    console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener event...');
+  }).catch((purchaseError: any) => {
+    const msg = purchaseError?.message || String(purchaseError);
+    console.warn('⚠️ PURCHASE REQUEST: purchaseItemAsync threw:', msg, 'code:', purchaseError?.code);
+    const isCancelError = msg.toLowerCase().includes('cancel') || purchaseError?.code === 2;
+    const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.toLowerCase().includes('sandbox');
+    if (isCancelError) {
+      activePurchaseCallbacks = null;
+      onCancelled();
+    } else if (isRealError) {
+      activePurchaseCallbacks = null;
+      onError(msg);
     }
-  }).catch((queryError: any) => {
-    console.error('❌ PURCHASE PRE-QUERY: Exception during pre-query:', queryError?.message);
-    // Fall back to cached product
-    const cachedProduct = queriedProducts.get(productId);
-    if (!cachedProduct) {
-      onError('Product not available. Please close and reopen the paywall, then try again.');
-      return;
-    }
-
-    activePurchaseCallbacks = { onSuccess, onCancelled, onError };
-    InAppPurchases.purchaseItemAsync(cachedProduct).then(() => {
-      console.log('ℹ️ PURCHASE REQUEST: purchaseItemAsync resolved — waiting for listener...');
-    }).catch((purchaseError: any) => {
-      const msg = purchaseError?.message || String(purchaseError);
-      const isCancelError = msg.includes('cancel') || msg.includes('Cancel') || purchaseError?.code === 2;
-      const isRealError = purchaseError?.code !== undefined && purchaseError?.code !== 2 && !msg.includes('sandbox');
-      if (isCancelError) {
-        activePurchaseCallbacks = null;
-        onCancelled();
-      } else if (isRealError) {
-        activePurchaseCallbacks = null;
-        onError(msg);
-      }
-    });
+    // Otherwise: sandbox quirk — leave callbacks set, listener will fire
   });
 }
 
