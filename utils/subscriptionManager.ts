@@ -19,23 +19,7 @@ export const PRODUCT_IDS = {
   ANNUAL: 'portiontrack.annual',
 };
 
-// Fallback prices for display only - NOT used for purchase readiness
-const FALLBACK_PRICES = {
-  MONTHLY: {
-    price: '3.99',
-    priceString: '$3.99',
-    currencyCode: 'USD',
-    title: 'Monthly Subscription',
-    description: 'Monthly subscription to Portion Tracker',
-  },
-  ANNUAL: {
-    price: '29.99',
-    priceString: '$29.99',
-    currencyCode: 'USD',
-    title: 'Annual Subscription',
-    description: 'Annual subscription to Portion Tracker',
-  },
-};
+
 
 // Store queried Product objects in memory keyed by productId
 let queriedProducts: Map<string, any> = new Map();
@@ -205,19 +189,6 @@ function isPriceValid(price: any, priceString: any): boolean {
   console.log('🔍 PRICE VALIDATION:', { price, priceString, isValidPrice, isValidPriceString });
   
   return isValidPrice && isValidPriceString;
-}
-
-/**
- * Get fallback product details for a given product ID
- * Fallback prices can display, but purchase must be disabled unless product exists in memory
- */
-function getFallbackProduct(productId: string): ProductDetails {
-  const fallback = productId === PRODUCT_IDS.MONTHLY ? FALLBACK_PRICES.MONTHLY : FALLBACK_PRICES.ANNUAL;
-  console.log('📦 FALLBACK: Using fallback product for:', productId);
-  return {
-    productId,
-    ...fallback,
-  };
 }
 
 /**
@@ -425,52 +396,39 @@ export function isProductReady(productId: string): boolean {
 
 /**
  * Get product details for display
- * Fallback prices can display, but purchase must be disabled unless product exists in memory
+ * Returns Apple's live product data only — never substitutes hardcoded prices
  */
 export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
   try {
-    console.log('🔄 GET DETAILS: Fetching display details for:', productId);
-    
+    // On non-iOS, no StoreKit — return null (no prices shown)
     if (Platform.OS !== 'ios') {
-      console.log('⚠️ GET DETAILS: Not iOS, returning fallback');
-      return getFallbackProduct(productId);
+      return null;
     }
 
     if (!InAppPurchases) {
-      console.error('❌ GET DETAILS: InAppPurchases not available, returning fallback');
-      return getFallbackProduct(productId);
+      return null;
     }
 
-    // Check if we already have this product in memory from queryProducts()
+    // Return whatever Apple gave us — never substitute hardcoded prices
     if (queriedProducts.has(productId)) {
       const product = queriedProducts.get(productId);
-      console.log('✅ GET DETAILS: Using cached product from memory');
-      
-      // Validate price data
-      if (isPriceValid(product.price, product.priceString)) {
-        console.log('✅ GET DETAILS: Price data valid');
-        return {
-          productId: product.productId,
-          price: product.price,
-          priceString: product.priceString,
-          currencyCode: product.currencyCode || 'USD',
-          title: product.title || '',
-          description: product.description || '',
-        };
-      } else {
-        console.warn('⚠️ GET DETAILS: Cached product has invalid price, using fallback for display');
-        return getFallbackProduct(productId);
-      }
+      console.log('✅ GET DETAILS: Using cached product from memory for:', productId);
+      return {
+        productId: product.productId,
+        price: String(product.price ?? ''),
+        priceString: product.priceString ?? '',
+        currencyCode: product.currencyCode || 'USD',
+        title: product.title || '',
+        description: product.description || '',
+      };
     }
 
-    // If not in memory, return fallback for display
-    console.warn('⚠️ GET DETAILS: Product not in memory, returning fallback for display');
-    console.warn('⚠️ GET DETAILS: queryProducts() should be called before getProductDetails()');
-    
-    return getFallbackProduct(productId);
+    // Product not yet queried — return null so UI shows '...'
+    console.log('ℹ️ GET DETAILS: Product not in memory yet, returning null for:', productId);
+    return null;
   } catch (error) {
     console.error('❌ GET DETAILS: Error fetching details:', error);
-    return getFallbackProduct(productId);
+    return null;
   }
 }
 
