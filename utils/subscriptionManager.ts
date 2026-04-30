@@ -129,30 +129,35 @@ export async function initializeStoreKit(): Promise<boolean> {
       return false;
     }
 
-    // Connect to the App Store BEFORE querying products
-    // connectAsync() must be called before EVERY getProductsAsync() — the connection
-    // is not persistent across paywall opens. If already connected, treat it as success.
-    console.log('🔄 STOREKIT INIT: Calling connectAsync...');
+    // Reset listener flag so it is always re-registered on the fresh connection.
+    // Product objects from a stale/reconnected session are rejected by StoreKit at
+    // purchaseItemAsync time even though they appear valid in memory. Forcing a full
+    // disconnect → connect cycle guarantees fresh, valid product objects every time.
+    listenerRegistered = false;
+
+    // Always disconnect first to ensure a clean session.
+    // expo-in-app-purchases product objects from a stale/reconnected session
+    // are rejected by StoreKit at purchaseItemAsync time even though they
+    // appear valid in memory. A fresh connect guarantees valid objects.
+    console.log('🔄 STOREKIT INIT: Disconnecting any existing session...');
     try {
-      await InAppPurchases.connectAsync();
-      console.log('✅ STOREKIT INIT: Connected to App Store successfully');
-    } catch (connectError: any) {
-      const msg = connectError?.message || String(connectError);
-      const code = connectError?.code;
-      // "Already connected" (code 3 or message contains "already") is fine — treat as success
-      if (code === 3 || msg.toLowerCase().includes('already')) {
-        console.log('✅ STOREKIT INIT: Already connected — continuing');
-      } else {
-        throw connectError; // real error — let the outer catch handle it
-      }
+      await InAppPurchases.disconnectAsync();
+      console.log('✅ STOREKIT INIT: Disconnected successfully');
+    } catch (disconnectError: any) {
+      // Not connected yet — this is fine, continue
+      console.log('ℹ️ STOREKIT INIT: Nothing to disconnect (not connected yet)');
     }
+
+    console.log('🔄 STOREKIT INIT: Calling connectAsync...');
+    await InAppPurchases.connectAsync();
+    console.log('✅ STOREKIT INIT: Connected to App Store successfully');
 
     // Clear any previous connect error
     if (iapDebugInfo.connectError) {
       delete iapDebugInfo.connectError;
     }
 
-    // Set up the persistent background purchase listener — only once per session
+    // Set up the persistent background purchase listener — always register on fresh connection
     if (!listenerRegistered) {
       console.log('🔄 STOREKIT INIT: Setting up purchase listener...');
       registerPersistentListener();
