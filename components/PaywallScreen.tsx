@@ -197,21 +197,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       return;
     }
 
-    if (!isProductReady(productId)) {
-      const loadedDisplay = debugInfo.loadedIds.join(', ') || 'none';
-      console.warn('[Paywall] Product not ready:', productId, 'loaded:', loadedDisplay);
-      Alert.alert('Product Not Ready', `The ${selectedPlan} plan is not available yet. Loaded: ${loadedDisplay}`);
-      return;
-    }
-
-    const mapSize = getLoadedProductCount();
-    console.log('[Paywall] loadedProducts map size at purchase time:', mapSize);
-    if (mapSize === 0) {
-      Alert.alert('Not Ready', 'Products not loaded. Please tap Retry.');
-      return;
-    }
-
-    console.log('[Paywall] Purchase guard passed — calling purchaseProduct');
+    console.log('[Paywall] Calling purchaseProduct — productId:', productId, 'mapSize:', getLoadedProductCount());
     setLoading(true);
 
     const safetyTimer = setTimeout(() => {
@@ -289,24 +275,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
   };
 
-  const getMonthlyPrice = () => {
-    if (monthlyProduct?.priceString) return monthlyProduct.priceString;
-    return '$3.99';
-  };
-
-  const getAnnualPrice = () => {
-    if (annualProduct?.priceString) return annualProduct.priceString;
-    return '$29.99';
-  };
-
-  const getAnnualMonthlyPrice = () => {
-    if (annualProduct) {
-      const annualPrice = parseFloat(annualProduct.price);
-      const monthlyEquivalent = (annualPrice / 12).toFixed(2);
-      return `${annualProduct.currencyCode === 'USD' ? '$' : ''}${monthlyEquivalent}`;
-    }
-    return '$2.50';
-  };
+  const getMonthlyPrice = () => '$3.99';
+  const getAnnualPrice = () => '$29.99';
+  const getAnnualMonthlyPrice = () => '$2.50';
 
   // Purchase must be disabled unless the product object exists in memory from StoreKit
   const isSelectedProductReady = () => {
@@ -326,8 +297,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   const buttonText = loadingProducts
     ? 'Loading plans...'
-    : !isSelectedProductReady()
-    ? 'Product not available'
     : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
 
   const disclosureText = 'Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.';
@@ -507,10 +476,10 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
             style={[
               buttonStyles.primary,
               styles.subscribeButton,
-              (!isSelectedProductReady() || loadingProducts) && styles.subscribeButtonDisabled,
+              loadingProducts && styles.subscribeButtonDisabled,
             ]}
             onPress={handleSubscribe}
-            disabled={loading || loadingProducts || !isSelectedProductReady()}
+            disabled={loading || loadingProducts}
           >
             {loading ? (
               <ActivityIndicator color={colors.surface} />

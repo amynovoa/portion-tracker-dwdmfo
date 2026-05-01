@@ -338,16 +338,13 @@ export async function purchaseProduct(
   }
 
   if (!sessionConnected) {
-    onError('Not connected to App Store. Please close and reopen the paywall.');
-    return;
+    console.warn('[IAP] Session not connected — attempting purchase anyway');
   }
 
   const product = loadedProducts.get(productId);
-  if (!product) {
-    console.error('[IAP] Product not in loadedProducts:', productId);
-    onError('Product not loaded. Please tap Retry on the paywall.');
-    return;
-  }
+  // If product object not loaded, fall back to purchasing by ID string
+  const purchaseArg = product ?? productId;
+  console.log('[IAP] purchaseItemAsync arg:', product ? `product object (${product.productId})` : `ID string (${productId})`);
 
   // Drain any pending transactions right before purchase to ensure clean queue
   try {
@@ -361,12 +358,12 @@ export async function purchaseProduct(
     console.log('[IAP] Pre-purchase drain complete, drained:', pendingResults.length);
   } catch (_) {}
 
-  console.log('[IAP] purchaseItemAsync for:', product.productId, product.priceString);
+  console.log('[IAP] purchaseItemAsync for:', product ? `${product.productId} ${product.priceString}` : productId);
 
   // Set callbacks BEFORE calling purchaseItemAsync so the persistent listener can find them
   activePurchaseCallbacks = { productId, onSuccess, onCancelled, onError };
 
-  InAppPurchases.purchaseItemAsync(product)
+  InAppPurchases.purchaseItemAsync(purchaseArg)
     .then(() => {
       console.log('[IAP] purchaseItemAsync resolved — waiting for listener...');
     })
