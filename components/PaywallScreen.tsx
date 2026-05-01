@@ -23,6 +23,7 @@ import {
   getProductDetails,
   queryProducts,
   isProductReady,
+  getLoadedProductCount,
   ProductDetails,
 } from '@/utils/subscriptionManager';
 import { loadProfile } from '@/utils/storage';
@@ -61,8 +62,14 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   useEffect(() => {
     if (visible) {
       setLoading(false);
-      console.log('[Paywall] Paywall opened — loading products');
-      loadProducts();
+      const alreadyLoaded = isProductReady(PRODUCT_IDS.MONTHLY) && isProductReady(PRODUCT_IDS.ANNUAL);
+      console.log('[Paywall] Paywall opened — alreadyLoaded:', alreadyLoaded);
+      if (!alreadyLoaded) {
+        loadProducts();
+      } else {
+        setLoadingProducts(false);
+        setDebugInfo(prev => ({ ...prev, status: 'loaded' }));
+      }
     }
   }, [visible]);
 
@@ -74,6 +81,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   const loadProducts = async () => {
     console.log('[Paywall] loadProducts called, platform:', Platform.OS);
+
+    // If products are already loaded, skip re-querying
+    if (isProductReady(PRODUCT_IDS.MONTHLY) && isProductReady(PRODUCT_IDS.ANNUAL)) {
+      console.log('[Paywall] Products already loaded — skipping re-query');
+      setLoadingProducts(false);
+      return;
+    }
 
     setLoadingProducts(true);
     setProductsFailed(false);
@@ -187,6 +201,13 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       const loadedDisplay = debugInfo.loadedIds.join(', ') || 'none';
       console.warn('[Paywall] Product not ready:', productId, 'loaded:', loadedDisplay);
       Alert.alert('Product Not Ready', `The ${selectedPlan} plan is not available yet. Loaded: ${loadedDisplay}`);
+      return;
+    }
+
+    const mapSize = getLoadedProductCount();
+    console.log('[Paywall] loadedProducts map size at purchase time:', mapSize);
+    if (mapSize === 0) {
+      Alert.alert('Not Ready', 'Products not loaded. Please tap Retry.');
       return;
     }
 

@@ -212,7 +212,7 @@ async function ensureConnected(): Promise<boolean> {
  * NEVER calls disconnectAsync — that would invalidate the product objects.
  */
 export async function queryProducts(productIds: string[]): Promise<string[]> {
-  loadedProducts.clear();
+  console.log('[IAP] queryProducts called — current map size:', loadedProducts.size);
   iapDebugInfo = {
     bundleId: Constants.expoConfig?.ios?.bundleIdentifier || 'unknown',
     responseCode: 'not_queried',
@@ -252,6 +252,8 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.log('[IAP] getProductsAsync responseCode:', responseCode, 'count:', results.length);
 
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results.length > 0) {
+      console.log('[IAP] loadedProducts cleared — about to store fresh results');
+      loadedProducts.clear();
       for (const product of results) {
         if (product?.productId) {
           loadedProducts.set(product.productId, product);
@@ -272,6 +274,10 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
 
 export function isProductReady(productId: string): boolean {
   return loadedProducts.has(productId);
+}
+
+export function getLoadedProductCount(): number {
+  return loadedProducts.size;
 }
 
 export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
