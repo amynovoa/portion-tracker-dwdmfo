@@ -6,7 +6,7 @@ import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
 // Only import InAppPurchases on iOS
 let InAppPurchases: any = null;
 if (Platform.OS === 'ios') {
-  InAppPurchases = require('expo-in-app-purchases');
+  InAppPurchases = require('expo-iap');
 }
 
 export const PRODUCT_IDS = {
