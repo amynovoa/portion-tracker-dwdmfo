@@ -236,6 +236,27 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     return [];
   }
 
+  // Drain any pending/unfinished transactions from previous sessions.
+  // These cause "Must query item from store before calling purchase" if left in the queue.
+  try {
+    console.log('[IAP] Draining pending transactions...');
+    const pending = await InAppPurchases.getPurchaseHistoryAsync();
+    const pendingResults = pending?.results || [];
+    console.log('[IAP] Pending transactions to drain:', pendingResults.length);
+    for (const tx of pendingResults) {
+      if (!tx?.acknowledged) {
+        try {
+          await InAppPurchases.finishTransactionAsync(tx, false);
+          console.log('[IAP] Drained pending tx:', tx?.productId);
+        } catch (e: any) {
+          console.warn('[IAP] Could not drain tx:', tx?.productId, e?.message);
+        }
+      }
+    }
+  } catch (e: any) {
+    console.warn('[IAP] Could not drain pending transactions:', e?.message);
+  }
+
   try {
     console.log('[IAP] Calling getProductsAsync for:', productIds);
     const response = await InAppPurchases.getProductsAsync(productIds);
@@ -252,7 +273,7 @@ export async function queryProducts(productIds: string[]): Promise<string[]> {
     console.log('[IAP] getProductsAsync responseCode:', responseCode, 'count:', results.length);
 
     if (responseCode === InAppPurchases.IAPResponseCode.OK && results.length > 0) {
-      console.log('[IAP] loadedProducts cleared — about to store fresh results');
+      console.log('[IAP] Storing fresh products');
       loadedProducts.clear();
       for (const product of results) {
         if (product?.productId) {
@@ -298,12 +319,12 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
  * Purchase a product. The product MUST already be in loadedProducts (from queryProducts).
  * NEVER calls connectAsync here — session must already be live from queryProducts.
  */
-export function purchaseProduct(
+export async function purchaseProduct(
   productId: string,
   onSuccess: () => void,
   onCancelled: () => void,
   onError: (message: string) => void
-): void {
+): Promise<void> {
   console.log('[IAP] purchaseProduct called for:', productId);
 
   if (Platform.OS !== 'ios') {
@@ -327,6 +348,18 @@ export function purchaseProduct(
     onError('Product not loaded. Please tap Retry on the paywall.');
     return;
   }
+
+  // Drain any pending transactions right before purchase to ensure clean queue
+  try {
+    const pending = await InAppPurchases.getPurchaseHistoryAsync();
+    const pendingResults = pending?.results || [];
+    for (const tx of pendingResults) {
+      if (!tx?.acknowledged) {
+        try { await InAppPurchases.finishTransactionAsync(tx, false); } catch (_) {}
+      }
+    }
+    console.log('[IAP] Pre-purchase drain complete, drained:', pendingResults.length);
+  } catch (_) {}
 
   console.log('[IAP] purchaseItemAsync for:', product.productId, product.priceString);
 
