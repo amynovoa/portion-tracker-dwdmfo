@@ -17,6 +17,7 @@ SplashScreen.preventAutoHideAsync();
 function AppContent() {
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
   const pathname = usePathname();
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     isOnboardingComplete().then((complete) => {
@@ -24,13 +25,8 @@ function AppContent() {
     });
   }, [pathname]);
 
-  if (onboardingComplete === null) {
-    return null;
-  }
-
-  const initializedRef = useRef(false);
-
   useEffect(() => {
+    if (onboardingComplete === null) return;
     async function prepare() {
       if (initializedRef.current) return;
       initializedRef.current = true;
@@ -75,6 +71,10 @@ function AppContent() {
     const sub = AppState.addEventListener('change', handleAppStateChange);
     return () => sub.remove();
   }, []);
+
+  if (onboardingComplete === null) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
