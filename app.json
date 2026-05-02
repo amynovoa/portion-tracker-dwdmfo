@@ -47,6 +47,7 @@
       "expo-font",
       "expo-router",
       "expo-web-browser",
+      "react-native-purchases",
       [
         "expo-image-picker",
         {
@@ -68,8 +69,8 @@
       "revenueCatApiKeyAndroid": "goog_XKBHXAYvojkkOKMAFBzanTPipxv",
       "revenueCatEntitlementId": "Portion Track Pro",
       "nativelyProjectId": "cf794022-4f46-40af-8c9d-e88fcb1e5354",
-      "revenueCatTestApiKeyIos": "test_ZgWhywUYNHVuzJXLSognkVaNkjC",
-      "revenueCatTestApiKeyAndroid": "test_ZgWhywUYNHVuzJXLSognkVaNkjC"
+      "revenueCatTestApiKeyIos": "test_KtEgTHosuZccGMeUqzvMuHSPQcp",
+      "revenueCatTestApiKeyAndroid": "test_KtEgTHosuZccGMeUqzvMuHSPQcp"
     }
   },
   "scheme": "portion-tracker"
