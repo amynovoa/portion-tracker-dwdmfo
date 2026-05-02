@@ -302,7 +302,8 @@ export async function purchaseProduct(
   productId: string,
   onSuccess: () => void,
   onCancelled: () => void,
-  onError: (message: string) => void
+  onError: (message: string) => void,
+  onSheetReady?: () => void
 ): Promise<void> {
   console.log('[IAP] purchaseProduct called for:', productId);
 
@@ -340,6 +341,7 @@ export async function purchaseProduct(
   InAppPurchases.purchaseItemAsync(product.productId)
     .then(() => {
       console.log('[IAP] purchaseItemAsync resolved — waiting for listener...');
+      onSheetReady?.();
     })
     .catch((e: any) => {
       const msg = e?.message || String(e);

@@ -207,30 +207,33 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
     console.log('[Paywall] Calling purchaseProduct — productId:', productId, 'mapSize:', getLoadedProductCount());
     setLoading(true);
 
-    const safetyTimer = setTimeout(() => {
-      console.warn('[Paywall] Safety timer fired — no listener response after 30s');
-      setLoading(false);
-      Alert.alert('Purchase Timed Out', 'The purchase did not complete. Please try again.', [{ text: 'OK' }]);
-    }, 30000);
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
 
     purchaseProduct(
       productId,
       () => {
-        clearTimeout(safetyTimer);
+        if (safetyTimer) clearTimeout(safetyTimer);
         console.log('[Paywall] onSuccess fired');
         setLoading(false);
         handlePurchaseSuccess();
       },
       () => {
-        clearTimeout(safetyTimer);
+        if (safetyTimer) clearTimeout(safetyTimer);
         console.log('[Paywall] onCancelled fired');
         setLoading(false);
       },
       (message) => {
-        clearTimeout(safetyTimer);
+        if (safetyTimer) clearTimeout(safetyTimer);
         console.error('[Paywall] onError fired:', message);
         setLoading(false);
         Alert.alert('Purchase Failed', message, [{ text: 'OK' }]);
+      },
+      () => {
+        safetyTimer = setTimeout(() => {
+          console.warn('[Paywall] Safety timer fired — no listener response after 120s');
+          setLoading(false);
+          Alert.alert('Purchase Timed Out', 'The purchase did not complete. Please try again.', [{ text: 'OK' }]);
+        }, 120000);
       }
     );
   };
