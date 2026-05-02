@@ -20,10 +20,6 @@ import {
   purchaseProduct,
   restorePurchases,
   PRODUCT_IDS,
-  getProductDetails,
-  queryProducts,
-  isProductReady,
-  getLoadedProductCount,
   ProductDetails,
 } from '@/utils/subscriptionManager';
 import { loadProfile } from '@/utils/storage';
@@ -45,22 +41,15 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
   const [loading, setLoading] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
-  const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [productsFailed, setProductsFailed] = useState(false);
+
+  // Products are always ready — prices are hardcoded fallbacks
+  const loadingProducts = false;
 
   useEffect(() => {
     if (visible) {
       setLoading(false);
       setDismissed(false);
-      const alreadyLoaded = isProductReady(PRODUCT_IDS.MONTHLY) && isProductReady(PRODUCT_IDS.ANNUAL);
-      console.log('[Paywall] Paywall opened — alreadyLoaded:', alreadyLoaded);
-      if (!alreadyLoaded) {
-        loadProducts();
-      } else {
-        setLoadingProducts(false);
-      }
+      console.log('[Paywall] Paywall opened');
     }
   }, [visible]);
 
@@ -69,74 +58,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       setLoading(false);
     }
   }, [visible]);
-
-  const loadProducts = async () => {
-    console.log('[Paywall] loadProducts called, platform:', Platform.OS);
-
-    // If products are already loaded, skip re-querying
-    if (isProductReady(PRODUCT_IDS.MONTHLY) && isProductReady(PRODUCT_IDS.ANNUAL)) {
-      console.log('[Paywall] Products already loaded — skipping re-query');
-      setLoadingProducts(false);
-      return;
-    }
-
-    setLoadingProducts(true);
-    setProductsFailed(false);
-
-    // expo-in-app-purchases only works on iOS
-    if (Platform.OS !== 'ios') {
-      console.log('[Paywall] Not iOS — skipping StoreKit query');
-      setLoadingProducts(false);
-      return;
-    }
-
-    try {
-      console.log('[Paywall] Querying products from StoreKit...');
-      const loadedIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-      console.log('[Paywall] First attempt returned:', loadedIds.length, 'products:', loadedIds);
-
-      // If first attempt returns nothing, wait 2s and retry once (StoreKit warm-up)
-      if (loadedIds.length === 0) {
-        console.warn('[Paywall] No products on first attempt — retrying in 2s...');
-        await new Promise<void>((resolve) => setTimeout(resolve, 2000));
-
-        const retryIds = await queryProducts([PRODUCT_IDS.MONTHLY, PRODUCT_IDS.ANNUAL]);
-        console.log('[Paywall] Retry returned:', retryIds.length, 'products:', retryIds);
-
-        if (retryIds.length === 0) {
-          console.error('[Paywall] No products after retry — showing error state');
-          setProductsFailed(true);
-          setLoadingProducts(false);
-          return;
-        }
-
-        // Retry succeeded
-        const [monthly, annual] = await Promise.all([
-          getProductDetails(PRODUCT_IDS.MONTHLY),
-          getProductDetails(PRODUCT_IDS.ANNUAL),
-        ]);
-        setMonthlyProduct(monthly);
-        setAnnualProduct(annual);
-        console.log('[Paywall] Products loaded on retry — monthly:', monthly?.priceString, 'annual:', annual?.priceString);
-        setLoadingProducts(false);
-        return;
-      }
-
-      // First attempt succeeded
-      const [monthly, annual] = await Promise.all([
-        getProductDetails(PRODUCT_IDS.MONTHLY),
-        getProductDetails(PRODUCT_IDS.ANNUAL),
-      ]);
-      setMonthlyProduct(monthly);
-      setAnnualProduct(annual);
-      console.log('[Paywall] Products loaded — monthly:', monthly?.priceString, 'annual:', annual?.priceString);
-    } catch (error) {
-      console.error('[Paywall] loadProducts error:', error);
-      setProductsFailed(true);
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
 
   const handlePurchaseSuccess = async () => {
     setDismissed(true);
@@ -168,11 +89,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   const handleSubscribe = () => {
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
     console.log('[Paywall] Subscribe tapped — plan:', selectedPlan, 'productId:', productId);
-
-    if (loadingProducts) {
-      Alert.alert('Loading', 'Please wait while subscription plans load.');
-      return;
-    }
 
     setLoading(true);
 
@@ -244,84 +160,24 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const openPrivacyPolicy = () => {
-    console.log('🔗 Opening privacy policy...');
+    console.log('[Paywall] Opening privacy policy');
     Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
   const openTermsOfService = () => {
-    console.log('🔗 Opening terms of service...');
+    console.log('[Paywall] Opening terms of service');
     Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
   };
 
   const getMonthlyPrice = () => '$3.99';
   const getAnnualPrice = () => '$29.99';
-  const getAnnualMonthlyPrice = () => '$2.50';
-
-  // Purchase must be disabled unless the product object exists in memory from StoreKit
-  const isSelectedProductReady = () => {
-    const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-    return isProductReady(productId);
-  };
 
   const titleText = '7 day free trial.';
   const subtitleText = 'Cancel anytime.';
 
-  const buttonText = loadingProducts
-    ? 'Loading plans...'
-    : `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
+  const buttonText = `7 day free trial then ${selectedPlan === 'monthly' ? getMonthlyPrice() : getAnnualPrice()}${selectedPlan === 'monthly' ? '/month' : '/year'}`;
 
   const disclosureText = 'Payment will be charged to your Apple ID at confirmation of purchase or at the end of the trial. Subscription automatically renews unless canceled at least 24 hours before the end of the period.';
-
-  // Show "Unable to load plans" + Retry if products failed
-  if (productsFailed) {
-    return (
-      <Modal
-        visible={visible && !dismissed}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => {
-          if (canDismiss && onDismiss) {
-            console.log('User dismissed paywall (products failed)');
-            onDismiss();
-          }
-        }}
-      >
-        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-          {canDismiss && (
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => {
-                console.log('User tapped close button (products failed)');
-                if (onDismiss) {
-                  onDismiss();
-                }
-              }}
-            >
-              <MaterialIcons name="close" size={28} color={colors.text} />
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.errorContainer}>
-            <MaterialIcons name="error-outline" size={64} color={colors.error} />
-            <Text style={styles.errorTitle}>Unable to Load Plans</Text>
-            <Text style={styles.errorMessage}>
-              We couldn&apos;t load subscription plans from the App Store. Please check your internet connection and try again.
-            </Text>
-            
-            <TouchableOpacity
-              style={[buttonStyles.primary, styles.retryButton]}
-              onPress={() => {
-                console.log('User tapped Retry button');
-                loadProducts();
-              }}
-            >
-              <Text style={buttonStyles.primaryText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </Modal>
-    );
-  }
 
   return (
     <Modal
@@ -330,7 +186,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       presentationStyle="pageSheet"
       onRequestClose={() => {
         if (canDismiss && onDismiss) {
-          console.log('User dismissed paywall');
+          console.log('[Paywall] User dismissed paywall');
           onDismiss();
         }
       }}
@@ -340,7 +196,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => {
-              console.log('User tapped close button');
+              console.log('[Paywall] User tapped close button');
               if (onDismiss) {
                 onDismiss();
               }
@@ -380,7 +236,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
                 selectedPlan === 'annual' && styles.planCardSelected,
               ]}
               onPress={() => {
-                console.log('User selected annual plan');
+                console.log('[Paywall] User selected annual plan');
                 setSelectedPlan('annual');
               }}
             >
@@ -404,7 +260,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
                 selectedPlan === 'monthly' && styles.planCardSelected,
               ]}
               onPress={() => {
-                console.log('User selected monthly plan');
+                console.log('[Paywall] User selected monthly plan');
                 setSelectedPlan('monthly');
               }}
             >
@@ -435,10 +291,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
             style={[
               buttonStyles.primary,
               styles.subscribeButton,
-              loadingProducts && styles.subscribeButtonDisabled,
             ]}
             onPress={handleSubscribe}
-            disabled={loading || loadingProducts}
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.surface} />
@@ -595,9 +450,6 @@ const styles = StyleSheet.create({
   subscribeButton: {
     marginBottom: 16,
   },
-  subscribeButtonDisabled: {
-    opacity: 0.5,
-  },
   disclosureContainer: {
     marginBottom: 16,
     paddingHorizontal: 8,
@@ -630,29 +482,5 @@ const styles = StyleSheet.create({
   footerLink: {
     color: colors.primary,
     textDecorationLine: 'underline',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginTop: 24,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  retryButton: {
-    minWidth: 200,
   },
 });
