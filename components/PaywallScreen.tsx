@@ -27,6 +27,8 @@ import {
   ProductDetails,
 } from '@/utils/subscriptionManager';
 import { loadProfile } from '@/utils/storage';
+import { markSubscribed } from '@/utils/userStateManager';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 interface PaywallScreenProps {
   visible: boolean;
@@ -39,6 +41,7 @@ type SubscriptionPlan = 'monthly' | 'annual';
 
 export default function PaywallScreen({ visible, onDismiss, canDismiss = true, onSubscribeSuccess }: PaywallScreenProps) {
   const router = useRouter();
+  const { refreshSubscription } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
   const [loading, setLoading] = useState(false);
   const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
@@ -166,7 +169,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   const handlePurchaseSuccess = async () => {
     setLoading(false);
-    console.log('[Paywall] handlePurchaseSuccess — post-purchase navigation');
+    console.log('[Paywall] handlePurchaseSuccess — persisting subscription before navigation');
+
+    // Persist to both AsyncStorage keys synchronously before navigating
+    await markSubscribed(true);
+    await refreshSubscription();
 
     if (onSubscribeSuccess) {
       console.log('[Paywall] Delegating navigation to onSubscribeSuccess callback');
