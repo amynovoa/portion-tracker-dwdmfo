@@ -6,7 +6,6 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { getIAPDebugInfo } from '@/utils/subscriptionManager';
 
 const styles = StyleSheet.create({
   container: {
@@ -90,16 +89,9 @@ export default function MoreScreen() {
   const { isSubscribed, refreshSubscription } = useSubscription();
 
   const handleTestSubscription = async () => {
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🧪 TEST: Manual subscription status check');
-    console.log('═══════════════════════════════════════════════════════');
-    
+    console.log('[More] Refresh Subscription Status tapped');
     await refreshSubscription();
-    
-    const debugInfo = getIAPDebugInfo();
-    console.log('📊 IAP Debug Info:', debugInfo);
-    console.log('📊 Current subscription status:', isSubscribed);
-    console.log('═══════════════════════════════════════════════════════');
+    console.log('[More] Subscription status after refresh:', isSubscribed);
   };
 
   const subscriptionStatusText = isSubscribed ? 'Active' : 'Not Active';

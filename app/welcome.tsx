@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import AppLogo from '@/components/AppLogo';
-import PaywallScreen from '@/components/PaywallScreen';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { markSubscribed } from '@/utils/userStateManager';
-import { loadProfile } from '@/utils/storage';
 
 const { width } = Dimensions.get('window');
 
@@ -47,10 +43,6 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const C = scheme === 'dark' ? DARK : LIGHT;
-  const { refreshSubscription } = useSubscription();
-
-  // Paywall is only shown when user taps "Get Started"
-  const [paywallVisible, setPaywallVisible] = useState(false);
 
   // Entrance animations
   const logoOpacity = useRef(new Animated.Value(0)).current;
@@ -86,48 +78,11 @@ export default function WelcomeScreen() {
     });
   }, []);
 
-  // "Get Started" button — only entry point to the paywall
+  // "Get Started" button — navigates to the RevenueCat paywall
   const handleGetStarted = useCallback(() => {
-    console.log('[WelcomeScreen] Get Started tapped — showing paywall');
-    setPaywallVisible(true);
-  }, []);
-
-  // Paywall dismissed without subscribing — re-show after 300ms (inescapable once opened)
-  const handlePaywallDismiss = useCallback(() => {
-    console.log('[WelcomeScreen] Paywall dismissed without subscribing — re-showing paywall in 300ms');
-    setPaywallVisible(false);
-    setTimeout(() => {
-      setPaywallVisible(true);
-    }, 300);
-  }, []);
-
-  // Successful purchase — persist, refresh context, then route
-  const handleSubscribeSuccess = useCallback(async () => {
-    console.log('[WelcomeScreen] Purchase confirmed — persisting subscription and refreshing context');
-
-    // 1. Persist subscription flag via userStateManager (single source of truth)
-    await markSubscribed();
-
-    // 2. Refresh SubscriptionContext so in-app access checks are up to date
-    await refreshSubscription();
-
-    // 3. Check onboarding completion using the existing profile key
-    const profile = await loadProfile();
-    const onboardingComplete = !!(profile && profile.portionTargets);
-    console.log('[WelcomeScreen] Post-purchase onboarding check — complete:', onboardingComplete);
-
-    // 4. Close paywall before navigating
-    setPaywallVisible(false);
-
-    // 5. Route based on onboarding state
-    if (onboardingComplete) {
-      console.log('[WelcomeScreen] Onboarding done → navigating to /(tabs)');
-      router.replace('/(tabs)');
-    } else {
-      console.log('[WelcomeScreen] Onboarding not done → navigating to /setup-profile');
-      router.replace('/setup-profile');
-    }
-  }, [refreshSubscription, router]);
+    console.log('[WelcomeScreen] Get Started tapped — navigating to /paywall');
+    router.push('/paywall');
+  }, [router]);
 
   const appName = 'Welcome to Portion Track';
   const tagline = 'Simple Portions. Balanced Eating.';
@@ -190,13 +145,6 @@ export default function WelcomeScreen() {
 
       </View>
 
-      {/* Paywall — only shown after Get Started tap; dismissing re-shows it */}
-      <PaywallScreen
-        visible={paywallVisible}
-        canDismiss={true}
-        onDismiss={handlePaywallDismiss}
-        onSubscribeSuccess={handleSubscribeSuccess}
-      />
     </SafeAreaView>
   );
 }

@@ -63,7 +63,13 @@
       "router": {},
       "eas": {
         "projectId": "your-project-id-here"
-      }
+      },
+      "revenueCatApiKeyIos": "appl_SYPlYiVRMIrJKWUAmqKHDuIvFty",
+      "revenueCatApiKeyAndroid": "goog_XKBHXAYvojkkOKMAFBzanTPipxv",
+      "revenueCatEntitlementId": "pro",
+      "nativelyProjectId": "cf794022-4f46-40af-8c9d-e88fcb1e5354",
+      "revenueCatTestApiKeyIos": "test_ZgWhywUYNHVuzJXLSognkVaNkjC",
+      "revenueCatTestApiKeyAndroid": "test_ZgWhywUYNHVuzJXLSognkVaNkjC"
     }
   },
   "scheme": "portion-tracker"

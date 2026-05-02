@@ -18,71 +18,39 @@ export type UserState =
 /**
  * Single source of truth for user routing state.
  *
- * 1. Read persisted subscription flag from AsyncStorage (@subscription_active) to
- *    prevent cold-start flicker.
- * 2. Attempt a live check via checkAppStoreSubscription() (this app uses
- *    expo-in-app-purchases, not RevenueCat).
- * 3. On success: persist result to @subscription_active.
- * 4. On failure: fall back to the persisted value; treat as not_subscribed if absent.
- * 5. Check onboarding by reading the existing profile key.
- * 6. Return the correct UserState.
+ * Reads the persisted subscription flag written by markSubscribed() (called from
+ * app/paywall.tsx after a successful RevenueCat purchase). RevenueCat is the live
+ * source of truth; this AsyncStorage flag is used only for fast cold-start routing
+ * to avoid showing the paywall on every launch for existing subscribers.
+ *
+ * 1. Read persisted subscription flag from AsyncStorage (@subscription_active).
+ * 2. Fall back to legacy key written by storage.ts if absent.
+ * 3. Check onboarding by reading the existing profile key.
+ * 4. Return the correct UserState.
  */
 export async function resolveUserState(): Promise<Exclude<UserState, 'loading'>> {
   console.log('[UserStateManager] resolveUserState() called');
 
-  // Step 1: read persisted flag as fast fallback
-  let persistedSubscribed = false;
+  // Step 1: read persisted flag
+  let isSubscribed = false;
   try {
     const raw = await AsyncStorage.getItem(SUBSCRIPTION_ACTIVE_KEY);
     if (raw !== null) {
-      persistedSubscribed = JSON.parse(raw) === true;
+      isSubscribed = JSON.parse(raw) === true;
     } else {
       // Also check the legacy key written by storage.ts
-      persistedSubscribed = await loadSubscriptionStatus();
+      isSubscribed = await loadSubscriptionStatus();
     }
-    console.log('[UserStateManager] Persisted subscription flag:', persistedSubscribed);
+    console.log('[UserStateManager] Persisted subscription flag:', isSubscribed);
   } catch (err) {
     console.warn('[UserStateManager] Failed to read persisted subscription flag:', err);
   }
 
-  // Step 2: attempt live check via App Store
-  // IMPORTANT: the live check can return false on non-iOS or when StoreKit is unavailable
-  // without throwing. We must NOT let a false live result downgrade a true persisted value.
-  // A live true result upgrades the persisted value; a live false result is ignored in favour
-  // of the persisted flag (the user may have purchased and the live check may be unreliable).
-  let isSubscribed = persistedSubscribed;
-  try {
-    const { checkAppStoreSubscription } = await import('./subscriptionManager');
-    console.log('[UserStateManager] Calling checkAppStoreSubscription() for live status...');
-    const liveResult = await checkAppStoreSubscription();
-    console.log('[UserStateManager] Live subscription result:', liveResult);
-
-    if (liveResult === true) {
-      // Live confirms subscribed — trust it and persist
-      isSubscribed = true;
-      await markSubscribed(true);
-      console.log('[UserStateManager] Live check confirmed subscribed — persisted true');
-    } else if (persistedSubscribed) {
-      // Live returned false but we have a persisted true — keep the persisted value.
-      // The live check may be unreliable (non-iOS, StoreKit unavailable, network issue).
-      console.log('[UserStateManager] Live check returned false but persisted flag is true — keeping persisted value');
-      isSubscribed = true;
-    } else {
-      // Both live and persisted say not subscribed
-      isSubscribed = false;
-      console.log('[UserStateManager] Live check and persisted flag both indicate not subscribed');
-    }
-  } catch (err) {
-    // Step 4: fall back to persisted value
-    console.warn('[UserStateManager] Live subscription check failed — using persisted value:', persistedSubscribed, err);
-    isSubscribed = persistedSubscribed;
-  }
-
-  // Step 5: check onboarding completion
+  // Step 2: check onboarding completion
   const onboardingComplete = await checkOnboardingComplete();
   console.log('[UserStateManager] isSubscribed:', isSubscribed, '| onboardingComplete:', onboardingComplete);
 
-  // Step 6: return state
+  // Step 3: return state
   if (!isSubscribed) {
     console.log('[UserStateManager] → not_subscribed');
     return 'not_subscribed';

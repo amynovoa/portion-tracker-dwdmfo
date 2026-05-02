@@ -4,7 +4,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking, Platform } from 'react-native';
-import PaywallScreen from '@/components/PaywallScreen';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
@@ -63,7 +62,6 @@ const styles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const handleResetAppData = () => {
     console.log('=== RESET APP DATA BUTTON PRESSED ===');
@@ -94,8 +92,8 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={styles.settingItem}
           onPress={() => {
-            console.log('Subscription button pressed');
-            setPaywallVisible(true);
+            console.log('Subscription button pressed — navigating to /paywall');
+            router.push('/paywall');
           }}
         >
           <Text style={styles.settingIcon}>💳</Text>
@@ -178,12 +176,6 @@ export default function SettingsScreen() {
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      <PaywallScreen
-        visible={paywallVisible}
-        onDismiss={() => setPaywallVisible(false)}
-        canDismiss={true}
-      />
     </SafeAreaView>
   );
 }

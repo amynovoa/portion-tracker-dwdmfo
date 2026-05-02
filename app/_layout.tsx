@@ -1,19 +1,33 @@
 
 import 'react-native-reanimated';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, Redirect, usePathname, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, ActivityIndicator } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
-import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { isOnboardingComplete } from "@/utils/onboardingStorage";
+import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    isOnboardingComplete().then((complete) => {
+      setOnboardingComplete(complete);
+    });
+  }, [pathname]);
+
+  if (onboardingComplete === null) {
+    return null;
+  }
+
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -64,9 +78,14 @@ function AppContent() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {onboardingComplete === false && pathname !== "/auth" && pathname !== "/paywall" && pathname !== "/auth-popup" && pathname !== "/auth-callback" && <Redirect href="/onboarding" />}
+
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+
         <Stack.Screen name="index" />
         <Stack.Screen name="welcome" />
+        <Stack.Screen name="paywall" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="setup-profile" />
         <Stack.Screen name="setup-targets" />
         <Stack.Screen name="(tabs)" />
@@ -74,6 +93,40 @@ function AppContent() {
       </Stack>
     </GestureHandlerRootView>
   );
+}
+
+
+function SubscriptionRedirect() {
+  const { isSubscribed, loading } = useSubscription();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (loading) return;
+    const onOnboarding = pathname.startsWith("/onboarding");
+    if (onOnboarding) return;
+
+    let cancelled = false;
+    isOnboardingComplete().then((done) => {
+      if (cancelled) return;
+      if (!done) return;
+      const onPaywall = pathname === "/paywall";
+      if (onPaywall) return;
+      if (!isSubscribed) {
+        router.replace("/paywall");
+      }
+    }).catch(() => {
+      if (cancelled) return;
+      const onPaywall = pathname === "/paywall";
+      if (onPaywall) return;
+      if (!isSubscribed) {
+        router.replace("/paywall");
+      }
+    });
+    return () => { cancelled = true; };
+  }, [isSubscribed, loading, pathname]);
+
+  return null;
 }
 
 export default function RootLayout() {
@@ -91,6 +144,7 @@ export default function RootLayout() {
 
   return (
     <SubscriptionProvider>
+          <SubscriptionRedirect />
       <AppContent />
     </SubscriptionProvider>
   );

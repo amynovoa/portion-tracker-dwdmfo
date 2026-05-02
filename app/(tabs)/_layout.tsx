@@ -2,8 +2,11 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 
 export default function TabLayout() {
+  useSubscriptionGuard();
+
   // Define all tabs that appear in the tab bar
   const tabs: TabBarItem[] = [
     {
