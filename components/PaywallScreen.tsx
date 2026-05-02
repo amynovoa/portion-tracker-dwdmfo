@@ -168,7 +168,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const handlePurchaseSuccess = async () => {
-    setLoading(false);
     console.log('[Paywall] handlePurchaseSuccess — persisting subscription before navigation');
 
     // Persist to both AsyncStorage keys synchronously before navigating
@@ -211,11 +210,11 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
     purchaseProduct(
       productId,
-      () => {
+      async () => {
         if (safetyTimer) clearTimeout(safetyTimer);
         console.log('[Paywall] onSuccess fired');
         setLoading(false);
-        handlePurchaseSuccess();
+        await handlePurchaseSuccess();
       },
       () => {
         if (safetyTimer) clearTimeout(safetyTimer);
