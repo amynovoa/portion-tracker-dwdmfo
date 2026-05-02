@@ -78,7 +78,7 @@ function AppContent() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {onboardingComplete === false && pathname !== "/auth" && pathname !== "/paywall" && pathname !== "/auth-popup" && pathname !== "/auth-callback" && <Redirect href="/onboarding" />}
+      {onboardingComplete === false && pathname !== "/" && pathname !== "/auth" && pathname !== "/paywall" && pathname !== "/welcome" && pathname !== "/setup-profile" && pathname !== "/setup-targets" && pathname !== "/auth-popup" && pathname !== "/auth-callback" && <Redirect href="/onboarding" />}
 
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
