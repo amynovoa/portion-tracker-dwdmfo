@@ -51,7 +51,7 @@ function AppContent() {
     }
 
     prepare();
-  }, []);
+  }, [onboardingComplete]);
 
   // Foreground backup (subscription refresh is handled by SubscriptionContext's AppState listener)
   useEffect(() => {
