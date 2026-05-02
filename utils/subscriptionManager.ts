@@ -117,8 +117,23 @@ function registerListener() {
         }
       }
 
-      // If no matching results, this was entirely a stale event — do not clear callbacks
+      // If no matching results but we have an active purchase, check if any result is a valid subscription
       if (matchingResults.length === 0) {
+        if (activePurchaseCallbacks) {
+          // Check if any result is a valid subscription (covers "already owned" edge cases)
+          const anyValid = results.some(
+            (r: any) => r?.productId === PRODUCT_IDS.MONTHLY || r?.productId === PRODUCT_IDS.ANNUAL
+          );
+          if (anyValid) {
+            console.log('[IAP] Already owned subscription detected — treating as success');
+            const callbacks = activePurchaseCallbacks;
+            activePurchaseCallbacks = null;
+            await saveSubscriptionStatus(true);
+            emitSubscriptionUpdate(true);
+            callbacks.onSuccess();
+            return;
+          }
+        }
         console.log('[IAP] No matching results for active purchase — ignoring event');
         return;
       }
@@ -134,10 +149,11 @@ function registerListener() {
           purchase?.productId === PRODUCT_IDS.ANNUAL;
         if (isValid) {
           foundValid = true;
-          console.log('[IAP] Valid subscription purchase:', purchase.productId);
+          console.log('[IAP] Valid subscription purchase (acknowledged:', purchase?.acknowledged, '):', purchase.productId);
           await saveSubscriptionStatus(true);
           emitSubscriptionUpdate(true);
         }
+        // Only finish unacknowledged transactions
         if (!purchase?.acknowledged) {
           try { await InAppPurchases.finishTransactionAsync(purchase, true); } catch (_) {}
         }
