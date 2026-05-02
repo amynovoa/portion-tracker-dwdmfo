@@ -37,8 +37,8 @@ export default function HomeScreen() {
     console.log('Profile loaded:', userProfile ? 'exists' : 'null');
     
     if (!userProfile) {
-      console.log('No profile found, redirecting to welcome');
-      router.replace('/welcome');
+      console.log('No profile found, redirecting to setup-profile');
+      router.replace('/setup-profile');
       return;
     }
     setProfile(userProfile);

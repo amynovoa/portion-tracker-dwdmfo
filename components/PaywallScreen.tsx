@@ -213,8 +213,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       async () => {
         if (safetyTimer) clearTimeout(safetyTimer);
         console.log('[Paywall] onSuccess fired');
-        setLoading(false);
         await handlePurchaseSuccess();
+        setLoading(false);
       },
       () => {
         if (safetyTimer) clearTimeout(safetyTimer);
