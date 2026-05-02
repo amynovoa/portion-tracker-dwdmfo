@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Linking,
   useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -28,26 +29,12 @@ import AppLogo from "@/components/AppLogo";
 
 // Premium features
 const FEATURES = [
-  {
-    icon: "🍽️",
-    title: "Unlimited Tracking",
-    description: "Track all your daily portions without limits",
-  },
-  {
-    icon: "📊",
-    title: "Progress History",
-    description: "View your full adherence history and trends",
-  },
-  {
-    icon: "⚖️",
-    title: "Weight Tracking",
-    description: "Log and chart your weight over time",
-  },
-  {
-    icon: "🔔",
-    title: "Daily Reminders",
-    description: "Custom notifications to keep you on track",
-  },
+  { icon: "🍽️", title: "Unlimited Portion Tracking", description: "Track all your daily portions without limits" },
+  { icon: "🥗", title: "Healthy Portion Guidance", description: "Science-based portion sizes for balanced eating" },
+  { icon: "🎯", title: "Custom Portion Targets", description: "Set personalised targets based on your goals" },
+  { icon: "⚖️", title: "Weight Tracking & Charts", description: "Log and visualise your weight over time" },
+  { icon: "📊", title: "Progress History & Trends", description: "View your full adherence history and trends" },
+  { icon: "🔔", title: "Daily Reminders", description: "Custom notifications to keep you on track" },
 ];
 
 function getColors(scheme: "light" | "dark") {
@@ -183,7 +170,7 @@ export default function PaywallScreen() {
           {/* Header */}
           <View style={styles.header}>
             <AppLogo size={64} />
-            <Text style={[styles.title, { color: C.text }]}>Portion Track Pro</Text>
+            <Text style={[styles.title, { color: C.text }]}>Portion Track</Text>
             <Text style={[styles.subtitle, { color: C.secondaryText }]}>
               Simple Portions. Balanced Eating.
             </Text>
@@ -276,14 +263,6 @@ export default function PaywallScreen() {
             </View>
           )}
 
-          {/* Legal text */}
-          <Text style={[styles.legalText, { color: C.secondaryText }]}>
-            Payment will be charged to your{" "}
-            {Platform.OS === "ios" ? "Apple ID" : "Google Play"} account.
-            Subscription automatically renews unless canceled at least 24 hours
-            before the end of the current period. You can manage or cancel your
-            subscription in your account settings.
-          </Text>
         </ScrollView>
 
         {/* Bottom Actions */}
@@ -318,6 +297,16 @@ export default function PaywallScreen() {
               </Text>
             )}
           </TouchableOpacity>
+
+          <Text style={[styles.legalText, { color: C.secondaryText }]}>
+            Payment will be charged to your {Platform.OS === "ios" ? "Apple ID" : "Google Play"} account. Subscription automatically renews unless canceled at least 24 hours before the end of the current period.
+          </Text>
+          <Text style={[styles.termsText, { color: C.secondaryText }]}>
+            By subscribing, you agree to our{" "}
+            <Text style={{ color: C.primary }} onPress={() => Linking.openURL("https://portiontracker.app/terms")}>Terms of Service</Text>
+            {" "}and{" "}
+            <Text style={{ color: C.primary }} onPress={() => Linking.openURL("https://portiontracker.app/privacy")}>Privacy Policy</Text>
+          </Text>
         </View>
       </SafeAreaView>
     </View>
@@ -477,6 +466,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 16,
     marginBottom: 8,
+  },
+  termsText: {
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 16,
+    marginTop: 4,
   },
   bottomActions: {
     paddingHorizontal: 24,
