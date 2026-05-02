@@ -302,8 +302,7 @@ export async function purchaseProduct(
   productId: string,
   onSuccess: () => void | Promise<void>,
   onCancelled: () => void,
-  onError: (message: string) => void,
-  onSheetReady?: () => void
+  onError: (message: string) => void
 ): Promise<void> {
   console.log('[IAP] purchaseProduct called for:', productId);
 
@@ -338,16 +337,13 @@ export async function purchaseProduct(
   // Set callbacks BEFORE calling purchaseItemAsync so the persistent listener can find them
   activePurchaseCallbacks = { productId, onSuccess, onCancelled, onError };
 
+  // Do NOT await or chain .then() — purchaseItemAsync never resolves on iOS.
+  // Results come back exclusively through the setPurchaseListener callback.
   InAppPurchases.purchaseItemAsync(product.productId)
-    .then(() => {
-      console.log('[IAP] purchaseItemAsync resolved — waiting for listener...');
-      onSheetReady?.();
-    })
     .catch((e: any) => {
       const msg = e?.message || String(e);
       const isCancelled = msg.toLowerCase().includes('cancel') || e?.code === 2;
       console.warn('[IAP] purchaseItemAsync threw:', msg, 'code:', e?.code);
-      // Always clear callbacks on throw — listener will NOT fire after a throw
       const callbacks = activePurchaseCallbacks;
       activePurchaseCallbacks = null;
       if (isCancelled) {

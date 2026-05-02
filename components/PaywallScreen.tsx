@@ -167,7 +167,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   const handleSubscribe = () => {
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-
     console.log('[Paywall] Subscribe tapped — plan:', selectedPlan, 'productId:', productId);
 
     if (loadingProducts) {
@@ -175,36 +174,34 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       return;
     }
 
-    console.log('[Paywall] Calling purchaseProduct — productId:', productId, 'mapSize:', getLoadedProductCount());
     setLoading(true);
 
-    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+    // Start safety timer immediately — purchaseItemAsync promise never resolves,
+    // results come back through setPurchaseListener only
+    const safetyTimer = setTimeout(() => {
+      console.warn('[Paywall] Safety timer fired — no listener response after 30s');
+      setLoading(false);
+      Alert.alert('Purchase Timed Out', 'The purchase did not complete. Please try again.', [{ text: 'OK' }]);
+    }, 30000);
 
     purchaseProduct(
       productId,
       async () => {
-        if (safetyTimer) clearTimeout(safetyTimer);
+        clearTimeout(safetyTimer);
         console.log('[Paywall] onSuccess fired');
         setLoading(false);
         await handlePurchaseSuccess();
       },
       () => {
-        if (safetyTimer) clearTimeout(safetyTimer);
+        clearTimeout(safetyTimer);
         console.log('[Paywall] onCancelled fired');
         setLoading(false);
       },
       (message) => {
-        if (safetyTimer) clearTimeout(safetyTimer);
+        clearTimeout(safetyTimer);
         console.error('[Paywall] onError fired:', message);
         setLoading(false);
         Alert.alert('Purchase Failed', message, [{ text: 'OK' }]);
-      },
-      () => {
-        safetyTimer = setTimeout(() => {
-          console.warn('[Paywall] Safety timer fired — no listener response after 120s');
-          setLoading(false);
-          Alert.alert('Purchase Timed Out', 'The purchase did not complete. Please try again.', [{ text: 'OK' }]);
-        }, 120000);
       }
     );
   };
