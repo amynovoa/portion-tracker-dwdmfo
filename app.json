@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.portiontracker.app",
+      "bundleIdentifier": "com.amynovoa.portiontracker",
       "appleTeamId": "9978T8842P",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -31,7 +31,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.portiontracker.app",
+      "package": "com.amynovoa.portiontracker",
       "versionCode": 19,
       "permissions": [
         "CAMERA",
