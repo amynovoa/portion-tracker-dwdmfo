@@ -1,6 +1,6 @@
 
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, AppState } from 'react-native';
 import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
 
 // Only import InAppPurchases on iOS
@@ -202,6 +202,7 @@ async function ensureConnected(): Promise<boolean> {
     console.log('[IAP] Calling connectAsync...');
     await InAppPurchases.connectAsync();
     sessionConnected = true;
+    listenerRegistered = false; // always re-register after fresh connect
     registerListener();
     console.log('[IAP] Connected to App Store');
     return true;
@@ -210,6 +211,7 @@ async function ensureConnected(): Promise<boolean> {
     // Error code 3 or "already connected" means we ARE connected — treat as success
     if (e?.code === 3 || msg.toLowerCase().includes('already')) {
       sessionConnected = true;
+      listenerRegistered = false; // reset so listener is re-registered even on "already connected"
       registerListener();
       console.log('[IAP] Already connected — session reused');
       return true;
@@ -332,8 +334,11 @@ export async function purchaseProduct(
     return;
   }
 
-  if (!sessionConnected) {
-    console.warn('[IAP] Session not connected — attempting purchase anyway');
+  // Re-ensure connection and listener are live before purchasing
+  const connected = await ensureConnected();
+  if (!connected) {
+    onError('Unable to connect to App Store. Please try again.');
+    return;
   }
 
   let product = loadedProducts.get(productId);
@@ -461,3 +466,12 @@ export async function checkAppStoreSubscription(): Promise<boolean> {
 export async function validateReceipt(_receiptData: string): Promise<boolean> {
   return false;
 }
+
+AppState.addEventListener('change', (nextState) => {
+  if (nextState === 'active') {
+    // Reset session flags so ensureConnected() reconnects fresh on next purchase
+    sessionConnected = false;
+    listenerRegistered = false;
+    console.log('[IAP] App became active — session flags reset for fresh reconnect');
+  }
+});
