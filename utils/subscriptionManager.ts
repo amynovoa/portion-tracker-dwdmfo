@@ -27,7 +27,7 @@ const loadedProducts = new Map<string, any>();
 // Callbacks for the active purchase — set before purchaseItemAsync, cleared after listener fires
 let activePurchaseCallbacks: {
   productId: string;
-  onSuccess: () => void;
+  onSuccess: () => void | Promise<void>;
   onCancelled: () => void;
   onError: (msg: string) => void;
 } | null = null;
@@ -300,7 +300,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
  */
 export async function purchaseProduct(
   productId: string,
-  onSuccess: () => void,
+  onSuccess: () => void | Promise<void>,
   onCancelled: () => void,
   onError: (message: string) => void,
   onSheetReady?: () => void

@@ -44,34 +44,22 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   const { refreshSubscription } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('annual');
   const [loading, setLoading] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [monthlyProduct, setMonthlyProduct] = useState<ProductDetails | null>(null);
   const [annualProduct, setAnnualProduct] = useState<ProductDetails | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsFailed, setProductsFailed] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<{
-    status: 'loading' | 'loaded' | 'failed';
-    productCount: number;
-    loadedIds: string[];
-    monthlyReady: boolean;
-    annualReady: boolean;
-  }>({
-    status: 'loading',
-    productCount: 0,
-    loadedIds: [],
-    monthlyReady: false,
-    annualReady: false,
-  });
 
   useEffect(() => {
     if (visible) {
       setLoading(false);
+      setDismissed(false);
       const alreadyLoaded = isProductReady(PRODUCT_IDS.MONTHLY) && isProductReady(PRODUCT_IDS.ANNUAL);
       console.log('[Paywall] Paywall opened — alreadyLoaded:', alreadyLoaded);
       if (!alreadyLoaded) {
         loadProducts();
       } else {
         setLoadingProducts(false);
-        setDebugInfo(prev => ({ ...prev, status: 'loaded' }));
       }
     }
   }, [visible]);
@@ -94,7 +82,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
     setLoadingProducts(true);
     setProductsFailed(false);
-    setDebugInfo({ status: 'loading', productCount: 0, loadedIds: [], monthlyReady: false, annualReady: false });
 
     // expo-in-app-purchases only works on iOS
     if (Platform.OS !== 'ios') {
@@ -118,7 +105,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
         if (retryIds.length === 0) {
           console.error('[Paywall] No products after retry — showing error state');
-          setDebugInfo({ status: 'failed', productCount: 0, loadedIds: [], monthlyReady: false, annualReady: false });
           setProductsFailed(true);
           setLoadingProducts(false);
           return;
@@ -131,13 +117,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
         ]);
         setMonthlyProduct(monthly);
         setAnnualProduct(annual);
-        setDebugInfo({
-          status: 'loaded',
-          productCount: retryIds.length,
-          loadedIds: retryIds,
-          monthlyReady: isProductReady(PRODUCT_IDS.MONTHLY),
-          annualReady: isProductReady(PRODUCT_IDS.ANNUAL),
-        });
         console.log('[Paywall] Products loaded on retry — monthly:', monthly?.priceString, 'annual:', annual?.priceString);
         setLoadingProducts(false);
         return;
@@ -150,17 +129,9 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       ]);
       setMonthlyProduct(monthly);
       setAnnualProduct(annual);
-      setDebugInfo({
-        status: 'loaded',
-        productCount: loadedIds.length,
-        loadedIds,
-        monthlyReady: isProductReady(PRODUCT_IDS.MONTHLY),
-        annualReady: isProductReady(PRODUCT_IDS.ANNUAL),
-      });
       console.log('[Paywall] Products loaded — monthly:', monthly?.priceString, 'annual:', annual?.priceString);
     } catch (error) {
       console.error('[Paywall] loadProducts error:', error);
-      setDebugInfo({ status: 'failed', productCount: 0, loadedIds: [], monthlyReady: false, annualReady: false });
       setProductsFailed(true);
     } finally {
       setLoadingProducts(false);
@@ -168,6 +139,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   };
 
   const handlePurchaseSuccess = async () => {
+    setDismissed(true);
     console.log('[Paywall] handlePurchaseSuccess — persisting subscription before navigation');
 
     // Persist to both AsyncStorage keys synchronously before navigating
@@ -213,8 +185,8 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
       async () => {
         if (safetyTimer) clearTimeout(safetyTimer);
         console.log('[Paywall] onSuccess fired');
-        await handlePurchaseSuccess();
         setLoading(false);
+        await handlePurchaseSuccess();
       },
       () => {
         if (safetyTimer) clearTimeout(safetyTimer);
@@ -291,14 +263,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   // Purchase must be disabled unless the product object exists in memory from StoreKit
   const isSelectedProductReady = () => {
     const productId = selectedPlan === 'monthly' ? PRODUCT_IDS.MONTHLY : PRODUCT_IDS.ANNUAL;
-    const ready = isProductReady(productId);
-    
-    console.log('🔍 PRODUCT READY CHECK:', {
-      productId,
-      ready
-    });
-    
-    return ready;
+    return isProductReady(productId);
   };
 
   const titleText = '7 day free trial.';
@@ -314,7 +279,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
   if (productsFailed) {
     return (
       <Modal
-        visible={visible}
+        visible={visible && !dismissed}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => {
@@ -363,7 +328,7 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
 
   return (
     <Modal
-      visible={visible}
+      visible={visible && !dismissed}
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={() => {
@@ -467,18 +432,6 @@ export default function PaywallScreen({ visible, onDismiss, canDismiss = true, o
                 Privacy Policy
               </Text>
             </Text>
-          </View>
-
-          {/* === STOREKIT DIAGNOSTIC PANEL === */}
-          <View style={styles.debugPanel}>
-            <Text style={styles.debugTitle}>StoreKit Debug</Text>
-            <Text style={styles.debugText}>Status: <Text style={styles.debugValue}>{debugInfo.status}</Text></Text>
-            <Text style={styles.debugText}>Products loaded: <Text style={styles.debugValue}>{debugInfo.productCount}</Text></Text>
-            <Text style={styles.debugText}>Loaded IDs: <Text style={styles.debugValue}>{debugInfo.loadedIds.length > 0 ? debugInfo.loadedIds.join(', ') : 'none'}</Text></Text>
-            <Text style={styles.debugText}>Monthly ready: <Text style={styles.debugValue}>{debugInfo.monthlyReady ? 'YES' : 'NO'}</Text></Text>
-            <Text style={styles.debugText}>Annual ready: <Text style={styles.debugValue}>{debugInfo.annualReady ? 'YES' : 'NO'}</Text></Text>
-            <Text style={styles.debugText}>Monthly button purchases: <Text style={styles.debugValue}>{PRODUCT_IDS.MONTHLY}</Text></Text>
-            <Text style={styles.debugText}>Annual button purchases: <Text style={styles.debugValue}>{PRODUCT_IDS.ANNUAL}</Text></Text>
           </View>
 
           <TouchableOpacity
@@ -704,31 +657,5 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     minWidth: 200,
-  },
-  debugPanel: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#ff6b6b',
-  },
-  debugTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#ff6b6b',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  debugText: {
-    fontSize: 11,
-    color: '#aaaaaa',
-    marginBottom: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  debugValue: {
-    color: '#00ff88',
-    fontWeight: 'bold',
   },
 });
