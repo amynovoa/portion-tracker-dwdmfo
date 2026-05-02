@@ -337,7 +337,7 @@ export async function purchaseProduct(
   // Set callbacks BEFORE calling purchaseItemAsync so the persistent listener can find them
   activePurchaseCallbacks = { productId, onSuccess, onCancelled, onError };
 
-  InAppPurchases.purchaseItemAsync(product)
+  InAppPurchases.purchaseItemAsync(product.productId)
     .then(() => {
       console.log('[IAP] purchaseItemAsync resolved — waiting for listener...');
     })
