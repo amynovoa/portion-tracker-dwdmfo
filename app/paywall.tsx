@@ -303,9 +303,9 @@ export default function PaywallScreen() {
           </Text>
           <Text style={[styles.termsText, { color: C.secondaryText }]}>
             By subscribing, you agree to our{" "}
-            <Text style={{ color: C.primary }} onPress={() => Linking.openURL("https://portiontracker.app/terms")}>Terms of Service</Text>
+            <Text style={{ color: C.primary }} onPress={() => Linking.openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")}>Terms of Service</Text>
             {" "}and{" "}
-            <Text style={{ color: C.primary }} onPress={() => Linking.openURL("https://portiontracker.app/privacy")}>Privacy Policy</Text>
+            <Text style={{ color: C.primary }} onPress={() => Linking.openURL("https://www.portiontrack.com/privacy-policy")}>Privacy Policy</Text>
           </Text>
         </View>
       </SafeAreaView>

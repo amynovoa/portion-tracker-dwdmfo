@@ -101,18 +101,48 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
     // Fetch offerings via REST API for web platform
   const fetchOfferingsViaRest = async () => {
-    // Mock package with real prices from RevenueCat dashboard
-    const mockPackage = {
-      identifier: "$rc_monthly",
-      product: {
-        title: "Premium",
-        priceString: "$29.99/month",
-        description: "Unlock all premium features",
-      },
-    };
+    try {
+      const apiKey = IOS_API_KEY || TEST_IOS_API_KEY;
+      if (!apiKey) return;
 
-    setPackages([mockPackage] as PurchasesPackage[]);
-    console.log("[revenuecat] Web preview: showing real prices from dashboard");
+      const response = await fetch(
+        'https://api.revenuecat.com/v1/subscribers/anonymous/offerings',
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'X-Platform': 'ios',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.warn('[RevenueCat] Web offerings fetch failed:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      const currentOffering = data.offerings?.find((o: any) => o.identifier === data.current_offering_id);
+      if (!currentOffering) return;
+
+      const webPackages = currentOffering.packages.map((pkg: any) => ({
+        identifier: pkg.identifier,
+        product: {
+          title: pkg.platform_product_identifier.includes('annual') ? 'Annual' : 'Monthly',
+          priceString: pkg.platform_product_identifier.includes('annual') ? '$29.99/year' : '$3.99/month',
+          description: pkg.platform_product_identifier.includes('annual') ? 'Best value — save over 35%' : 'Billed monthly',
+          productIdentifier: pkg.platform_product_identifier,
+        },
+        offeringIdentifier: currentOffering.identifier,
+      })) as PurchasesPackage[];
+
+      if (webPackages.length > 0) {
+        setPackages(webPackages);
+        console.log('[revenuecat] Web preview: loaded', webPackages.length, 'packages from REST API');
+      }
+    } catch (error) {
+      console.warn('[RevenueCat] Web REST fetch error:', error);
+    }
   };
 
   // Initialize RevenueCat on mount
