@@ -82,6 +82,10 @@ export default function DailyReminderScreen() {
   );
 
   const loadReminderStatus = async () => {
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
     try {
       console.log('Loading reminder status...');
       const enabled = await isNoonReminderEnabled();
@@ -94,53 +98,39 @@ export default function DailyReminderScreen() {
       setNoonReminderEnabled(false);
       setHasPermission(false);
     } finally {
+      clearTimeout(safetyTimer);
       setIsLoading(false);
     }
   };
 
   const handleToggleNoonReminder = async (value: boolean) => {
     console.log('User toggled noon reminder to:', value);
-    
-    // Disable the switch while processing
     setIsLoading(true);
-    
+
+    // Safety timeout — always unblock the UI within 10 seconds
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 10000);
+
     try {
-      // Attempt to toggle the reminder
       await toggleNoonReminder(value);
       console.log('Noon reminder toggled successfully to:', value);
-      
-      // Update UI on success
       setNoonReminderEnabled(value);
-      
-      // Reload permission status
       const permission = await checkNotificationPermissions();
       setHasPermission(permission);
     } catch (error: any) {
       console.error('Error toggling noon reminder:', error);
-      
-      // Revert switch to previous state
       setNoonReminderEnabled(!value);
-      
-      // Handle specific error types
       if (error?.message === 'PERMISSION_DENIED' || error?.name === 'PERMISSION_DENIED') {
-        console.log('Permission denied - showing settings alert');
         Alert.alert(
           'Permission Required',
           'Please enable notifications in your device settings to use daily reminders.',
           [
             { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Open Settings', 
-              onPress: () => {
-                console.log('Opening device settings...');
-                Linking.openSettings();
-              }
-            }
+            { text: 'Open Settings', onPress: () => Linking.openSettings() }
           ]
         );
       } else {
-        // Generic error - something went wrong with scheduling
-        console.log('Showing generic error alert');
         Alert.alert(
           'Unable to Set Reminder',
           'There was a problem setting up the reminder. Please try again.',
@@ -148,6 +138,7 @@ export default function DailyReminderScreen() {
         );
       }
     } finally {
+      clearTimeout(safetyTimer);
       setIsLoading(false);
     }
   };
