@@ -110,9 +110,9 @@ export async function scheduleNoonReminder(): Promise<void> {
         sound: true,
       },
       trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: 12,
         minute: 0,
-        repeats: true,
         channelId: NOTIFICATION_CHANNEL_ID, // Link to our channel
       },
     });
