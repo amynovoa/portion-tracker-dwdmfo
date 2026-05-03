@@ -22,7 +22,7 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library."
       },
-      "buildNumber": "21"
+      "buildNumber": "22"
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +31,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.amynovoa.portiontracker",
-      "versionCode": 21,
+      "versionCode": 22,
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
@@ -63,7 +63,7 @@
       "eas": {
         "projectId": "3dace54e-74ca-4bd2-ae2d-790ecfd2a740"
       },
-      "revenueCatApiKeyIos": "appl_SYPlYiVRMIrJKWUAmqKHDuIvFty",
+      "revenueCatApiKeyIos": "appl_CuXblAvLmtgigmcFCsvMIgatAwI",
       "revenueCatApiKeyAndroid": "goog_XKBHXAYvojkkOKMAFBzanTPipxv",
       "revenueCatEntitlementId": "pro",
       "nativelyProjectId": "cf794022-4f46-40af-8c9d-e88fcb1e5354",
