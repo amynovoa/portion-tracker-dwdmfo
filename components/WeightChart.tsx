@@ -30,10 +30,10 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
     const minWeight = Math.min(...weights, goalWeight || Infinity);
     const maxWeight = Math.max(...weights, goalWeight || -Infinity);
     
-    // Add padding to y-axis range
+    // Add padding to y-axis range (guard against zero range with single/flat data)
     const weightRange = maxWeight - minWeight;
-    const yMin = Math.floor(minWeight - weightRange * 0.15);
-    const yMax = Math.ceil(maxWeight + weightRange * 0.15);
+    const yMin = Math.floor(minWeight - Math.max(weightRange * 0.15, 2));
+    const yMax = Math.ceil(maxWeight + Math.max(weightRange * 0.15, 2));
 
     // Calculate chart dimensions
     const plotWidth = chartWidth - CHART_PADDING.left - CHART_PADDING.right;
@@ -98,6 +98,17 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
 
   const { points, trendLine, goalLine, yMin, yMax, plotWidth, plotHeight } = chartData;
 
+  // Safety check: if any point has NaN/Infinite coordinates, show empty state
+  if (points.some(p => isNaN(p.x) || isNaN(p.y) || !isFinite(p.x) || !isFinite(p.y))) {
+    console.log('[WeightChart] NaN/Infinite coordinates detected, showing empty state');
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No data yet</Text>
+        <Text style={styles.emptySubtext}>Add weight entries to see your progress</Text>
+      </View>
+    );
+  }
+
   // Generate y-axis labels (fewer labels for cleaner look)
   const yAxisLabels = [];
   const labelCount = 4;
@@ -110,9 +121,11 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
   // Create polyline points string for the weight line
   const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ');
 
-  // Create gradient area path
-  const areaPath = points.length > 0 
-    ? `M ${points[0].x},${CHART_PADDING.top + plotHeight} L ${polylinePoints} L ${points[points.length - 1].x},${CHART_PADDING.top + plotHeight} Z`
+  // Create gradient area path (each point gets its own L command for valid SVG)
+  const areaPath = points.length > 0
+    ? `M ${points[0].x},${CHART_PADDING.top + plotHeight} ` +
+      points.map(p => `L ${p.x},${p.y}`).join(' ') +
+      ` L ${points[points.length - 1].x},${CHART_PADDING.top + plotHeight} Z`
     : '';
 
   return (
