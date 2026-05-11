@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-const MINIMUM_VERSION = '2.0.0';
+const MINIMUM_VERSION = '2.1.0';
 const APP_STORE_URL = 'https://apps.apple.com/app/id6744042838';
 
 export type VersionCheckResult =
