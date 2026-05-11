@@ -216,10 +216,22 @@ export async function loadWeightEntries(): Promise<WeightEntry[]> {
   try {
     const data = await AsyncStorage.getItem(WEIGHT_ENTRIES_KEY);
     if (data) {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      if (!Array.isArray(parsed)) {
+        console.warn('[storage] Weight entries is not an array, resetting');
+        return [];
+      }
+      const valid = parsed.filter((e: any) =>
+        e && typeof e.date === 'string' && typeof e.weight === 'number' &&
+        isFinite(e.weight) && typeof e.timestamp === 'number' && isFinite(e.timestamp)
+      );
+      if (valid.length !== parsed.length) {
+        console.warn(`[storage] Filtered ${parsed.length - valid.length} malformed weight entries`);
+      }
+      return valid;
     }
   } catch (error) {
-    console.error('Error loading weight entries:', error);
+    console.error('[storage] Error loading weight entries:', error);
   }
   return [];
 }

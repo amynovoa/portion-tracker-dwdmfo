@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
 import { saveWeightEntry, loadWeightEntries, loadProfile, deleteWeightEntry } from '@/utils/storage';
@@ -12,6 +12,16 @@ import AppLogo from '@/components/AppLogo';
 
 type TimeRange = 'week' | '30days' | '90days' | 'all';
 
+const formatEntryDate = (entry: WeightEntry): string => {
+  try {
+    const d = new Date(entry.timestamp);
+    if (isNaN(d.getTime())) return entry.date;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch {
+    return entry.date;
+  }
+};
+
 export default function WeightTrackingScreen() {
   const [weightInput, setWeightInput] = useState('');
   const [entries, setEntries] = useState<WeightEntry[]>([]);
@@ -22,67 +32,112 @@ export default function WeightTrackingScreen() {
   const [filteredEntries, setFilteredEntries] = useState<WeightEntry[]>([]);
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    console.log('Loading weight data...');
-    const profile = await loadProfile();
-    
-    if (profile) {
-      console.log('Profile found:', { currentWeight: profile.currentWeight, goalWeight: profile.goalWeight });
-      setGoalWeight(profile.goalWeight);
-      setCurrentWeight(profile.currentWeight);
-      
-      const weightEntries = await loadWeightEntries();
-      console.log('Weight entries found:', weightEntries.length);
+    console.log('[Weight] loadData start');
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const profile = await loadProfile();
 
-      // Determine starting weight (oldest entry or current weight if no entries)
-      if (weightEntries.length > 0) {
-        const sorted = [...weightEntries].sort((a, b) => a.timestamp - b.timestamp);
-        setStartingWeight(sorted[0].weight);
-      } else {
-        setStartingWeight(profile.currentWeight);
-      }
+      if (profile) {
+        console.log('[Weight] Profile found:', { currentWeight: profile.currentWeight, goalWeight: profile.goalWeight });
+        setGoalWeight(profile.goalWeight);
+        setCurrentWeight(profile.currentWeight);
 
-      // Check if we need to create an initial entry with the profile weight
-      const hasProfileWeightEntry = weightEntries.some(entry => entry.weight === profile.currentWeight);
-      
-      if (weightEntries.length === 0 || !hasProfileWeightEntry) {
-        console.log('Creating/updating initial entry with profile weight:', profile.currentWeight);
-        const today = new Date();
-        const todayString = today.toISOString().split('T')[0];
-        
-        const todayEntry = weightEntries.find(entry => entry.date === todayString);
-        
-        if (!todayEntry) {
-          const initialEntry: WeightEntry = {
-            date: todayString,
-            weight: profile.currentWeight,
-            timestamp: today.getTime(),
-          };
-          await saveWeightEntry(initialEntry);
-          
-          const updatedEntries = await loadWeightEntries();
-          setEntries(updatedEntries);
+        const rawEntries = await loadWeightEntries();
+        console.log('[Weight] Raw entries loaded:', rawEntries.length);
+
+        // Deduplicate: keep latest entry per date
+        const deduped = Object.values(
+          rawEntries.reduce((acc, e) => {
+            if (!acc[e.date] || e.timestamp > acc[e.date].timestamp) {
+              acc[e.date] = e;
+            }
+            return acc;
+          }, {} as Record<string, WeightEntry>)
+        );
+        console.log(`[Weight] After dedup: ${rawEntries.length} → ${deduped.length} entries`);
+
+        // Validate entries
+        const validEntries = deduped.filter(e => {
+          const ok = typeof e.weight === 'number' && isFinite(e.weight) && e.weight > 0
+            && typeof e.timestamp === 'number' && isFinite(e.timestamp) && e.timestamp > 0
+            && typeof e.date === 'string' && e.date.length === 10;
+          if (!ok) console.warn('[Weight] Skipping invalid entry:', e);
+          return ok;
+        });
+
+        // Determine starting weight (oldest entry or current weight if no entries)
+        if (validEntries.length > 0) {
+          const sorted = [...validEntries].sort((a, b) => a.timestamp - b.timestamp);
+          setStartingWeight(sorted[0].weight);
         } else {
-          setEntries(weightEntries);
+          setStartingWeight(profile.currentWeight);
+        }
+
+        // Check if we need to create an initial entry with the profile weight
+        const hasProfileWeightEntry = validEntries.some(entry => entry.weight === profile.currentWeight);
+
+        if (validEntries.length === 0 || !hasProfileWeightEntry) {
+          console.log('[Weight] Creating/updating initial entry with profile weight:', profile.currentWeight);
+          const today = new Date();
+          const todayString = today.toISOString().split('T')[0];
+
+          const todayEntry = validEntries.find(entry => entry.date === todayString);
+
+          if (!todayEntry) {
+            const initialEntry: WeightEntry = {
+              date: todayString,
+              weight: profile.currentWeight,
+              timestamp: today.getTime(),
+            };
+            await saveWeightEntry(initialEntry);
+
+            const updatedRaw = await loadWeightEntries();
+            const updatedDeduped = Object.values(
+              updatedRaw.reduce((acc, e) => {
+                if (!acc[e.date] || e.timestamp > acc[e.date].timestamp) {
+                  acc[e.date] = e;
+                }
+                return acc;
+              }, {} as Record<string, WeightEntry>)
+            );
+            const updatedValid = updatedDeduped.filter(e =>
+              typeof e.weight === 'number' && isFinite(e.weight) && e.weight > 0
+              && typeof e.timestamp === 'number' && isFinite(e.timestamp) && e.timestamp > 0
+              && typeof e.date === 'string' && e.date.length === 10
+            );
+            setEntries(updatedValid);
+          } else {
+            setEntries(validEntries);
+          }
+        } else {
+          setEntries(validEntries);
         }
       } else {
-        setEntries(weightEntries);
+        console.log('[Weight] No profile found, clearing weight data');
+        setGoalWeight(undefined);
+        setCurrentWeight(undefined);
+        setStartingWeight(undefined);
+        setEntries([]);
+        setWeightInput('');
       }
-    } else {
-      console.log('No profile found, clearing weight data');
-      setGoalWeight(undefined);
-      setCurrentWeight(undefined);
-      setStartingWeight(undefined);
-      setEntries([]);
-      setWeightInput('');
+    } catch (err) {
+      console.error('[Weight] loadData error:', err);
+      setLoadError('Failed to load weight data. Please try again.');
+    } finally {
+      console.log('[Weight] loadData complete');
+      setIsLoading(false);
     }
   }, []);
 
   // Reload data whenever the screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      console.log('Weight screen (iOS) focused, loading data');
+      console.log('[Weight] Weight screen (iOS) focused, loading data');
       loadData();
     }, [loadData])
   );
@@ -113,7 +168,9 @@ export default function WeightTrackingScreen() {
     }
 
     const filtered = entries.filter(entry => entry.timestamp >= cutoffTime);
-    setFilteredEntries(filtered);
+    const capped = filtered.slice(-90);
+    console.log(`[Weight] Chart entries: ${filtered.length} filtered → ${capped.length} capped`);
+    setFilteredEntries(capped);
   }, [entries, timeRange]);
 
   useEffect(() => {
@@ -134,6 +191,8 @@ export default function WeightTrackingScreen() {
       return;
     }
 
+    console.log('[Weight] Saving entry:', { date: selectedDate, weight });
+
     const selectedDateObj = new Date(selectedDate + 'T12:00:00');
     const entry: WeightEntry = {
       date: selectedDate,
@@ -143,23 +202,39 @@ export default function WeightTrackingScreen() {
 
     try {
       await saveWeightEntry(entry);
-      const updatedEntries = await loadWeightEntries();
-      setEntries(updatedEntries);
-      
+      const updatedRaw = await loadWeightEntries();
+      const updatedDeduped = Object.values(
+        updatedRaw.reduce((acc, e) => {
+          if (!acc[e.date] || e.timestamp > acc[e.date].timestamp) {
+            acc[e.date] = e;
+          }
+          return acc;
+        }, {} as Record<string, WeightEntry>)
+      );
+      const updatedValid = updatedDeduped.filter(e =>
+        typeof e.weight === 'number' && isFinite(e.weight) && e.weight > 0
+        && typeof e.timestamp === 'number' && isFinite(e.timestamp) && e.timestamp > 0
+        && typeof e.date === 'string' && e.date.length === 10
+      );
+      setEntries(updatedValid);
+
       // Update starting weight if this is the oldest entry
-      const sorted = [...updatedEntries].sort((a, b) => a.timestamp - b.timestamp);
-      setStartingWeight(sorted[0].weight);
-      
+      const sorted = [...updatedValid].sort((a, b) => a.timestamp - b.timestamp);
+      if (sorted.length > 0) setStartingWeight(sorted[0].weight);
+
+      console.log('[Weight] Entry saved successfully');
+
       const isToday = selectedDate === formatDate(new Date());
       const dateLabel = isToday ? 'today' : selectedDate;
       Alert.alert('Success', `Weight entry saved for ${dateLabel}!`);
     } catch (error) {
       Alert.alert('Error', 'Failed to save weight entry.');
-      console.error('Error saving weight:', error);
+      console.error('[Weight] Error saving weight:', error);
     }
   };
 
   const handleDeleteEntry = (date: string) => {
+    console.log('[Weight] Delete entry pressed for date:', date);
     Alert.alert(
       'Delete Entry',
       'Are you sure you want to delete this weight entry?',
@@ -171,21 +246,34 @@ export default function WeightTrackingScreen() {
           onPress: async () => {
             try {
               await deleteWeightEntry(date);
-              const updatedEntries = await loadWeightEntries();
-              setEntries(updatedEntries);
-              
+              const updatedRaw = await loadWeightEntries();
+              const updatedDeduped = Object.values(
+                updatedRaw.reduce((acc, e) => {
+                  if (!acc[e.date] || e.timestamp > acc[e.date].timestamp) {
+                    acc[e.date] = e;
+                  }
+                  return acc;
+                }, {} as Record<string, WeightEntry>)
+              );
+              const updatedValid = updatedDeduped.filter(e =>
+                typeof e.weight === 'number' && isFinite(e.weight) && e.weight > 0
+                && typeof e.timestamp === 'number' && isFinite(e.timestamp) && e.timestamp > 0
+                && typeof e.date === 'string' && e.date.length === 10
+              );
+              setEntries(updatedValid);
+
               // Update starting weight after deletion
-              if (updatedEntries.length > 0) {
-                const sorted = [...updatedEntries].sort((a, b) => a.timestamp - b.timestamp);
+              if (updatedValid.length > 0) {
+                const sorted = [...updatedValid].sort((a, b) => a.timestamp - b.timestamp);
                 setStartingWeight(sorted[0].weight);
               }
-              
+
               if (date === selectedDate) {
                 setWeightInput('');
               }
             } catch (error) {
               Alert.alert('Error', 'Failed to delete weight entry.');
-              console.error('Error deleting weight:', error);
+              console.error('[Weight] Error deleting weight:', error);
             }
           },
         },
@@ -217,6 +305,25 @@ export default function WeightTrackingScreen() {
   const hasEntryForSelectedDate = entries.some(e => e.date === selectedDate);
   const isToday = selectedDate === formatDate(new Date());
 
+  if (isLoading) {
+    return (
+      <View style={[commonStyles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <View style={[commonStyles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>{loadError}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={commonStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -246,11 +353,11 @@ export default function WeightTrackingScreen() {
               <Text style={styles.statLabel}>Goal</Text>
             </View>
           </View>
-          
+
           {changeFromStart !== null && (
             <View style={styles.changeIndicator}>
-              <Text style={[styles.changeText, { 
-                color: changeFromStart > 0 ? colors.error : changeFromStart < 0 ? colors.secondary : colors.textSecondary 
+              <Text style={[styles.changeText, {
+                color: changeFromStart > 0 ? colors.error : changeFromStart < 0 ? colors.secondary : colors.textSecondary
               }]}>
                 {changeFromStart > 0 ? '↑' : changeFromStart < 0 ? '↓' : '='} {Math.abs(changeFromStart).toFixed(1)} lbs from starting weight
               </Text>
@@ -293,7 +400,10 @@ export default function WeightTrackingScreen() {
               <TouchableOpacity
                 key={range}
                 style={[styles.timeChip, timeRange === range && styles.timeChipActive]}
-                onPress={() => setTimeRange(range)}
+                onPress={() => {
+                  console.log('[Weight] Time range changed to:', range);
+                  setTimeRange(range);
+                }}
               >
                 <Text style={[styles.timeChipText, timeRange === range && styles.timeChipTextActive]}>
                   {range === 'week' ? '7D' : range === '30days' ? '30D' : range === '90days' ? '90D' : 'All'}
@@ -310,7 +420,10 @@ export default function WeightTrackingScreen() {
             <View style={styles.historyHeader}>
               <Text style={styles.historyTitle}>Recent Entries</Text>
               {entries.length > 3 && (
-                <TouchableOpacity onPress={() => setShowAllHistory(!showAllHistory)}>
+                <TouchableOpacity onPress={() => {
+                  console.log('[Weight] Toggle show all history:', !showAllHistory);
+                  setShowAllHistory(!showAllHistory);
+                }}>
                   <Text style={styles.showMoreText}>
                     {showAllHistory ? 'Show Less' : `Show All (${entries.length})`}
                   </Text>
@@ -321,12 +434,7 @@ export default function WeightTrackingScreen() {
               <View key={`${entry.date}-${index}`} style={styles.historyRow}>
                 <View style={styles.historyLeft}>
                   <Text style={styles.historyWeight}>{entry.weight} lbs</Text>
-                  <Text style={styles.historyDate}>
-                    {new Date(entry.timestamp).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </Text>
+                  <Text style={styles.historyDate}>{formatEntryDate(entry)}</Text>
                 </View>
                 <TouchableOpacity onPress={() => handleDeleteEntry(entry.date)} style={styles.deleteIcon}>
                   <Text style={styles.deleteIconText}>×</Text>
@@ -346,6 +454,28 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 16,
     paddingBottom: 120,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 32,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+  },
+  retryButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   header: {
     paddingHorizontal: 20,
