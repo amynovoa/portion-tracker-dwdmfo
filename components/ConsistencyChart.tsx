@@ -150,7 +150,7 @@ export default function ConsistencyChart({ entries }: ConsistencyChartProps) {
 
         {/* Gradient area under line */}
         {areaPath ? (
-          <Path d={areaPath} fill={colors.secondary} opacity={0.1} />
+          <Path d={areaPath} fill={colors.primary} opacity={0.1} />
         ) : null}
 
         {/* Trend line */}
@@ -160,7 +160,7 @@ export default function ConsistencyChart({ entries }: ConsistencyChartProps) {
             y1={trendLine.y1}
             x2={trendLine.x2}
             y2={trendLine.y2}
-            stroke={colors.secondary}
+            stroke={colors.primary}
             strokeWidth="1.5"
             strokeDasharray="6,4"
             opacity={0.4}
@@ -171,7 +171,7 @@ export default function ConsistencyChart({ entries }: ConsistencyChartProps) {
         <Polyline
           points={polylinePoints}
           fill="none"
-          stroke={colors.secondary}
+          stroke={colors.primary}
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -185,7 +185,7 @@ export default function ConsistencyChart({ entries }: ConsistencyChartProps) {
               cx={point.x}
               cy={point.y}
               r="4"
-              fill={colors.secondary}
+              fill={colors.primary}
               stroke="#FFFFFF"
               strokeWidth="2"
             />
