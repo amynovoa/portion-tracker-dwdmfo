@@ -9,6 +9,7 @@ import { useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
 import { calculateDailyAdherence, calculateDailyAdherenceForDate, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
+import ConsistencyChart from '@/components/ConsistencyChart';
 
 export default function HistoryScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -65,6 +66,13 @@ export default function HistoryScreen() {
     );
   }
 
+  const consistencyEntries = allPortions
+    .map(day => ({
+      date: day.date,
+      score: calculateDailyAdherence(day.portions, profile.portionTargets),
+    }))
+    .filter(e => typeof e.score === 'number' && isFinite(e.score));
+
   const todayString = getTodayString();
   const dailyAdherence = calculateDailyAdherenceForDate(allPortions, profile.portionTargets, todayString);
   const weeklyAdherence = calculateWeeklyAdherence(allPortions, profile.portionTargets);
@@ -113,6 +121,15 @@ export default function HistoryScreen() {
             subtitle="Last 30 days"
           />
         </View>
+
+        {consistencyEntries.length > 0 && (
+          <View style={styles.consistencySection}>
+            <Text style={styles.sectionTitle}>Consistency Over Time</Text>
+            <View style={styles.chartCard}>
+              <ConsistencyChart entries={consistencyEntries} />
+            </View>
+          </View>
+        )}
 
         <View style={styles.historySection}>
           <Text style={styles.sectionTitle}>Daily History</Text>
@@ -201,6 +218,17 @@ const styles = StyleSheet.create({
   adherenceSection: {
     paddingHorizontal: 20,
     paddingVertical: 12,
+  },
+  consistencySection: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  chartCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 12,
+    overflow: 'hidden',
   },
   historySection: {
     paddingHorizontal: 20,

@@ -4,6 +4,7 @@ import { getAllDailyPortions, loadProfile, loadDailyPortions } from '@/utils/sto
 import AdherenceCard from '@/components/AdherenceCard';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
 import { calculateDailyAdherence, calculateDailyAdherenceForDate, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
+import ConsistencyChart from '@/components/ConsistencyChart';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useFocusEffect } from 'expo-router';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } from 'react-native';
@@ -46,6 +47,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginBottom: 16,
+  },
+  consistencySection: {
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  chartCard: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    padding: 12,
+    overflow: 'hidden',
   },
   historySection: {
     marginBottom: 32,
@@ -149,6 +160,13 @@ export default function HistoryScreen() {
     );
   }
 
+  const consistencyEntries = allPortions
+    .map(day => ({
+      date: day.date,
+      score: calculateDailyAdherence(day.portions, profile.portionTargets),
+    }))
+    .filter(e => typeof e.score === 'number' && isFinite(e.score));
+
   const todayString = getTodayString();
   const todayAdherence = calculateDailyAdherenceForDate(allPortions, profile.portionTargets, todayString);
   const weeklyAdherence = calculateWeeklyAdherence(allPortions, profile.portionTargets);
@@ -199,6 +217,15 @@ export default function HistoryScreen() {
             subtitle="Last 30 days"
           />
         </View>
+
+        {consistencyEntries.length > 0 && (
+          <View style={styles.consistencySection}>
+            <Text style={styles.sectionTitle}>Consistency Over Time</Text>
+            <View style={styles.chartCard}>
+              <ConsistencyChart entries={consistencyEntries} />
+            </View>
+          </View>
+        )}
 
         <View style={styles.historySection}>
           <Text style={styles.sectionTitle}>Daily History</Text>
