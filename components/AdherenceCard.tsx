@@ -13,11 +13,7 @@ export default function AdherenceCard({ title, percentage, subtitle }: Adherence
   // Handle NaN or invalid values
   const validPercentage = isNaN(percentage) || !isFinite(percentage) ? 0 : Math.max(0, Math.min(100, percentage));
   
-  const getColor = (pct: number) => {
-    if (pct >= 80) return colors.success;
-    if (pct >= 60) return colors.secondary;
-    return colors.error;
-  };
+  const getColor = (_pct: number) => colors.primary;
 
   return (
     <View style={styles.container}>
@@ -56,7 +52,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.text,
     marginBottom: 4,
   },
   subtitle: {

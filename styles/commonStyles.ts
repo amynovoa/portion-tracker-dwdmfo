@@ -15,7 +15,7 @@ export const colors = {
   highlight: '#FFF5F4',
   border: '#E0E0E0',
   error: '#C94A3D',
-  success: '#C8D647',
+  success: '#C94A3D',
   white: '#FFFFFF',
   surface: '#F8F8F8',
   warning: '#FF9800',
