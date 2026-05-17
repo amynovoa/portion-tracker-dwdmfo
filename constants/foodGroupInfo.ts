@@ -114,12 +114,13 @@ Watch portion sizes — it's easy to overeat nuts.
 Limit nut butters with added sugar or oils.`,
     examples: `Nuts:
 - Almonds, walnuts, cashews, pecans, pistachios
+- Peanuts (lower in omega-3s than other nuts)
 
 Seeds:
 - Chia seeds, flaxseeds, pumpkin seeds, sunflower seeds, hemp seeds
 
 Nut butters:
-- Almond butter, peanut butter (natural, no added sugar)`,
+- Almond butter, peanut butter (natural, no added sugar), seed butters`,
     portionSize: 'About ¼ cup nuts or 2 tablespoons nut butter',
   },
   fats: {
