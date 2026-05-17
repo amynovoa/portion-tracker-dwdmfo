@@ -74,11 +74,11 @@ Tree fruit:
 - Apples, pears, peaches, plums
 
 Tropical:
-- Bananas, oranges, pineapple, mango, kiwi
+- Bananas, oranges, pineapple, mango, papaya, guava, kiwi
 
 Melons:
 - Watermelon, cantaloupe, honeydew`,
-    portionSize: 'About 1 medium piece of fruit or 1 cup berries/melon',
+    portionSize: 'About 1 medium piece of fruit or 1 cup fruit',
   },
   wholeGrains: {
     benefit: `Whole grains provide sustained energy, fiber, and B vitamins. They support digestion and help stabilize blood sugar.
