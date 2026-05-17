@@ -95,10 +95,10 @@ Watch portion sizes — grains are calorie-dense.`,
 - Oats, quinoa, brown rice, farro, barley
 
 Bread & pasta:
-- Whole wheat bread, whole grain pasta, whole grain tortillas
+- Whole wheat bread, whole grain pasta, corn or whole grain tortillas
 
 Starchy vegetables (count as grains):
-- Sweet potatoes, white potatoes, corn, peas`,
+- Sweet potatoes, white potatoes, corn, peas, plantains`,
     portionSize: 'About ½ cup cooked grains, 1 slice bread, or 1 small potato',
   },
   nutsSeeds: {
