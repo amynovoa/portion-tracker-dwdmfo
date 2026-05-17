@@ -21,15 +21,16 @@ Limit fried or breaded proteins.
 
 Watch portion sizes on higher-fat cuts if you're trying to lose weight.`,
     examples: `Animal sources:
-- Chicken breast
+- Chicken breast (grilled or shredded)
 - Turkey
-- Lean beef or pork
-- Fish (salmon, tuna, cod)
+- Lean beef or pork (carne asada, carnitas)
+- Fish (salmon, tuna, cod, or grilled fish)
 - Eggs
 - Greek yogurt
 - Cottage cheese
 
 Plant sources:
+- Beans (black, pinto, etc.)
 - Tofu or tempeh
 - Edamame
 - Seitan`,
