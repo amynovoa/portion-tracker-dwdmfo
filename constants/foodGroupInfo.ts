@@ -41,7 +41,7 @@ Plant sources:
 
 The more variety, the better — aim for different colors throughout the week.
 
-Non-starchy veggies can be eaten freely and help with satiety.`,
+Non-starchy vegetables can be eaten freely and help you feel full.`,
     avoid: `Avoid deep-fried vegetables or those loaded with heavy sauces.
 
 Watch portion sizes on starchy vegetables like potatoes (count those as whole grains instead).`,
@@ -52,7 +52,10 @@ Cruciferous:
 - Broccoli, cauliflower, Brussels sprouts, cabbage
 
 Other favorites:
-- Bell peppers, tomatoes, cucumbers, zucchini, carrots, green beans, asparagus, mushrooms`,
+- Bell peppers, tomatoes, cucumbers, zucchini, carrots, green beans, asparagus, mushrooms
+- Jicama
+- Nopales (cactus)
+- Squash (calabacitas)`,
     portionSize: 'About 1 cup raw or ½ cup cooked',
   },
   fruits: {
