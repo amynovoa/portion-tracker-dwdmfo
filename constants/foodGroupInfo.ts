@@ -24,7 +24,7 @@ Watch portion sizes on higher-fat cuts if you're trying to lose weight.`,
 - Chicken breast (grilled or shredded)
 - Turkey
 - Lean beef or pork (carne asada, carnitas)
-- Fish (salmon, tuna, cod, or grilled fish)
+- Fish (tuna, salmon, cod, or grilled fish — fresh or canned)
 - Eggs
 - Greek yogurt
 - Cottage cheese
