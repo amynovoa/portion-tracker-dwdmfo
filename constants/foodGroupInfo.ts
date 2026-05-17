@@ -126,24 +126,24 @@ Nut butters:
   fats: {
     benefit: `Healthy fats support hormone production, brain function, and nutrient absorption. They help you feel satisfied and add flavor to meals.
 
-Focus on unsaturated fats from plant sources and fatty fish.
+Focus on healthy fats from plant sources and fatty fish.
 
 Fats are essential but calorie-dense, so portion control matters.`,
     avoid: `Avoid trans fats (partially hydrogenated oils) found in some processed foods.
 
 Limit saturated fats from butter, cream, and fatty meats.
 
-Watch portion sizes — fats are 9 calories per gram.`,
+Watch portion sizes — fats are high in calories.`,
     examples: `Healthy fat sources:
 - Olive oil, avocado oil
 - Avocados
-- Fatty fish (salmon, mackerel, sardines)
+- Fatty fish (salmon, tuna, mackerel, sardines)
 - Olives
 - Dark chocolate (70%+ cacao, in moderation)
 
 Cooking fats:
 - Extra virgin olive oil
-- Coconut oil (in moderation)
+- Avocado oil
 - Grass-fed butter (small amounts)`,
     portionSize: 'About 1 tablespoon oil, ¼ avocado, or 1 oz fatty fish',
   },
