@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -75,9 +75,23 @@ const FAQ_DATA: FAQItem[] = [
 
 export default function FAQScreen() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const itemRefs = useRef<(View | null)[]>([]);
 
   const toggleExpand = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+    const isOpening = expandedIndex !== index;
+    console.log(`[FAQs] FAQ item tapped: index=${index}, action=${isOpening ? 'expand' : 'collapse'}, question="${FAQ_DATA[index].question}"`);
+    setExpandedIndex(isOpening ? index : null);
+
+    if (isOpening) {
+      const itemRef = itemRefs.current[index];
+      if (itemRef && scrollViewRef.current) {
+        itemRef.measure((_x, _y, _width, _height, _pageX, pageY) => {
+          console.log(`[FAQs] Scrolling to FAQ item index=${index}, pageY=${pageY}`);
+          scrollViewRef.current?.scrollTo({ y: pageY - 80, animated: true });
+        });
+      }
+    }
   };
 
   return (
@@ -96,6 +110,7 @@ export default function FAQScreen() {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.container}
         contentContainerStyle={[
           styles.contentContainer,
@@ -109,7 +124,7 @@ export default function FAQScreen() {
         </Text>
 
         {FAQ_DATA.map((faq, index) => (
-          <View key={index} style={styles.faqItem}>
+          <View key={index} ref={(el) => { itemRefs.current[index] = el; }} style={styles.faqItem}>
             <TouchableOpacity
               style={styles.questionContainer}
               onPress={() => toggleExpand(index)}
