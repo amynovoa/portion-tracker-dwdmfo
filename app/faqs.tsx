@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -75,8 +76,14 @@ const FAQ_DATA: FAQItem[] = [
 
 export default function FAQScreen() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [showIntroModal, setShowIntroModal] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
   const itemRefs = useRef<(View | null)[]>([]);
+
+  const handleDismissModal = () => {
+    console.log('[FAQs] Intro modal dismissed');
+    setShowIntroModal(false);
+  };
 
   const toggleExpand = (index: number) => {
     const isOpening = expandedIndex !== index;
@@ -96,6 +103,32 @@ export default function FAQScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <Modal
+        visible={showIntroModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleDismissModal}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={handleDismissModal}>
+              <IconSymbol
+                ios_icon_name="xmark"
+                android_material_icon_name="close"
+                size={18}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Have questions?</Text>
+            <Text style={styles.modalBody}>
+              Portion Track is designed to be simple and flexible! These FAQs cover the most common questions about portions, logging food, and adjusting your plan.
+            </Text>
+            <TouchableOpacity style={styles.modalButton} onPress={handleDismissModal}>
+              <Text style={styles.modalButtonText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <IconSymbol
@@ -117,12 +150,6 @@ export default function FAQScreen() {
           Platform.OS !== 'ios' && styles.contentContainerWithTabBar,
         ]}
       >
-        <Text style={styles.subtitle}>Have questions?</Text>
-        <Text style={styles.description}>
-          Portion Track is designed to be simple and flexible! These FAQs cover the most common
-          questions about portions, logging food, and adjusting your plan.
-        </Text>
-
         {FAQ_DATA.map((faq, index) => (
           <View key={index} ref={(el) => { itemRefs.current[index] = el; }} style={styles.faqItem}>
             <TouchableOpacity
@@ -185,17 +212,50 @@ const styles = StyleSheet.create({
   contentContainerWithTabBar: {
     paddingBottom: 100,
   },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  description: {
-    fontSize: 14,
+  modalCard: {
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 360,
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    padding: 6,
+    zIndex: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 12,
+    marginRight: 28,
+  },
+  modalBody: {
+    fontSize: 15,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 22,
     marginBottom: 24,
+  },
+  modalButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   faqItem: {
     backgroundColor: colors.cardBackground,
