@@ -16,6 +16,7 @@ import {
   Platform,
   Linking,
   useColorScheme,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -55,6 +56,9 @@ export default function PaywallScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const C = getColors(isDark ? "dark" : "light");
+
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
 
   const { packages, loading, purchasePackage, restorePurchases } =
     useSubscription();
@@ -151,27 +155,42 @@ export default function PaywallScreen() {
 
   const platformName = Platform.OS === "ios" ? "Apple ID" : "Google Play";
 
+  const logoSize = isTablet ? 60 : 40;
+
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
-      style={[styles.safeArea, { backgroundColor: C.background }]}
+      style={[
+        styles.safeArea,
+        { backgroundColor: C.background },
+        isTablet && { alignItems: "center" },
+      ]}
     >
       {/* Close button — absolutely positioned, high zIndex, does not affect layout flow */}
       <TouchableOpacity
-        style={[styles.closeButton, { backgroundColor: C.border }]}
+        style={[
+          styles.closeButton,
+          { backgroundColor: C.border },
+          isTablet && { top: 24, right: 28, width: 40, height: 40, borderRadius: 20 },
+        ]}
         onPress={handleClose}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Text style={[styles.closeButtonText, { color: C.secondaryText }]}>✕</Text>
+        <Text style={[styles.closeButtonText, { color: C.secondaryText }, isTablet && { fontSize: 18 }]}>✕</Text>
       </TouchableOpacity>
 
       {/* Content area — fills remaining space, distributes children evenly */}
-      <View style={styles.content}>
+      <View
+        style={[
+          styles.content,
+          isTablet && { width: 560, paddingHorizontal: 48, paddingTop: 32 },
+        ]}
+      >
         {/* Header */}
-        <View style={styles.header}>
-          <AppLogo size={40} />
-          <Text style={[styles.title, { color: C.text }]}>Portion Track</Text>
-          <Text style={[styles.subtitle, { color: C.secondaryText }]}>
+        <View style={[styles.header, isTablet && { gap: 8 }]}>
+          <AppLogo size={logoSize} />
+          <Text style={[styles.title, { color: C.text }, isTablet && { fontSize: 28 }]}>Portion Track</Text>
+          <Text style={[styles.subtitle, { color: C.secondaryText }, isTablet && { fontSize: 17 }]}>
             Simple Portions. Balanced Eating.
           </Text>
         </View>
@@ -179,16 +198,16 @@ export default function PaywallScreen() {
         {/* Features list */}
         <View style={styles.featuresList}>
           {FEATURES.map((feature, index) => (
-            <View key={index} style={styles.featureRow}>
-              <Text style={[styles.featureCheckmark, { color: C.primary }]}>✓</Text>
-              <Text style={[styles.featureTitle, { color: C.text }]}>{feature.title}</Text>
+            <View key={index} style={[styles.featureRow, isTablet && { paddingVertical: 5 }]}>
+              <Text style={[styles.featureCheckmark, { color: C.primary }, isTablet && { fontSize: 16 }]}>✓</Text>
+              <Text style={[styles.featureTitle, { color: C.text }, isTablet && { fontSize: 16 }]}>{feature.title}</Text>
             </View>
           ))}
         </View>
 
         {/* Package cards — side by side */}
         {packages.length > 0 ? (
-          <View style={styles.packagesContainer}>
+          <View style={[styles.packagesContainer, isTablet && { gap: 16 }]}>
             {packages.map((pkg) => {
               const isSelected = selectedPackage?.identifier === pkg.identifier;
               const showBestValue = isAnnual(pkg);
@@ -204,20 +223,21 @@ export default function PaywallScreen() {
                       borderColor,
                       borderWidth,
                     },
+                    isTablet && { padding: 18, borderRadius: 16 },
                   ]}
                   onPress={() => handlePackageSelect(pkg)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.freeTrialBadge, { color: C.primary }]}>
+                  <Text style={[styles.freeTrialBadge, { color: C.primary }, isTablet && { fontSize: 14 }]}>
                     7-day free trial
                   </Text>
                   {showBestValue && (
                     <View style={[styles.bestValueBadge, { backgroundColor: C.accent }]}>
-                      <Text style={styles.bestValueText}>Best Value</Text>
+                      <Text style={[styles.bestValueText, isTablet && { fontSize: 13 }]}>Best Value</Text>
                     </View>
                   )}
                   <View style={styles.packageHeader}>
-                    <Text style={[styles.packageTitle, { color: C.text }]}>
+                    <Text style={[styles.packageTitle, { color: C.text }, isTablet && { fontSize: 18 }]}>
                       {pkg.product.title}
                     </Text>
                     <View
@@ -232,7 +252,7 @@ export default function PaywallScreen() {
                       {isSelected && <View style={styles.radioInner} />}
                     </View>
                   </View>
-                  <Text style={[styles.packagePrice, { color: C.primary }]}>
+                  <Text style={[styles.packagePrice, { color: C.primary }, isTablet && { fontSize: 22 }]}>
                     {pkg.product.priceString}
                   </Text>
                 </TouchableOpacity>
@@ -250,12 +270,18 @@ export default function PaywallScreen() {
       </View>
 
       {/* Bottom actions — always below content, never overlapping */}
-      <View style={styles.bottomActions}>
+      <View
+        style={[
+          styles.bottomActions,
+          isTablet && { width: 560, paddingHorizontal: 48 },
+        ]}
+      >
         <TouchableOpacity
           style={[
             styles.primaryButton,
             { backgroundColor: C.primary },
             (!selectedPackage || purchasing) && styles.buttonDisabled,
+            isTablet && { paddingVertical: 16, borderRadius: 18 },
           ]}
           onPress={handlePurchase}
           disabled={!selectedPackage || purchasing}
@@ -264,7 +290,7 @@ export default function PaywallScreen() {
           {purchasing ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.primaryButtonText}>{subscribeLabel}</Text>
+            <Text style={[styles.primaryButtonText, isTablet && { fontSize: 18 }]}>{subscribeLabel}</Text>
           )}
         </TouchableOpacity>
 
@@ -276,18 +302,18 @@ export default function PaywallScreen() {
           {restoring ? (
             <ActivityIndicator size="small" color={C.secondaryText} />
           ) : (
-            <Text style={[styles.restoreButtonText, { color: C.secondaryText }]}>
+            <Text style={[styles.restoreButtonText, { color: C.secondaryText }, isTablet && { fontSize: 17 }]}>
               Restore Purchases
             </Text>
           )}
         </TouchableOpacity>
 
-        <Text style={[styles.legalText, { color: C.secondaryText }]}>
+        <Text style={[styles.legalText, { color: C.secondaryText }, isTablet && { fontSize: 13, lineHeight: 18 }]}>
           {"Payment will be charged to your "}
           {platformName}
           {" account. Subscription automatically renews unless canceled at least 24 hours before the end of the current period."}
         </Text>
-        <Text style={[styles.termsText, { color: C.secondaryText }]}>
+        <Text style={[styles.termsText, { color: C.secondaryText }, isTablet && { fontSize: 13, lineHeight: 18 }]}>
           {"By subscribing, you agree to our "}
           <Text
             style={{ color: C.primary }}
