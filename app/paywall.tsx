@@ -204,6 +204,9 @@ export default function PaywallScreen() {
                     onPress={() => handlePackageSelect(pkg)}
                     activeOpacity={0.8}
                   >
+                    <Text style={[styles.freeTrialBadge, { color: C.primary }]}>
+                      7-day free trial
+                    </Text>
                     {showBestValue && (
                       <View style={[styles.bestValueBadge, { backgroundColor: C.accent }]}>
                         <Text style={styles.bestValueText}>Best Value</Text>
@@ -227,6 +230,12 @@ export default function PaywallScreen() {
                     </View>
                     <Text style={[styles.packagePrice, { color: C.primary }]}>
                       {pkg.product.priceString}
+                    </Text>
+                    <Text style={[styles.packagePriceThen, { color: C.secondaryText }]}>
+                      {"then "}
+                      {pkg.product.priceString}
+                      {" / "}
+                      {isAnnual(pkg) ? "year" : "month"}
                     </Text>
                     {pkg.product.description ? (
                       <Text style={[styles.packageDescription, { color: C.secondaryText }]}>
@@ -253,7 +262,7 @@ export default function PaywallScreen() {
         {/* Bottom Actions */}
         <View style={[styles.bottomActions, { borderTopColor: C.border }]}>
           <Text style={[styles.freeTrialCallout, { color: C.primary }]}>
-            Start your 7-day free trial
+            Try free for 7 days
           </Text>
           <TouchableOpacity
             style={[
@@ -349,6 +358,7 @@ const styles = StyleSheet.create({
   },
   featuresList: {
     marginBottom: 20,
+    paddingLeft: 8,
   },
   featureRow: {
     flexDirection: "row",
@@ -413,10 +423,20 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#fff",
   },
+  freeTrialBadge: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 6,
+    letterSpacing: 0.2,
+  },
   packagePrice: {
     fontSize: 22,
     fontWeight: "700",
     marginTop: 6,
+  },
+  packagePriceThen: {
+    fontSize: 13,
+    marginTop: 2,
   },
   packageDescription: {
     fontSize: 13,
