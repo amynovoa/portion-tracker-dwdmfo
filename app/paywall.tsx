@@ -164,7 +164,7 @@ export default function PaywallScreen() {
         <View style={styles.scrollContent}>
           {/* Header */}
           <View style={styles.header}>
-            <AppLogo size={48} />
+            <AppLogo size={44} />
             <Text style={[styles.title, { color: C.text }]}>Portion Track</Text>
             <Text style={[styles.subtitle, { color: C.secondaryText }]}>
               Simple Portions. Balanced Eating.
@@ -230,12 +230,6 @@ export default function PaywallScreen() {
                       <Text style={[styles.packagePrice, { color: C.primary }]}>
                         {pkg.product.priceString}
                       </Text>
-                      <Text style={[styles.packagePriceThen, { color: C.secondaryText }]}>
-                        {"then "}
-                        {pkg.product.priceString}
-                        {" / "}
-                        {isAnnual(pkg) ? "year" : "month"}
-                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -255,9 +249,6 @@ export default function PaywallScreen() {
 
         {/* Bottom Actions */}
         <View style={[styles.bottomActions, { borderTopColor: C.border }]}>
-          <Text style={[styles.freeTrialCallout, { color: C.primary }]}>
-            Try free for 7 days
-          </Text>
           <TouchableOpacity
             style={[
               styles.primaryButton,
@@ -338,28 +329,28 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 12,
-    gap: 6,
+    marginBottom: 10,
+    gap: 4,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 18,
   },
   featuresList: {
-    marginBottom: 12,
+    marginBottom: 10,
     paddingLeft: 8,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 4,
+    paddingVertical: 3,
     gap: 10,
   },
   featureCheckmark: {
@@ -429,10 +420,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 2,
   },
-  packagePriceThen: {
-    fontSize: 12,
-    marginTop: 2,
-  },
   loadingPlansContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -445,30 +432,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   legalText: {
-    fontSize: 11,
+    fontSize: 10,
     textAlign: "center",
-    lineHeight: 16,
-    marginBottom: 8,
+    lineHeight: 14,
+    marginBottom: 4,
   },
   termsText: {
-    fontSize: 11,
+    fontSize: 10,
     textAlign: "center",
-    lineHeight: 16,
-    marginTop: 4,
+    lineHeight: 14,
+    marginTop: 2,
   },
   bottomActions: {
     paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 6,
+    paddingTop: 8,
+    paddingBottom: 4,
     borderTopWidth: 1,
     gap: 4,
-  },
-  freeTrialCallout: {
-    fontSize: 14,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 6,
-    letterSpacing: -0.2,
   },
   primaryButton: {
     paddingVertical: 13,
