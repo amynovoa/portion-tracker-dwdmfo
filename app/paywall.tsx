@@ -492,6 +492,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "700",
+    textAlign: "center",
   },
   buttonDisabled: {
     opacity: 0.55,
