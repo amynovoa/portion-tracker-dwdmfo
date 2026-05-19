@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   primaryButton: {
-    paddingVertical: 13,
+    paddingVertical: 10,
     borderRadius: 14,
     alignItems: "center",
     shadowColor: "#C94A3D",
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "700",
   },
   buttonDisabled: {
