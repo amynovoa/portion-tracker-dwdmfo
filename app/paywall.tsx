@@ -146,9 +146,7 @@ export default function PaywallScreen() {
     return id.includes("annual") || id.includes("$rc_annual");
   };
 
-  const subscribeLabel = selectedPackage
-    ? `Subscribe for ${selectedPackage.product.priceString}`
-    : "Subscribe";
+  const subscribeLabel = selectedPackage ? "Start Free Trial" : "Start Free Trial";
 
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
@@ -177,24 +175,11 @@ export default function PaywallScreen() {
           </View>
 
           {/* Features */}
-          <View style={[styles.featuresCard, { backgroundColor: C.surface, borderColor: C.border }]}>
+          <View style={styles.featuresList}>
             {FEATURES.map((feature, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.featureRow,
-                  index < FEATURES.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.border },
-                ]}
-              >
-                <View style={[styles.featureIconContainer, { backgroundColor: C.border }]}>
-                  <Text style={styles.featureIconText}>{feature.icon}</Text>
-                </View>
-                <View style={styles.featureTextContainer}>
-                  <Text style={[styles.featureTitle, { color: C.text }]}>{feature.title}</Text>
-                  <Text style={[styles.featureDescription, { color: C.secondaryText }]}>
-                    {feature.description}
-                  </Text>
-                </View>
+              <View key={index} style={styles.featureRow}>
+                <Text style={[styles.featureCheckmark, { color: C.primary }]}>✓</Text>
+                <Text style={[styles.featureTitle, { color: C.text }]}>{feature.title}</Text>
               </View>
             ))}
           </View>
@@ -267,6 +252,9 @@ export default function PaywallScreen() {
 
         {/* Bottom Actions */}
         <View style={[styles.bottomActions, { borderTopColor: C.border }]}>
+          <Text style={[styles.freeTrialCallout, { color: C.primary }]}>
+            Start your 7-day free trial
+          </Text>
           <TouchableOpacity
             style={[
               styles.primaryButton,
@@ -359,40 +347,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
   },
-  featuresCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: "hidden",
+  featuresList: {
     marginBottom: 20,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 14,
+    paddingVertical: 8,
+    gap: 10,
   },
-  featureIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  featureIconText: {
-    fontSize: 20,
-  },
-  featureTextContainer: {
-    flex: 1,
+  featureCheckmark: {
+    fontSize: 16,
+    fontWeight: "700",
+    width: 20,
+    textAlign: "center",
   },
   featureTitle: {
     fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  featureDescription: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontWeight: "500",
+    flex: 1,
   },
   packagesContainer: {
     gap: 12,
@@ -479,6 +452,13 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     borderTopWidth: 1,
     gap: 4,
+  },
+  freeTrialCallout: {
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 10,
+    letterSpacing: -0.2,
   },
   primaryButton: {
     paddingVertical: 16,
