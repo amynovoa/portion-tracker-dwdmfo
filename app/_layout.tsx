@@ -112,6 +112,8 @@ function SubscriptionRedirect() {
       if (!done) return;
       const onPaywall = pathname === "/paywall";
       if (onPaywall) return;
+      const onWelcome = pathname === "/welcome";
+      if (onWelcome) return;
       if (!isSubscribed) {
         router.replace("/paywall");
       }
@@ -119,6 +121,8 @@ function SubscriptionRedirect() {
       if (cancelled) return;
       const onPaywall = pathname === "/paywall";
       if (onPaywall) return;
+      const onWelcome = pathname === "/welcome";
+      if (onWelcome) return;
       if (!isSubscribed) {
         router.replace("/paywall");
       }
