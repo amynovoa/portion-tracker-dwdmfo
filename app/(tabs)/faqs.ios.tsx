@@ -88,11 +88,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
   faqItem: {
     backgroundColor: colors.cardBackground,
     marginHorizontal: 16,
@@ -136,9 +131,6 @@ export default function FAQScreen() {
       <View style={styles.header}>
         <AppLogo />
         <Text style={styles.title}>FAQs</Text>
-        <Text style={styles.subtitle}>
-          Have questions? Portion Track is designed to be simple and flexible! These FAQs cover the most common questions about portions, logging food, and adjusting your plan.
-        </Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         {FAQ_DATA.map((faq, index) => (
