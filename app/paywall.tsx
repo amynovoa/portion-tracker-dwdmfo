@@ -10,7 +10,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
@@ -146,7 +145,9 @@ export default function PaywallScreen() {
     return id.includes("annual") || id.includes("$rc_annual");
   };
 
-  const subscribeLabel = selectedPackage ? "Start Free Trial" : "Start Free Trial";
+  const subscribeLabel = selectedPackage
+    ? `Try Free for 7 Days · then ${selectedPackage.product.priceString}/${isAnnual(selectedPackage) ? "yr" : "mo"}`
+    : "Start Free Trial";
 
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
@@ -160,104 +161,97 @@ export default function PaywallScreen() {
           <Text style={[styles.closeButtonText, { color: C.secondaryText }]}>✕</Text>
         </TouchableOpacity>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <View style={styles.scrollContent}>
           {/* Header */}
           <View style={styles.header}>
-            <AppLogo size={64} />
+            <AppLogo size={48} />
             <Text style={[styles.title, { color: C.text }]}>Portion Track</Text>
             <Text style={[styles.subtitle, { color: C.secondaryText }]}>
               Simple Portions. Balanced Eating.
             </Text>
           </View>
 
-          {/* Features */}
-          <View style={styles.featuresList}>
-            {FEATURES.map((feature, index) => (
-              <View key={index} style={styles.featureRow}>
-                <Text style={[styles.featureCheckmark, { color: C.primary }]}>✓</Text>
-                <Text style={[styles.featureTitle, { color: C.text }]}>{feature.title}</Text>
+          {/* Features + Packages */}
+          <View style={styles.middleSection}>
+            {/* Features */}
+            <View style={styles.featuresList}>
+              {FEATURES.map((feature, index) => (
+                <View key={index} style={styles.featureRow}>
+                  <Text style={[styles.featureCheckmark, { color: C.primary }]}>✓</Text>
+                  <Text style={[styles.featureTitle, { color: C.text }]}>{feature.title}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Package Selection */}
+            {packages.length > 0 ? (
+              <View style={styles.packagesContainer}>
+                {packages.map((pkg) => {
+                  const isSelected = selectedPackage?.identifier === pkg.identifier;
+                  const showBestValue = isAnnual(pkg);
+                  return (
+                    <TouchableOpacity
+                      key={pkg.identifier}
+                      style={[
+                        styles.packageCard,
+                        {
+                          backgroundColor: C.surface,
+                          borderColor: isSelected ? C.primaryBorder : C.border,
+                          borderWidth: isSelected ? 2 : 1,
+                        },
+                      ]}
+                      onPress={() => handlePackageSelect(pkg)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.freeTrialBadge, { color: C.primary }]}>
+                        7-day free trial
+                      </Text>
+                      {showBestValue && (
+                        <View style={[styles.bestValueBadge, { backgroundColor: C.accent }]}>
+                          <Text style={styles.bestValueText}>Best Value</Text>
+                        </View>
+                      )}
+                      <View style={styles.packageHeader}>
+                        <Text style={[styles.packageTitle, { color: C.text }]}>
+                          {pkg.product.title}
+                        </Text>
+                        <View
+                          style={[
+                            styles.radioCircle,
+                            {
+                              borderColor: isSelected ? C.primaryBorder : C.secondaryText,
+                              backgroundColor: isSelected ? C.primaryBorder : "transparent",
+                            },
+                          ]}
+                        >
+                          {isSelected && <View style={styles.radioInner} />}
+                        </View>
+                      </View>
+                      <Text style={[styles.packagePrice, { color: C.primary }]}>
+                        {pkg.product.priceString}
+                      </Text>
+                      <Text style={[styles.packagePriceThen, { color: C.secondaryText }]}>
+                        {"then "}
+                        {pkg.product.priceString}
+                        {" / "}
+                        {isAnnual(pkg) ? "year" : "month"}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-            ))}
+            ) : (
+              <View style={styles.loadingPlansContainer}>
+                {loading ? (
+                  <ActivityIndicator size="small" color={C.primary} />
+                ) : null}
+                <Text style={[styles.loadingPlansText, { color: C.secondaryText }]}>
+                  Loading plans...
+                </Text>
+              </View>
+            )}
           </View>
-
-          {/* Package Selection */}
-          {packages.length > 0 ? (
-            <View style={styles.packagesContainer}>
-              {packages.map((pkg) => {
-                const isSelected = selectedPackage?.identifier === pkg.identifier;
-                const showBestValue = isAnnual(pkg);
-                return (
-                  <TouchableOpacity
-                    key={pkg.identifier}
-                    style={[
-                      styles.packageCard,
-                      {
-                        backgroundColor: C.surface,
-                        borderColor: isSelected ? C.primaryBorder : C.border,
-                        borderWidth: isSelected ? 2 : 1,
-                      },
-                    ]}
-                    onPress={() => handlePackageSelect(pkg)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.freeTrialBadge, { color: C.primary }]}>
-                      7-day free trial
-                    </Text>
-                    {showBestValue && (
-                      <View style={[styles.bestValueBadge, { backgroundColor: C.accent }]}>
-                        <Text style={styles.bestValueText}>Best Value</Text>
-                      </View>
-                    )}
-                    <View style={styles.packageHeader}>
-                      <Text style={[styles.packageTitle, { color: C.text }]}>
-                        {pkg.product.title}
-                      </Text>
-                      <View
-                        style={[
-                          styles.radioCircle,
-                          {
-                            borderColor: isSelected ? C.primaryBorder : C.secondaryText,
-                            backgroundColor: isSelected ? C.primaryBorder : "transparent",
-                          },
-                        ]}
-                      >
-                        {isSelected && <View style={styles.radioInner} />}
-                      </View>
-                    </View>
-                    <Text style={[styles.packagePrice, { color: C.primary }]}>
-                      {pkg.product.priceString}
-                    </Text>
-                    <Text style={[styles.packagePriceThen, { color: C.secondaryText }]}>
-                      {"then "}
-                      {pkg.product.priceString}
-                      {" / "}
-                      {isAnnual(pkg) ? "year" : "month"}
-                    </Text>
-                    {pkg.product.description ? (
-                      <Text style={[styles.packageDescription, { color: C.secondaryText }]}>
-                        {pkg.product.description}
-                      </Text>
-                    ) : null}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ) : (
-            <View style={styles.loadingPlansContainer}>
-              {loading ? (
-                <ActivityIndicator size="small" color={C.primary} />
-              ) : null}
-              <Text style={[styles.loadingPlansText, { color: C.secondaryText }]}>
-                Loading plans...
-              </Text>
-            </View>
-          )}
-
-        </ScrollView>
+        </View>
 
         {/* Bottom Actions */}
         <View style={[styles.bottomActions, { borderTopColor: C.border }]}>
@@ -332,58 +326,59 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  scrollView: {
-    flex: 1,
-  },
   scrollContent: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+    justifyContent: "space-between",
+  },
+  middleSection: {
+    flex: 1,
   },
   header: {
     alignItems: "center",
-    marginBottom: 28,
-    gap: 10,
+    marginBottom: 12,
+    gap: 6,
   },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "700",
     textAlign: "center",
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
     lineHeight: 22,
   },
   featuresList: {
-    marginBottom: 20,
+    marginBottom: 12,
     paddingLeft: 8,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 4,
     gap: 10,
   },
   featureCheckmark: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "700",
     width: 20,
     textAlign: "center",
   },
   featureTitle: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "500",
     flex: 1,
   },
   packagesContainer: {
-    gap: 12,
-    marginBottom: 20,
+    gap: 8,
   },
   packageCard: {
     borderRadius: 14,
-    padding: 16,
+    padding: 10,
     overflow: "hidden",
   },
   bestValueBadge: {
@@ -424,24 +419,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   freeTrialBadge: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
-    marginBottom: 6,
+    marginBottom: 3,
     letterSpacing: 0.2,
   },
   packagePrice: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "700",
-    marginTop: 6,
-  },
-  packagePriceThen: {
-    fontSize: 13,
     marginTop: 2,
   },
-  packageDescription: {
-    fontSize: 13,
-    marginTop: 4,
-    lineHeight: 18,
+  packagePriceThen: {
+    fontSize: 12,
+    marginTop: 2,
   },
   loadingPlansContainer: {
     flexDirection: "row",
@@ -468,20 +458,20 @@ const styles = StyleSheet.create({
   },
   bottomActions: {
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingTop: 10,
+    paddingBottom: 6,
     borderTopWidth: 1,
     gap: 4,
   },
   freeTrialCallout: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 6,
     letterSpacing: -0.2,
   },
   primaryButton: {
-    paddingVertical: 16,
+    paddingVertical: 13,
     borderRadius: 14,
     alignItems: "center",
     shadowColor: "#C94A3D",
