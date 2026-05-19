@@ -16,11 +16,13 @@ import { completeOnboarding } from "@/utils/onboardingStorage";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { OptionCard } from "@/components/onboarding/OptionCard";
 import { useOnboardingColors } from "@/hooks/useOnboardingColors";
+import { useTranslation } from "react-i18next";
 
 const TOTAL_STEPS = onboardingQuestions.length;
 
 export default function OnboardingScreen() {
   const colors = useOnboardingColors();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const opacity = useSharedValue(1);
@@ -64,9 +66,11 @@ export default function OnboardingScreen() {
     if (!selectedOption) return;
 
     if (isLastStep) {
+      console.log('[Onboarding] Get Started pressed — completing onboarding');
       await completeOnboarding();
       router.replace("/paywall");
     } else {
+      console.log('[Onboarding] Continue pressed — step:', currentStep);
       if (isAnimating.current) return;
       isAnimating.current = true;
       opacity.value = withTiming(0, { duration: 150 });
@@ -79,6 +83,8 @@ export default function OnboardingScreen() {
   };
 
   if (!question) return null;
+
+  const continueButtonLabel = isLastStep ? t('onboarding.getStarted') : t('onboarding.continue');
 
   const optionCards = [];
   for (const option of question.options) {
@@ -131,7 +137,7 @@ export default function OnboardingScreen() {
           ]}
         >
           <Text style={styles.continueText}>
-            {isLastStep ? "Get Started" : "Continue"}
+            {continueButtonLabel}
           </Text>
         </Pressable>
       </View>

@@ -1,14 +1,12 @@
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Linking, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, commonStyles } from '@/styles/commonStyles';
-import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
-import { toggleNoonReminder, isNoonReminderEnabled } from '@/utils/notificationManager';
+import { colors } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
+import { useTranslation } from 'react-i18next';
+import i18n, { setStoredLanguage } from '@/utils/i18n';
 
 const styles = StyleSheet.create({
   container: {
@@ -64,6 +62,8 @@ const styles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const [currentLang, setCurrentLang] = useState(i18n.language || 'en');
 
   const handleResetAppData = () => {
     console.log('=== RESET APP DATA BUTTON PRESSED ===');
@@ -77,6 +77,16 @@ export default function SettingsScreen() {
     Linking.openURL('https://www.portiontrack.com/privacy-policy');
   };
 
+  const handleToggleLanguage = async () => {
+    const nextLang = currentLang === 'en' ? 'es' : 'en';
+    console.log('[Settings] Language toggle pressed — switching to:', nextLang);
+    await setStoredLanguage(nextLang);
+    setCurrentLang(nextLang);
+    console.log('[Settings] Language changed to:', nextLang);
+  };
+
+  const languageDisplayText = currentLang === 'en' ? 'English' : 'Español';
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView 
@@ -88,7 +98,7 @@ export default function SettingsScreen() {
         <View style={styles.logoContainer}>
           <AppLogo size={50} />
         </View>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
 
         {/* Subscription */}
         <TouchableOpacity
@@ -100,7 +110,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>💳</Text>
           <View style={styles.settingContent} pointerEvents="none">
-            <Text style={styles.settingLabel}>Subscription</Text>
+            <Text style={styles.settingLabel}>{t('settings.subscription')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -115,7 +125,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>🎉</Text>
           <View style={styles.settingContent} pointerEvents="none">
-            <Text style={styles.settingLabel}>Celebration</Text>
+            <Text style={styles.settingLabel}>{t('settings.celebration')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -130,12 +140,12 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>🕐</Text>
           <View style={styles.settingContent} pointerEvents="none">
-            <Text style={styles.settingLabel}>Daily Reset</Text>
+            <Text style={styles.settingLabel}>{t('settings.dailyReset')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
 
-        {/* Daily Reminder - Now with chevron */}
+        {/* Daily Reminder */}
         <TouchableOpacity
           style={styles.settingItem}
           onPress={() => {
@@ -145,7 +155,20 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>🔔</Text>
           <View style={styles.settingContent} pointerEvents="none">
-            <Text style={styles.settingLabel}>Daily Reminder</Text>
+            <Text style={styles.settingLabel}>{t('settings.dailyReminder')}</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
+        {/* Language */}
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={handleToggleLanguage}
+        >
+          <Text style={styles.settingIcon}>🌐</Text>
+          <View style={styles.settingContent} pointerEvents="none">
+            <Text style={styles.settingLabel}>{t('settings.language')}</Text>
+            <Text style={styles.settingDescription}>{languageDisplayText}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -160,7 +183,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>🛡️</Text>
           <View style={styles.settingContent} pointerEvents="none">
-            <Text style={styles.settingLabel}>Privacy Policy</Text>
+            <Text style={styles.settingLabel}>{t('settings.privacyPolicy')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -173,7 +196,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>⚠️</Text>
           <View style={styles.settingContent} pointerEvents="none">
-            <Text style={styles.settingLabel}>Reset App Data</Text>
+            <Text style={styles.settingLabel}>{t('settings.resetAppData')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>

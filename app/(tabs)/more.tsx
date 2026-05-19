@@ -2,10 +2,11 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useTranslation } from 'react-i18next';
 
 const styles = StyleSheet.create({
   container: {
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
 export default function MoreScreen() {
   const router = useRouter();
   const { isSubscribed, refreshSubscription } = useSubscription();
+  const { t } = useTranslation();
 
   const handleTestSubscription = async () => {
     console.log('[More] Refresh Subscription Status tapped');
@@ -94,7 +96,7 @@ export default function MoreScreen() {
     console.log('[More] Subscription status after refresh:', isSubscribed);
   };
 
-  const subscriptionStatusText = isSubscribed ? 'Active' : 'Not Active';
+  const subscriptionStatusText = isSubscribed ? t('more.active') : t('more.notActive');
   const subscriptionStatusColor = isSubscribed ? '#28A745' : '#DC3545';
 
   return (
@@ -108,24 +110,24 @@ export default function MoreScreen() {
         <View style={styles.logoContainer}>
           <AppLogo size={50} />
         </View>
-        <Text style={styles.headerTitle}>More</Text>
+        <Text style={styles.headerTitle}>{t('more.title')}</Text>
 
         {/* Subscription Status */}
         <View style={styles.statusSection}>
-          <Text style={styles.statusTitle}>Subscription Status</Text>
+          <Text style={styles.statusTitle}>{t('more.subscriptionStatus')}</Text>
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Status:</Text>
+            <Text style={styles.statusLabel}>{t('more.status')}</Text>
             <Text style={[styles.statusValue, { color: subscriptionStatusColor }]}>
               {subscriptionStatusText}
             </Text>
           </View>
           <View style={styles.statusRow}>
-            <Text style={styles.statusLabel}>Platform:</Text>
+            <Text style={styles.statusLabel}>{t('more.platform')}</Text>
             <Text style={styles.statusValue}>{Platform.OS}</Text>
           </View>
         </View>
 
-        {/* Test Subscription Button */}
+        {/* Refresh Subscription Button */}
         <TouchableOpacity
           style={styles.menuItem}
           onPress={handleTestSubscription}
@@ -138,8 +140,8 @@ export default function MoreScreen() {
             style={styles.menuIcon}
           />
           <View style={styles.menuContent} pointerEvents="none">
-            <Text style={styles.menuLabel}>Refresh Subscription Status</Text>
-            <Text style={styles.menuDescription}>Check current subscription state</Text>
+            <Text style={styles.menuLabel}>{t('more.refreshSubscription')}</Text>
+            <Text style={styles.menuDescription}>{t('more.refreshDescription')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -160,8 +162,8 @@ export default function MoreScreen() {
             style={styles.menuIcon}
           />
           <View style={styles.menuContent} pointerEvents="none">
-            <Text style={styles.menuLabel}>Profile</Text>
-            <Text style={styles.menuDescription}>View and edit your profile</Text>
+            <Text style={styles.menuLabel}>{t('more.profile')}</Text>
+            <Text style={styles.menuDescription}>{t('more.profileDescription')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -182,8 +184,8 @@ export default function MoreScreen() {
             style={styles.menuIcon}
           />
           <View style={styles.menuContent} pointerEvents="none">
-            <Text style={styles.menuLabel}>Settings</Text>
-            <Text style={styles.menuDescription}>App preferences and configuration</Text>
+            <Text style={styles.menuLabel}>{t('more.settings')}</Text>
+            <Text style={styles.menuDescription}>{t('more.settingsDescription')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -204,8 +206,8 @@ export default function MoreScreen() {
             style={styles.menuIcon}
           />
           <View style={styles.menuContent} pointerEvents="none">
-            <Text style={styles.menuLabel}>FAQs</Text>
-            <Text style={styles.menuDescription}>Frequently asked questions</Text>
+            <Text style={styles.menuLabel}>{t('more.faqs')}</Text>
+            <Text style={styles.menuDescription}>{t('more.faqsDescription')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
@@ -226,8 +228,8 @@ export default function MoreScreen() {
             style={styles.menuIcon}
           />
           <View style={styles.menuContent} pointerEvents="none">
-            <Text style={styles.menuLabel}>Backup &amp; Restore</Text>
-            <Text style={styles.menuDescription}>Manage your data backups</Text>
+            <Text style={styles.menuLabel}>{t('more.backupRestore')}</Text>
+            <Text style={styles.menuDescription}>{t('more.backupDescription')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>

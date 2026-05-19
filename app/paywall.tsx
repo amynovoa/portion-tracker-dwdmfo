@@ -26,16 +26,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { markSubscribed } from "@/utils/userStateManager";
 import { loadProfile } from "@/utils/storage";
 import AppLogo from "@/components/AppLogo";
-
-// Premium features
-const FEATURES = [
-  { title: "Unlimited Portion Tracking" },
-  { title: "Healthy Portion Guidance" },
-  { title: "Custom Portion Targets" },
-  { title: "Weight Tracking & Charts" },
-  { title: "Progress History & Trends" },
-  { title: "Daily Reminders" },
-];
+import { useTranslation } from "react-i18next";
 
 function getColors(scheme: "light" | "dark") {
   const isDark = scheme === "dark";
@@ -53,9 +44,19 @@ function getColors(scheme: "light" | "dark") {
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const C = getColors(isDark ? "dark" : "light");
+
+  const FEATURES = [
+    { title: t('paywall.features.tracking') },
+    { title: t('paywall.features.guidance') },
+    { title: t('paywall.features.targets') },
+    { title: t('paywall.features.weight') },
+    { title: t('paywall.features.history') },
+    { title: t('paywall.features.reminders') },
+  ];
 
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;

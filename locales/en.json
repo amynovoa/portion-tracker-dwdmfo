@@ -1,0 +1,185 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "continue": "Continue",
+    "save": "Save",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No",
+    "edit": "Edit",
+    "back": "Back",
+    "close": "Close",
+    "error": "Error",
+    "oops": "Oops!",
+    "portions": "portions",
+    "glasses": "glasses",
+    "servings": "servings",
+    "lbs": "lbs",
+    "pastDay": "Past Day"
+  },
+  "tabs": {
+    "home": "Home",
+    "history": "History",
+    "weight": "Weight",
+    "more": "More",
+    "settings": "Settings",
+    "profile": "Profile",
+    "faqs": "FAQs",
+    "track": "Track"
+  },
+  "home": {
+    "loading": "Loading..."
+  },
+  "settings": {
+    "title": "Settings",
+    "subscription": "Subscription",
+    "celebration": "Celebration",
+    "dailyReset": "Daily Reset",
+    "dailyReminder": "Daily Reminder",
+    "privacyPolicy": "Privacy Policy",
+    "resetAppData": "Reset App Data",
+    "language": "Language",
+    "languageDescription": "English / Español"
+  },
+  "more": {
+    "title": "More",
+    "subscriptionStatus": "Subscription Status",
+    "status": "Status:",
+    "platform": "Platform:",
+    "active": "Active",
+    "notActive": "Not Active",
+    "refreshSubscription": "Refresh Subscription Status",
+    "refreshDescription": "Check current subscription state",
+    "profile": "Profile",
+    "profileDescription": "View and edit your profile",
+    "settings": "Settings",
+    "settingsDescription": "App preferences and configuration",
+    "faqs": "FAQs",
+    "faqsDescription": "Frequently asked questions",
+    "backupRestore": "Backup & Restore",
+    "backupDescription": "Manage your data backups"
+  },
+  "profile": {
+    "title": "Profile",
+    "loadingProfile": "Loading profile...",
+    "noProfileFound": "No profile found",
+    "createProfile": "Create Profile",
+    "personalInformation": "Personal Information",
+    "sex": "Sex",
+    "startingWeight": "Starting Weight",
+    "goalWeight": "Goal Weight",
+    "goal": "Goal",
+    "editProfile": "Edit Profile",
+    "dailyPortionTargets": "Daily Portion Targets",
+    "protein": "Protein",
+    "veggies": "Veggies",
+    "fruits": "Fruits",
+    "wholeGrains": "Whole Grains",
+    "nutsSeeds": "Nuts & Seeds",
+    "fats": "Fats",
+    "water": "Water",
+    "alcohol": "Alcohol",
+    "editTargets": "Edit Targets",
+    "exerciseNote": "Exercise can be tracked daily by checking it off, but doesn't have a numeric target.",
+    "sexMale": "Male",
+    "sexFemale": "Female",
+    "sexPreferNot": "Prefer not to say",
+    "sexNotSet": "Not set",
+    "goalLose": "Lose Weight",
+    "goalMaintain": "Maintain Weight",
+    "goalBuild": "Build Muscle",
+    "goalEatHealthier": "Eat Healthier",
+    "goalMoreEnergy": "Have More Energy",
+    "goalNotSet": "Not set"
+  },
+  "setupProfile": {
+    "title": "Let's Set Up Your Profile",
+    "sex": "Sex",
+    "startingWeight": "Starting Weight (lbs)",
+    "startingWeightHelper": "This will be your baseline for tracking progress",
+    "startingWeightPlaceholder": "Enter starting weight",
+    "goalWeight": "Goal Weight (lbs)",
+    "goalWeightPlaceholder": "Enter goal weight",
+    "primaryGoal": "Primary Goal",
+    "activityLevel": "Activity Level",
+    "includeAlcohol": "Include Alcohol Tracking?",
+    "dailyAlcoholGoal": "Daily Alcohol Goal",
+    "alcoholHelper": "Recommended maximum: 2 servings per day",
+    "continue": "Continue",
+    "selectSex": "Select Sex",
+    "selectGoal": "Select Primary Goal",
+    "selectActivity": "Select Activity Level",
+    "selectAlcohol": "Daily Alcohol Goal",
+    "errorWeightRequired": "Please enter your starting and goal weight",
+    "errorWeightInvalid": "Please enter valid weight values",
+    "sexFemale": "Female",
+    "sexMale": "Male",
+    "sexPreferNot": "Prefer not to say",
+    "goalLose": "Lose Weight",
+    "goalMaintain": "Maintain Weight",
+    "goalBuild": "Build Muscle",
+    "goalEatHealthier": "Eat Healthier",
+    "goalMoreEnergy": "Have More Energy",
+    "activitySedentary": "Sedentary - Little to no exercise",
+    "activityLight": "Light - 1-3x/week or 6k-9k steps/day",
+    "activityModerate": "Moderate - 3-5x/week or 9k-12k steps/day",
+    "activityActive": "Active - Most days or 12k-15k+ steps/day",
+    "activityVeryActive": "Very Active - High daily activity",
+    "alcohol0": "0 servings",
+    "alcohol1": "1 serving",
+    "alcohol2": "2 servings (recommended max)",
+    "alcohol3": "3 servings",
+    "alcohol4": "4 servings",
+    "alcohol5": "5 servings",
+    "alcohol6": "6 servings",
+    "alcohol7": "7 servings",
+    "alcohol8": "8 servings",
+    "alcohol9": "9 servings",
+    "alcohol10": "10 servings"
+  },
+  "onboarding": {
+    "getStarted": "Get Started",
+    "continue": "Continue"
+  },
+  "welcome": {
+    "getStarted": "Get Started"
+  },
+  "paywall": {
+    "features": {
+      "tracking": "Unlimited Portion Tracking",
+      "guidance": "Healthy Portion Guidance",
+      "targets": "Custom Portion Targets",
+      "weight": "Weight Tracking & Charts",
+      "history": "Progress History & Trends",
+      "reminders": "Daily Reminders"
+    }
+  },
+  "history": {
+    "title": "History"
+  },
+  "weight": {
+    "title": "Weight"
+  },
+  "faqs": {
+    "title": "FAQs"
+  },
+  "dailyReset": {
+    "title": "Daily Reset"
+  },
+  "dailyReminder": {
+    "title": "Daily Reminder"
+  },
+  "celebration": {
+    "title": "Celebration Settings"
+  },
+  "resetData": {
+    "title": "Reset App Data"
+  },
+  "activityLevel": {
+    "title": "Activity Level"
+  },
+  "backupRestore": {
+    "title": "Backup & Restore"
+  }
+}

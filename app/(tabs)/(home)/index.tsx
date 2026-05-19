@@ -1,9 +1,9 @@
 
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 import DailyPlateProgress from '@/components/DailyPlateProgress';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { colors } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
-import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
+import { loadProfile, loadDailyPortions, saveDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
@@ -14,6 +14,7 @@ import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenSh
 import DaySelector from '@/components/DaySelector';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AppLogo from '@/components/AppLogo';
+import { useTranslation } from 'react-i18next';
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const loadDateData = useCallback(async (date: string) => {
     console.log('Loading portions for date:', date);
@@ -135,14 +137,16 @@ export default function HomeScreen() {
   };
 
   if (!profile || !dailyPortions) {
+    const loadingText = t('home.loading');
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>{loadingText}</Text>
       </View>
     );
   }
 
   const isToday = selectedDate === getTodayString();
+  const pastDayLabel = t('common.pastDay');
 
   return (
     <View style={styles.container}>
@@ -161,7 +165,7 @@ export default function HomeScreen() {
 
         <View style={styles.dateHeader}>
           <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
-          {!isToday && <Text style={styles.pastDateLabel}>Past Day</Text>}
+          {!isToday && <Text style={styles.pastDateLabel}>{pastDayLabel}</Text>}
         </View>
 
         {/* Daily Plate Progress - Visual Summary */}

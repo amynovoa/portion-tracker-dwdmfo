@@ -1,0 +1,185 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "continue": "Continuar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "ok": "Aceptar",
+    "yes": "Sí",
+    "no": "No",
+    "edit": "Editar",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "error": "Error",
+    "oops": "¡Ups!",
+    "portions": "porciones",
+    "glasses": "vasos",
+    "servings": "porciones",
+    "lbs": "lbs",
+    "pastDay": "Día Anterior"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "history": "Historial",
+    "weight": "Peso",
+    "more": "Más",
+    "settings": "Ajustes",
+    "profile": "Perfil",
+    "faqs": "Preguntas",
+    "track": "Rastrear"
+  },
+  "home": {
+    "loading": "Cargando..."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "subscription": "Suscripción",
+    "celebration": "Celebración",
+    "dailyReset": "Reinicio Diario",
+    "dailyReminder": "Recordatorio Diario",
+    "privacyPolicy": "Política de Privacidad",
+    "resetAppData": "Restablecer Datos",
+    "language": "Idioma",
+    "languageDescription": "English / Español"
+  },
+  "more": {
+    "title": "Más",
+    "subscriptionStatus": "Estado de Suscripción",
+    "status": "Estado:",
+    "platform": "Plataforma:",
+    "active": "Activa",
+    "notActive": "No Activa",
+    "refreshSubscription": "Actualizar Suscripción",
+    "refreshDescription": "Verificar estado actual de suscripción",
+    "profile": "Perfil",
+    "profileDescription": "Ver y editar tu perfil",
+    "settings": "Ajustes",
+    "settingsDescription": "Preferencias y configuración",
+    "faqs": "Preguntas Frecuentes",
+    "faqsDescription": "Preguntas frecuentes",
+    "backupRestore": "Copia de Seguridad",
+    "backupDescription": "Administrar copias de seguridad"
+  },
+  "profile": {
+    "title": "Perfil",
+    "loadingProfile": "Cargando perfil...",
+    "noProfileFound": "Perfil no encontrado",
+    "createProfile": "Crear Perfil",
+    "personalInformation": "Información Personal",
+    "sex": "Sexo",
+    "startingWeight": "Peso Inicial",
+    "goalWeight": "Peso Meta",
+    "goal": "Objetivo",
+    "editProfile": "Editar Perfil",
+    "dailyPortionTargets": "Metas Diarias de Porciones",
+    "protein": "Proteína",
+    "veggies": "Verduras",
+    "fruits": "Frutas",
+    "wholeGrains": "Granos Integrales",
+    "nutsSeeds": "Nueces y Semillas",
+    "fats": "Grasas",
+    "water": "Agua",
+    "alcohol": "Alcohol",
+    "editTargets": "Editar Metas",
+    "exerciseNote": "El ejercicio se puede registrar diariamente, pero no tiene una meta numérica.",
+    "sexMale": "Masculino",
+    "sexFemale": "Femenino",
+    "sexPreferNot": "Prefiero no decir",
+    "sexNotSet": "No establecido",
+    "goalLose": "Perder Peso",
+    "goalMaintain": "Mantener Peso",
+    "goalBuild": "Ganar Músculo",
+    "goalEatHealthier": "Comer Más Sano",
+    "goalMoreEnergy": "Tener Más Energía",
+    "goalNotSet": "No establecido"
+  },
+  "setupProfile": {
+    "title": "Configuremos Tu Perfil",
+    "sex": "Sexo",
+    "startingWeight": "Peso Inicial (lbs)",
+    "startingWeightHelper": "Este será tu punto de partida para seguir tu progreso",
+    "startingWeightPlaceholder": "Ingresa tu peso inicial",
+    "goalWeight": "Peso Meta (lbs)",
+    "goalWeightPlaceholder": "Ingresa tu peso meta",
+    "primaryGoal": "Objetivo Principal",
+    "activityLevel": "Nivel de Actividad",
+    "includeAlcohol": "¿Incluir seguimiento de alcohol?",
+    "dailyAlcoholGoal": "Meta Diaria de Alcohol",
+    "alcoholHelper": "Máximo recomendado: 2 porciones por día",
+    "continue": "Continuar",
+    "selectSex": "Seleccionar Sexo",
+    "selectGoal": "Seleccionar Objetivo Principal",
+    "selectActivity": "Seleccionar Nivel de Actividad",
+    "selectAlcohol": "Meta Diaria de Alcohol",
+    "errorWeightRequired": "Por favor ingresa tu peso inicial y meta",
+    "errorWeightInvalid": "Por favor ingresa valores de peso válidos",
+    "sexFemale": "Femenino",
+    "sexMale": "Masculino",
+    "sexPreferNot": "Prefiero no decir",
+    "goalLose": "Perder Peso",
+    "goalMaintain": "Mantener Peso",
+    "goalBuild": "Ganar Músculo",
+    "goalEatHealthier": "Comer Más Sano",
+    "goalMoreEnergy": "Tener Más Energía",
+    "activitySedentary": "Sedentario - Poco o ningún ejercicio",
+    "activityLight": "Ligero - 1-3x/semana o 6k-9k pasos/día",
+    "activityModerate": "Moderado - 3-5x/semana o 9k-12k pasos/día",
+    "activityActive": "Activo - La mayoría de los días o 12k-15k+ pasos/día",
+    "activityVeryActive": "Muy Activo - Alta actividad diaria",
+    "alcohol0": "0 porciones",
+    "alcohol1": "1 porción",
+    "alcohol2": "2 porciones (máximo recomendado)",
+    "alcohol3": "3 porciones",
+    "alcohol4": "4 porciones",
+    "alcohol5": "5 porciones",
+    "alcohol6": "6 porciones",
+    "alcohol7": "7 porciones",
+    "alcohol8": "8 porciones",
+    "alcohol9": "9 porciones",
+    "alcohol10": "10 porciones"
+  },
+  "onboarding": {
+    "getStarted": "Comenzar",
+    "continue": "Continuar"
+  },
+  "welcome": {
+    "getStarted": "Comenzar"
+  },
+  "paywall": {
+    "features": {
+      "tracking": "Seguimiento ilimitado de porciones",
+      "guidance": "Guía de porciones saludables",
+      "targets": "Metas de porciones personalizadas",
+      "weight": "Seguimiento de peso y gráficas",
+      "history": "Historial completo y tendencias",
+      "reminders": "Recordatorios diarios"
+    }
+  },
+  "history": {
+    "title": "Historial"
+  },
+  "weight": {
+    "title": "Peso"
+  },
+  "faqs": {
+    "title": "Preguntas Frecuentes"
+  },
+  "dailyReset": {
+    "title": "Reinicio Diario"
+  },
+  "dailyReminder": {
+    "title": "Recordatorio Diario"
+  },
+  "celebration": {
+    "title": "Ajustes de Celebración"
+  },
+  "resetData": {
+    "title": "Restablecer Datos"
+  },
+  "activityLevel": {
+    "title": "Nivel de Actividad"
+  },
+  "backupRestore": {
+    "title": "Copia de Seguridad"
+  }
+}

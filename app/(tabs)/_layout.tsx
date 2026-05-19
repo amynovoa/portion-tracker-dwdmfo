@@ -3,6 +3,7 @@ import React from 'react';
 import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
+import i18n from '@/utils/i18n';
 
 export default function TabLayout() {
   useSubscriptionGuard();
@@ -13,37 +14,37 @@ export default function TabLayout() {
       name: '(home)',
       route: '/(tabs)/(home)/',
       icon: 'check-circle',
-      label: 'Track',
+      label: i18n.t('tabs.track'),
     },
     {
       name: 'history',
       route: '/(tabs)/history',
       icon: 'history',
-      label: 'History',
+      label: i18n.t('tabs.history'),
     },
     {
       name: 'weight',
       route: '/(tabs)/weight',
       icon: 'monitor-weight',
-      label: 'Weight',
+      label: i18n.t('tabs.weight'),
     },
     {
       name: 'faqs',
       route: '/(tabs)/faqs',
       icon: 'help',
-      label: 'FAQs',
+      label: i18n.t('tabs.faqs'),
     },
     {
       name: 'profile',
       route: '/(tabs)/profile',
       icon: 'person',
-      label: 'Profile',
+      label: i18n.t('tabs.profile'),
     },
     {
       name: 'settings',
       route: '/(tabs)/settings',
       icon: 'settings',
-      label: 'Settings',
+      label: i18n.t('tabs.settings'),
     },
   ];
 

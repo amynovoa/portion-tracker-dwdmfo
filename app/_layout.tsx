@@ -11,6 +11,7 @@ import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { isOnboardingComplete } from "@/utils/onboardingStorage";
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+import { initI18n } from '@/utils/i18n';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -137,8 +138,19 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const [i18nReady, setI18nReady] = useState(false);
 
-  if (!loaded) {
+  useEffect(() => {
+    initI18n().then(() => {
+      console.log('[Layout] i18n initialized');
+      setI18nReady(true);
+    }).catch((err) => {
+      console.error('[Layout] i18n init error:', err);
+      setI18nReady(true);
+    });
+  }, []);
+
+  if (!loaded || !i18nReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />
