@@ -87,7 +87,7 @@ export default function WelcomeScreen() {
 
   const { t } = useTranslation();
 
-  const appName = 'Welcome to Portion Track';
+  const appName = `${t('welcome.welcomeTo')} Portion Track`;
   const tagline = t('welcome.tagline');
   const subtitle = t('welcome.subtitle');
   const getStartedLabel = t('welcome.getStarted');
