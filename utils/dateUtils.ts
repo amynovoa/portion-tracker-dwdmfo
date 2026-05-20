@@ -80,18 +80,21 @@ export function getMonthStartDate(): string {
   return formatDate(monthStart);
 }
 
-export function formatDisplayDate(dateString: string): string {
+export function formatDisplayDate(dateString: string, locale: string = 'en'): string {
   const date = parseDate(dateString);
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
+  const isEnglish = locale.startsWith('en');
+
   if (formatDate(date) === formatDate(today)) {
-    return 'Today';
+    return isEnglish ? 'Today' : 'Hoy';
   } else if (formatDate(date) === formatDate(yesterday)) {
-    return 'Yesterday';
+    return isEnglish ? 'Yesterday' : 'Ayer';
   } else {
-    return date.toLocaleDateString('en-US', { 
+    const localeCode = isEnglish ? 'en-US' : locale;
+    return date.toLocaleDateString(localeCode, { 
       month: 'short', 
       day: 'numeric', 
       year: 'numeric' 

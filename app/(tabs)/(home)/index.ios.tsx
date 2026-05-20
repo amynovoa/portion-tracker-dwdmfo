@@ -24,7 +24,7 @@ export default function HomeScreen() {
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const loadDateData = useCallback(async (date: string) => {
     console.log('Loading portions for date:', date);
@@ -163,7 +163,7 @@ export default function HomeScreen() {
         <DaySelector selectedDate={selectedDate} onDateSelect={handleDateSelect} />
 
         <View style={styles.dateHeader}>
-          <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
+          <Text style={styles.dateText}>{formatDisplayDate(selectedDate, i18n.language)}</Text>
           {!isToday && <Text style={styles.pastDateLabel}>{pastDayLabel}</Text>}
         </View>
 
