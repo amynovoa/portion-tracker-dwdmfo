@@ -94,8 +94,8 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView 
-        style={styles.scrollContent}
-        contentContainerStyle={{ flexGrow: 1 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 180, flexGrow: 1 }}
         showsVerticalScrollIndicator={true}
         bounces={true}
       >
@@ -171,7 +171,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.settingIcon}>🌐</Text>
           <View style={styles.settingContent} pointerEvents="none">
-            <Text style={styles.settingLabel}>{t('settings.language')}</Text>
+            <Text style={styles.settingLabel}>{t('settings.language') || 'Language'}</Text>
             <Text style={styles.settingDescription}>{languageDisplayText}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
