@@ -15,6 +15,7 @@ import {
   Alert,
   Platform,
   Linking,
+  ScrollView,
   useColorScheme,
   useWindowDimensions,
 } from "react-native";
@@ -180,15 +181,18 @@ export default function PaywallScreen() {
         <Text style={[styles.closeButtonText, { color: C.secondaryText }, isTablet && { fontSize: 18 }]}>✕</Text>
       </TouchableOpacity>
 
-      {/* Content area — fills remaining space, distributes children evenly */}
-      <View
-        style={[
-          styles.content,
-          isTablet && { width: 560, paddingHorizontal: 48, paddingTop: 32 },
+      {/* Scrollable content area */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isTablet && { width: 560, alignSelf: "center", paddingHorizontal: 48, paddingTop: 32 },
         ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View style={[styles.header, isTablet && { gap: 8 }]}>
+        <View style={[styles.header, isTablet && { gap: 8 }, { marginBottom: 8 }]}>
           <AppLogo size={logoSize} />
           <Text style={[styles.title, { color: C.text }, isTablet && { fontSize: 28 }]}>Portion Track</Text>
           <Text style={[styles.subtitle, { color: C.secondaryText }, isTablet && { fontSize: 17 }]}>
@@ -197,7 +201,7 @@ export default function PaywallScreen() {
         </View>
 
         {/* Features list */}
-        <View style={styles.featuresList}>
+        <View style={[styles.featuresList, { marginBottom: 8 }]}>
           {FEATURES.map((feature, index) => (
             <View key={index} style={[styles.featureRow, isTablet && { paddingVertical: 5 }]}>
               <Text style={[styles.featureCheckmark, { color: C.primary }, isTablet && { fontSize: 16 }]}>✓</Text>
@@ -208,7 +212,7 @@ export default function PaywallScreen() {
 
         {/* Package cards — side by side */}
         {packages.length > 0 ? (
-          <View style={[styles.packagesContainer, isTablet && { gap: 16 }]}>
+          <View style={[styles.packagesContainer, { marginBottom: 8 }, isTablet && { gap: 16 }]}>
             {packages.map((pkg) => {
               const isSelected = selectedPackage?.identifier === pkg.identifier;
               const showBestValue = isAnnual(pkg);
@@ -261,14 +265,14 @@ export default function PaywallScreen() {
             })}
           </View>
         ) : (
-          <View style={styles.loadingPlansContainer}>
+          <View style={[styles.loadingPlansContainer, { marginBottom: 8 }]}>
             {loading && <ActivityIndicator size="small" color={C.primary} />}
             <Text style={[styles.loadingPlansText, { color: C.secondaryText }]}>
               Loading plans...
             </Text>
           </View>
         )}
-      </View>
+      </ScrollView>
 
       {/* Bottom actions — always below content, never overlapping */}
       <View
@@ -357,13 +361,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  // Fills all space between safe area top and bottom actions
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 8,
-    justifyContent: "space-between",
   },
   header: {
     alignItems: "center",
