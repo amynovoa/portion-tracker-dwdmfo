@@ -160,7 +160,16 @@
     "tryFree": "Try Free for 7 Days · then {{price}}/{{period}}",
     "startTrial": "Start Free Trial",
     "perYear": "yr",
-    "perMonth": "mo"
+    "perMonth": "mo",
+    "subtitle": "Simple Portions. Balanced Eating.",
+    "freeTrial": "7-day free trial",
+    "bestValue": "Best Value",
+    "restore": "Restore Purchases",
+    "legalText": "Payment will be charged to your {{platform}} account. Subscription automatically renews unless canceled at least 24 hours before the end of the current period.",
+    "termsPrefix": "By subscribing, you agree to our ",
+    "termsMiddle": " and ",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy"
   },
   "history": {
     "title": "History"

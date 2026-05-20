@@ -160,7 +160,16 @@
     "tryFree": "Prueba gratis 7 días · luego {{price}}/{{period}}",
     "startTrial": "Iniciar prueba gratuita",
     "perYear": "año",
-    "perMonth": "mes"
+    "perMonth": "mes",
+    "subtitle": "Porciones Simples. Alimentación Equilibrada.",
+    "freeTrial": "Prueba gratis 7 días",
+    "bestValue": "Mejor Valor",
+    "restore": "Restaurar Compras",
+    "legalText": "El pago se cargará a tu cuenta de {{platform}}. La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del final del período actual.",
+    "termsPrefix": "Al suscribirte, aceptas nuestros ",
+    "termsMiddle": " y ",
+    "termsOfService": "Términos de Servicio",
+    "privacyPolicy": "Política de Privacidad"
   },
   "history": {
     "title": "Historial"

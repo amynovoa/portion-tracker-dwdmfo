@@ -192,7 +192,7 @@ export default function PaywallScreen() {
           <AppLogo size={logoSize} />
           <Text style={[styles.title, { color: C.text }, isTablet && { fontSize: 28 }]}>Portion Track</Text>
           <Text style={[styles.subtitle, { color: C.secondaryText }, isTablet && { fontSize: 17 }]}>
-            Simple Portions. Balanced Eating.
+            {t('paywall.subtitle')}
           </Text>
         </View>
 
@@ -230,11 +230,11 @@ export default function PaywallScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.freeTrialBadge, { color: C.primary }, isTablet && { fontSize: 14 }]}>
-                    7-day free trial
+                    {t('paywall.freeTrial')}
                   </Text>
                   {showBestValue && (
                     <View style={[styles.bestValueBadge, { backgroundColor: C.accent }]}>
-                      <Text style={[styles.bestValueText, isTablet && { fontSize: 13 }]}>Best Value</Text>
+                      <Text style={[styles.bestValueText, isTablet && { fontSize: 13 }]}>{t('paywall.bestValue')}</Text>
                     </View>
                   )}
                   <View style={styles.packageHeader}>
@@ -309,36 +309,28 @@ export default function PaywallScreen() {
             <ActivityIndicator size="small" color={C.secondaryText} />
           ) : (
             <Text style={[styles.restoreButtonText, { color: C.secondaryText }, isTablet && { fontSize: 17 }]}>
-              Restore Purchases
+              {t('paywall.restore')}
             </Text>
           )}
         </TouchableOpacity>
 
         <Text style={[styles.legalText, { color: C.secondaryText }, isTablet && { fontSize: 13, lineHeight: 18 }]}>
-          {"Payment will be charged to your "}
-          {platformName}
-          {" account. Subscription automatically renews unless canceled at least 24 hours before the end of the current period."}
+          {t('paywall.legalText', { platform: platformName })}
         </Text>
         <Text style={[styles.termsText, { color: C.secondaryText }, isTablet && { fontSize: 13, lineHeight: 18 }]}>
-          {"By subscribing, you agree to our "}
+          {t('paywall.termsPrefix')}
           <Text
             style={{ color: C.primary }}
-            onPress={() =>
-              Linking.openURL(
-                "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
-              )
-            }
+            onPress={() => Linking.openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")}
           >
-            Terms of Service
+            {t('paywall.termsOfService')}
           </Text>
-          {" and "}
+          {t('paywall.termsMiddle')}
           <Text
             style={{ color: C.primary }}
-            onPress={() =>
-              Linking.openURL("https://www.portiontrack.com/privacy-policy")
-            }
+            onPress={() => Linking.openURL("https://www.portiontrack.com/privacy-policy")}
           >
-            Privacy Policy
+            {t('paywall.privacyPolicy')}
           </Text>
         </Text>
       </View>
@@ -480,16 +472,16 @@ const styles = StyleSheet.create({
   // Fixed bottom section — never overlaps content
   bottomActions: {
     paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 4,
-    gap: 4,
+    gap: 6,
   },
   primaryButton: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 14,
     alignItems: "center",
-    minHeight: 44,
     justifyContent: "center",
+    minHeight: 52,
     shadowColor: "#C94A3D",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -501,7 +493,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     textAlign: "center",
-    flexShrink: 1,
+    paddingHorizontal: 8,
   },
   buttonDisabled: {
     opacity: 0.55,
