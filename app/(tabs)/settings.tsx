@@ -1,12 +1,12 @@
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
-import i18n, { setStoredLanguage } from '@/utils/i18n';
+import { setStoredLanguage } from '@/utils/i18n';
 
 const styles = StyleSheet.create({
   container: {
@@ -62,8 +62,12 @@ const styles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
-  const [currentLang, setCurrentLang] = useState(i18n.language || 'en');
+  const { t, i18n: i18nInstance } = useTranslation();
+  const [currentLang, setCurrentLang] = useState<string>(i18nInstance.language || 'en');
+
+  useEffect(() => {
+    setCurrentLang(i18nInstance.language || 'en');
+  }, [i18nInstance.language]);
 
   const handleResetAppData = () => {
     console.log('=== RESET APP DATA BUTTON PRESSED ===');
