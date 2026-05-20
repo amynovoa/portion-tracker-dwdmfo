@@ -2,6 +2,7 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { colors } from '@/styles/commonStyles';
+import { useTranslation } from 'react-i18next';
 
 interface FoodGroupInfoModalProps {
   visible: boolean;
@@ -24,6 +25,7 @@ export default function FoodGroupInfoModal({
   examples,
   portionSize,
 }: FoodGroupInfoModalProps) {
+  const { t } = useTranslation();
   console.log('FoodGroupInfoModal (iOS) rendering, visible:', visible);
   
   return (
@@ -57,26 +59,26 @@ export default function FoodGroupInfoModal({
           >
             {portionSize && (
               <View style={styles.portionSizeHighlight}>
-                <Text style={styles.portionSizeTitle}>What is 1 Portion?</Text>
+                <Text style={styles.portionSizeTitle}>{t('foodGroupModal.whatIs1Portion')}</Text>
                 <Text style={styles.portionSizeText}>{portionSize}</Text>
                 <Text style={styles.helperText}>
-                  Portions don&apos;t need to be exact — this is a guide, not a scale.
+                  {t('foodGroupModal.portionsGuide')}
                 </Text>
               </View>
             )}
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Benefits</Text>
+              <Text style={styles.sectionTitle}>{t('foodGroupModal.benefits')}</Text>
               <Text style={styles.benefitText}>{benefit}</Text>
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Good Choices</Text>
+              <Text style={styles.sectionTitle}>{t('foodGroupModal.goodChoices')}</Text>
               <Text style={styles.examplesText}>{examples}</Text>
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>What to Avoid</Text>
+              <Text style={styles.sectionTitle}>{t('foodGroupModal.whatToAvoid')}</Text>
               <Text style={styles.avoidText}>{avoid}</Text>
             </View>
           </ScrollView>
@@ -86,7 +88,7 @@ export default function FoodGroupInfoModal({
               onPress={onClose} 
               style={styles.doneButton}
             >
-              <Text style={styles.doneButtonText}>Got it!</Text>
+              <Text style={styles.doneButtonText}>{t('foodGroupModal.gotIt')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -182,7 +182,7 @@ export default function HomeScreen() {
             <FoodGroupRow
               key={foodGroupItem.key}
               foodGroup={foodGroupItem.key}
-              label={foodGroupItem.label}
+              label={t(`foodGroups.${foodGroupItem.key}`)}
               icon={foodGroupItem.icon}
               completed={dailyPortions.portions[foodGroupItem.key] || 0}
               target={profile.portionTargets[foodGroupItem.key]}

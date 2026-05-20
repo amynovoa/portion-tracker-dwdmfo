@@ -197,5 +197,80 @@
   },
   "backupRestore": {
     "title": "Copia de Seguridad"
+  },
+  "foodGroups": {
+    "protein": "Proteína",
+    "veggies": "Verduras",
+    "fruits": "Frutas",
+    "wholeGrains": "Granos Integrales",
+    "nutsSeeds": "Nueces y Semillas",
+    "fats": "Grasas",
+    "water": "Agua",
+    "exercise": "Ejercicio",
+    "alcohol": "Alcohol"
+  },
+  "foodGroupModal": {
+    "whatIs1Portion": "¿Qué es 1 Porción?",
+    "portionsGuide": "Las porciones no necesitan ser exactas — esto es una guía, no una báscula.",
+    "benefits": "Beneficios",
+    "goodChoices": "Buenas Opciones",
+    "whatToAvoid": "Qué Evitar",
+    "gotIt": "¡Entendido!"
+  },
+  "foodGroupInfo": {
+    "protein": {
+      "benefit": "La proteína apoya la reparación muscular, la saciedad y el metabolismo. Te ayuda a sentirte lleno por más tiempo y preserva la masa magra durante la pérdida de peso.\n\nIntenta incluir una fuente de proteína en la mayoría de las comidas.\n\nLa calidad importa — elige opciones magras y mínimamente procesadas cuando sea posible.",
+      "avoid": "Evita las carnes muy procesadas (hot dogs, embutidos con nitratos).\n\nLimita las proteínas fritas o empanizadas.\n\nVigilá las porciones en cortes con más grasa si estás tratando de perder peso.",
+      "examples": "Fuentes animales:\n- Pechuga de pollo (a la parrilla o deshebrada)\n- Pavo\n- Res o cerdo magro (carne asada, carnitas)\n- Pescado (atún, salmón, bacalao o pescado a la parrilla — fresco o en lata)\n- Huevos\n- Yogur griego\n- Requesón\n\nFuentes vegetales:\n- Frijoles (negros, pintos, etc.)\n- Tofu o tempeh\n- Edamame\n- Seitán",
+      "portionSize": "Aproximadamente del tamaño de tu palma (85-115 g de carne cocida, 1 taza de yogur griego, 2 huevos, etc.)"
+    },
+    "veggies": {
+      "benefit": "Las verduras están llenas de fibra, vitaminas y minerales. Apoyan la digestión, la inmunidad y la salud en general, siendo bajas en calorías.\n\nCuanta más variedad, mejor — busca diferentes colores durante la semana.\n\nLas verduras sin almidón se pueden comer libremente y ayudan a sentirse lleno.",
+      "avoid": "Evita las verduras fritas o las que tienen salsas pesadas.\n\nVigilá las porciones de verduras con almidón como las papas (cuéntalas como granos integrales).",
+      "examples": "Hojas verdes:\n- Espinaca, col rizada, arúgula, lechuga\n\nCrucíferas:\n- Brócoli, coliflor, coles de Bruselas, repollo\n\nOtras favoritas:\n- Pimientos, tomates, pepinos, calabacín, zanahorias, ejotes, espárragos, champiñones\n- Jícama\n- Nopales\n- Calabacitas",
+      "portionSize": "Aproximadamente 1 taza cruda o ½ taza cocida"
+    },
+    "fruits": {
+      "benefit": "La fruta aporta azúcares naturales, fibra, vitaminas y antioxidantes. Es una excelente manera de satisfacer el antojo de dulce mientras nutres tu cuerpo.\n\nLa fruta entera siempre es mejor que el jugo — la fibra ralentiza la absorción del azúcar.\n\nLas bayas son especialmente nutritivas y más bajas en azúcar.",
+      "avoid": "Evita los jugos de fruta y la fruta seca en grandes cantidades (están concentrados en azúcar y calorías).\n\nLimita la fruta enlatada en almíbar espeso.",
+      "examples": "Bayas:\n- Fresas, arándanos, frambuesas, moras\n\nFrutas de árbol:\n- Manzanas, peras, duraznos, ciruelas\n\nTropicales:\n- Plátanos, naranjas, piña, mango, papaya, guayaba, kiwi\n\nMelones:\n- Sandía, melón cantalupo, melón verde",
+      "portionSize": "Aproximadamente 1 pieza mediana de fruta o 1 taza de fruta"
+    },
+    "wholeGrains": {
+      "benefit": "Los granos integrales proporcionan energía sostenida, fibra y vitaminas del complejo B. Apoyan la digestión y ayudan a estabilizar el azúcar en sangre.\n\nElige granos integrales sobre granos refinados siempre que sea posible.\n\nCombínalos con proteína y verduras para comidas equilibradas.",
+      "avoid": "Evita los granos refinados (pan blanco, arroz blanco, pasteles).\n\nLimita los cereales azucarados y los productos horneados.\n\nVigilá las porciones — los granos son densos en calorías.",
+      "examples": "Granos:\n- Avena, quinoa, arroz integral, farro, cebada\n\nPan y pasta:\n- Pan integral, pasta de grano entero, tortillas de maíz o grano entero\n\nVerduras con almidón (cuentan como granos):\n- Camotes, papas blancas, maíz, chícharos, plátanos machos",
+      "portionSize": "Aproximadamente ½ taza de granos cocidos, 1 rebanada de pan o 1 papa pequeña"
+    },
+    "nutsSeeds": {
+      "benefit": "Las nueces y semillas aportan grasas saludables, proteína, fibra y minerales importantes como magnesio y zinc.\n\nApoyan la salud del corazón y ayudan con la saciedad.\n\nUn poco rinde mucho — son densas en calorías pero ricas en nutrientes.",
+      "avoid": "Evita las nueces muy saladas o confitadas.\n\nVigilá las porciones — es fácil comer nueces en exceso.\n\nLimita las mantequillas de nuez con azúcar o aceites añadidos.",
+      "examples": "Nueces:\n- Almendras, nueces, anacardos, pecanas, pistaches\n- Cacahuates (más bajos en omega-3 que otras nueces)\n\nSemillas:\n- Semillas de chía, linaza, pepitas, semillas de girasol, semillas de cáñamo\n\nMantequillas de nuez:\n- Mantequilla de almendra, mantequilla de cacahuate (natural, sin azúcar añadida), mantequillas de semillas",
+      "portionSize": "Aproximadamente ¼ taza de nueces o 2 cucharadas de mantequilla de nuez"
+    },
+    "fats": {
+      "benefit": "Las grasas saludables apoyan la producción de hormonas, la función cerebral y la absorción de nutrientes. Te ayudan a sentirte satisfecho y añaden sabor a las comidas.\n\nConcentrate en grasas saludables de fuentes vegetales y pescado graso.\n\nLas grasas son esenciales pero densas en calorías, así que el control de porciones importa.",
+      "avoid": "Evita las grasas trans (aceites parcialmente hidrogenados) que se encuentran en algunos alimentos procesados.\n\nLimita las grasas saturadas de mantequilla, crema y carnes grasas.\n\nVigilá las porciones — las grasas son altas en calorías.",
+      "examples": "Fuentes de grasas saludables:\n- Aceite de oliva, aceite de aguacate\n- Aguacates\n- Pescado graso (salmón, atún, macarela, sardinas)\n- Aceitunas\n- Chocolate oscuro (70%+ cacao, con moderación)\n\nGrasas para cocinar:\n- Aceite de oliva extra virgen\n- Aceite de aguacate\n- Mantequilla de pasto (en pequeñas cantidades)",
+      "portionSize": "Aproximadamente 1 cucharada de aceite, ¼ aguacate o 30 g de pescado graso"
+    },
+    "water": {
+      "benefit": "El agua es esencial para todas las funciones corporales — digestión, circulación, regulación de temperatura y más.\n\nMantenerse hidratado apoya la energía, la concentración y el rendimiento físico.\n\nTambién puede ayudar con el control del apetito y reducir los antojos innecesarios.",
+      "avoid": "Evita las bebidas azucaradas (refrescos, bebidas de café endulzadas, bebidas energéticas).\n\nLimita los jugos de fruta — son altos en azúcar y bajos en fibra.\n\nVigilá el consumo de cafeína — puede deshidratar en exceso.",
+      "examples": "Mejores opciones:\n- Agua simple\n- Agua con gas (sin endulzar)\n- Té de hierbas\n- Agua con limón, pepino o menta\n\nBien con moderación:\n- Café negro, té sin endulzar",
+      "portionSize": "Aproximadamente 240 ml (1 taza) por porción — busca 7-10+ porciones al día"
+    },
+    "exercise": {
+      "benefit": "El ejercicio regular es esencial para la salud general, el control del peso y el bienestar mental.\n\nAyuda a construir y mantener músculo, mejora la salud cardiovascular y eleva el estado de ánimo.\n\nLa constancia importa más que la intensidad — encuentra actividades que disfrutes y puedas mantener.",
+      "avoid": "Evita el sobreentrenamiento sin descanso y recuperación adecuados.\n\nNo hagas ejercicio con dolor o lesión.\n\nEvita compararte con otros — enfócate en tu propio progreso.",
+      "examples": "Cardio:\n- Caminar, trotar, correr\n- Ciclismo, natación\n- Baile, deportes\n\nEntrenamiento de fuerza:\n- Levantamiento de pesas\n- Ejercicios con peso corporal\n- Bandas de resistencia\n\nFlexibilidad y equilibrio:\n- Yoga, Pilates\n- Rutinas de estiramiento\n- Tai chi",
+      "portionSize": "Una sesión cuenta como 1 porción (busca 20-60 minutos de movimiento intencional)"
+    },
+    "alcohol": {
+      "benefit": "Si decides beber, la moderación es clave. Algunos estudios sugieren que el consumo moderado de alcohol puede tener beneficios sociales y de relajación.\n\nSin embargo, el alcohol aporta calorías vacías y puede interferir con los objetivos de pérdida de peso y condición física.\n\nEl máximo recomendado es 2 porciones al día, pero menos es generalmente mejor para la salud.",
+      "avoid": "Evita beber en exceso — puede llevar a malas elecciones alimentarias, deshidratación y sueño interrumpido.\n\nLimita las bebidas mezcladas azucaradas y los cócteles altos en calorías.\n\nNo bebas con el estómago vacío.\n\nEvita beber si estás embarazada, tomando ciertos medicamentos o tienes historial de problemas con el alcohol.",
+      "examples": "Porciones estándar:\n- 355 ml de cerveza (regular, ~5% ABV)\n- 150 ml de vino (tinto o blanco)\n- 45 ml de destilados (vodka, whisky, ron, ginebra, tequila)\n\nOpciones más bajas en calorías:\n- Cerveza light\n- Spritzer de vino (vino + agua con gas)\n- Destilados con agua mineral y limón",
+      "portionSize": "Una bebida estándar: 355 ml de cerveza, 150 ml de vino o 45 ml de destilados"
+    }
   }
 }

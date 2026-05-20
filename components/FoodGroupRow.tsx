@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
-import { foodGroupInfo } from '@/constants/foodGroupInfo';
+import { getFoodGroupInfo } from '@/constants/foodGroupInfo';
 import { FoodGroup } from '@/types';
 import { FOOD_GROUP_COLORS } from './DailyPlateProgress';
+import { useTranslation } from 'react-i18next';
 
 interface FoodGroupRowProps {
   foodGroup: FoodGroup;
@@ -31,7 +32,8 @@ export default function FoodGroupRow({
   isFirstRow = false,
 }: FoodGroupRowProps) {
   const [modalVisible, setModalVisible] = useState(false);
-  const info = foodGroupInfo[foodGroup];
+  const { t } = useTranslation();
+  const info = getFoodGroupInfo(t)[foodGroup];
 
   // Get the color indicator for this food group (only for plate food groups)
   const categoryColor = FOOD_GROUP_COLORS[foodGroup];
@@ -97,7 +99,10 @@ export default function FoodGroupRow({
           {hideCount && <View style={styles.hiddenCount} />}
           {info && (
             <TouchableOpacity
-              onPress={() => setModalVisible(true)}
+              onPress={() => {
+                console.log('FoodGroupRow: info button pressed for', foodGroup);
+                setModalVisible(true);
+              }}
               style={styles.infoButton}
             >
               <Text style={styles.infoIcon}>ℹ️</Text>
@@ -114,7 +119,11 @@ export default function FoodGroupRow({
           return (
             <TouchableOpacity
               key={index}
-              onPress={() => onTogglePortion(index >= completed)}
+              onPress={() => {
+                const increment = index >= completed;
+                console.log('FoodGroupRow: slot pressed for', foodGroup, increment ? 'increment' : 'decrement');
+                onTogglePortion(increment);
+              }}
               style={[
                 styles.slot,
                 {
@@ -132,7 +141,10 @@ export default function FoodGroupRow({
       {info && (
         <FoodGroupInfoModal
           visible={modalVisible}
-          onClose={() => setModalVisible(false)}
+          onClose={() => {
+            console.log('FoodGroupRow: info modal closed for', foodGroup);
+            setModalVisible(false);
+          }}
           title={label}
           icon={icon}
           benefit={info.benefit}

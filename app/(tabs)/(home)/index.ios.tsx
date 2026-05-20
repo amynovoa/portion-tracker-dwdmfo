@@ -14,6 +14,7 @@ import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenSh
 import DaySelector from '@/components/DaySelector.ios';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AppLogo from '@/components/AppLogo';
+import { useTranslation } from 'react-i18next';
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const loadDateData = useCallback(async (date: string) => {
     console.log('Loading portions for date:', date);
@@ -137,12 +139,13 @@ export default function HomeScreen() {
   if (!profile || !dailyPortions) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>{t('home.loading')}</Text>
       </View>
     );
   }
 
   const isToday = selectedDate === getTodayString();
+  const pastDayLabel = t('common.pastDay');
 
   return (
     <View style={styles.container}>
@@ -161,7 +164,7 @@ export default function HomeScreen() {
 
         <View style={styles.dateHeader}>
           <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
-          {!isToday && <Text style={styles.pastDateLabel}>Past Day</Text>}
+          {!isToday && <Text style={styles.pastDateLabel}>{pastDayLabel}</Text>}
         </View>
 
         {/* Daily Plate Progress - Visual Summary */}
@@ -178,7 +181,7 @@ export default function HomeScreen() {
             <FoodGroupRow
               key={foodGroupItem.key}
               foodGroup={foodGroupItem.key}
-              label={foodGroupItem.label}
+              label={t(`foodGroups.${foodGroupItem.key}`)}
               icon={foodGroupItem.icon}
               completed={dailyPortions.portions[foodGroupItem.key] || 0}
               target={profile.portionTargets[foodGroupItem.key]}
