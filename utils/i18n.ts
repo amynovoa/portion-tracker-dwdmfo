@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 import en from '@/locales/en.json';
 import es from '@/locales/es.json';
 
@@ -9,7 +10,15 @@ const LANGUAGE_KEY = '@language';
 export async function getStoredLanguage(): Promise<string> {
   try {
     const lang = await AsyncStorage.getItem(LANGUAGE_KEY);
-    return lang || 'en';
+    if (lang) {
+      console.log('[i18n] Using stored language preference:', lang);
+      return lang;
+    }
+    const systemLocale = Localization.getLocales()[0]?.languageCode;
+    console.log('[i18n] No stored preference — detected system locale:', systemLocale);
+    const detectedLang = systemLocale === 'es' ? 'es' : 'en';
+    console.log('[i18n] Defaulting to language:', detectedLang);
+    return detectedLang;
   } catch {
     return 'en';
   }

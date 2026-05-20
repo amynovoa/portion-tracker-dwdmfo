@@ -22,7 +22,7 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library."
       },
-      "buildNumber": "19"
+      "buildNumber": "20"
     },
     "android": {
       "adaptiveIcon": {
@@ -52,7 +52,8 @@
           "photosPermission": "This app needs access to your photo library to select meal photos.",
           "cameraPermission": "This app uses the camera to take photos of your meals for tracking purposes."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "scheme": "portiontracker",
     "experiments": {
