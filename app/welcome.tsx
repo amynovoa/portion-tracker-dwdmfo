@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import AppLogo from '@/components/AppLogo';
 
 const { width } = Dimensions.get('window');
@@ -84,10 +85,12 @@ export default function WelcomeScreen() {
     router.push('/paywall');
   }, [router]);
 
+  const { t } = useTranslation();
+
   const appName = 'Welcome to Portion Track';
-  const tagline = 'Simple Portions. Balanced Eating.';
-  const subtitle = 'A simple way to eat well and build healthy habits for life.';
-  const getStartedLabel = 'Get Started';
+  const tagline = t('welcome.tagline');
+  const subtitle = t('welcome.subtitle');
+  const getStartedLabel = t('welcome.getStarted');
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: C.background }]}>
