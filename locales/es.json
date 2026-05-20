@@ -29,7 +29,12 @@
     "track": "Rastrear"
   },
   "home": {
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "yourPlateToday": "Tu Plato de Hoy",
+    "tapToBuilder": "Toca las porciones de abajo para armar tu plato",
+    "congratulations": "¡Felicitaciones! ¡Has armado un plato equilibrado!"
   },
   "settings": {
     "title": "Ajustes",

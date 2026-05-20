@@ -29,7 +29,12 @@
     "track": "Track"
   },
   "home": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "yourPlateToday": "Your Plate Today",
+    "tapToBuilder": "Tap the portions below to build your plate",
+    "congratulations": "Congratulations! You've built a balanced plate!"
   },
   "settings": {
     "title": "Settings",

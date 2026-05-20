@@ -5,6 +5,7 @@ import Svg, { Circle, Path, G, Defs, ClipPath } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { PortionTargets } from '@/types';
 import AppLogo from './AppLogo';
+import { useTranslation } from 'react-i18next';
 
 interface DailyPlateProgressProps {
   completed: PortionTargets;
@@ -101,6 +102,7 @@ function calculateIconPosition(
 }
 
 export default function DailyPlateProgress({ completed, targets }: DailyPlateProgressProps) {
+  const { t } = useTranslation();
   const plateSize = 280;
   const centerX = plateSize / 2;
   const centerY = plateSize / 2;
@@ -158,10 +160,10 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Plate Today</Text>
+      <Text style={styles.title}>{t('home.yourPlateToday')}</Text>
 
       {isPlateEmpty && (
-        <Text style={styles.hintText}>Tap the portions below to build your plate</Text>
+        <Text style={styles.hintText}>{t('home.tapToBuilder')}</Text>
       )}
       
       <View style={styles.plateWrapper}>
@@ -260,7 +262,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
       </View>
 
       {isPlateComplete && (
-        <Text style={styles.congratsMessage}>Congratulations! You've built a balanced plate!</Text>
+        <Text style={styles.congratsMessage}>{t('home.congratulations')}</Text>
       )}
     </View>
   );

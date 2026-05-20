@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { formatDate } from '@/utils/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 interface DaySelectorProps {
   selectedDate: string;
@@ -10,25 +11,23 @@ interface DaySelectorProps {
 }
 
 export default function DaySelector({ selectedDate, onDateSelect }: DaySelectorProps) {
-  // Generate array of dates for the last 7 days
-  const getDates = () => {
-    const dates = [];
-    const today = new Date();
-    
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      dates.push({
-        dateString: formatDate(date),
-        label: i === 0 ? 'Today' : i === 1 ? 'Yesterday' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-        isToday: i === 0,
-      });
-    }
-    
-    return dates;
-  };
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'es' ? 'es-MX' : 'en-US';
 
-  const dates = getDates();
+  // Generate array of dates for the last 7 days
+  const today = new Date();
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const todayLabel = t('home.today');
+    const yesterdayLabel = t('home.yesterday');
+    dates.push({
+      dateString: formatDate(date),
+      label: i === 0 ? todayLabel : i === 1 ? yesterdayLabel : date.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' }),
+      isToday: i === 0,
+    });
+  }
 
   return (
     <View style={styles.container}>
