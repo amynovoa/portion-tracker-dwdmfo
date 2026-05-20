@@ -156,7 +156,11 @@
       "weight": "Seguimiento de peso y gráficas",
       "history": "Historial completo y tendencias",
       "reminders": "Recordatorios diarios"
-    }
+    },
+    "tryFree": "Prueba gratis 7 días · luego {{price}}/{{period}}",
+    "startTrial": "Iniciar prueba gratuita",
+    "perYear": "año",
+    "perMonth": "mes"
   },
   "history": {
     "title": "Historial"

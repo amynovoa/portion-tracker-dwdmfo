@@ -156,7 +156,11 @@
       "weight": "Weight Tracking & Charts",
       "history": "Progress History & Trends",
       "reminders": "Daily Reminders"
-    }
+    },
+    "tryFree": "Try Free for 7 Days · then {{price}}/{{period}}",
+    "startTrial": "Start Free Trial",
+    "perYear": "yr",
+    "perMonth": "mo"
   },
   "history": {
     "title": "History"

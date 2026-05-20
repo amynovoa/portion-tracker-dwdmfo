@@ -151,8 +151,8 @@ export default function PaywallScreen() {
   };
 
   const subscribeLabel = selectedPackage
-    ? `Try Free for 7 Days · then ${selectedPackage.product.priceString}/${isAnnual(selectedPackage) ? "yr" : "mo"}`
-    : "Start Free Trial";
+    ? t('paywall.tryFree', { price: selectedPackage.product.priceString, period: isAnnual(selectedPackage) ? t('paywall.perYear') : t('paywall.perMonth') })
+    : t('paywall.startTrial');
 
   const platformName = Platform.OS === "ios" ? "Apple ID" : "Google Play";
 
@@ -291,7 +291,12 @@ export default function PaywallScreen() {
           {purchasing ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={[styles.primaryButtonText, isTablet && { fontSize: 18 }]}>{subscribeLabel}</Text>
+            <Text
+              style={[styles.primaryButtonText, isTablet && { fontSize: 18 }]}
+              numberOfLines={2}
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.7}
+            >{subscribeLabel}</Text>
           )}
         </TouchableOpacity>
 
@@ -483,6 +488,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 14,
     alignItems: "center",
+    minHeight: 44,
+    justifyContent: "center",
     shadowColor: "#C94A3D",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -494,6 +501,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     textAlign: "center",
+    flexShrink: 1,
   },
   buttonDisabled: {
     opacity: 0.55,
