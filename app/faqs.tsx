@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,10 +25,14 @@ export default function FAQScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const itemRefs = useRef<(View | null)[]>([]);
 
-  const faqData: FAQItem[] = Array.from({ length: 13 }, (_, i) => ({
-    question: t(`faqs.faqItems.q${i + 1}.question`),
-    answer: t(`faqs.faqItems.q${i + 1}.answer`),
-  }));
+  const faqData = useMemo<FAQItem[]>(
+    () =>
+      Array.from({ length: 13 }, (_, i) => ({
+        question: t(`faqs.faqItems.q${i + 1}.question`),
+        answer: t(`faqs.faqItems.q${i + 1}.answer`),
+      })),
+    [t]
+  );
 
   const toggleExpand = (index: number) => {
     const isOpening = expandedIndex !== index;
