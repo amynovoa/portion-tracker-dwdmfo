@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
 
@@ -16,61 +17,6 @@ interface FAQItem {
   question: string;
   answer: string;
 }
-
-const FAQ_DATA: FAQItem[] = [
-  {
-    question: 'What is Portion Track?',
-    answer: 'Portion Track helps you track food using simple portions instead of calories. It is designed to be flexible, realistic and easy to adjust to your goals and dietary preferences.',
-  },
-  {
-    question: 'Do I need to count calories?',
-    answer: 'No. Portion Track is designed so you don\'t need to count calories at all.',
-  },
-  {
-    question: 'Where do I log dairy or plant-based dairy?',
-    answer: 'Dairy and plant-based dairy count as Protein, Fat, or Carbs depending on type. For example:\n\n• Greek yogurt or cottage cheese = Protein\n• Cheese or cream = Fat\n• Milk or plant-based milk = Carbs logged under Whole Grains',
-  },
-  {
-    question: 'Will Portion Track work with Keto or other diet plans?',
-    answer: 'Yes. Portion Track is designed to work with a wide variety of eating styles including keto, low-carb, Mediterranean, plant-based, and more. Because the app focuses on portions and food groups, users can adjust their portion choices to match their preferred approach.',
-  },
-  {
-    question: 'How do I know how much a "portion" is?',
-    answer: 'Tap the ⓘ info icon next to each food group to see portion examples and tips.',
-  },
-  {
-    question: 'I forgot to log my food yesterday. What do I do?',
-    answer: 'No problem! You can go back and log food, exercise, or weight for up to 7 days prior. Just use the day selector at the top of the screen in Tracking and choose the day you want to update.',
-  },
-  {
-    question: 'How do I log a food that isn\'t listed?',
-    answer: 'Choose the food group that best fits the item. You don\'t need perfect matches.',
-  },
-  {
-    question: 'What if a food fits into more than one category?',
-    answer: 'Pick the category that best reflects the main component. There is no single right answer.',
-  },
-  {
-    question: 'Do I need to be exact with portions?',
-    answer: 'Portion Track works best when it\'s consistent, not perfect. Portions do count and having larger or smaller portions of food items will impact your results.',
-  },
-  {
-    question: 'How does alcohol affect my portions?',
-    answer: 'Alcohol impacts the number of whole grain and fat serving targets in your daily calculations for up to 2 per day. Going over 2 will not impact your targets so should be considered in your overall planning and tracking.',
-  },
-  {
-    question: 'Can I change my portions or goals later?',
-    answer: 'Yes. You can update your goal and adjust portions at any time in your profile.',
-  },
-  {
-    question: 'When does my day reset?',
-    answer: 'The default setting is 12:00 a.m. You can adjust this in settings.',
-  },
-  {
-    question: 'Can Portion Track help with goals like improving cholesterol or blood sugar?',
-    answer: 'Portion Track does not diagnose or treat medical conditions. However, many people use portion control and balanced eating to support overall health. Eating consistent portions, choosing healthy options outlined in the app, and focusing on balanced meals can all play a role in supporting healthy blood sugar and cholesterol levels.',
-  },
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -121,18 +67,30 @@ const styles = StyleSheet.create({
 });
 
 export default function FAQScreen() {
+  const { t } = useTranslation();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
+  const FAQ_DATA = useMemo<FAQItem[]>(
+    () =>
+      Array.from({ length: 13 }, (_, i) => ({
+        question: t(`faqs.faqItems.q${i + 1}.question`),
+        answer: t(`faqs.faqItems.q${i + 1}.answer`),
+      })),
+    [t]
+  );
+
   const toggleExpand = (index: number) => {
+    console.log('[FAQScreen] FAQ item toggled', { index, question: FAQ_DATA[index]?.question });
     setExpandedIndex(expandedIndex === index ? null : index);
   };
+
+  const screenTitle = t('faqs.title');
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <AppLogo />
-        <Text style={styles.title}>FAQs</Text>
-
+        <Text style={styles.title}>{screenTitle}</Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         {FAQ_DATA.map((faq, index) => (
