@@ -183,7 +183,61 @@
     "title": "Peso"
   },
   "faqs": {
-    "title": "Preguntas Frecuentes"
+    "title": "Preguntas Frecuentes",
+    "faqItems": {
+      "q1": {
+        "question": "¿Qué es Portion Track?",
+        "answer": "Portion Track te ayuda a registrar tu alimentación usando porciones simples en lugar de calorías. Está diseñado para ser flexible, realista y fácil de adaptar a tus objetivos y preferencias alimentarias."
+      },
+      "q2": {
+        "question": "¿Necesito contar calorías?",
+        "answer": "No. Portion Track está diseñado para que no necesites contar calorías en absoluto."
+      },
+      "q3": {
+        "question": "¿Dónde registro los lácteos o los lácteos de origen vegetal?",
+        "answer": "Los lácteos y los lácteos de origen vegetal se cuentan como Proteína, Grasa o Carbohidratos según el tipo. Por ejemplo:\n\nYogur griego o requesón = Proteína\nQueso o crema = Grasa\nLeche o leche vegetal = Carbohidratos registrados en Granos Integrales"
+      },
+      "q4": {
+        "question": "¿Portion Track funciona con Keto u otros planes de alimentación?",
+        "answer": "Sí. Portion Track está diseñado para funcionar con una amplia variedad de estilos de alimentación, incluyendo keto, bajo en carbohidratos, mediterráneo, basado en plantas y más.\n\nComo la app se enfoca en porciones y grupos de alimentos, los usuarios pueden ajustar sus elecciones de porciones para adaptarse a su enfoque preferido."
+      },
+      "q5": {
+        "question": "¿Cómo sé cuánto es una \"porción\"?",
+        "answer": "Toca el ícono de información junto a cada grupo de alimentos para ver ejemplos de porciones y consejos."
+      },
+      "q6": {
+        "question": "Olvidé registrar mi comida de ayer. ¿Qué hago?",
+        "answer": "¡No hay problema! Puedes regresar y registrar comida, ejercicio o peso de hasta 7 días anteriores. Solo usa el selector de días en la parte superior de la pantalla en Seguimiento y elige el día que quieres actualizar."
+      },
+      "q7": {
+        "question": "¿Cómo registro un alimento que no está en la lista?",
+        "answer": "Elige el grupo de alimentos que mejor se adapte al artículo. No necesitas coincidencias perfectas."
+      },
+      "q8": {
+        "question": "¿Qué pasa si un alimento encaja en más de una categoría?",
+        "answer": "Elige la categoría que mejor refleje el componente principal. No hay una única respuesta correcta."
+      },
+      "q9": {
+        "question": "¿Necesito ser exacto con las porciones?",
+        "answer": "Portion Track funciona mejor cuando es consistente, no perfecto. Las porciones sí cuentan y tener porciones más grandes o más pequeñas de los alimentos impactará tus resultados."
+      },
+      "q10": {
+        "question": "¿Cómo afecta el alcohol a mis porciones?",
+        "answer": "El alcohol impacta el número de metas de porciones de granos integrales y grasas en tus cálculos diarios para hasta 2 por día. Superar 2 no afectará tus metas, por lo que debe considerarse en tu planificación y seguimiento general."
+      },
+      "q11": {
+        "question": "¿Puedo cambiar mis porciones u objetivos más adelante?",
+        "answer": "Sí. Puedes actualizar tu objetivo y ajustar las porciones en cualquier momento desde tu perfil."
+      },
+      "q12": {
+        "question": "¿Cuándo se reinicia mi día?",
+        "answer": "La configuración predeterminada es a las 12:00 a.m. Puedes ajustarlo en los ajustes."
+      },
+      "q13": {
+        "question": "¿Puede Portion Track ayudar con objetivos como mejorar el colesterol o el azúcar en sangre?",
+        "answer": "Portion Track no diagnostica ni trata condiciones médicas. Sin embargo, muchas personas usan el control de porciones y una alimentación equilibrada para apoyar la salud en general. Comer porciones consistentes, elegir opciones saludables descritas en la app y enfocarse en comidas equilibradas puede contribuir a mantener niveles saludables de azúcar en sangre y colesterol."
+      }
+    }
   },
   "dailyReset": {
     "title": "Reinicio Diario"
