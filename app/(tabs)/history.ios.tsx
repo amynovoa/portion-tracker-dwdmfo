@@ -11,6 +11,7 @@ import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } 
 import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
 import AppLogo from '@/components/AppLogo';
+import { useTranslation } from 'react-i18next';
 
 const styles = StyleSheet.create({
   container: {
@@ -113,6 +114,7 @@ const styles = StyleSheet.create({
 });
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
   const [allPortions, setAllPortions] = useState<DailyPortions[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -155,7 +157,7 @@ export default function HistoryScreen() {
   if (!profile) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: colors.text }}>No profile data available</Text>
+        <Text style={{ color: colors.text }}>{t('history.noProfileData')}</Text>
       </View>
     );
   }
@@ -196,31 +198,31 @@ export default function HistoryScreen() {
         </View>
 
         <View style={styles.header}>
-          <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>Your tracking history</Text>
+          <Text style={styles.title}>{t('history.title')}</Text>
+          <Text style={styles.subtitle}>{t('history.subtitle')}</Text>
         </View>
 
         <View style={styles.adherenceSection}>
           <AdherenceCard
-            title="Today"
+            title={t('history.today')}
             percentage={todayAdherence}
             subtitle={formatDisplayDate(todayString)}
           />
           <AdherenceCard
-            title="This Week"
+            title={t('history.thisWeek')}
             percentage={weeklyAdherence}
-            subtitle="Last 7 days"
+            subtitle={t('history.last7Days')}
           />
           <AdherenceCard
-            title="This Month"
+            title={t('history.thisMonth')}
             percentage={monthlyAdherence}
-            subtitle="Last 30 days"
+            subtitle={t('history.last30Days')}
           />
         </View>
 
         {consistencyEntries.length > 0 && (
           <View style={styles.consistencySection}>
-            <Text style={styles.sectionTitle}>Consistency Over Time</Text>
+            <Text style={styles.sectionTitle}>{t('history.consistencyTitle')}</Text>
             <View style={styles.chartCard}>
               <ConsistencyChart entries={consistencyEntries} />
             </View>
@@ -228,10 +230,10 @@ export default function HistoryScreen() {
         )}
 
         <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>Daily History</Text>
+          <Text style={styles.sectionTitle}>{t('history.dailyHistoryTitle')}</Text>
           {sortedDates.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No tracking history yet</Text>
+              <Text style={styles.emptyText}>{t('history.noTrackingYet')}</Text>
             </View>
           ) : (
             sortedDates.map((dayData) => {
@@ -246,7 +248,7 @@ export default function HistoryScreen() {
                 >
                   <View style={styles.dayHeader}>
                     <Text style={styles.dayDate}>{formatDisplayDate(dayData.date)}</Text>
-                    <Text style={styles.dayAdherence}>{dayAdherence}% complete</Text>
+                    <Text style={styles.dayAdherence}>{t('history.percentComplete', { percent: dayAdherence })}</Text>
                   </View>
                   {isExpanded && (
                     <View style={styles.dayDetails}>
@@ -256,7 +258,7 @@ export default function HistoryScreen() {
                         
                         return (
                           <View key={fg.key} style={styles.foodGroupRow}>
-                            <Text style={styles.foodGroupName}>{fg.icon} {fg.label}</Text>
+                            <Text style={styles.foodGroupName}>{fg.icon} {t(`foodGroups.${fg.key}`)}</Text>
                             <Text style={styles.foodGroupValue}>
                               {completed} / {target}
                             </Text>

@@ -177,7 +177,20 @@
     "privacyPolicy": "Privacy Policy"
   },
   "history": {
-    "title": "History"
+    "title": "History",
+    "subtitle": "Your tracking history",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "consistencyTitle": "Consistency Over Time",
+    "dailyHistoryTitle": "Daily History",
+    "noTrackingYet": "No tracking history yet",
+    "noTrackingData": "No tracking data yet",
+    "startTracking": "Start tracking your portions to see your history here",
+    "percentComplete": "{{percent}}% complete",
+    "noProfileData": "No profile data available"
   },
   "weight": {
     "title": "Weight"

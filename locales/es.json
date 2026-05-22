@@ -177,7 +177,20 @@
     "privacyPolicy": "Política de Privacidad"
   },
   "history": {
-    "title": "Historial"
+    "title": "Historial",
+    "subtitle": "Tu historial de seguimiento",
+    "today": "Hoy",
+    "thisWeek": "Esta semana",
+    "thisMonth": "Este mes",
+    "last7Days": "Últimos 7 días",
+    "last30Days": "Últimos 30 días",
+    "consistencyTitle": "Consistencia a lo largo del tiempo",
+    "dailyHistoryTitle": "Historial diario",
+    "noTrackingYet": "Aún no hay historial de seguimiento",
+    "noTrackingData": "Aún no hay datos de seguimiento",
+    "startTracking": "Comienza a registrar tus porciones para ver tu historial aquí",
+    "percentComplete": "{{percent}}% completado",
+    "noProfileData": "No hay datos de perfil disponibles"
   },
   "weight": {
     "title": "Peso"
@@ -260,9 +273,9 @@
   "foodGroups": {
     "protein": "Proteína",
     "veggies": "Verduras",
-    "fruits": "Frutas",
-    "wholeGrains": "Granos",
-    "nutsSeeds": "Nueces",
+    "fruits": "Fruta",
+    "wholeGrains": "Granos integrales",
+    "nutsSeeds": "Frutos secos y semillas",
     "fats": "Grasas",
     "water": "Agua",
     "exercise": "Ejercicio",
