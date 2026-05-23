@@ -13,7 +13,7 @@ import ConsistencyChart from '@/components/ConsistencyChart';
 import { useTranslation } from 'react-i18next';
 
 export default function HistoryScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [allPortions, setAllPortions] = useState<DailyPortions[]>([]);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
@@ -110,7 +110,7 @@ export default function HistoryScreen() {
           <AdherenceCard
             title={t('history.today')}
             percentage={dailyAdherence}
-            subtitle={formatDisplayDate(todayString)}
+            subtitle={formatDisplayDate(todayString, i18n.language)}
           />
           <AdherenceCard
             title={t('history.thisWeek')}
@@ -152,7 +152,7 @@ export default function HistoryScreen() {
                     onPress={() => toggleExpand(dayData.date)}
                   >
                     <View style={styles.dayHeaderLeft}>
-                      <Text style={styles.dayDate}>{formatDisplayDate(dayData.date)}</Text>
+                      <Text style={styles.dayDate}>{formatDisplayDate(dayData.date, i18n.language)}</Text>
                       <Text style={styles.dayAdherence}>{t('history.percentComplete', { percent: adherence })}</Text>
                     </View>
                     <Text style={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</Text>

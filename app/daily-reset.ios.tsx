@@ -6,6 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loadResetTime, saveResetTime, ResetTimeConfig } from '@/utils/storage';
 import { colors } from '@/styles/commonStyles';
+import { useTranslation } from 'react-i18next';
 
 const styles = StyleSheet.create({
   container: {
@@ -76,6 +77,7 @@ const styles = StyleSheet.create({
 });
 
 export default function DailyResetScreen() {
+  const { t, i18n } = useTranslation();
   const [resetTime, setResetTime] = useState(() => {
     const defaultTime = new Date();
     defaultTime.setHours(0, 0, 0, 0);
@@ -131,7 +133,8 @@ export default function DailyResetScreen() {
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
+    const locale = i18n.language === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleTimeString(locale, {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
@@ -143,8 +146,8 @@ export default function DailyResetScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Daily Reset',
-          headerBackTitle: 'Settings',
+          title: t('dailyReset.title'),
+          headerBackTitle: t('settings.title'),
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -154,17 +157,17 @@ export default function DailyResetScreen() {
       
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Daily Reset</Text>
+          <Text style={styles.headerTitle}>{t('dailyReset.title')}</Text>
         </View>
 
         <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Custom Reset Time</Text>
+          <Text style={styles.settingLabel}>{t('dailyReset.customResetTime')}</Text>
           <Text style={styles.settingDescription}>
-            By default, your daily portions reset at midnight (12:00 AM). Enable this to choose a custom reset time.
+            {t('dailyReset.description')}
           </Text>
           
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Enable Custom Time</Text>
+            <Text style={styles.toggleLabel}>{t('dailyReset.enableCustomTime')}</Text>
             <Switch
               value={customResetEnabled}
               onValueChange={handleToggleCustomReset}
@@ -175,7 +178,7 @@ export default function DailyResetScreen() {
 
           {customResetEnabled && (
             <View style={styles.pickerContainer}>
-              <Text style={styles.pickerLabel}>Select Reset Time</Text>
+              <Text style={styles.pickerLabel}>{t('dailyReset.selectResetTime')}</Text>
               <DateTimePicker
                 value={resetTime}
                 mode="time"
@@ -184,7 +187,7 @@ export default function DailyResetScreen() {
                 textColor={colors.text}
               />
               <Text style={styles.currentTimeText}>
-                Current reset time: {formatTime(resetTime)}
+                {t('dailyReset.currentResetTime', { time: formatTime(resetTime) })}
               </Text>
             </View>
           )}

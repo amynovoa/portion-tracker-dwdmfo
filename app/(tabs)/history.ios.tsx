@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
 });
 
 export default function HistoryScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [allPortions, setAllPortions] = useState<DailyPortions[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -206,7 +206,7 @@ export default function HistoryScreen() {
           <AdherenceCard
             title={t('history.today')}
             percentage={todayAdherence}
-            subtitle={formatDisplayDate(todayString)}
+            subtitle={formatDisplayDate(todayString, i18n.language)}
           />
           <AdherenceCard
             title={t('history.thisWeek')}
@@ -247,7 +247,7 @@ export default function HistoryScreen() {
                   onPress={() => toggleExpand(dayData.date)}
                 >
                   <View style={styles.dayHeader}>
-                    <Text style={styles.dayDate}>{formatDisplayDate(dayData.date)}</Text>
+                    <Text style={styles.dayDate}>{formatDisplayDate(dayData.date, i18n.language)}</Text>
                     <Text style={styles.dayAdherence}>{t('history.percentComplete', { percent: dayAdherence })}</Text>
                   </View>
                   {isExpanded && (

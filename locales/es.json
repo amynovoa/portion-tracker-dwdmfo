@@ -253,7 +253,14 @@
     }
   },
   "dailyReset": {
-    "title": "Reinicio Diario"
+    "title": "Reinicio Diario",
+    "customResetTime": "Hora de Reinicio Personalizada",
+    "description": "De forma predeterminada, tus porciones diarias se reinician a la medianoche (12:00 AM). Activa esto para elegir una hora de reinicio personalizada.",
+    "enableCustomTime": "Activar Hora Personalizada",
+    "resetTime": "Hora de Reinicio",
+    "tapToChange": "Toca para cambiar la hora",
+    "selectResetTime": "Selecciona la Hora de Reinicio",
+    "currentResetTime": "Hora de reinicio actual: {{time}}"
   },
   "dailyReminder": {
     "title": "Recordatorio Diario"

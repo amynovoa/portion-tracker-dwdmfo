@@ -253,7 +253,14 @@
     }
   },
   "dailyReset": {
-    "title": "Daily Reset"
+    "title": "Daily Reset",
+    "customResetTime": "Custom Reset Time",
+    "description": "By default, your daily portions reset at midnight (12:00 AM). Enable this to choose a custom reset time.",
+    "enableCustomTime": "Enable Custom Time",
+    "resetTime": "Reset Time",
+    "tapToChange": "Tap to change time",
+    "selectResetTime": "Select Reset Time",
+    "currentResetTime": "Current reset time: {{time}}"
   },
   "dailyReminder": {
     "title": "Daily Reminder"
