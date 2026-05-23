@@ -263,7 +263,19 @@
     "currentResetTime": "Current reset time: {{time}}"
   },
   "dailyReminder": {
-    "title": "Daily Reminder"
+    "title": "Daily Reminder",
+    "notificationSettings": "🔔 Notification Settings",
+    "enableLabel": "Enable Daily Reminder",
+    "description": "Get reminded at 12:00 PM (noon) each day if you haven't logged any portions yet.",
+    "warningText": "⚠️ Notifications are not enabled for this app. To receive reminders, please enable notifications in your device settings.",
+    "infoText": "💡 This reminder helps you stay on track with your daily portion tracking. You'll only receive the notification if you haven't logged anything by noon.",
+    "aboutTitle": "ℹ️ About Reminders",
+    "aboutText": "- Reminders are sent at 12:00 PM daily\n- You must enable notifications in your device settings\n- Reminders only appear if you haven't tracked any portions yet\n- You can turn reminders on or off at any time",
+    "permissionRequiredTitle": "Permission Required",
+    "permissionRequiredMessage": "Please enable notifications in your device settings to use daily reminders.",
+    "openSettings": "Open Settings",
+    "unableToSetTitle": "Unable to Set Reminder",
+    "unableToSetMessage": "There was a problem setting up the reminder. Please try again."
   },
   "celebration": {
     "title": "Celebration Settings",
@@ -273,7 +285,28 @@
     "disabledDescription": "Celebrations are turned off. You will not see any animations when completing your targets."
   },
   "resetData": {
-    "title": "Reset App Data"
+    "title": "Reset App Data",
+    "headerTitle": "Reset All App Data",
+    "back": "Back",
+    "warningTitle": "⚠️ Warning",
+    "warningText": "This action will permanently delete ALL your data and cannot be undone.",
+    "whatDeletedTitle": "What will be deleted:",
+    "bullet1": "• Your profile information (sex, weight, goals)",
+    "bullet2": "• All daily portion tracking data",
+    "bullet3": "• Your tracking history",
+    "bullet4": "• Custom portion targets",
+    "bullet5": "• All settings and preferences",
+    "bullet6": "• Weight tracking history",
+    "whatNextTitle": "What happens next:",
+    "whatNextText": "After resetting, you'll be taken back to the welcome screen where you can set up your profile again from scratch.",
+    "resetButton": "Reset All Data",
+    "resettingButton": "Resetting...",
+    "cancelButton": "Cancel",
+    "modalTitle": "Final Confirmation",
+    "modalMessage": "Are you absolutely sure you want to reset all data? This cannot be undone.",
+    "modalConfirm": "Yes, Reset Everything",
+    "errorTitle": "Error",
+    "errorMessage": "Failed to reset app data. Please try again."
   },
   "activityLevel": {
     "title": "Activity Level"

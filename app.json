@@ -22,7 +22,7 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library."
       },
-      "buildNumber": "39"
+      "buildNumber": "40"
     },
     "android": {
       "adaptiveIcon": {

@@ -263,7 +263,19 @@
     "currentResetTime": "Hora de reinicio actual: {{time}}"
   },
   "dailyReminder": {
-    "title": "Recordatorio Diario"
+    "title": "Recordatorio Diario",
+    "notificationSettings": "🔔 Ajustes de Notificaciones",
+    "enableLabel": "Activar Recordatorio Diario",
+    "description": "Recibe un recordatorio a las 12:00 PM (mediodía) cada día si aún no has registrado ninguna porción.",
+    "warningText": "⚠️ Las notificaciones no están activadas para esta app. Para recibir recordatorios, activa las notificaciones en los ajustes de tu dispositivo.",
+    "infoText": "💡 Este recordatorio te ayuda a mantener tu seguimiento diario de porciones. Solo recibirás la notificación si no has registrado nada antes del mediodía.",
+    "aboutTitle": "ℹ️ Acerca de los Recordatorios",
+    "aboutText": "- Los recordatorios se envían a las 12:00 PM diariamente\n- Debes activar las notificaciones en los ajustes de tu dispositivo\n- Los recordatorios solo aparecen si aún no has registrado porciones\n- Puedes activar o desactivar los recordatorios en cualquier momento",
+    "permissionRequiredTitle": "Permiso Requerido",
+    "permissionRequiredMessage": "Activa las notificaciones en los ajustes de tu dispositivo para usar los recordatorios diarios.",
+    "openSettings": "Abrir Ajustes",
+    "unableToSetTitle": "No se Pudo Configurar el Recordatorio",
+    "unableToSetMessage": "Hubo un problema al configurar el recordatorio. Por favor, inténtalo de nuevo."
   },
   "celebration": {
     "title": "Ajustes de Celebración",
@@ -273,7 +285,28 @@
     "disabledDescription": "Las celebraciones están desactivadas. No verás animaciones al completar tus objetivos."
   },
   "resetData": {
-    "title": "Restablecer Datos"
+    "title": "Restablecer Datos",
+    "headerTitle": "Restablecer Todos los Datos",
+    "back": "Atrás",
+    "warningTitle": "⚠️ Advertencia",
+    "warningText": "Esta acción eliminará permanentemente TODOS tus datos y no se puede deshacer.",
+    "whatDeletedTitle": "Qué se eliminará:",
+    "bullet1": "• Tu información de perfil (sexo, peso, objetivos)",
+    "bullet2": "• Todos los datos de seguimiento diario de porciones",
+    "bullet3": "• Tu historial de seguimiento",
+    "bullet4": "• Objetivos de porciones personalizados",
+    "bullet5": "• Todos los ajustes y preferencias",
+    "bullet6": "• Historial de seguimiento de peso",
+    "whatNextTitle": "Qué sucede a continuación:",
+    "whatNextText": "Después de restablecer, volverás a la pantalla de bienvenida donde podrás configurar tu perfil desde cero.",
+    "resetButton": "Restablecer Todos los Datos",
+    "resettingButton": "Restableciendo...",
+    "cancelButton": "Cancelar",
+    "modalTitle": "Confirmación Final",
+    "modalMessage": "¿Estás absolutamente seguro de que quieres restablecer todos los datos? Esto no se puede deshacer.",
+    "modalConfirm": "Sí, Restablecer Todo",
+    "errorTitle": "Error",
+    "errorMessage": "No se pudieron restablecer los datos. Por favor, inténtalo de nuevo."
   },
   "activityLevel": {
     "title": "Nivel de Actividad"

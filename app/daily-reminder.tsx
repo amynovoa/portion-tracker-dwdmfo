@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useFocusEffect } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { toggleNoonReminder, isNoonReminderEnabled, checkNotificationPermissions } from '@/utils/notificationManager';
+import { useTranslation } from 'react-i18next';
 
 const styles = StyleSheet.create({
   container: {
@@ -69,6 +70,7 @@ const styles = StyleSheet.create({
 });
 
 export default function DailyReminderScreen() {
+  const { t } = useTranslation();
   const [noonReminderEnabled, setNoonReminderEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState(false);
@@ -125,12 +127,12 @@ export default function DailyReminderScreen() {
       if (error?.message === 'PERMISSION_DENIED' || error?.name === 'PERMISSION_DENIED') {
         console.log('Permission denied - showing settings alert');
         Alert.alert(
-          'Permission Required',
-          'Please enable notifications in your device settings to use daily reminders.',
+          t('dailyReminder.permissionRequiredTitle'),
+          t('dailyReminder.permissionRequiredMessage'),
           [
-            { text: 'Cancel', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             { 
-              text: 'Open Settings', 
+              text: t('dailyReminder.openSettings'), 
               onPress: () => {
                 console.log('Opening device settings...');
                 Linking.openSettings();
@@ -142,9 +144,9 @@ export default function DailyReminderScreen() {
         // Generic error - something went wrong with scheduling
         console.log('Showing generic error alert');
         Alert.alert(
-          'Unable to Set Reminder',
-          'There was a problem setting up the reminder. Please try again.',
-          [{ text: 'OK' }]
+          t('dailyReminder.unableToSetTitle'),
+          t('dailyReminder.unableToSetMessage'),
+          [{ text: t('common.ok') }]
         );
       }
     } finally {
@@ -157,8 +159,8 @@ export default function DailyReminderScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Daily Reminder',
-          headerBackTitle: 'Settings',
+          title: t('dailyReminder.title'),
+          headerBackTitle: t('settings.title'),
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -167,10 +169,10 @@ export default function DailyReminderScreen() {
       />
       <ScrollView style={styles.scrollContent}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔔 Notification Settings</Text>
+          <Text style={styles.sectionTitle}>{t('dailyReminder.notificationSettings')}</Text>
           
           <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Enable Daily Reminder</Text>
+            <Text style={styles.settingLabel}>{t('dailyReminder.enableLabel')}</Text>
             <Switch
               value={noonReminderEnabled}
               onValueChange={handleToggleNoonReminder}
@@ -181,32 +183,28 @@ export default function DailyReminderScreen() {
           </View>
 
           <Text style={styles.description}>
-            Get reminded at 12:00 PM (noon) each day if you haven&apos;t logged any portions yet.
+            {t('dailyReminder.description')}
           </Text>
 
           {!hasPermission && (
             <View style={styles.warningBox}>
               <Text style={styles.warningText}>
-                ⚠️ Notifications are not enabled for this app. To receive reminders, please enable notifications in your device settings.
+                {t('dailyReminder.warningText')}
               </Text>
             </View>
           )}
 
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
-              💡 This reminder helps you stay on track with your daily portion tracking. 
-              You&apos;ll only receive the notification if you haven&apos;t logged anything by noon.
+              {t('dailyReminder.infoText')}
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ℹ️ About Reminders</Text>
+          <Text style={styles.sectionTitle}>{t('dailyReminder.aboutTitle')}</Text>
           <Text style={styles.description}>
-            - Reminders are sent at 12:00 PM daily{'\n'}
-            - You must enable notifications in your device settings{'\n'}
-            - Reminders only appear if you haven&apos;t tracked any portions yet{'\n'}
-            - You can turn reminders on or off at any time
+            {t('dailyReminder.aboutText')}
           </Text>
         </View>
       </ScrollView>

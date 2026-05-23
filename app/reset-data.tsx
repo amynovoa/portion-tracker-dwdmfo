@@ -5,9 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '@/styles/commonStyles';
+import { useTranslation } from 'react-i18next';
 
 export default function ResetDataScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isResetting, setIsResetting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -36,12 +38,12 @@ export default function ResetDataScreen() {
       
       if (Platform.OS === 'web') {
         setShowConfirmModal(false);
-        alert('Failed to reset app data. Please try again.');
+        alert(t('resetData.errorMessage'));
       } else {
         Alert.alert(
-          'Error',
-          'Failed to reset app data. Please try again.',
-          [{ text: 'OK' }]
+          t('resetData.errorTitle'),
+          t('resetData.errorMessage'),
+          [{ text: t('common.ok') }]
         );
       }
     }
@@ -80,9 +82,9 @@ export default function ResetDataScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Stack.Screen
         options={{
-          title: 'Reset App Data',
+          title: t('resetData.title'),
           headerShown: true,
-          headerBackTitle: 'Back',
+          headerBackTitle: t('resetData.back'),
         }}
       />
       
@@ -92,30 +94,30 @@ export default function ResetDataScreen() {
         showsVerticalScrollIndicator={true}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Reset All App Data</Text>
+          <Text style={styles.title}>{t('resetData.headerTitle')}</Text>
         </View>
 
         <View style={styles.warningBox}>
-          <Text style={styles.warningTitle}>⚠️ Warning</Text>
+          <Text style={styles.warningTitle}>{t('resetData.warningTitle')}</Text>
           <Text style={styles.warningText}>
-            This action will permanently delete ALL your data and cannot be undone.
+            {t('resetData.warningText')}
           </Text>
         </View>
 
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>What will be deleted:</Text>
-          <Text style={styles.bulletPoint}>• Your profile information (sex, weight, goals)</Text>
-          <Text style={styles.bulletPoint}>• All daily portion tracking data</Text>
-          <Text style={styles.bulletPoint}>• Your tracking history</Text>
-          <Text style={styles.bulletPoint}>• Custom portion targets</Text>
-          <Text style={styles.bulletPoint}>• All settings and preferences</Text>
-          <Text style={styles.bulletPoint}>• Weight tracking history</Text>
+          <Text style={styles.infoTitle}>{t('resetData.whatDeletedTitle')}</Text>
+          <Text style={styles.bulletPoint}>{t('resetData.bullet1')}</Text>
+          <Text style={styles.bulletPoint}>{t('resetData.bullet2')}</Text>
+          <Text style={styles.bulletPoint}>{t('resetData.bullet3')}</Text>
+          <Text style={styles.bulletPoint}>{t('resetData.bullet4')}</Text>
+          <Text style={styles.bulletPoint}>{t('resetData.bullet5')}</Text>
+          <Text style={styles.bulletPoint}>{t('resetData.bullet6')}</Text>
         </View>
 
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>What happens next:</Text>
+          <Text style={styles.infoTitle}>{t('resetData.whatNextTitle')}</Text>
           <Text style={styles.infoText}>
-            After resetting, you&apos;ll be taken back to the welcome screen where you can set up your profile again from scratch.
+            {t('resetData.whatNextText')}
           </Text>
         </View>
 
@@ -131,7 +133,7 @@ export default function ResetDataScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.resetButtonText}>
-            {isResetting ? 'Resetting...' : 'Reset All Data'}
+            {isResetting ? t('resetData.resettingButton') : t('resetData.resetButton')}
           </Text>
         </TouchableOpacity>
 
@@ -141,7 +143,7 @@ export default function ResetDataScreen() {
           disabled={isResetting}
           activeOpacity={0.7}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.cancelButtonText}>{t('resetData.cancelButton')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -154,9 +156,9 @@ export default function ResetDataScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Final Confirmation</Text>
+            <Text style={styles.modalTitle}>{t('resetData.modalTitle')}</Text>
             <Text style={styles.modalMessage}>
-              Are you absolutely sure you want to reset all data? This cannot be undone.
+              {t('resetData.modalMessage')}
             </Text>
             
             <View style={styles.modalButtons}>
@@ -165,7 +167,7 @@ export default function ResetDataScreen() {
                 onPress={handleCancelReset}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                <Text style={styles.modalCancelButtonText}>{t('resetData.cancelButton')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -173,7 +175,7 @@ export default function ResetDataScreen() {
                 onPress={handleConfirmReset}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalConfirmButtonText}>Yes, Reset Everything</Text>
+                <Text style={styles.modalConfirmButtonText}>{t('resetData.modalConfirm')}</Text>
               </TouchableOpacity>
             </View>
           </View>
