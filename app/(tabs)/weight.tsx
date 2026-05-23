@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
 import { saveWeightEntry, loadWeightEntries, loadProfile, deleteWeightEntry } from '@/utils/storage';
 import WeightChart from '@/components/WeightChart';
@@ -9,20 +9,13 @@ import DaySelector from '@/components/DaySelector';
 import { useFocusEffect } from 'expo-router';
 import { formatDate } from '@/utils/dateUtils';
 import AppLogo from '@/components/AppLogo';
+import { useTranslation } from 'react-i18next';
+import { loadWeightUnit, WeightUnit } from '@/utils/weightUnit';
 
 type TimeRange = 'week' | '30days' | '90days' | 'all';
 
-const formatEntryDate = (entry: WeightEntry): string => {
-  try {
-    const d = new Date(entry.timestamp);
-    if (isNaN(d.getTime())) return entry.date;
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  } catch {
-    return entry.date;
-  }
-};
-
 export default function WeightTrackingScreen() {
+  const { t, i18n } = useTranslation();
   const [weightInput, setWeightInput] = useState('');
   const [entries, setEntries] = useState<WeightEntry[]>([]);
   const [goalWeight, setGoalWeight] = useState<number | undefined>(undefined);
@@ -34,13 +27,27 @@ export default function WeightTrackingScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('lbs');
+
+  const formatEntryDate = useCallback((entry: WeightEntry): string => {
+    try {
+      const d = new Date(entry.timestamp);
+      if (isNaN(d.getTime())) return entry.date;
+      const locale = i18n.language === 'es' ? 'es-ES' : 'en-US';
+      return d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+    } catch {
+      return entry.date;
+    }
+  }, [i18n.language]);
 
   const loadData = useCallback(async () => {
     console.log('[Weight] loadData start');
     setIsLoading(true);
     setLoadError(null);
     try {
-      const profile = await loadProfile();
+      const [profile, unit] = await Promise.all([loadProfile(), loadWeightUnit()]);
+      console.log('[Weight] Weight unit loaded:', unit);
+      setWeightUnit(unit);
 
       if (profile) {
         console.log('[Weight] Profile found:', { currentWeight: profile.currentWeight, goalWeight: profile.goalWeight });
@@ -127,12 +134,12 @@ export default function WeightTrackingScreen() {
       }
     } catch (err) {
       console.error('[Weight] loadData error:', err);
-      setLoadError('Failed to load weight data. Please try again.');
+      setLoadError(t('weightScreen.failedLoad'));
     } finally {
       console.log('[Weight] loadData complete');
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Reload data whenever the screen comes into focus
   useFocusEffect(
@@ -187,7 +194,8 @@ export default function WeightTrackingScreen() {
     const weight = parseFloat(weightInput);
 
     if (isNaN(weight) || weight <= 0) {
-      Alert.alert('Invalid Input', 'Please enter a valid weight.');
+      console.log('[Weight] Invalid weight input:', weightInput);
+      Alert.alert(t('weightScreen.invalidInput'), t('weightScreen.invalidInputMessage'));
       return;
     }
 
@@ -224,11 +232,11 @@ export default function WeightTrackingScreen() {
 
       console.log('[Weight] Entry saved successfully');
 
-      const isToday = selectedDate === formatDate(new Date());
-      const dateLabel = isToday ? 'today' : selectedDate;
-      Alert.alert('Success', `Weight entry saved for ${dateLabel}!`);
+      const isTodayDate = selectedDate === formatDate(new Date());
+      const dateLabel = isTodayDate ? t('weightScreen.today') : selectedDate;
+      Alert.alert(t('weightScreen.success'), t('weightScreen.weightSaved', { date: dateLabel }));
     } catch (error) {
-      Alert.alert('Error', 'Failed to save weight entry.');
+      Alert.alert(t('common.error'), t('weightScreen.failedSave'));
       console.error('[Weight] Error saving weight:', error);
     }
   };
@@ -236,12 +244,12 @@ export default function WeightTrackingScreen() {
   const handleDeleteEntry = (date: string) => {
     console.log('[Weight] Delete entry pressed for date:', date);
     Alert.alert(
-      'Delete Entry',
-      'Are you sure you want to delete this weight entry?',
+      t('weightScreen.deleteEntry'),
+      t('weightScreen.deleteConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('weightScreen.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -272,7 +280,7 @@ export default function WeightTrackingScreen() {
                 setWeightInput('');
               }
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete weight entry.');
+              Alert.alert(t('common.error'), t('weightScreen.failedDelete'));
               console.error('[Weight] Error deleting weight:', error);
             }
           },
@@ -281,29 +289,45 @@ export default function WeightTrackingScreen() {
     );
   };
 
-  const getWeightChange = () => {
-    if (filteredEntries.length < 2) return null;
-
-    const sorted = [...filteredEntries].sort((a, b) => a.timestamp - b.timestamp);
-    const firstWeight = sorted[0].weight;
-    const lastWeight = sorted[sorted.length - 1].weight;
-    const change = lastWeight - firstWeight;
-
-    return {
-      change,
-      percentage: ((change / firstWeight) * 100).toFixed(1),
-    };
-  };
-
-  const weightChange = getWeightChange();
   const latestWeight = entries.length > 0 ? entries[0].weight : currentWeight;
   const displayedHistory = showAllHistory ? entries : entries.slice(0, 3);
 
   // Calculate change from starting weight
   const changeFromStart = startingWeight && latestWeight ? latestWeight - startingWeight : null;
+  const changeFromStartAbs = changeFromStart !== null ? Math.abs(changeFromStart).toFixed(1) : null;
 
   const hasEntryForSelectedDate = entries.some(e => e.date === selectedDate);
-  const isToday = selectedDate === formatDate(new Date());
+  const isTodaySelected = selectedDate === formatDate(new Date());
+
+  const unitLabel = t(weightUnit === 'kg' ? 'common.kg' : 'common.lbs');
+  const titleText = t('weightScreen.title');
+  const startingLabel = t('weightScreen.starting');
+  const currentLabel = t('weightScreen.current');
+  const goalLabel = t('weightScreen.goal');
+  const progressChartText = t('weightScreen.progressChart');
+  const recentEntriesText = t('weightScreen.recentEntries');
+  const retryText = t('weightScreen.retry');
+  const errorText = loadError || '';
+
+  const quickAddLabelText = hasEntryForSelectedDate
+    ? t('weightScreen.updateWeight')
+    : t('weightScreen.logWeight');
+  const quickAddDateSuffix = !isTodaySelected
+    ? ' ' + t('weightScreen.forDate', { date: selectedDate })
+    : '';
+  const quickAddLabel = quickAddLabelText + quickAddDateSuffix;
+
+  const addButtonText = hasEntryForSelectedDate ? t('weightScreen.update') : t('weightScreen.add');
+
+  const changeArrow = changeFromStart !== null
+    ? (changeFromStart > 0 ? '↑' : changeFromStart < 0 ? '↓' : '=')
+    : '';
+  const changeColor = changeFromStart !== null
+    ? (changeFromStart > 0 ? colors.error : changeFromStart < 0 ? colors.secondary : colors.textSecondary)
+    : colors.textSecondary;
+  const changeText = changeFromStartAbs !== null
+    ? t('weightScreen.fromStartingWeight', { n: changeFromStartAbs, unit: unitLabel })
+    : '';
 
   if (isLoading) {
     return (
@@ -316,9 +340,9 @@ export default function WeightTrackingScreen() {
   if (loadError) {
     return (
       <View style={[commonStyles.container, styles.centerContent]}>
-        <Text style={styles.errorText}>{loadError}</Text>
+        <Text style={styles.errorText}>{errorText}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadData}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{retryText}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -332,7 +356,7 @@ export default function WeightTrackingScreen() {
           <View style={styles.logoContainer}>
             <AppLogo size={40} />
           </View>
-          <Text style={styles.title}>Weight Progress</Text>
+          <Text style={styles.title}>{titleText}</Text>
         </View>
 
         {/* Main Stats Card with Starting Weight */}
@@ -340,26 +364,27 @@ export default function WeightTrackingScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{startingWeight ? `${startingWeight}` : '--'}</Text>
-              <Text style={styles.statLabel}>Starting</Text>
+              <Text style={styles.statLabel}>{startingLabel}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{latestWeight ? `${latestWeight}` : '--'}</Text>
-              <Text style={styles.statLabel}>Current</Text>
+              <Text style={styles.statLabel}>{currentLabel}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{goalWeight ? `${goalWeight}` : '--'}</Text>
-              <Text style={styles.statLabel}>Goal</Text>
+              <Text style={styles.statLabel}>{goalLabel}</Text>
             </View>
           </View>
 
           {changeFromStart !== null && (
             <View style={styles.changeIndicator}>
-              <Text style={[styles.changeText, {
-                color: changeFromStart > 0 ? colors.error : changeFromStart < 0 ? colors.secondary : colors.textSecondary
-              }]}>
-                {changeFromStart > 0 ? '↑' : changeFromStart < 0 ? '↓' : '='} {Math.abs(changeFromStart).toFixed(1)} lbs from starting weight
+              <Text style={[styles.changeText, { color: changeColor }]}>
+                {changeArrow}
+              </Text>
+              <Text style={[styles.changeText, { color: changeColor }]}>
+                {' '}{changeText}
               </Text>
             </View>
           )}
@@ -370,22 +395,18 @@ export default function WeightTrackingScreen() {
 
         {/* Quick Add Weight */}
         <View style={styles.quickAddCard}>
-          <Text style={styles.quickAddLabel}>
-            {hasEntryForSelectedDate ? 'Update Weight' : 'Log Weight'} {!isToday && `for ${selectedDate}`}
-          </Text>
+          <Text style={styles.quickAddLabel}>{quickAddLabel}</Text>
           <View style={styles.quickAddRow}>
             <TextInput
               style={styles.quickAddInput}
               value={weightInput}
               onChangeText={setWeightInput}
               keyboardType="decimal-pad"
-              placeholder="lbs"
+              placeholder={unitLabel}
               placeholderTextColor={colors.textSecondary}
             />
             <TouchableOpacity style={styles.quickAddButton} onPress={handleAddWeight}>
-              <Text style={styles.quickAddButtonText}>
-                {hasEntryForSelectedDate ? 'Update' : 'Add'}
-              </Text>
+              <Text style={styles.quickAddButtonText}>{addButtonText}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -393,23 +414,32 @@ export default function WeightTrackingScreen() {
         {/* Chart with integrated time range selector */}
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>Progress Chart</Text>
+            <Text style={styles.chartTitle}>{progressChartText}</Text>
           </View>
           <View style={styles.compactTimeRange}>
-            {(['week', '30days', '90days', 'all'] as TimeRange[]).map((range) => (
-              <TouchableOpacity
-                key={range}
-                style={[styles.timeChip, timeRange === range && styles.timeChipActive]}
-                onPress={() => {
-                  console.log('[Weight] Time range changed to:', range);
-                  setTimeRange(range);
-                }}
-              >
-                <Text style={[styles.timeChipText, timeRange === range && styles.timeChipTextActive]}>
-                  {range === 'week' ? '7D' : range === '30days' ? '30D' : range === '90days' ? '90D' : 'All'}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {(['week', '30days', '90days', 'all'] as TimeRange[]).map((range) => {
+              const chipLabel = range === 'week'
+                ? t('weightScreen.time7D')
+                : range === '30days'
+                  ? t('weightScreen.time30D')
+                  : range === '90days'
+                    ? t('weightScreen.time90D')
+                    : t('weightScreen.timeAll');
+              return (
+                <TouchableOpacity
+                  key={range}
+                  style={[styles.timeChip, timeRange === range && styles.timeChipActive]}
+                  onPress={() => {
+                    console.log('[Weight] Time range changed to:', range);
+                    setTimeRange(range);
+                  }}
+                >
+                  <Text style={[styles.timeChipText, timeRange === range && styles.timeChipTextActive]}>
+                    {chipLabel}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
           <WeightChart entries={filteredEntries} goalWeight={goalWeight} />
         </View>
@@ -418,29 +448,35 @@ export default function WeightTrackingScreen() {
         {entries.length > 0 && (
           <View style={styles.historyCard}>
             <View style={styles.historyHeader}>
-              <Text style={styles.historyTitle}>Recent Entries</Text>
+              <Text style={styles.historyTitle}>{recentEntriesText}</Text>
               {entries.length > 3 && (
                 <TouchableOpacity onPress={() => {
                   console.log('[Weight] Toggle show all history:', !showAllHistory);
                   setShowAllHistory(!showAllHistory);
                 }}>
                   <Text style={styles.showMoreText}>
-                    {showAllHistory ? 'Show Less' : `Show All (${entries.length})`}
+                    {showAllHistory
+                      ? t('weightScreen.showLess')
+                      : t('weightScreen.showAll', { n: entries.length })}
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
-            {displayedHistory.map((entry, index) => (
-              <View key={`${entry.date}-${index}`} style={styles.historyRow}>
-                <View style={styles.historyLeft}>
-                  <Text style={styles.historyWeight}>{entry.weight} lbs</Text>
-                  <Text style={styles.historyDate}>{formatEntryDate(entry)}</Text>
+            {displayedHistory.map((entry, index) => {
+              const entryWeightText = entry.weight + ' ' + unitLabel;
+              const entryDateText = formatEntryDate(entry);
+              return (
+                <View key={`${entry.date}-${index}`} style={styles.historyRow}>
+                  <View style={styles.historyLeft}>
+                    <Text style={styles.historyWeight}>{entryWeightText}</Text>
+                    <Text style={styles.historyDate}>{entryDateText}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleDeleteEntry(entry.date)} style={styles.deleteIcon}>
+                    <Text style={styles.deleteIconText}>×</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={() => handleDeleteEntry(entry.date)} style={styles.deleteIcon}>
-                  <Text style={styles.deleteIconText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
 
@@ -531,6 +567,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   changeText: {
     fontSize: 13,

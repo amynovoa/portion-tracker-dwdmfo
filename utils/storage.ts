@@ -246,6 +246,15 @@ export async function deleteWeightEntry(date: string): Promise<void> {
   }
 }
 
+export async function saveAllWeightEntries(entries: WeightEntry[]): Promise<void> {
+  try {
+    console.log('[storage] Saving all weight entries, count:', entries.length);
+    await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error('[storage] Error saving all weight entries:', error);
+  }
+}
+
 // Reset time functions
 export async function saveResetTime(config: ResetTimeConfig): Promise<void> {
   try {

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -8,12 +8,16 @@ import { loadProfile } from '@/utils/storage';
 import { UserProfile, Sex, Goal } from '@/types';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
+import { loadWeightUnit, saveWeightUnit, convertAllStoredWeights, WeightUnit } from '@/utils/weightUnit';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('lbs');
+  const [unitModalVisible, setUnitModalVisible] = useState(false);
+  const [pendingUnit, setPendingUnit] = useState<WeightUnit>('lbs');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -23,9 +27,11 @@ export default function ProfileScreen() {
 
   const loadProfileData = async () => {
     try {
-      const data = await loadProfile();
+      const [data, unit] = await Promise.all([loadProfile(), loadWeightUnit()]);
       console.log('Profile loaded:', data);
+      console.log('[Profile] Weight unit loaded:', unit);
       setProfile(data);
+      setWeightUnit(unit);
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -41,6 +47,26 @@ export default function ProfileScreen() {
   const handleEditTargets = () => {
     console.log('Edit Targets button pressed');
     router.push('/setup-targets');
+  };
+
+  const handleUnitToggle = (newUnit: WeightUnit) => {
+    if (newUnit === weightUnit) return;
+    console.log('[Profile] Unit toggle pressed, new unit:', newUnit);
+    setPendingUnit(newUnit);
+    setUnitModalVisible(true);
+  };
+
+  const handleConfirmUnitChange = async () => {
+    console.log('[Profile] Confirming unit change from', weightUnit, 'to', pendingUnit);
+    setUnitModalVisible(false);
+    try {
+      await convertAllStoredWeights(weightUnit, pendingUnit);
+      await saveWeightUnit(pendingUnit);
+      setWeightUnit(pendingUnit);
+      await loadProfileData();
+    } catch (error) {
+      console.error('[Profile] Error converting weights:', error);
+    }
   };
 
   const getSexLabel = (sex: Sex) => {
@@ -100,14 +126,15 @@ export default function ProfileScreen() {
     );
   }
 
+  const unitSuffix = t(weightUnit === 'kg' ? 'common.kg' : 'common.lbs');
   const headerText = t('profile.title');
   const personalInfoText = t('profile.personalInformation');
   const sexLabel = t('profile.sex');
   const sexValue = getSexLabel(profile.sex);
   const startingWeightLabel = t('profile.startingWeight');
-  const startingWeightValue = profile.currentWeight + ' ' + t('common.lbs');
+  const startingWeightValue = profile.currentWeight + ' ' + unitSuffix;
   const goalWeightLabel = t('profile.goalWeight');
-  const goalWeightValue = profile.goalWeight + ' ' + t('common.lbs');
+  const goalWeightValue = profile.goalWeight + ' ' + unitSuffix;
   const goalLabel = t('profile.goal');
   const goalValue = getGoalLabel(profile.goal);
   const editProfileText = t('profile.editProfile');
@@ -125,10 +152,17 @@ export default function ProfileScreen() {
   const servingsUnit = t('common.servings');
   const editTargetsText = t('profile.editTargets');
   const exerciseNoteText = t('profile.exerciseNote');
+  const weightUnitLabel = t('profile.weightUnit');
+  const unitPoundsText = t('profile.unitPounds');
+  const unitKilogramsText = t('profile.unitKilograms');
+  const changeUnitTitle = t('profile.changeUnitTitle');
+  const changeUnitBody = t('profile.changeUnitBody', { unit: pendingUnit });
+  const cancelText = t('common.cancel');
+  const confirmText = t('common.confirm');
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView 
+      <ScrollView
         style={styles.container}
         contentContainerStyle={[
           styles.contentContainer,
@@ -143,7 +177,7 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{personalInfoText}</Text>
-          
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>{sexLabel}</Text>
             <Text style={styles.infoValue}>{sexValue}</Text>
@@ -164,6 +198,29 @@ export default function ProfileScreen() {
             <Text style={styles.infoValue}>{goalValue}</Text>
           </View>
 
+          {/* Weight Unit Toggle */}
+          <View style={styles.unitRow}>
+            <Text style={styles.infoLabel}>{weightUnitLabel}</Text>
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[styles.toggleButton, weightUnit === 'lbs' && styles.toggleButtonActive]}
+                onPress={() => handleUnitToggle('lbs')}
+              >
+                <Text style={[styles.toggleButtonText, weightUnit === 'lbs' && styles.toggleButtonTextActive]}>
+                  {unitPoundsText}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleButton, weightUnit === 'kg' && styles.toggleButtonActive]}
+                onPress={() => handleUnitToggle('kg')}
+              >
+                <Text style={[styles.toggleButtonText, weightUnit === 'kg' && styles.toggleButtonTextActive]}>
+                  {unitKilogramsText}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
             <Text style={styles.editButtonText}>{editProfileText}</Text>
           </TouchableOpacity>
@@ -171,7 +228,7 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{dailyTargetsText}</Text>
-          
+
           {profile.portionTargets && (
             <>
               <View style={styles.infoRow}>
@@ -228,6 +285,38 @@ export default function ProfileScreen() {
           <Text style={styles.noteText}>{exerciseNoteText}</Text>
         </View>
       </ScrollView>
+
+      {/* Unit Change Confirmation Modal */}
+      <Modal
+        visible={unitModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setUnitModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{changeUnitTitle}</Text>
+            <Text style={styles.modalMessage}>{changeUnitBody}</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  console.log('[Profile] Unit change cancelled');
+                  setUnitModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalCancelText}>{cancelText}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={handleConfirmUnitChange}
+              >
+                <Text style={styles.modalConfirmText}>{confirmText}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -276,6 +365,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  unitRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   infoLabel: {
     fontSize: 16,
     color: colors.text,
@@ -284,6 +378,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.primary,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: 8,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  toggleButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  toggleButtonTextActive: {
+    color: '#FFFFFF',
   },
   editButton: {
     marginTop: 16,
@@ -336,5 +455,69 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 16,
     marginBottom: 24,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

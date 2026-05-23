@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/IconSymbol';
+import { useTranslation } from 'react-i18next';
+import { loadWeightUnit, WeightUnit } from '@/utils/weightUnit';
 
 type DropdownModalProps = {
   visible: boolean;
@@ -31,20 +33,20 @@ function DropdownModal({ visible, onClose, onSelect, selectedValue, items, title
       onRequestClose={onClose}
     >
       <View style={styles.dropdownModalOverlay}>
-        <TouchableOpacity 
-          style={styles.dropdownModalBackdrop} 
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.dropdownModalBackdrop}
+          activeOpacity={1}
           onPress={onClose}
         />
         <View style={styles.dropdownModalContent}>
           <View style={styles.dropdownModalHeader}>
             <Text style={styles.dropdownModalTitle}>{title}</Text>
             <TouchableOpacity onPress={onClose} style={styles.dropdownModalCloseButton}>
-              <IconSymbol 
-                ios_icon_name="xmark" 
-                android_material_icon_name="close" 
-                size={24} 
-                color={colors.text} 
+              <IconSymbol
+                ios_icon_name="xmark"
+                android_material_icon_name="close"
+                size={24}
+                color={colors.text}
               />
             </TouchableOpacity>
           </View>
@@ -67,11 +69,11 @@ function DropdownModal({ visible, onClose, onSelect, selectedValue, items, title
                   {item.label}
                 </Text>
                 {item.value === selectedValue && (
-                  <IconSymbol 
-                    ios_icon_name="checkmark" 
-                    android_material_icon_name="check" 
-                    size={24} 
-                    color={colors.primary} 
+                  <IconSymbol
+                    ios_icon_name="checkmark"
+                    android_material_icon_name="check"
+                    size={24}
+                    color={colors.primary}
                   />
                 )}
               </TouchableOpacity>
@@ -85,6 +87,7 @@ function DropdownModal({ visible, onClose, onSelect, selectedValue, items, title
 
 export default function SetupProfileScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [sex, setSex] = useState<Sex>('female');
   const [weight, setWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
@@ -94,6 +97,7 @@ export default function SetupProfileScreen() {
   const [alcoholGoal, setAlcoholGoal] = useState(2);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>('lbs');
 
   // Modal visibility states
   const [sexPickerVisible, setSexPickerVisible] = useState(false);
@@ -101,40 +105,47 @@ export default function SetupProfileScreen() {
   const [activityPickerVisible, setActivityPickerVisible] = useState(false);
   const [alcoholPickerVisible, setAlcoholPickerVisible] = useState(false);
 
+  useEffect(() => {
+    loadWeightUnit().then(unit => {
+      console.log('[SetupProfile] Loaded weight unit:', unit);
+      setWeightUnit(unit);
+    });
+  }, []);
+
   const sexOptions = [
-    { label: 'Female', value: 'female' as Sex },
-    { label: 'Male', value: 'male' as Sex },
-    { label: 'Prefer not to say', value: 'prefer-not-to-say' as Sex },
+    { label: t('setupProfile.sexFemale'), value: 'female' as Sex },
+    { label: t('setupProfile.sexMale'), value: 'male' as Sex },
+    { label: t('setupProfile.sexPreferNot'), value: 'prefer-not-to-say' as Sex },
   ];
 
   const goalOptions = [
-    { label: 'Lose Weight', value: 'lose' as Goal },
-    { label: 'Maintain Weight', value: 'maintain' as Goal },
-    { label: 'Build Muscle', value: 'build' as Goal },
-    { label: 'Eat Healthier', value: 'eat-healthier' as Goal },
-    { label: 'Have More Energy', value: 'have-more-energy' as Goal },
+    { label: t('setupProfile.goalLose'), value: 'lose' as Goal },
+    { label: t('setupProfile.goalMaintain'), value: 'maintain' as Goal },
+    { label: t('setupProfile.goalBuild'), value: 'build' as Goal },
+    { label: t('setupProfile.goalEatHealthier'), value: 'eat-healthier' as Goal },
+    { label: t('setupProfile.goalMoreEnergy'), value: 'have-more-energy' as Goal },
   ];
 
   const activityOptions = [
-    { label: 'Sedentary - Little to no exercise', value: 'sedentary' as ActivityLevel },
-    { label: 'Light - 1-3x/week or 6k-9k steps/day', value: 'light' as ActivityLevel },
-    { label: 'Moderate - 3-5x/week or 9k-12k steps/day', value: 'moderate' as ActivityLevel },
-    { label: 'Active - Most days or 12k-15k+ steps/day', value: 'active' as ActivityLevel },
-    { label: 'Very Active - High daily activity', value: 'veryActive' as ActivityLevel },
+    { label: t('setupProfile.activitySedentary'), value: 'sedentary' as ActivityLevel },
+    { label: t('setupProfile.activityLight'), value: 'light' as ActivityLevel },
+    { label: t('setupProfile.activityModerate'), value: 'moderate' as ActivityLevel },
+    { label: t('setupProfile.activityActive'), value: 'active' as ActivityLevel },
+    { label: t('setupProfile.activityVeryActive'), value: 'veryActive' as ActivityLevel },
   ];
 
   const alcoholOptions = [
-    { label: '0 servings', value: 0 },
-    { label: '1 serving', value: 1 },
-    { label: '2 servings (recommended max)', value: 2 },
-    { label: '3 servings', value: 3 },
-    { label: '4 servings', value: 4 },
-    { label: '5 servings', value: 5 },
-    { label: '6 servings', value: 6 },
-    { label: '7 servings', value: 7 },
-    { label: '8 servings', value: 8 },
-    { label: '9 servings', value: 9 },
-    { label: '10 servings', value: 10 },
+    { label: t('setupProfile.alcohol0'), value: 0 },
+    { label: t('setupProfile.alcohol1'), value: 1 },
+    { label: t('setupProfile.alcohol2'), value: 2 },
+    { label: t('setupProfile.alcohol3'), value: 3 },
+    { label: t('setupProfile.alcohol4'), value: 4 },
+    { label: t('setupProfile.alcohol5'), value: 5 },
+    { label: t('setupProfile.alcohol6'), value: 6 },
+    { label: t('setupProfile.alcohol7'), value: 7 },
+    { label: t('setupProfile.alcohol8'), value: 8 },
+    { label: t('setupProfile.alcohol9'), value: 9 },
+    { label: t('setupProfile.alcohol10'), value: 10 },
   ];
 
   const getSelectedLabel = (value: any, options: { label: string; value: any }[]) => {
@@ -155,9 +166,9 @@ export default function SetupProfileScreen() {
 
   const handleContinue = () => {
     console.log('Setup profile - Continue clicked');
-    
+
     if (!weight || !goalWeight) {
-      showError('Please enter your starting and goal weight');
+      showError(t('setupProfile.errorWeightRequired'));
       return;
     }
 
@@ -165,7 +176,7 @@ export default function SetupProfileScreen() {
     const goalWeightNum = parseFloat(goalWeight);
 
     if (isNaN(weightNum) || isNaN(goalWeightNum) || weightNum <= 0 || goalWeightNum <= 0) {
-      showError('Please enter valid weight values');
+      showError(t('setupProfile.errorWeightInvalid'));
       return;
     }
 
@@ -193,14 +204,39 @@ export default function SetupProfileScreen() {
     });
   };
 
+  const unitSuffix = t(weightUnit === 'kg' ? 'common.kg' : 'common.lbs');
+  const titleText = t('setupProfile.title');
+  const sexLabelText = t('setupProfile.sex');
+  const startingWeightBaseText = t('setupProfile.startingWeight');
+  const startingWeightLabelText = startingWeightBaseText + ' (' + unitSuffix + ')';
+  const startingWeightHelperText = t('setupProfile.startingWeightHelper');
+  const startingWeightPlaceholderText = t('setupProfile.startingWeightPlaceholder');
+  const goalWeightBaseText = t('setupProfile.goalWeight');
+  const goalWeightLabelText = goalWeightBaseText + ' (' + unitSuffix + ')';
+  const goalWeightPlaceholderText = t('setupProfile.goalWeightPlaceholder');
+  const primaryGoalLabelText = t('setupProfile.primaryGoal');
+  const activityLevelLabelText = t('setupProfile.activityLevel');
+  const includeAlcoholLabelText = t('setupProfile.includeAlcohol');
+  const dailyAlcoholGoalLabelText = t('setupProfile.dailyAlcoholGoal');
+  const alcoholHelperText = t('setupProfile.alcoholHelper');
+  const continueText = t('setupProfile.continue');
+  const noText = t('common.no');
+  const yesText = t('common.yes');
+  const oopsText = t('common.oops');
+  const okText = t('common.ok');
+  const selectSexTitle = t('setupProfile.selectSex');
+  const selectGoalTitle = t('setupProfile.selectGoal');
+  const selectActivityTitle = t('setupProfile.selectActivity');
+  const selectAlcoholTitle = t('setupProfile.selectAlcohol');
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Let&apos;s Set Up Your Profile</Text>
+        <Text style={styles.title}>{titleText}</Text>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Sex</Text>
-          <TouchableOpacity 
+          <Text style={styles.label}>{sexLabelText}</Text>
+          <TouchableOpacity
             style={styles.selectButton}
             onPress={() => {
               console.log('Opening sex picker with current value:', sex);
@@ -208,43 +244,43 @@ export default function SetupProfileScreen() {
             }}
           >
             <Text style={styles.selectButtonText}>{getSelectedLabel(sex, sexOptions)}</Text>
-            <IconSymbol 
-              ios_icon_name="chevron.down" 
-              android_material_icon_name="arrow-drop-down" 
-              size={24} 
-              color={colors.text} 
+            <IconSymbol
+              ios_icon_name="chevron.down"
+              android_material_icon_name="arrow-drop-down"
+              size={24}
+              color={colors.text}
             />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Starting Weight (lbs)</Text>
-          <Text style={styles.helperText}>This will be your baseline for tracking progress</Text>
+          <Text style={styles.label}>{startingWeightLabelText}</Text>
+          <Text style={styles.helperText}>{startingWeightHelperText}</Text>
           <TextInput
             style={styles.input}
             value={weight}
             onChangeText={setWeight}
             keyboardType="numeric"
-            placeholder="Enter starting weight"
+            placeholder={startingWeightPlaceholderText}
             placeholderTextColor={colors.textSecondary}
           />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Goal Weight (lbs)</Text>
+          <Text style={styles.label}>{goalWeightLabelText}</Text>
           <TextInput
             style={styles.input}
             value={goalWeight}
             onChangeText={setGoalWeight}
             keyboardType="numeric"
-            placeholder="Enter goal weight"
+            placeholder={goalWeightPlaceholderText}
             placeholderTextColor={colors.textSecondary}
           />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Primary Goal</Text>
-          <TouchableOpacity 
+          <Text style={styles.label}>{primaryGoalLabelText}</Text>
+          <TouchableOpacity
             style={styles.selectButton}
             onPress={() => {
               console.log('Opening goal picker with current value:', goal);
@@ -252,18 +288,18 @@ export default function SetupProfileScreen() {
             }}
           >
             <Text style={styles.selectButtonText}>{getSelectedLabel(goal, goalOptions)}</Text>
-            <IconSymbol 
-              ios_icon_name="chevron.down" 
-              android_material_icon_name="arrow-drop-down" 
-              size={24} 
-              color={colors.text} 
+            <IconSymbol
+              ios_icon_name="chevron.down"
+              android_material_icon_name="arrow-drop-down"
+              size={24}
+              color={colors.text}
             />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Activity Level</Text>
-          <TouchableOpacity 
+          <Text style={styles.label}>{activityLevelLabelText}</Text>
+          <TouchableOpacity
             style={styles.selectButton}
             onPress={() => {
               console.log('Opening activity picker with current value:', activityLevel);
@@ -271,17 +307,17 @@ export default function SetupProfileScreen() {
             }}
           >
             <Text style={styles.selectButtonText}>{getSelectedLabel(activityLevel, activityOptions)}</Text>
-            <IconSymbol 
-              ios_icon_name="chevron.down" 
-              android_material_icon_name="arrow-drop-down" 
-              size={24} 
-              color={colors.text} 
+            <IconSymbol
+              ios_icon_name="chevron.down"
+              android_material_icon_name="arrow-drop-down"
+              size={24}
+              color={colors.text}
             />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Include Alcohol Tracking?</Text>
+          <Text style={styles.label}>{includeAlcoholLabelText}</Text>
           <View style={styles.toggleContainer}>
             <TouchableOpacity
               style={[
@@ -296,7 +332,7 @@ export default function SetupProfileScreen() {
                   !includeAlcohol && styles.toggleButtonTextActive,
                 ]}
               >
-                No
+                {noText}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -312,7 +348,7 @@ export default function SetupProfileScreen() {
                   includeAlcohol && styles.toggleButtonTextActive,
                 ]}
               >
-                Yes
+                {yesText}
               </Text>
             </TouchableOpacity>
           </View>
@@ -320,9 +356,9 @@ export default function SetupProfileScreen() {
 
         {includeAlcohol && (
           <View style={styles.section}>
-            <Text style={styles.label}>Daily Alcohol Goal</Text>
-            <Text style={styles.helperText}>Recommended maximum: 2 servings per day</Text>
-            <TouchableOpacity 
+            <Text style={styles.label}>{dailyAlcoholGoalLabelText}</Text>
+            <Text style={styles.helperText}>{alcoholHelperText}</Text>
+            <TouchableOpacity
               style={styles.selectButton}
               onPress={() => {
                 console.log('Opening alcohol picker with current value:', alcoholGoal);
@@ -330,18 +366,18 @@ export default function SetupProfileScreen() {
               }}
             >
               <Text style={styles.selectButtonText}>{getSelectedLabel(alcoholGoal, alcoholOptions)}</Text>
-              <IconSymbol 
-                ios_icon_name="chevron.down" 
-                android_material_icon_name="arrow-drop-down" 
-                size={24} 
-                color={colors.text} 
+              <IconSymbol
+                ios_icon_name="chevron.down"
+                android_material_icon_name="arrow-drop-down"
+                size={24}
+                color={colors.text}
               />
             </TouchableOpacity>
           </View>
         )}
 
         <TouchableOpacity style={buttonStyles.primary} onPress={handleContinue}>
-          <Text style={buttonStyles.primaryText}>Continue</Text>
+          <Text style={buttonStyles.primaryText}>{continueText}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -352,7 +388,7 @@ export default function SetupProfileScreen() {
         onSelect={setSex}
         selectedValue={sex}
         items={sexOptions}
-        title="Select Sex"
+        title={selectSexTitle}
       />
 
       <DropdownModal
@@ -361,7 +397,7 @@ export default function SetupProfileScreen() {
         onSelect={handleGoalSelect}
         selectedValue={goal}
         items={goalOptions}
-        title="Select Primary Goal"
+        title={selectGoalTitle}
       />
 
       <DropdownModal
@@ -370,7 +406,7 @@ export default function SetupProfileScreen() {
         onSelect={setActivityLevel}
         selectedValue={activityLevel}
         items={activityOptions}
-        title="Select Activity Level"
+        title={selectActivityTitle}
       />
 
       <DropdownModal
@@ -379,7 +415,7 @@ export default function SetupProfileScreen() {
         onSelect={setAlcoholGoal}
         selectedValue={alcoholGoal}
         items={alcoholOptions}
-        title="Daily Alcohol Goal"
+        title={selectAlcoholTitle}
       />
 
       {/* Error Modal */}
@@ -391,13 +427,13 @@ export default function SetupProfileScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Oops!</Text>
+            <Text style={styles.modalTitle}>{oopsText}</Text>
             <Text style={styles.modalMessage}>{errorMessage}</Text>
             <TouchableOpacity
               style={styles.modalButton}
               onPress={() => setErrorModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>OK</Text>
+              <Text style={styles.modalButtonText}>{okText}</Text>
             </TouchableOpacity>
           </View>
         </View>

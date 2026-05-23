@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Line, Circle, Polyline, Text as SvgText, Path } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { WeightEntry } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface WeightChartProps {
   entries: WeightEntry[];
@@ -14,6 +15,7 @@ const CHART_HEIGHT = 220;
 const CHART_PADDING = { top: 20, right: 10, bottom: 30, left: 45 };
 
 export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
+  const { t, i18n } = useTranslation();
   const screenWidth = Dimensions.get('window').width;
   const chartWidth = Math.max(screenWidth - 80, 1); // Guard against zero/negative on tiny screens
 
@@ -120,10 +122,12 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
   }, [entries, goalWeight, chartWidth]);
 
   if (!chartData || entries.length === 0) {
+    const noDataText = t('weightScreen.noData');
+    const emptyStateText = t('weightScreen.emptyState');
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No data yet</Text>
-        <Text style={styles.emptySubtext}>Add weight entries to see your progress</Text>
+        <Text style={styles.emptyText}>{noDataText}</Text>
+        <Text style={styles.emptySubtext}>{emptyStateText}</Text>
       </View>
     );
   }
@@ -253,7 +257,7 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
               fontSize="11"
               textAnchor="start"
             >
-              {new Date(points[0].entry.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {new Date(points[0].entry.timestamp).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' })}
             </SvgText>
             {points.length > 1 && (
               <SvgText
@@ -263,7 +267,7 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
                 fontSize="11"
                 textAnchor="end"
               >
-                {new Date(points[points.length - 1].entry.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {new Date(points[points.length - 1].entry.timestamp).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' })}
               </SvgText>
             )}
           </>
