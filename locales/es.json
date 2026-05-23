@@ -259,7 +259,11 @@
     "title": "Recordatorio Diario"
   },
   "celebration": {
-    "title": "Ajustes de Celebración"
+    "title": "Ajustes de Celebración",
+    "description": "Recibe una divertida animación de celebración cuando completes todos tus objetivos diarios de porciones. Actívalo o desactívalo según tu preferencia.",
+    "enableLabel": "Activar Celebraciones",
+    "enabledDescription": "Verás una celebración cuando completes todos tus objetivos de porciones del día.",
+    "disabledDescription": "Las celebraciones están desactivadas. No verás animaciones al completar tus objetivos."
   },
   "resetData": {
     "title": "Restablecer Datos"

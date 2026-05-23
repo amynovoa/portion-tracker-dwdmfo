@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Switch, TouchableOpacity } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { loadCelebrationEnabled, saveCelebrationEnabled } from '@/utils/celebrationStorage';
 import { colors } from '@/styles/commonStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -55,6 +56,7 @@ const styles = StyleSheet.create({
 
 export default function CelebrationSettingsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
@@ -76,8 +78,8 @@ export default function CelebrationSettingsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Celebration',
-          headerBackTitle: 'Settings',
+          title: t('celebration.title'),
+          headerBackTitle: t('settings.title'),
           headerStyle: {
             backgroundColor: colors.background,
           },
@@ -87,15 +89,15 @@ export default function CelebrationSettingsScreen() {
       
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>🎉 Celebration</Text>
+          <Text style={styles.headerTitle}>🎉 {t('celebration.title')}</Text>
           <Text style={styles.headerDescription}>
-            Get a fun celebration animation when you complete all your daily portion targets. Turn this on or off based on your preference.
+            {t('celebration.description')}
           </Text>
         </View>
 
         <View style={styles.settingCard}>
           <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Enable Celebrations</Text>
+            <Text style={styles.settingLabel}>{t('celebration.enableLabel')}</Text>
             <Switch
               value={enabled}
               onValueChange={handleToggle}
@@ -104,9 +106,9 @@ export default function CelebrationSettingsScreen() {
             />
           </View>
           <Text style={styles.settingDescription}>
-            {enabled 
-              ? 'You will see a celebration when you complete all your portion targets for the day.'
-              : 'Celebrations are turned off. You will not see any animations when completing your targets.'}
+            {enabled
+              ? t('celebration.enabledDescription')
+              : t('celebration.disabledDescription')}
           </Text>
         </View>
       </View>

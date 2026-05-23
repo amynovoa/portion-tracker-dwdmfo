@@ -259,7 +259,11 @@
     "title": "Daily Reminder"
   },
   "celebration": {
-    "title": "Celebration Settings"
+    "title": "Celebration Settings",
+    "description": "Get a fun celebration animation when you complete all your daily portion targets. Turn this on or off based on your preference.",
+    "enableLabel": "Enable Celebrations",
+    "enabledDescription": "You will see a celebration when you complete all your portion targets for the day.",
+    "disabledDescription": "Celebrations are turned off. You will not see any animations when completing your targets."
   },
   "resetData": {
     "title": "Reset App Data"
