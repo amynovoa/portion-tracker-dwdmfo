@@ -356,6 +356,10 @@
   "backupRestore": {
     "title": "Backup & Restore"
   },
+  "notifications": {
+    "reminderTitle": "Portion Track Reminder",
+    "reminderBody": "Don't forget to track your portions today!"
+  },
   "foodGroups": {
     "protein": "Protein",
     "veggies": "Vegetables",

@@ -2,6 +2,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { saveNoonReminderEnabled, loadNoonReminderEnabled } from './storage';
+import i18n from '@/utils/i18n';
 
 const NOON_REMINDER_ID = 'noon_reminder';
 const NOTIFICATION_CHANNEL_ID = 'daily-reminders';
@@ -105,8 +106,8 @@ export async function scheduleNoonReminder(): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: NOON_REMINDER_ID,
       content: {
-        title: 'Portion Tracker Reminder',
-        body: "Don't forget to track your portions today!",
+        title: i18n.t('notifications.reminderTitle'),
+        body: i18n.t('notifications.reminderBody'),
         sound: true,
       },
       trigger: {

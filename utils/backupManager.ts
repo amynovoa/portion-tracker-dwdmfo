@@ -189,7 +189,7 @@ export async function shareBackup(): Promise<void> {
       if (isAvailable) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/json',
-          dialogTitle: 'Save Portion Tracker Backup'
+          dialogTitle: 'Save Portion Track Backup'
         });
         console.log('Backup shared successfully');
       } else {

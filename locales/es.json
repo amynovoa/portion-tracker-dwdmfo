@@ -356,6 +356,10 @@
   "backupRestore": {
     "title": "Copia de Seguridad"
   },
+  "notifications": {
+    "reminderTitle": "Recordatorio de Portion Track",
+    "reminderBody": "¡No olvides registrar tus porciones hoy!"
+  },
   "foodGroups": {
     "protein": "Proteína",
     "veggies": "Verduras",

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Portion Tracker",
+    "name": "Portion Track",
     "slug": "portion-tracker",
     "version": "2.5.0",
     "orientation": "portrait",
@@ -18,11 +18,12 @@
       "appleTeamId": "9978T8842P",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "Portion Track",
         "NSCameraUsageDescription": "This app uses the camera to take photos of your meals for tracking purposes.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library."
       },
-      "buildNumber": "49"
+      "buildNumber": "50"
     },
     "android": {
       "adaptiveIcon": {
