@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import { getFoodGroupInfo } from '@/constants/foodGroupInfo';
@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 interface FoodGroupRowProps {
   foodGroup: FoodGroup;
   label: string;
-  icon: string;
+  icon: string | number;
   completed: number;
   target: number;
   onTogglePortion: (increment: boolean) => void;
@@ -83,7 +83,11 @@ export default function FoodGroupRow({
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.labelContainer}>
-          <Text style={styles.icon}>{icon}</Text>
+          {typeof icon === 'number' ? (
+            <Image source={icon} style={styles.iconImage} resizeMode="contain" />
+          ) : (
+            <Text style={styles.icon}>{icon}</Text>
+          )}
           {/* Add small color indicator next to label for plate food groups */}
           {categoryColor && (
             <View style={[styles.colorIndicator, { backgroundColor: categoryColor }]} />
@@ -173,6 +177,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 24,
+    marginRight: 8,
+  },
+  iconImage: {
+    width: 28,
+    height: 28,
     marginRight: 8,
   },
   colorIndicator: {

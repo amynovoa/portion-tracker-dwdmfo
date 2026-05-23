@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { useTranslation } from 'react-i18next';
 
@@ -8,7 +8,7 @@ interface FoodGroupInfoModalProps {
   visible: boolean;
   onClose: () => void;
   title: string;
-  icon: string;
+  icon: string | number;
   benefit: string;
   avoid: string;
   examples: string;
@@ -39,7 +39,11 @@ export default function FoodGroupInfoModal({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              <Text style={styles.icon}>{icon}</Text>
+              {typeof icon === 'number' ? (
+                <Image source={icon} style={styles.iconImage} resizeMode="contain" />
+              ) : (
+                <Text style={styles.icon}>{icon}</Text>
+              )}
               <Text style={styles.title}>{title}</Text>
             </View>
             <TouchableOpacity 
@@ -124,6 +128,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 28,
+    marginRight: 12,
+  },
+  iconImage: {
+    width: 32,
+    height: 32,
     marginRight: 12,
   },
   title: {

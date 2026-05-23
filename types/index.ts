@@ -41,12 +41,12 @@ export interface WeightEntry {
 
 export type FoodGroup = keyof PortionTargets;
 
-export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
+export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string | number }[] = [
   { key: 'protein', label: 'Protein', icon: '🍗' },
   { key: 'veggies', label: 'Vegetables', icon: '🥦' },
   { key: 'fruits', label: 'Fruit', icon: '🍎' },
   { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
-  { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🌰' },
+  { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: require('../assets/images/almond.png') },
   { key: 'fats', label: 'Fats', icon: '🥑' },
   { key: 'water', label: 'Water', icon: '💧' },
   { key: 'exercise', label: 'Exercise', icon: '💪' },

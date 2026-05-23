@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import Svg, { Circle, Path, G, Defs, ClipPath } from 'react-native-svg';
 import { colors } from '@/styles/commonStyles';
 import { PortionTargets } from '@/types';
@@ -14,13 +14,13 @@ interface DailyPlateProgressProps {
 
 // All segments now use white background with black outlines
 // Progress fill: green (#4CAF50) for all sections
-const PLATE_SECTIONS = [
-  { key: 'protein' as keyof PortionTargets, label: 'Protein', backgroundColor: '#FFFFFF', icon: '🍗' },
-  { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', backgroundColor: '#FFFFFF', icon: '🥦' },
-  { key: 'fruits' as keyof PortionTargets, label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' },
-  { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', backgroundColor: '#FFFFFF', icon: '🌾' },
-  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#FFFFFF', icon: '🌰' },
-  { key: 'fats' as keyof PortionTargets, label: 'Fats', backgroundColor: '#FFFFFF', icon: '🥑' },
+const PLATE_SECTIONS: { key: keyof PortionTargets; label: string; backgroundColor: string; icon: string | number }[] = [
+  { key: 'protein', label: 'Protein', backgroundColor: '#FFFFFF', icon: '🍗' },
+  { key: 'veggies', label: 'Vegetables', backgroundColor: '#FFFFFF', icon: '🥦' },
+  { key: 'fruits', label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' },
+  { key: 'wholeGrains', label: 'Whole Grains', backgroundColor: '#FFFFFF', icon: '🌾' },
+  { key: 'nutsSeeds', label: 'Nuts & Seeds', backgroundColor: '#FFFFFF', icon: require('../assets/images/almond.png') },
+  { key: 'fats', label: 'Fats', backgroundColor: '#FFFFFF', icon: '🥑' },
 ];
 
 // Progress fill color - green for all sections
@@ -249,7 +249,11 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
                   },
                 ]}
               >
-                <Text style={styles.icon}>{seg.section.icon}</Text>
+                {typeof seg.section.icon === 'number' ? (
+                  <Image source={seg.section.icon} style={styles.iconImage} resizeMode="contain" />
+                ) : (
+                  <Text style={styles.icon}>{seg.section.icon}</Text>
+                )}
               </View>
             );
           })}
@@ -304,6 +308,10 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 24,
+  },
+  iconImage: {
+    width: 24,
+    height: 24,
   },
   hintText: {
     fontSize: 13,
