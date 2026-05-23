@@ -46,7 +46,7 @@ export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string }[] = [
   { key: 'veggies', label: 'Vegetables', icon: '🥦' },
   { key: 'fruits', label: 'Fruit', icon: '🍎' },
   { key: 'wholeGrains', label: 'Whole Grains', icon: '🌾' },
-  { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🥜' },
+  { key: 'nutsSeeds', label: 'Nuts & Seeds', icon: '🌰' },
   { key: 'fats', label: 'Fats', icon: '🥑' },
   { key: 'water', label: 'Water', icon: '💧' },
   { key: 'exercise', label: 'Exercise', icon: '💪' },

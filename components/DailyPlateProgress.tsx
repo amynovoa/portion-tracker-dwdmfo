@@ -19,7 +19,7 @@ const PLATE_SECTIONS = [
   { key: 'veggies' as keyof PortionTargets, label: 'Vegetables', backgroundColor: '#FFFFFF', icon: '🥦' },
   { key: 'fruits' as keyof PortionTargets, label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' },
   { key: 'wholeGrains' as keyof PortionTargets, label: 'Whole Grains', backgroundColor: '#FFFFFF', icon: '🌾' },
-  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#FFFFFF', icon: '🥜' },
+  { key: 'nutsSeeds' as keyof PortionTargets, label: 'Nuts & Seeds', backgroundColor: '#FFFFFF', icon: '🌰' },
   { key: 'fats' as keyof PortionTargets, label: 'Fats', backgroundColor: '#FFFFFF', icon: '🥑' },
 ];
 
