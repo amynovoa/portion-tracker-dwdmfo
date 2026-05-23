@@ -73,6 +73,7 @@ function AppContent() {
         <Stack.Screen name="setup-targets" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="backup-restore" />
+        <Stack.Screen name="daily-reset" options={{ headerShown: true }} />
       </Stack>
     </GestureHandlerRootView>
   );

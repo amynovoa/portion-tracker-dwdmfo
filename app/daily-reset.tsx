@@ -152,7 +152,7 @@ export default function DailyResetScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
           headerShown: true,

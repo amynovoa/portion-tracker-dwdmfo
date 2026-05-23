@@ -142,7 +142,7 @@ export default function DailyResetScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
           headerShown: true,
@@ -182,9 +182,8 @@ export default function DailyResetScreen() {
               <DateTimePicker
                 value={resetTime}
                 mode="time"
-                display="spinner"
+                display="compact"
                 onChange={handleTimeChange}
-                textColor={colors.text}
               />
               <Text style={styles.currentTimeText}>
                 {t('dailyReset.currentResetTime', { time: formatTime(resetTime) })}
