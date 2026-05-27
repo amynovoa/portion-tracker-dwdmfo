@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
+    paddingBottom: 24,
   },
   logoRing: {
     width: 120,
@@ -194,7 +195,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     lineHeight: 24,
-    maxWidth: width * 0.7,
+    maxWidth: width * 0.85,
+    paddingHorizontal: 12,
   },
   subtitle: {
     fontSize: 15,
@@ -206,6 +208,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 24,
     paddingBottom: 32,
+    paddingTop: 8,
   },
   getStartedButton: {
     borderRadius: 16,
