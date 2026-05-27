@@ -372,7 +372,10 @@
     "labelFats": "Fats",
     "labelWater": "Water (cups)",
     "labelExercise": "Exercise",
-    "labelAlcohol": "Alcohol"
+    "labelAlcohol": "Alcohol",
+    "exerciseNote": "Exercise can be tracked daily on the tracking page, but doesn't have a numeric target.",
+    "alcoholNote": "You can set your alcohol target to 0 if you don't drink, or adjust it to match your goals. Recommended maximum is 2 servings per day.",
+    "saveContinue": "Save & Continue"
   },
   "foodGroups": {
     "protein": "Protein",

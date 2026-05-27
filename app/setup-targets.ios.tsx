@@ -268,20 +268,16 @@ export default function SetupTargetsScreen() {
 
           <View style={styles.noteSection}>
             <Text style={styles.noteIcon}>💪</Text>
-            <Text style={styles.noteText}>
-              Exercise can be tracked daily on the tracking page, but doesn&apos;t have a numeric target.
-            </Text>
+            <Text style={styles.noteText}>{t('setupTargets.exerciseNote')}</Text>
           </View>
 
           <View style={styles.noteSection}>
             <Text style={styles.noteIcon}>🍷</Text>
-            <Text style={styles.noteText}>
-              You can set your alcohol target to 0 if you don&apos;t drink, or adjust it to match your goals. Recommended maximum is 2 servings per day.
-            </Text>
+            <Text style={styles.noteText}>{t('setupTargets.alcoholNote')}</Text>
           </View>
 
           <TouchableOpacity style={buttonStyles.primary} onPress={handleSave}>
-            <Text style={buttonStyles.primaryText}>Save & Continue</Text>
+            <Text style={buttonStyles.primaryText}>{t('setupTargets.saveContinue')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

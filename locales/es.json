@@ -372,7 +372,10 @@
     "labelFats": "Grasas",
     "labelWater": "Agua (tazas)",
     "labelExercise": "Ejercicio",
-    "labelAlcohol": "Alcohol"
+    "labelAlcohol": "Alcohol",
+    "exerciseNote": "El ejercicio se puede registrar diariamente en la página de seguimiento, pero no tiene una meta numérica.",
+    "alcoholNote": "Puedes establecer tu meta de alcohol en 0 si no bebes, o ajustarla según tus objetivos. El máximo recomendado es de 2 porciones por día.",
+    "saveContinue": "Guardar y continuar"
   },
   "foodGroups": {
     "protein": "Proteína",
