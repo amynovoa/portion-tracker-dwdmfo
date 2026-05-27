@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, Animated, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../styles/commonStyles';
 import { IconSymbol } from './IconSymbol';
 
@@ -13,6 +14,7 @@ interface InfoHintTooltipProps {
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipProps) {
+  const { t } = useTranslation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
   const insets = useSafeAreaInsets();
@@ -98,10 +100,8 @@ export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipP
                     <Text style={styles.infoEmoji}>ℹ️</Text>
                   </View>
                   <View style={styles.textContainer}>
-                    <Text style={styles.title}>Portion Tips Available</Text>
-                    <Text style={styles.text}>
-                      Tap the ℹ️ icon next to any food group to see examples and portion sizes.{'\n\n'}More tips can be found in the FAQs.
-                    </Text>
+                    <Text style={styles.title}>{t('portionTips.title')}</Text>
+                    <Text style={styles.text}>{t('portionTips.body')}</Text>
                   </View>
                   <TouchableOpacity 
                     style={styles.okButton}
@@ -110,7 +110,7 @@ export default function InfoHintTooltip({ visible, onDismiss }: InfoHintTooltipP
                     accessibilityLabel="Got It"
                     accessibilityRole="button"
                   >
-                    <Text style={styles.okButtonText}>Got It</Text>
+                    <Text style={styles.okButtonText}>{t('portionTips.gotIt')}</Text>
                   </TouchableOpacity>
                 </View>
               </Animated.View>

@@ -388,6 +388,11 @@
     "exercise": "Ejercicio",
     "alcohol": "Alcohol"
   },
+  "portionTips": {
+    "title": "Consejos de porciones disponibles",
+    "body": "Toca el ícono ℹ️ junto a cualquier grupo de alimentos para ver ejemplos y tamaños de porciones.\n\nPuedes encontrar más consejos en las preguntas frecuentes.",
+    "gotIt": "Entendido"
+  },
   "foodGroupModal": {
     "whatIs1Portion": "¿Qué es 1 Porción?",
     "portionsGuide": "Las porciones no necesitan ser exactas — esto es una guía, no una báscula.",
