@@ -360,6 +360,18 @@
     "reminderTitle": "Portion Track Reminder",
     "reminderBody": "Don't forget to track your portions today!"
   },
+  "setupTargets": {
+    "saveError": "Failed to save profile. Please try again.",
+    "labelProtein": "Protein",
+    "labelVeggies": "Vegetables",
+    "labelFruits": "Fruit",
+    "labelWholeGrains": "Whole Grains",
+    "labelNutsSeeds": "Nuts & Seeds",
+    "labelFats": "Fats",
+    "labelWater": "Water (cups)",
+    "labelExercise": "Exercise",
+    "labelAlcohol": "Alcohol"
+  },
   "foodGroups": {
     "protein": "Protein",
     "veggies": "Vegetables",
@@ -389,19 +401,19 @@
     "veggies": {
       "benefit": "Vegetables are packed with fiber, vitamins, and minerals. They support digestion, immunity, and overall health while being low in calories.\n\nThe more variety, the better — aim for different colors throughout the week.\n\nNon-starchy vegetables can be eaten freely and help you feel full.",
       "avoid": "Avoid deep-fried vegetables or those loaded with heavy sauces.\n\nWatch portion sizes on starchy vegetables like potatoes (count those as whole grains instead).",
-      "examples": "Leafy greens:\n- Spinach, kale, arugula, lettuce\n\nCruciferous:\n- Broccoli, cauliflower, Brussels sprouts, cabbage\n\nOther favorites:\n- Bell peppers, tomatoes, cucumbers, zucchini, carrots, green beans, asparagus, mushrooms\n- Jicama\n- Nopales (cactus)\n- Squash (calabacitas)",
+      "examples": "Leafy greens:\n- Spinach, kale, arugula, lettuce\n\nCruciferous:\n- Broccoli, cauliflower, Brussels sprouts, cabbage\n\nOther favorites:\n- Bell peppers, tomatoes, onions, cucumbers, zucchini, carrots, green beans, asparagus, mushrooms\n- Jicama\n- Nopales (cactus)\n- Squash (calabacitas)",
       "portionSize": "About 1 cup raw or ½ cup cooked"
     },
     "fruits": {
       "benefit": "Fruit provides natural sugars, fiber, vitamins, and antioxidants. It's a great way to satisfy a sweet tooth while nourishing your body.\n\nWhole fruit is always better than juice — the fiber slows sugar absorption.\n\nBerries are especially nutrient-dense and lower in sugar.",
       "avoid": "Avoid fruit juices and dried fruit in large amounts (they're concentrated in sugar and calories).\n\nLimit canned fruit in heavy syrup.",
-      "examples": "Berries:\n- Strawberries, blueberries, raspberries, blackberries\n\nTree fruit:\n- Apples, pears, peaches, plums\n\nTropical:\n- Bananas, oranges, pineapple, mango, papaya, guava, kiwi\n\nMelons:\n- Watermelon, cantaloupe, honeydew",
+      "examples": "Berries:\n- Strawberries, blueberries, raspberries, blackberries\n\nTree fruit:\n- Apples, pears, peaches, plums\n\nTropical:\n- Bananas, oranges, pineapple, mango, papaya, guava, kiwi, melon, honeydew, watermelon",
       "portionSize": "About 1 medium piece of fruit or 1 cup fruit"
     },
     "wholeGrains": {
       "benefit": "Whole grains provide sustained energy, fiber, and B vitamins. They support digestion and help stabilize blood sugar.\n\nChoose whole grains over refined grains whenever possible.\n\nPair with protein and veggies for balanced meals.",
       "avoid": "Avoid refined grains (white bread, white rice, pastries).\n\nLimit sugary cereals and baked goods.\n\nWatch portion sizes — grains are calorie-dense.",
-      "examples": "Grains:\n- Oats, quinoa, brown rice, farro, barley\n\nBread & pasta:\n- Whole wheat bread, whole grain pasta, corn or whole grain tortillas\n\nStarchy vegetables (count as grains):\n- Sweet potatoes, white potatoes, corn, peas, plantains",
+      "examples": "Grains:\n- Oats, quinoa, brown rice, barley\n\nBread & pasta:\n- Whole wheat bread, whole grain pasta, corn or whole grain tortillas\n\nStarchy vegetables (count as grains):\n- Sweet potatoes, white potatoes, corn, peas, plantains",
       "portionSize": "About ½ cup cooked grains, 1 slice bread, or 1 small potato"
     },
     "nutsSeeds": {

@@ -20,8 +20,20 @@ export async function loadWeightUnit(): Promise<WeightUnit> {
   try {
     const data = await AsyncStorage.getItem(WEIGHT_UNIT_KEY);
     if (data === 'kg') return 'kg';
+    if (data === 'lbs') return 'lbs';
   } catch (error) {
     console.error('[WeightUnit] Error loading weight unit:', error);
+  }
+  // No stored preference — pick a sensible default based on system locale.
+  try {
+    const Localization = require('expo-localization');
+    const systemLocale = Localization.getLocales?.()[0]?.languageCode;
+    if (systemLocale === 'es') {
+      console.log('[WeightUnit] No stored preference; system locale is Spanish — defaulting to kg');
+      return 'kg';
+    }
+  } catch (error) {
+    console.error('[WeightUnit] Error detecting system locale:', error);
   }
   return 'lbs';
 }

@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Dim
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile } from '@/utils/storage';
 import { recordTargetsSaved } from '@/utils/reviewManager';
@@ -92,6 +93,7 @@ function PickerModal({ visible, onClose, onSelect, selectedValue, title, maxValu
 export default function SetupTargetsScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const { t } = useTranslation();
   
   // Extract specific param values to avoid infinite loop
   const sex = params.sex as string;
@@ -177,7 +179,7 @@ export default function SetupTargetsScreen() {
       router.replace('/(tabs)');
     } catch (error) {
       console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to save profile. Please try again.');
+      Alert.alert(t('common.error'), t('setupTargets.saveError'));
     }
   };
 
@@ -192,18 +194,18 @@ export default function SetupTargetsScreen() {
   };
 
   const getLabelForKey = (key: keyof PortionTargets): string => {
-    const labels: Record<keyof PortionTargets, string> = {
-      protein: 'Protein',
-      veggies: 'Vegetables',
-      fruits: 'Fruit',
-      wholeGrains: 'Whole Grains',
-      nutsSeeds: 'Nuts & Seeds',
-      fats: 'Fats',
-      water: 'Water (cups)',
-      exercise: 'Exercise',
-      alcohol: 'Alcohol',
+    const labelKeys: Record<keyof PortionTargets, string> = {
+      protein: 'setupTargets.labelProtein',
+      veggies: 'setupTargets.labelVeggies',
+      fruits: 'setupTargets.labelFruits',
+      wholeGrains: 'setupTargets.labelWholeGrains',
+      nutsSeeds: 'setupTargets.labelNutsSeeds',
+      fats: 'setupTargets.labelFats',
+      water: 'setupTargets.labelWater',
+      exercise: 'setupTargets.labelExercise',
+      alcohol: 'setupTargets.labelAlcohol',
     };
-    return labels[key];
+    return t(labelKeys[key]);
   };
 
   const targetKeys: (keyof PortionTargets)[] = [
