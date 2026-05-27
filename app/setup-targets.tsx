@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -188,7 +188,7 @@ export default function SetupTargetsScreen() {
     setTargets((prev) => ({ ...prev, [key]: value }));
   };
 
-  const getIconForFoodGroup = (key: keyof PortionTargets): string => {
+  const getIconForFoodGroup = (key: keyof PortionTargets): string | number => {
     const foodGroup = FOOD_GROUPS.find(fg => fg.key === key);
     return foodGroup?.icon || '📊';
   };
@@ -229,10 +229,8 @@ export default function SetupTargetsScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>Set Your Daily Targets</Text>
-          <Text style={styles.subtitle}>
-            We&apos;ve recommended targets based on your profile. You can adjust them to fit your preferences.
-          </Text>
+          <Text style={styles.title}>{t('setupTargets.title')}</Text>
+          <Text style={styles.subtitle}>{t('setupTargets.subtitle')}</Text>
 
           {targetKeys.map((key) => {
             const targetValue = targets[key];
@@ -242,7 +240,11 @@ export default function SetupTargetsScreen() {
             return (
               <View key={key} style={styles.row}>
                 <View style={styles.labelContainer}>
-                  <Text style={styles.icon}>{iconEmoji}</Text>
+                  {typeof iconEmoji === 'number' ? (
+                    <Image source={iconEmoji} style={styles.iconImage} resizeMode="contain" />
+                  ) : (
+                    <Text style={styles.icon}>{iconEmoji}</Text>
+                  )}
                   <Text style={styles.rowLabel}>{labelText}</Text>
                 </View>
                 <TouchableOpacity 
@@ -350,6 +352,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 24,
+    marginRight: 12,
+  },
+  iconImage: {
+    width: 28,
+    height: 28,
     marginRight: 12,
   },
   rowLabel: {

@@ -361,6 +361,8 @@
     "reminderBody": "Don't forget to track your portions today!"
   },
   "setupTargets": {
+    "title": "Set Your Daily Targets",
+    "subtitle": "We've recommended targets based on your profile. You can adjust them to fit your preferences.",
     "saveError": "Failed to save profile. Please try again.",
     "labelProtein": "Protein",
     "labelVeggies": "Vegetables",

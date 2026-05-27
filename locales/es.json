@@ -361,12 +361,14 @@
     "reminderBody": "¡No olvides registrar tus porciones hoy!"
   },
   "setupTargets": {
+    "title": "Establece tus metas diarias",
+    "subtitle": "Te hemos recomendado metas según tu perfil. Puedes ajustarlas para que se adapten a tus preferencias.",
     "saveError": "Error al guardar el perfil. Por favor intenta de nuevo.",
     "labelProtein": "Proteína",
     "labelVeggies": "Verduras",
     "labelFruits": "Fruta",
     "labelWholeGrains": "Granos integrales",
-    "labelNutsSeeds": "Nueces y semillas",
+    "labelNutsSeeds": "Nueces",
     "labelFats": "Grasas",
     "labelWater": "Agua (tazas)",
     "labelExercise": "Ejercicio",
