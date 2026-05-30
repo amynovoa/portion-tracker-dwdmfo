@@ -47,7 +47,9 @@
     "privacyPolicy": "Privacy Policy",
     "resetAppData": "Reset App Data",
     "language": "Language",
-    "languageDescription": "English / Español"
+    "languageDescription": "English / Español",
+    "switchUnitTitle": "Switch weight unit?",
+    "switchUnitMessage": "Would you like to switch your weight unit to {{unit}}? You can change this anytime in your profile."
   },
   "more": {
     "title": "More",

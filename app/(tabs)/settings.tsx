@@ -1,12 +1,13 @@
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Linking, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
 import { setStoredLanguage } from '@/utils/i18n';
+import { loadWeightUnit, saveWeightUnit, convertAllStoredWeights } from '@/utils/weightUnit';
 
 const styles = StyleSheet.create({
   container: {
@@ -84,9 +85,32 @@ export default function SettingsScreen() {
   const handleToggleLanguage = async () => {
     const nextLang = currentLang === 'en' ? 'es' : 'en';
     console.log('[Settings] Language toggle pressed — switching to:', nextLang);
+    const currentUnit = await loadWeightUnit();
+    console.log('[Settings] Current weight unit:', currentUnit);
+    const suggestedUnit = nextLang === 'es' ? 'kg' : 'lbs';
     await setStoredLanguage(nextLang);
     setCurrentLang(nextLang);
     console.log('[Settings] Language changed to:', nextLang);
+    if (suggestedUnit !== currentUnit) {
+      const unitLabel = t(suggestedUnit === 'kg' ? 'common.kg' : 'common.lbs');
+      console.log('[Settings] Prompting unit switch to:', suggestedUnit);
+      Alert.alert(
+        t('settings.switchUnitTitle'),
+        t('settings.switchUnitMessage', { unit: unitLabel }),
+        [
+          { text: t('common.no'), style: 'cancel' },
+          {
+            text: t('common.yes'),
+            onPress: async () => {
+              console.log('[Settings] User accepted unit switch — converting from', currentUnit, 'to', suggestedUnit);
+              await convertAllStoredWeights(currentUnit, suggestedUnit);
+              await saveWeightUnit(suggestedUnit);
+              console.log('[Settings] Weight unit converted and saved:', suggestedUnit);
+            },
+          },
+        ]
+      );
+    }
   };
 
   const languageDisplayText = currentLang === 'en' ? 'English' : 'Español';

@@ -47,7 +47,9 @@
     "privacyPolicy": "Política de Privacidad",
     "resetAppData": "Restablecer Datos",
     "language": "Idioma",
-    "languageDescription": "English / Español"
+    "languageDescription": "English / Español",
+    "switchUnitTitle": "¿Cambiar la unidad de peso?",
+    "switchUnitMessage": "¿Quieres cambiar tu unidad de peso a {{unit}}? Puedes cambiarlo en cualquier momento en tu perfil."
   },
   "more": {
     "title": "Más",
