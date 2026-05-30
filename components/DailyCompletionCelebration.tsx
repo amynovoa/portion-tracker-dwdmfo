@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors } from '@/styles/commonStyles';
 
 interface DailyCompletionCelebrationProps {
@@ -9,6 +10,7 @@ interface DailyCompletionCelebrationProps {
 }
 
 export default function DailyCompletionCelebration({ visible, onDismiss }: DailyCompletionCelebrationProps) {
+  const { t } = useTranslation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -94,8 +96,8 @@ export default function DailyCompletionCelebration({ visible, onDismiss }: Daily
           <Text style={styles.starIcon}>⭐</Text>
 
           {/* Message */}
-          <Text style={styles.message}>You did it!</Text>
-          <Text style={styles.submessage}>Today&apos;s tracking is complete.</Text>
+          <Text style={styles.message}>{t('dailyCelebration.message')}</Text>
+          <Text style={styles.submessage}>{t('dailyCelebration.submessage')}</Text>
         </Animated.View>
       </TouchableOpacity>
     </Modal>

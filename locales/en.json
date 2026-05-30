@@ -456,5 +456,9 @@
       "examples": "Standard servings:\n- 12 oz beer (regular, ~5% ABV)\n- 5 oz wine (red or white)\n- 1.5 oz distilled spirits (vodka, whiskey, rum, gin, tequila)\n\nLower-calorie options:\n- Light beer\n- Wine spritzer (wine + sparkling water)\n- Spirits with soda water and lime",
       "portionSize": "One standard drink: 12 oz beer, 5 oz wine, or 1.5 oz spirits"
     }
+  },
+  "dailyCelebration": {
+    "message": "You did it!",
+    "submessage": "Today's tracking is complete."
   }
 }

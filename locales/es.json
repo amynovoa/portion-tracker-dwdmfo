@@ -456,5 +456,9 @@
       "examples": "Porciones estándar:\n- 355 ml de cerveza (regular, ~5% ABV)\n- 150 ml de vino (tinto o blanco)\n- 45 ml de destilados (vodka, whisky, ron, ginebra, tequila)\n\nOpciones más bajas en calorías:\n- Cerveza light\n- Spritzer de vino (vino + agua con gas)\n- Destilados con agua mineral y limón",
       "portionSize": "Una bebida estándar: 355 ml de cerveza, 150 ml de vino o 45 ml de destilados"
     }
+  },
+  "dailyCelebration": {
+    "message": "¡Lo lograste!",
+    "submessage": "El seguimiento de hoy está completo."
   }
 }
