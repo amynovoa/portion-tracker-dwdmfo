@@ -85,7 +85,8 @@ export default function WelcomeScreen() {
     router.push('/paywall');
   }, [router]);
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isSpanish = i18n.language?.startsWith('es');
 
   const appName = `${t('welcome.welcomeTo')} Portion Track`;
   const tagline = t('welcome.tagline');
@@ -100,16 +101,24 @@ export default function WelcomeScreen() {
         <View style={[styles.accentBar, { backgroundColor: C.primaryMuted }]} />
 
         {/* Hero section */}
-        <View style={styles.hero}>
+        <View style={[styles.hero, isSpanish && { gap: 12, paddingBottom: 32 }]}>
           <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
-            <View style={[styles.logoRing, { backgroundColor: C.primaryMuted, borderColor: C.border }]}>
-              <AppLogo size={72} />
+            <View style={[
+              styles.logoRing,
+              isSpanish && { width: 96, height: 96, borderRadius: 28 },
+              { backgroundColor: C.primaryMuted, borderColor: C.border },
+            ]}>
+              <AppLogo size={isSpanish ? 56 : 72} />
             </View>
           </Animated.View>
 
           <Animated.Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
             style={[
               styles.appName,
+              isSpanish && { fontSize: 28, lineHeight: 32 },
               { color: C.text, opacity: titleOpacity, transform: [{ translateY: titleY }] },
             ]}
           >
@@ -117,8 +126,12 @@ export default function WelcomeScreen() {
           </Animated.Text>
 
           <Animated.Text
+            numberOfLines={3}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
             style={[
               styles.tagline,
+              isSpanish && { fontSize: 15, lineHeight: 20 },
               { color: C.primary, opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
             ]}
           >
@@ -126,8 +139,12 @@ export default function WelcomeScreen() {
           </Animated.Text>
 
           <Animated.Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
             style={[
               styles.subtitle,
+              isSpanish && { fontSize: 13, lineHeight: 18 },
               { color: C.textSecondary, opacity: taglineOpacity, transform: [{ translateY: taglineY }] },
             ]}
           >
