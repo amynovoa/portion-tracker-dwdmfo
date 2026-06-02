@@ -322,9 +322,7 @@ export default function WeightTrackingScreen() {
   const changeArrow = changeFromStart !== null
     ? (changeFromStart > 0 ? '↑' : changeFromStart < 0 ? '↓' : '=')
     : '';
-  const changeColor = changeFromStart !== null
-    ? (changeFromStart > 0 ? colors.error : changeFromStart < 0 ? colors.secondary : colors.textSecondary)
-    : colors.textSecondary;
+  const changeColor = '#000000';
   const changeText = changeFromStartAbs !== null
     ? t('weightScreen.fromStartingWeight', { n: changeFromStartAbs, unit: unitLabel })
     : '';
