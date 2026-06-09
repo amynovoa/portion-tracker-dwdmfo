@@ -35,7 +35,6 @@ ios/
 netlify.toml
 .netlify/
 
-pnpm-lock.yaml
 package-lock.json
 
 .next/
@@ -44,8 +43,6 @@ package-lock.json
 .cache/
 build/
 .bun/bun.lock
-bun.lockb
 yarn.lock
 next-env.d.ts
 
-bun.lock
