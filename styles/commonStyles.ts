@@ -1,0 +1,136 @@
+
+import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
+
+export const colors = {
+  background: '#FFFFFF',
+  backgroundSecondary: '#F8F8F8',
+  text: '#333333',
+  textSecondary: '#7A7A7A',
+  primary: '#C94A3D',
+  primaryLight: '#FFE5E3',
+  secondary: '#C8D647',
+  accent: '#7A7A7A',
+  card: '#FFFFFF',
+  cardBackground: '#F8F8F8',
+  highlight: '#FFF5F4',
+  border: '#E0E0E0',
+  error: '#C94A3D',
+  success: '#C94A3D',
+  white: '#FFFFFF',
+  surface: '#F8F8F8',
+  warning: '#FF9800',
+  warningLight: '#FFF3E0',
+};
+
+export const buttonStyles = StyleSheet.create({
+  primaryButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  primary: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  secondary: {
+    backgroundColor: colors.secondary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 22,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
+export const commonStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+    elevation: 2,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 16,
+    color: colors.text,
+    lineHeight: 24,
+  },
+  textSecondary: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  input: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: colors.text,
+    marginVertical: 8,
+  },
+  button: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  buttonTextOutline: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+});

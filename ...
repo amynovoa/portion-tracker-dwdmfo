@@ -1,0 +1,639 @@
+B`) in the `subscriptionManager.ts` file that are causing a syntax error. These are from previous code generation attempts. Let me fix this by removing those XML tags:Looking at the error, I can see there are XML tags at lines 565-568 in the `subscriptionManager.ts` file. The error shows:
+
+```
+ 563 |   }
+ 564 | }
+> 565 | </write file>
+     |  ^
+ 566 |
+ 567 | <write file="components/PaywallScreen.tsx">
+ 568 | import React, { useState, useEffect } from 'react';
+```
+
+These XML tags need to be removed. Let me fix the file by removing everything after the last valid closing brace:
+
+<write file="utils/subscriptionManager.ts">
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+import { loadSubscriptionStatus, saveSubscriptionStatus } from './storage';
+
+// Only import InAppPurchases on iOS
+let InAppPurchases: any = null;
+if (Platform.OS === 'ios') {
+  InAppPurchases = require('expo-in-app-purchases');
+}
+
+const TRIAL_START_KEY = '@portion_tracker_trial_start';
+const TRIAL_DURATION_DAYS = 7;
+const TESTFLIGHT_BYPASS_KEY = '@testflight_bypass_enabled';
+
+// StoreKit product IDs - MUST match your App Store Connect configuration
+export const PRODUCT_IDS = {
+  MONTHLY: 'portiontrack.monthly',
+  ANNUAL: 'portiontrack.annual',
+};
+
+export interface SubscriptionStatus {
+  isSubscribed: boolean;
+  isInTrial: boolean;
+  trialDaysRemaining: number;
+  isTestFlight: boolean;
+}
+
+export interface PurchaseResult {
+  success: boolean;
+  userCancelled?: boolean;
+  error?: string;
+}
+
+export interface ProductDetails {
+  productId: string;
+  price: string;
+  priceString: string;
+  currencyCode: string;
+  title: string;
+  description: string;
+}
+
+/**
+ * Check if the app is running in TestFlight or development mode
+ * PRODUCTION BUILDS: Returns false (bypass disabled)
+ * TESTFLIGHT/DEV BUILDS: Returns true (bypass available)
+ */
+export function isTestFlightBuild(): boolean {
+  // Check if running in Expo Go or development
+  if (__DEV__) {
+    console.log('Running in development mode');
+    return true;
+  }
+
+  // Check for TestFlight indicators
+  const appOwnership = Constants.appOwnership;
+  
+  // In Expo, appOwnership will be 'expo' for Expo Go, 'standalone' for production builds
+  if (appOwnership === 'expo') {
+    console.log('Running in Expo Go');
+    return true;
+  }
+
+  console.log('App ownership:', appOwnership);
+  
+  // For production builds, return false
+  return false;
+}
+
+/**
+ * Get the current TestFlight bypass toggle state
+ * This is stored in AsyncStorage so testers can toggle it on/off
+ * ONLY WORKS IN TESTFLIGHT/DEV - Returns false in production
+ */
+export async function getTestFlightBypassEnabled(): Promise<boolean> {
+  try {
+    // In production builds, bypass is always disabled
+    if (!isTestFlightBuild()) {
+      console.log('Production build: TestFlight bypass disabled');
+      return false;
+    }
+
+    const value = await AsyncStorage.getItem(TESTFLIGHT_BYPASS_KEY);
+    // Default to true if not set (for easier testing)
+    const enabled = value === null ? true : value === 'true';
+    console.log('TestFlight bypass enabled:', enabled);
+    return enabled;
+  } catch (error) {
+    console.error('Error reading TestFlight bypass state:', error);
+    return true; // Default to enabled on error (TestFlight only)
+  }
+}
+
+/**
+ * Set the TestFlight bypass toggle state
+ * Only works in TestFlight/dev builds
+ * PRODUCTION BUILDS: This function does nothing
+ */
+export async function setTestFlightBypassEnabled(enabled: boolean): Promise<void> {
+  try {
+    if (!isTestFlightBuild()) {
+      console.log('⚠️ Cannot set TestFlight bypass in production builds');
+      return;
+    }
+    
+    await AsyncStorage.setItem(TESTFLIGHT_BYPASS_KEY, enabled ? 'true' : 'false');
+    console.log('TestFlight bypass set to:', enabled);
+  } catch (error) {
+    console.error('Error setting TestFlight bypass state:', error);
+  }
+}
+
+/**
+ * Initialize StoreKit connection via expo-in-app-purchases
+ * PRODUCTION: Always initializes real StoreKit
+ * TESTFLIGHT: Initializes real StoreKit (bypass only affects purchase flow)
+ */
+export async function initializeStoreKit(): Promise<boolean> {
+  try {
+    console.log('🛒 Initializing StoreKit connection via expo-in-app-purchases...');
+    
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ StoreKit only available on iOS');
+      return false;
+    }
+
+    if (!InAppPurchases) {
+      console.error('❌ InAppPurchases module not available');
+      return false;
+    }
+
+    // Connect to the App Store
+    await InAppPurchases.connectAsync();
+    console.log('✅ Connected to App Store');
+
+    // Set up purchase listener
+    InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }: any) => {
+      console.log('📱 Purchase listener triggered:', { responseCode, errorCode });
+      
+      if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+        results?.forEach(async (purchase: any) => {
+          console.log('✅ Purchase successful:', purchase.productId);
+          
+          // Acknowledge the purchase
+          if (!purchase.acknowledged) {
+            await InAppPurchases.finishTransactionAsync(purchase, true);
+            console.log('✅ Purchase acknowledged');
+          }
+          
+          // Save subscription status
+          await saveSubscriptionStatus(true);
+          console.log('✅ Subscription status saved');
+        });
+      } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+        console.log('ℹ️ User cancelled purchase');
+      } else {
+        console.error('❌ Purchase error:', errorCode);
+      }
+    });
+
+    console.log('✅ StoreKit initialized successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ StoreKit initialization failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Get product details from App Store via expo-in-app-purchases
+ * PRODUCTION: Fetches real product details from App Store
+ * TESTFLIGHT: Fetches real product details from App Store (sandbox)
+ */
+export async function getProductDetails(productId: string): Promise<ProductDetails | null> {
+  try {
+    console.log('🛒 Fetching product details from App Store for:', productId);
+    
+    if (Platform.OS !== 'ios') {
+      console.log('⚠️ Product details only available on iOS');
+      return null;
+    }
+
+    if (!InAppPurchases) {
+      console.error('❌ InAppPurchases module not available');
+      return null;
+    }
+
+    // Initialize if not already done
+    await initializeStoreKit();
+
+    // Fetch products from App Store
+    const { responseCode, results } = await InAppPurchases.getProductsAsync([productId]);
+    
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
+      const product = results[0];
+      console.log('✅ Product details fetched:', product);
+      
+      return {
+        productId: product.productId,
+        price: product.price || '0',
+        priceString: product.priceString || '$0.00',
+        currencyCode: product.currencyCode || 'USD',
+        title: product.title || '',
+        description: product.description || '',
+      };
+    }
+
+    console.log('⚠️ No product found for ID:', productId);
+    return null;
+  } catch (error) {
+    console.error('❌ Error fetching product details:', error);
+    return null;
+  }
+}
+
+/**
+ * Purchase a product through App Store via expo-in-app-purchases
+ * PRODUCTION: Always processes real App Store purchases
+ * TESTFLIGHT WITH BYPASS ON: Simulates purchase (no real charge)
+ * TESTFLIGHT WITH BYPASS OFF: Processes real sandbox purchases
+ */
+export async function purchaseProduct(productId: string): Promise<PurchaseResult> {
+  try {
+    console.log('🛒 Initiating App Store purchase for:', productId);
+    
+    if (Platform.OS !== 'ios') {
+      return {
+        success: false,
+        error: 'Subscriptions are only available on iOS',
+      };
+    }
+
+    if (!InAppPurchases) {
+      return {
+        success: false,
+        error: 'InAppPurchases module not available',
+      };
+    }
+
+    // Check if TestFlight bypass is enabled
+    const isTestFlight = isTestFlightBuild();
+    const bypassEnabled = await getTestFlightBypassEnabled();
+    
+    // PRODUCTION: bypassEnabled will always be false
+    // TESTFLIGHT: bypassEnabled can be toggled by user
+    if (isTestFlight && bypassEnabled) {
+      console.log('✅ TestFlight bypass enabled: Simulating purchase');
+      await saveSubscriptionStatus(true);
+      return { success: true };
+    }
+
+    // Initialize if not already done
+    await initializeStoreKit();
+
+    // Initiate purchase (real App Store purchase in production, sandbox in TestFlight)
+    console.log('🛒 Calling purchaseItemAsync for:', productId);
+    const { responseCode, errorCode } = await InAppPurchases.purchaseItemAsync(productId);
+    
+    console.log('📱 Purchase response:', { responseCode, errorCode });
+
+    if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+      console.log('✅ Purchase successful');
+      
+      // Save subscription status
+      await saveSubscriptionStatus(true);
+      
+      return { success: true };
+    } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+      console.log('ℹ️ User cancelled purchase');
+      return {
+        success: false,
+        userCancelled: true,
+      };
+    } else {
+      console.error('❌ Purchase failed with error code:', errorCode);
+      return {
+        success: false,
+        error: `Purchase failed (Error code: ${errorCode})`,
+      };
+    }
+  } catch (error: any) {
+    console.error('❌ Purchase error:', error);
+    
+    // Check if user cancelled
+    if (error.code === 'E_USER_CANCELLED' || error.message?.includes('cancel')) {
+      return {
+        success: false,
+        userCancelled: true,
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.message || 'Purchase failed',
+    };
+  }
+}
+
+/**
+ * Restore previous purchases from App Store via expo-in-app-purchases
+ * PRODUCTION: Always restores real App Store purchases
+ * TESTFLIGHT WITH BYPASS ON: Simulates restore
+ * TESTFLIGHT WITH BYPASS OFF: Restores real sandbox purchases
+ */
+export async function restorePurchases(): Promise<PurchaseResult> {
+  try {
+    console.log('🛒 Restoring purchases from App Store...');
+    
+    if (Platform.OS !== 'ios') {
+      return {
+        success: false,
+        error: 'Restore purchases is only available on iOS',
+      };
+    }
+
+    if (!InAppPurchases) {
+      return {
+        success: false,
+        error: 'InAppPurchases module not available',
+      };
+    }
+
+    // Check if TestFlight bypass is enabled
+    const isTestFlight = isTestFlightBuild();
+    const bypassEnabled = await getTestFlightBypassEnabled();
+    
+    // PRODUCTION: bypassEnabled will always be false
+    // TESTFLIGHT: bypassEnabled can be toggled by user
+    if (isTestFlight && bypassEnabled) {
+      console.log('✅ TestFlight bypass enabled: Simulating restore');
+      await saveSubscriptionStatus(true);
+      return { success: true };
+    }
+
+    // Initialize if not already done
+    await initializeStoreKit();
+
+    // Get purchase history (real App Store in production, sandbox in TestFlight)
+    console.log('🛒 Fetching purchase history...');
+    const { responseCode, results } = await InAppPurchases.getPurchaseHistoryAsync();
+    
+    console.log('📱 Purchase history response:', { responseCode, resultsCount: results?.length });
+
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
+      console.log('✅ Found', results.length, 'previous purchases');
+      
+      // Check if any of the purchases are our subscription products
+      const hasSubscription = results.some((purchase: any) => 
+        purchase.productId === PRODUCT_IDS.MONTHLY || 
+        purchase.productId === PRODUCT_IDS.ANNUAL
+      );
+      
+      if (hasSubscription) {
+        console.log('✅ Active subscription found');
+        await saveSubscriptionStatus(true);
+        return { success: true };
+      } else {
+        console.log('ℹ️ No active subscription found');
+        return {
+          success: false,
+          error: 'No active subscription found',
+        };
+      }
+    } else {
+      console.log('ℹ️ No purchase history found');
+      return {
+        success: false,
+        error: 'No purchases to restore',
+      };
+    }
+  } catch (error: any) {
+    console.error('❌ Restore purchases error:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to restore purchases',
+    };
+  }
+}
+
+/**
+ * Validate receipt with App Store
+ * TODO: Implement server-side receipt validation for production
+ */
+export async function validateReceipt(receiptData: string): Promise<boolean> {
+  try {
+    console.log('🛒 Validating receipt with App Store...');
+    
+    // For TestFlight with bypass enabled
+    const isTestFlight = isTestFlightBuild();
+    const bypassEnabled = await getTestFlightBypassEnabled();
+    
+    if (isTestFlight && bypassEnabled) {
+      console.log('✅ TestFlight bypass enabled: Receipt validation bypassed');
+      return true;
+    }
+
+    // TODO: Implement server-side receipt validation for production
+    // This should send the receipt to your backend server
+    // which validates it with Apple's servers
+    
+    console.log('⚠️ Server-side receipt validation not implemented');
+    console.log('📋 For production, implement backend validation at /api/validate-receipt');
+    
+    return false;
+  } catch (error) {
+    console.error('❌ Receipt validation error:', error);
+    return false;
+  }
+}
+
+/**
+ * Check current subscription status with App Store
+ * PRODUCTION: Always checks real App Store subscription status
+ * TESTFLIGHT WITH BYPASS ON: Uses local storage
+ * TESTFLIGHT WITH BYPASS OFF: Checks real sandbox subscription status
+ */
+export async function checkAppStoreSubscription(): Promise<boolean> {
+  try {
+    console.log('🛒 Checking subscription status with App Store...');
+    
+    if (Platform.OS !== 'ios') {
+      return false;
+    }
+
+    if (!InAppPurchases) {
+      console.log('⚠️ InAppPurchases module not available');
+      return false;
+    }
+
+    // Check if TestFlight bypass is enabled
+    const isTestFlight = isTestFlightBuild();
+    const bypassEnabled = await getTestFlightBypassEnabled();
+    
+    // PRODUCTION: bypassEnabled will always be false
+    // TESTFLIGHT: bypassEnabled can be toggled by user
+    if (isTestFlight && bypassEnabled) {
+      const localStatus = await loadSubscriptionStatus();
+      console.log('✅ TestFlight bypass enabled: Using local subscription status:', localStatus);
+      return localStatus;
+    }
+
+    // Initialize if not already done
+    await initializeStoreKit();
+
+    // Get purchase history to check for active subscriptions
+    const { responseCode, results } = await InAppPurchases.getPurchaseHistoryAsync();
+    
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results && results.length > 0) {
+      // Check if any of the purchases are our subscription products
+      const hasSubscription = results.some((purchase: any) => 
+        purchase.productId === PRODUCT_IDS.MONTHLY || 
+        purchase.productId === PRODUCT_IDS.ANNUAL
+      );
+      
+      console.log('✅ Subscription check complete:', hasSubscription);
+      
+      // Update local storage
+      await saveSubscriptionStatus(hasSubscription);
+      
+      return hasSubscription;
+    }
+
+    console.log('ℹ️ No active subscription found');
+    return false;
+  } catch (error) {
+    console.error('❌ Subscription check error:', error);
+    
+    // Fall back to local storage on error
+    const localStatus = await loadSubscriptionStatus();
+    return localStatus;
+  }
+}
+
+/**
+ * Get the trial start date
+ */
+export async function getTrialStartDate(): Promise<Date | null> {
+  try {
+    const trialStartStr = await AsyncStorage.getItem(TRIAL_START_KEY);
+    if (trialStartStr) {
+      return new Date(trialStartStr);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting trial start date:', error);
+    return null;
+  }
+}
+
+/**
+ * Start the free trial
+ */
+export async function startTrial(): Promise<void> {
+  try {
+    const existingTrialStart = await getTrialStartDate();
+    if (!existingTrialStart) {
+      const now = new Date().toISOString();
+      await AsyncStorage.setItem(TRIAL_START_KEY, now);
+      console.log('Trial started:', now);
+    } else {
+      console.log('Trial already started:', existingTrialStart);
+    }
+  } catch (error) {
+    console.error('Error starting trial:', error);
+    throw error;
+  }
+}
+
+/**
+ * Calculate days remaining in trial
+ */
+export function calculateTrialDaysRemaining(trialStartDate: Date): number {
+  const now = new Date();
+  const diffTime = now.getTime() - trialStartDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const daysRemaining = Math.max(0, TRIAL_DURATION_DAYS - diffDays);
+  return daysRemaining;
+}
+
+/**
+ * Check if user is in trial period
+ */
+export async function isInTrialPeriod(): Promise<boolean> {
+  try {
+    const trialStartDate = await getTrialStartDate();
+    if (!trialStartDate) {
+      return false;
+    }
+
+    const daysRemaining = calculateTrialDaysRemaining(trialStartDate);
+    return daysRemaining > 0;
+  } catch (error) {
+    console.error('Error checking trial period:', error);
+    return false;
+  }
+}
+
+/**
+ * Get comprehensive subscription status
+ * PRODUCTION: Always checks real App Store subscription
+ * TESTFLIGHT: Respects bypass toggle setting
+ */
+export async function getSubscriptionStatus(): Promise<SubscriptionStatus> {
+  try {
+    // Check if TestFlight build first
+    const isTestFlight = isTestFlightBuild();
+    const bypassEnabled = await getTestFlightBypassEnabled();
+    
+    // PRODUCTION: bypassEnabled will always be false
+    // TESTFLIGHT: bypassEnabled can be toggled by user
+    if (isTestFlight && bypassEnabled) {
+      // In TestFlight/Dev with bypass enabled, use local storage for testing
+      const localStatus = await loadSubscriptionStatus();
+      return {
+        isSubscribed: localStatus,
+        isInTrial: false,
+        trialDaysRemaining: 0,
+        isTestFlight: true,
+      };
+    }
+
+    // In production or TestFlight without bypass, check with App Store
+    const appStoreSubscribed = await checkAppStoreSubscription();
+    
+    // Check trial status as fallback
+    const trialStartDate = await getTrialStartDate();
+    const inTrial = await isInTrialPeriod();
+    const trialDaysRemaining = trialStartDate 
+      ? calculateTrialDaysRemaining(trialStartDate)
+      : TRIAL_DURATION_DAYS;
+
+    return {
+      isSubscribed: appStoreSubscribed || inTrial,
+      isInTrial: inTrial,
+      trialDaysRemaining,
+      isTestFlight: false,
+    };
+  } catch (error) {
+    console.error('Error getting subscription status:', error);
+    // Default to allowing access in case of error
+    return {
+      isSubscribed: true,
+      isInTrial: false,
+      trialDaysRemaining: 0,
+      isTestFlight: false,
+    };
+  }
+}
+
+/**
+ * Check if user should see paywall
+ * PRODUCTION: Shows paywall if not subscribed
+ * TESTFLIGHT: Respects bypass toggle setting
+ */
+export async function shouldShowPaywall(): Promise<boolean> {
+  const status = await getSubscriptionStatus();
+  
+  // Don't show paywall for TestFlight users with bypass enabled and active subscription
+  if (status.isTestFlight && status.isSubscribed) {
+    return false;
+  }
+
+  // Don't show paywall if subscribed or in trial
+  if (status.isSubscribed || status.isInTrial) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Disconnect from StoreKit (cleanup)
+ */
+export async function disconnectStoreKit(): Promise<void> {
+  try {
+    if (Platform.OS === 'ios' && InAppPurchases) {
+      await InAppPurchases.disconnectAsync();
+      console.log('✅ Disconnected from App Store');
+    }
+  } catch (error) {
+    console.error('❌ Error disconnecting from StoreKit:', error);
+  }
+}

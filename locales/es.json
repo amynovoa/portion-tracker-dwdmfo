@@ -1,0 +1,466 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "continue": "Continuar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "ok": "Aceptar",
+    "yes": "Sí",
+    "no": "No",
+    "edit": "Editar",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "error": "Error",
+    "oops": "¡Ups!",
+    "portions": "porciones",
+    "glasses": "vasos",
+    "servings": "porciones",
+    "lbs": "lbs",
+    "kg": "kg",
+    "pastDay": "Día Anterior"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "history": "Historial",
+    "weight": "Peso",
+    "more": "Más",
+    "settings": "Ajustes",
+    "profile": "Perfil",
+    "faqs": "Preguntas",
+    "track": "Rastrear"
+  },
+  "home": {
+    "loading": "Cargando...",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "yourPlateToday": "Tu Plato de Hoy",
+    "tapToBuilder": "Toca las porciones de abajo para armar tu plato",
+    "congratulations": "¡Felicitaciones! ¡Has armado un plato equilibrado!"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "subscription": "Suscripción",
+    "celebration": "Celebración",
+    "dailyReset": "Reinicio Diario",
+    "dailyReminder": "Recordatorio Diario",
+    "privacyPolicy": "Política de Privacidad",
+    "resetAppData": "Restablecer Datos",
+    "language": "Idioma",
+    "languageDescription": "English / Español",
+    "switchUnitTitle": "¿Cambiar la unidad de peso?",
+    "switchUnitMessage": "¿Quieres cambiar tu unidad de peso a {{unit}}? Puedes cambiarlo en cualquier momento en tu perfil."
+  },
+  "more": {
+    "title": "Más",
+    "subscriptionStatus": "Estado de Suscripción",
+    "status": "Estado:",
+    "platform": "Plataforma:",
+    "active": "Activa",
+    "notActive": "No Activa",
+    "refreshSubscription": "Actualizar Suscripción",
+    "refreshDescription": "Verificar estado actual de suscripción",
+    "profile": "Perfil",
+    "profileDescription": "Ver y editar tu perfil",
+    "settings": "Ajustes",
+    "settingsDescription": "Preferencias y configuración",
+    "faqs": "Preguntas Frecuentes",
+    "faqsDescription": "Preguntas frecuentes",
+    "backupRestore": "Copia de Seguridad",
+    "backupDescription": "Administrar copias de seguridad"
+  },
+  "profile": {
+    "title": "Perfil",
+    "loadingProfile": "Cargando perfil...",
+    "noProfileFound": "Perfil no encontrado",
+    "createProfile": "Crear Perfil",
+    "personalInformation": "Información Personal",
+    "sex": "Sexo",
+    "startingWeight": "Peso Inicial",
+    "goalWeight": "Peso Meta",
+    "goal": "Objetivo",
+    "editProfile": "Editar Perfil",
+    "dailyPortionTargets": "Metas Diarias de Porciones",
+    "protein": "Proteína",
+    "veggies": "Verduras",
+    "fruits": "Frutas",
+    "wholeGrains": "Granos",
+    "nutsSeeds": "Nueces",
+    "fats": "Grasas",
+    "water": "Agua",
+    "alcohol": "Alcohol",
+    "editTargets": "Editar Metas",
+    "exerciseNote": "El ejercicio se puede registrar diariamente, pero no tiene una meta numérica.",
+    "sexMale": "Masculino",
+    "sexFemale": "Femenino",
+    "sexPreferNot": "Prefiero no decir",
+    "sexNotSet": "No establecido",
+    "goalLose": "Perder Peso",
+    "goalMaintain": "Mantener Peso",
+    "goalBuild": "Ganar Músculo",
+    "goalEatHealthier": "Comer Más Sano",
+    "goalMoreEnergy": "Tener Más Energía",
+    "goalNotSet": "No establecido",
+    "weightUnit": "Unidad de peso",
+    "unitPounds": "Libras (lbs)",
+    "unitKilograms": "Kilogramos (kg)",
+    "changeUnitTitle": "¿Cambiar unidad de peso?",
+    "changeUnitBody": "Todas tus entradas de peso se convertirán a {{unit}}.",
+    "changeUnitConfirm": "Confirmar"
+  },
+  "setupProfile": {
+    "title": "Configuremos Tu Perfil",
+    "sex": "Sexo",
+    "startingWeight": "Peso Inicial",
+    "startingWeightHelper": "Este será tu punto de partida para seguir tu progreso",
+    "startingWeightPlaceholder": "Ingresa tu peso inicial",
+    "goalWeight": "Peso Meta",
+    "goalWeightPlaceholder": "Ingresa tu peso meta",
+    "primaryGoal": "Objetivo Principal",
+    "activityLevel": "Nivel de Actividad",
+    "includeAlcohol": "¿Incluir seguimiento de alcohol?",
+    "dailyAlcoholGoal": "Meta Diaria de Alcohol",
+    "alcoholHelper": "Máximo recomendado: 2 porciones por día",
+    "continue": "Continuar",
+    "selectSex": "Seleccionar Sexo",
+    "selectGoal": "Seleccionar Objetivo Principal",
+    "selectActivity": "Seleccionar Nivel de Actividad",
+    "selectAlcohol": "Meta Diaria de Alcohol",
+    "errorWeightRequired": "Por favor ingresa tu peso inicial y meta",
+    "errorWeightInvalid": "Por favor ingresa valores de peso válidos",
+    "sexFemale": "Femenino",
+    "sexMale": "Masculino",
+    "sexPreferNot": "Prefiero no decir",
+    "goalLose": "Perder Peso",
+    "goalMaintain": "Mantener Peso",
+    "goalBuild": "Ganar Músculo",
+    "goalEatHealthier": "Comer Más Sano",
+    "goalMoreEnergy": "Tener Más Energía",
+    "activitySedentary": "Sedentario - Poco o ningún ejercicio",
+    "activityLight": "Ligero - 1-3x/semana o 6k-9k pasos/día",
+    "activityModerate": "Moderado - 3-5x/semana o 9k-12k pasos/día",
+    "activityActive": "Activo - La mayoría de los días o 12k-15k+ pasos/día",
+    "activityVeryActive": "Muy Activo - Alta actividad diaria",
+    "alcohol0": "0 porciones",
+    "alcohol1": "1 porción",
+    "alcohol2": "2 porciones (máximo recomendado)",
+    "alcohol3": "3 porciones",
+    "alcohol4": "4 porciones",
+    "alcohol5": "5 porciones",
+    "alcohol6": "6 porciones",
+    "alcohol7": "7 porciones",
+    "alcohol8": "8 porciones",
+    "alcohol9": "9 porciones",
+    "alcohol10": "10 porciones"
+  },
+  "onboarding": {
+    "getStarted": "Comenzar",
+    "continue": "Continuar"
+  },
+  "welcome": {
+    "welcomeTo": "Bienvenido a",
+    "tagline": "Porciones Simples. Alimentación Equilibrada. Sin Contar Calorías.",
+    "subtitle": "Una forma sencilla de comer bien y crear hábitos saludables para toda la vida.",
+    "getStarted": "Comenzar"
+  },
+  "paywall": {
+    "features": {
+      "tracking": "Seguimiento ilimitado de porciones",
+      "guidance": "Guía de porciones saludables",
+      "targets": "Metas de porciones personalizadas",
+      "weight": "Seguimiento de peso y gráficas",
+      "history": "Historial completo y tendencias",
+      "reminders": "Recordatorios diarios"
+    },
+    "tryFree": "Prueba gratis 7 días · luego {{price}}/{{period}}",
+    "startTrial": "Iniciar prueba gratuita",
+    "perYear": "año",
+    "perMonth": "mes",
+    "subtitle": "Porciones Simples. Alimentación Equilibrada.",
+    "freeTrial": "Prueba gratis 7 días",
+    "bestValue": "Mejor Valor",
+    "restore": "Restaurar Compras",
+    "legalText": "El pago se cargará a tu cuenta de {{platform}}. La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del final del período actual.",
+    "termsPrefix": "Al suscribirte, aceptas nuestros ",
+    "termsMiddle": " y ",
+    "termsOfService": "Términos de Servicio",
+    "privacyPolicy": "Política de Privacidad"
+  },
+  "history": {
+    "title": "Historial",
+    "subtitle": "Tu historial de seguimiento",
+    "today": "Hoy",
+    "thisWeek": "Esta semana",
+    "thisMonth": "Este mes",
+    "last7Days": "Últimos 7 días",
+    "last30Days": "Últimos 30 días",
+    "consistencyTitle": "Consistencia a lo largo del tiempo",
+    "dailyHistoryTitle": "Historial diario",
+    "noTrackingYet": "Aún no hay historial de seguimiento",
+    "noTrackingData": "Aún no hay datos de seguimiento",
+    "startTracking": "Comienza a registrar tus porciones para ver tu historial aquí",
+    "percentComplete": "{{percent}}% completado",
+    "noProfileData": "No hay datos de perfil disponibles"
+  },
+  "weight": {
+    "title": "Peso"
+  },
+  "weightScreen": {
+    "title": "Progreso de Peso",
+    "starting": "Inicial",
+    "current": "Actual",
+    "goal": "Meta",
+    "fromStartingWeight": "{{n}} {{unit}} desde el peso inicial",
+    "updateWeight": "Actualizar Peso",
+    "logWeight": "Registrar Peso",
+    "forDate": "para {{date}}",
+    "update": "Actualizar",
+    "add": "Añadir",
+    "progressChart": "Gráfica de Progreso",
+    "time7D": "7D",
+    "time30D": "30D",
+    "time90D": "90D",
+    "timeAll": "Todo",
+    "recentEntries": "Entradas Recientes",
+    "showAll": "Mostrar Todo ({{n}})",
+    "showLess": "Mostrar Menos",
+    "invalidInput": "Entrada Inválida",
+    "invalidInputMessage": "Por favor ingresa un peso válido.",
+    "success": "Éxito",
+    "weightSaved": "¡Entrada de peso guardada para {{date}}!",
+    "deleteEntry": "Eliminar Entrada",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar esta entrada de peso?",
+    "delete": "Eliminar",
+    "failedSave": "No se pudo guardar la entrada de peso.",
+    "failedDelete": "No se pudo eliminar la entrada de peso.",
+    "failedLoad": "No se pudieron cargar los datos de peso. Inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "today": "hoy",
+    "emptyState": "Agrega entradas de peso para ver tu progreso",
+    "noData": "Sin datos aún"
+  },
+  "faqs": {
+    "title": "Preguntas Frecuentes",
+    "faqItems": {
+      "q1": {
+        "question": "¿Qué es Portion Track?",
+        "answer": "Portion Track te ayuda a registrar tu alimentación usando porciones simples en lugar de calorías. Está diseñado para ser flexible, realista y fácil de adaptar a tus objetivos y preferencias alimentarias."
+      },
+      "q2": {
+        "question": "¿Necesito contar calorías?",
+        "answer": "No. Portion Track está diseñado para que no necesites contar calorías en absoluto."
+      },
+      "q3": {
+        "question": "¿Dónde registro los lácteos o los lácteos de origen vegetal?",
+        "answer": "Los lácteos y los lácteos de origen vegetal se cuentan como Proteína, Grasa o Carbohidratos según el tipo. Por ejemplo:\n\nYogur griego o requesón = Proteína\nQueso o crema = Grasa\nLeche o leche vegetal = Carbohidratos registrados en Granos Integrales"
+      },
+      "q4": {
+        "question": "¿Portion Track funciona con Keto u otros planes de alimentación?",
+        "answer": "Sí. Portion Track está diseñado para funcionar con una amplia variedad de estilos de alimentación, incluyendo keto, bajo en carbohidratos, mediterráneo, basado en plantas y más.\n\nComo la app se enfoca en porciones y grupos de alimentos, los usuarios pueden ajustar sus elecciones de porciones para adaptarse a su enfoque preferido."
+      },
+      "q5": {
+        "question": "¿Cómo sé cuánto es una \"porción\"?",
+        "answer": "Toca el ícono de información junto a cada grupo de alimentos para ver ejemplos de porciones y consejos."
+      },
+      "q6": {
+        "question": "Olvidé registrar mi comida de ayer. ¿Qué hago?",
+        "answer": "¡No hay problema! Puedes regresar y registrar comida, ejercicio o peso de hasta 7 días anteriores. Solo usa el selector de días en la parte superior de la pantalla en Seguimiento y elige el día que quieres actualizar."
+      },
+      "q7": {
+        "question": "¿Cómo registro un alimento que no está en la lista?",
+        "answer": "Elige el grupo de alimentos que mejor se adapte al artículo. No necesitas coincidencias perfectas."
+      },
+      "q8": {
+        "question": "¿Qué pasa si un alimento encaja en más de una categoría?",
+        "answer": "Elige la categoría que mejor refleje el componente principal. No hay una única respuesta correcta."
+      },
+      "q9": {
+        "question": "¿Necesito ser exacto con las porciones?",
+        "answer": "Portion Track funciona mejor cuando es consistente, no perfecto. Las porciones sí cuentan y tener porciones más grandes o más pequeñas de los alimentos impactará tus resultados."
+      },
+      "q10": {
+        "question": "¿Cómo afecta el alcohol a mis porciones?",
+        "answer": "El alcohol impacta el número de metas de porciones de granos integrales y grasas en tus cálculos diarios para hasta 2 por día. Superar 2 no afectará tus metas, por lo que debe considerarse en tu planificación y seguimiento general."
+      },
+      "q11": {
+        "question": "¿Puedo cambiar mis porciones u objetivos más adelante?",
+        "answer": "Sí. Puedes actualizar tu objetivo y ajustar las porciones en cualquier momento desde tu perfil."
+      },
+      "q12": {
+        "question": "¿Cuándo se reinicia mi día?",
+        "answer": "La configuración predeterminada es a las 12:00 a.m. Puedes ajustarlo en los ajustes."
+      },
+      "q13": {
+        "question": "¿Puede Portion Track ayudar con objetivos como mejorar el colesterol o el azúcar en sangre?",
+        "answer": "Portion Track no diagnostica ni trata condiciones médicas. Sin embargo, muchas personas usan el control de porciones y una alimentación equilibrada para apoyar la salud en general. Comer porciones consistentes, elegir opciones saludables descritas en la app y enfocarse en comidas equilibradas puede contribuir a mantener niveles saludables de azúcar en sangre y colesterol."
+      }
+    }
+  },
+  "dailyReset": {
+    "title": "Reinicio Diario",
+    "customResetTime": "Hora de Reinicio Personalizada",
+    "description": "De forma predeterminada, tus porciones diarias se reinician a la medianoche (12:00 AM). Activa esto para elegir una hora de reinicio personalizada.",
+    "enableCustomTime": "Activar Hora Personalizada",
+    "resetTime": "Hora de Reinicio",
+    "tapToChange": "Toca para cambiar la hora",
+    "selectResetTime": "Selecciona la Hora de Reinicio",
+    "currentResetTime": "Hora de reinicio actual: {{time}}"
+  },
+  "dailyReminder": {
+    "title": "Recordatorio Diario",
+    "notificationSettings": "🔔 Ajustes de Notificaciones",
+    "enableLabel": "Activar Recordatorio Diario",
+    "description": "Recibe un recordatorio a las 12:00 PM (mediodía) cada día si aún no has registrado ninguna porción.",
+    "warningText": "⚠️ Las notificaciones no están activadas para esta app. Para recibir recordatorios, activa las notificaciones en los ajustes de tu dispositivo.",
+    "infoText": "💡 Este recordatorio te ayuda a mantener tu seguimiento diario de porciones. Solo recibirás la notificación si no has registrado nada antes del mediodía.",
+    "aboutTitle": "ℹ️ Acerca de los Recordatorios",
+    "aboutText": "- Los recordatorios se envían a las 12:00 PM diariamente\n- Debes activar las notificaciones en los ajustes de tu dispositivo\n- Los recordatorios solo aparecen si aún no has registrado porciones\n- Puedes activar o desactivar los recordatorios en cualquier momento",
+    "permissionRequiredTitle": "Permiso Requerido",
+    "permissionRequiredMessage": "Activa las notificaciones en los ajustes de tu dispositivo para usar los recordatorios diarios.",
+    "openSettings": "Abrir Ajustes",
+    "unableToSetTitle": "No se Pudo Configurar el Recordatorio",
+    "unableToSetMessage": "Hubo un problema al configurar el recordatorio. Por favor, inténtalo de nuevo."
+  },
+  "celebration": {
+    "title": "Ajustes de Celebración",
+    "description": "Recibe una divertida animación de celebración cuando completes todos tus objetivos diarios de porciones. Actívalo o desactívalo según tu preferencia.",
+    "enableLabel": "Activar Celebraciones",
+    "enabledDescription": "Verás una celebración cuando completes todos tus objetivos de porciones del día.",
+    "disabledDescription": "Las celebraciones están desactivadas. No verás animaciones al completar tus objetivos."
+  },
+  "resetData": {
+    "title": "Restablecer Datos",
+    "headerTitle": "Restablecer Todos los Datos",
+    "back": "Atrás",
+    "warningTitle": "⚠️ Advertencia",
+    "warningText": "Esta acción eliminará permanentemente TODOS tus datos y no se puede deshacer.",
+    "whatDeletedTitle": "Qué se eliminará:",
+    "bullet1": "• Tu información de perfil (sexo, peso, objetivos)",
+    "bullet2": "• Todos los datos de seguimiento diario de porciones",
+    "bullet3": "• Tu historial de seguimiento",
+    "bullet4": "• Objetivos de porciones personalizados",
+    "bullet5": "• Todos los ajustes y preferencias",
+    "bullet6": "• Historial de seguimiento de peso",
+    "whatNextTitle": "Qué sucede a continuación:",
+    "whatNextText": "Después de restablecer, volverás a la pantalla de bienvenida donde podrás configurar tu perfil desde cero.",
+    "resetButton": "Restablecer Todos los Datos",
+    "resettingButton": "Restableciendo...",
+    "cancelButton": "Cancelar",
+    "modalTitle": "Confirmación Final",
+    "modalMessage": "¿Estás absolutamente seguro de que quieres restablecer todos los datos? Esto no se puede deshacer.",
+    "modalConfirm": "Sí, Restablecer Todo",
+    "errorTitle": "Error",
+    "errorMessage": "No se pudieron restablecer los datos. Por favor, inténtalo de nuevo."
+  },
+  "activityLevel": {
+    "title": "Nivel de Actividad"
+  },
+  "backupRestore": {
+    "title": "Copia de Seguridad"
+  },
+  "notifications": {
+    "reminderTitle": "Recordatorio de Portion Track",
+    "reminderBody": "¡No olvides registrar tus porciones hoy!"
+  },
+  "setupTargets": {
+    "title": "Establece tus metas diarias",
+    "subtitle": "Te hemos recomendado metas según tu perfil. Puedes ajustarlas para que se adapten a tus preferencias.",
+    "saveError": "Error al guardar el perfil. Por favor intenta de nuevo.",
+    "labelProtein": "Proteína",
+    "labelVeggies": "Verduras",
+    "labelFruits": "Fruta",
+    "labelWholeGrains": "Granos integrales",
+    "labelNutsSeeds": "Nueces",
+    "labelFats": "Grasas",
+    "labelWater": "Agua (tazas)",
+    "labelExercise": "Ejercicio",
+    "labelAlcohol": "Alcohol",
+    "exerciseNote": "El ejercicio se puede registrar diariamente en la página de seguimiento, pero no tiene una meta numérica.",
+    "alcoholNote": "Puedes establecer tu meta de alcohol en 0 si no bebes, o ajustarla según tus objetivos. El máximo recomendado es de 2 porciones por día.",
+    "saveContinue": "Guardar y continuar"
+  },
+  "foodGroups": {
+    "protein": "Proteína",
+    "veggies": "Verduras",
+    "fruits": "Fruta",
+    "wholeGrains": "Granos",
+    "nutsSeeds": "Nueces",
+    "fats": "Grasas",
+    "water": "Agua",
+    "exercise": "Ejercicio",
+    "alcohol": "Alcohol"
+  },
+  "portionTips": {
+    "title": "Consejos de porciones disponibles",
+    "body": "Toca el ícono ℹ️ junto a cualquier grupo de alimentos para ver ejemplos y tamaños de porciones.\n\nPuedes encontrar más consejos en las preguntas frecuentes.",
+    "gotIt": "Entendido"
+  },
+  "foodGroupModal": {
+    "whatIs1Portion": "¿Qué es 1 Porción?",
+    "portionsGuide": "Las porciones no necesitan ser exactas — esto es una guía, no una báscula.",
+    "benefits": "Beneficios",
+    "goodChoices": "Buenas Opciones",
+    "whatToAvoid": "Qué Evitar",
+    "gotIt": "¡Entendido!"
+  },
+  "foodGroupInfo": {
+    "protein": {
+      "benefit": "La proteína apoya la reparación muscular, la saciedad y el metabolismo. Te ayuda a sentirte lleno por más tiempo y preserva la masa magra durante la pérdida de peso.\n\nIntenta incluir una fuente de proteína en la mayoría de las comidas.\n\nLa calidad importa — elige opciones magras y mínimamente procesadas cuando sea posible.",
+      "avoid": "Evita las carnes muy procesadas (hot dogs, embutidos con nitratos).\n\nLimita las proteínas fritas o empanizadas.\n\nVigila las porciones en cortes con más grasa si estás tratando de perder peso.",
+      "examples": "Fuentes animales:\n- Pechuga de pollo (a la parrilla o deshebrada)\n- Pavo\n- Res o cerdo magro (carne asada, carnitas)\n- Pescado (atún, salmón, bacalao o pescado a la parrilla — fresco o en lata)\n- Huevos\n- Yogur griego\n- Requesón\n\nFuentes vegetales:\n- Frijoles (negros, pintos, etc.)\n- Tofu o tempeh\n- Edamame\n- Seitán",
+      "portionSize": "Aproximadamente del tamaño de tu palma (85-115 g de carne cocida, 1 taza de yogur griego, 2 huevos, etc.)"
+    },
+    "veggies": {
+      "benefit": "Las verduras están llenas de fibra, vitaminas y minerales. Apoyan la digestión, la inmunidad y la salud en general, siendo bajas en calorías.\n\nCuanta más variedad, mejor — busca diferentes colores durante la semana.\n\nLas verduras sin almidón se pueden comer libremente y ayudan a sentirse lleno.",
+      "avoid": "Evita las verduras fritas o las que tienen salsas pesadas.\n\nVigila las porciones de verduras con almidón como las papas (cuéntalas como granos integrales).",
+      "examples": "Hojas verdes:\n- Espinaca, col rizada, arúgula, lechuga\n\nCrucíferas:\n- Brócoli, coliflor, coles de Bruselas, repollo\n\nOtras favoritas:\n- Pimientos, tomates, cebolla, pepinos, calabacín, zanahorias, ejotes, espárragos, champiñones\n- Jícama\n- Nopales\n- Calabacitas",
+      "portionSize": "Aproximadamente 1 taza cruda o ½ taza cocida"
+    },
+    "fruits": {
+      "benefit": "La fruta aporta azúcares naturales, fibra, vitaminas y antioxidantes. Es una excelente manera de satisfacer el antojo de dulce mientras nutres tu cuerpo.\n\nLa fruta entera siempre es mejor que el jugo — la fibra ralentiza la absorción del azúcar.\n\nLas bayas son especialmente nutritivas y más bajas en azúcar.",
+      "avoid": "Evita los jugos de fruta y la fruta seca en grandes cantidades (están concentrados en azúcar y calorías).\n\nLimita la fruta enlatada en almíbar espeso.",
+      "examples": "Bayas:\n- Fresas, arándanos, frambuesas, moras\n\nFrutas de árbol:\n- Manzanas, peras, duraznos, ciruelas\n\nTropicales:\n- Plátanos, naranjas, piña, mango, papaya, guayaba, kiwi, melón, melón verde, sandía",
+      "portionSize": "Aproximadamente 1 pieza mediana de fruta o 1 taza de fruta"
+    },
+    "wholeGrains": {
+      "benefit": "Los granos integrales proporcionan energía sostenida, fibra y vitaminas del complejo B. Apoyan la digestión y ayudan a estabilizar el azúcar en sangre.\n\nElige granos integrales sobre granos refinados siempre que sea posible.\n\nCombínalos con proteína y verduras para comidas equilibradas.",
+      "avoid": "Evita los granos refinados (pan blanco, arroz blanco, pasteles).\n\nLimita los cereales azucarados y los productos horneados.\n\nVigila las porciones — los granos son densos en calorías.",
+      "examples": "Granos:\n- Avena, quinoa, arroz integral, cebada\n\nPan y pasta:\n- Pan integral, pasta de grano entero, tortillas de maíz o grano entero\n\nVerduras con almidón (cuentan como granos):\n- Camotes, papas blancas, maíz, chícharos, plátanos machos",
+      "portionSize": "Aproximadamente ½ taza de granos cocidos, 1 rebanada de pan o 1 papa pequeña"
+    },
+    "nutsSeeds": {
+      "benefit": "Las nueces y semillas aportan grasas saludables, proteína, fibra y minerales importantes como magnesio y zinc.\n\nApoyan la salud del corazón y ayudan con la saciedad.\n\nUn poco rinde mucho — son densas en calorías pero ricas en nutrientes.",
+      "avoid": "Evita las nueces muy saladas o confitadas.\n\nVigila las porciones — es fácil comer nueces en exceso.\n\nLimita las mantequillas de nuez con azúcar o aceites añadidos.",
+      "examples": "Nueces:\n- Almendras, nueces, anacardos, pecanas, pistaches\n- Cacahuates (más bajos en omega-3 que otras nueces)\n\nSemillas:\n- Semillas de chía, linaza, pepitas, semillas de girasol, semillas de cáñamo\n\nMantequillas de nuez:\n- Mantequilla de almendra, mantequilla de cacahuate (natural, sin azúcar añadida), mantequillas de semillas",
+      "portionSize": "Aproximadamente ¼ taza de nueces o 2 cucharadas de mantequilla de nuez"
+    },
+    "fats": {
+      "benefit": "Las grasas saludables apoyan la producción de hormonas, la función cerebral y la absorción de nutrientes. Te ayudan a sentirte satisfecho y añaden sabor a las comidas.\n\nConcéntrate en grasas saludables de fuentes vegetales y pescado graso.\n\nLas grasas son esenciales pero densas en calorías, así que el control de porciones importa.",
+      "avoid": "Evita las grasas trans (aceites parcialmente hidrogenados) que se encuentran en algunos alimentos procesados.\n\nLimita las grasas saturadas de mantequilla, crema y carnes grasas.\n\nVigila las porciones — las grasas son altas en calorías.",
+      "examples": "Fuentes de grasas saludables:\n- Aceite de oliva, aceite de aguacate\n- Aguacates\n- Pescado graso (salmón, atún, macarela, sardinas)\n- Aceitunas\n- Chocolate oscuro (70%+ cacao, con moderación)\n\nGrasas para cocinar:\n- Aceite de oliva extra virgen\n- Aceite de aguacate\n- Mantequilla de pasto (en pequeñas cantidades)",
+      "portionSize": "Aproximadamente 1 cucharada de aceite, ¼ aguacate o 30 g de pescado graso"
+    },
+    "water": {
+      "benefit": "El agua es esencial para todas las funciones corporales — digestión, circulación, regulación de temperatura y más.\n\nMantenerse hidratado apoya la energía, la concentración y el rendimiento físico.\n\nTambién puede ayudar con el control del apetito y reducir los antojos innecesarios.",
+      "avoid": "Evita las bebidas azucaradas (refrescos, bebidas de café endulzadas, bebidas energéticas).\n\nLimita los jugos de fruta — son altos en azúcar y bajos en fibra.\n\nVigila el consumo de cafeína — puede deshidratar en exceso.",
+      "examples": "Mejores opciones:\n- Agua simple\n- Agua con gas (sin endulzar)\n- Té de hierbas\n- Agua con limón, pepino o menta\n\nBien con moderación:\n- Café negro, té sin endulzar",
+      "portionSize": "Aproximadamente 240 ml (1 taza) por porción — busca 7-10+ porciones al día"
+    },
+    "exercise": {
+      "benefit": "El ejercicio regular es esencial para la salud general, el control del peso y el bienestar mental.\n\nAyuda a construir y mantener músculo, mejora la salud cardiovascular y eleva el estado de ánimo.\n\nLa constancia importa más que la intensidad — encuentra actividades que disfrutes y puedas mantener.",
+      "avoid": "Evita el sobreentrenamiento sin descanso y recuperación adecuados.\n\nNo hagas ejercicio con dolor o lesión.\n\nEvita compararte con otros — enfócate en tu propio progreso.",
+      "examples": "Cardio:\n- Caminar, trotar, correr\n- Ciclismo, natación\n- Baile, deportes\n\nEntrenamiento de fuerza:\n- Levantamiento de pesas\n- Ejercicios con peso corporal\n- Bandas de resistencia\n\nFlexibilidad y equilibrio:\n- Yoga, Pilates\n- Rutinas de estiramiento\n- Tai chi",
+      "portionSize": "Una sesión cuenta como 1 porción (busca 20-60 minutos de movimiento intencional)"
+    },
+    "alcohol": {
+      "benefit": "Si decides beber, la moderación es clave. Algunos estudios sugieren que el consumo moderado de alcohol puede tener beneficios sociales y de relajación.\n\nSin embargo, el alcohol aporta calorías vacías y puede interferir con los objetivos de pérdida de peso y condición física.\n\nEl máximo recomendado es 2 porciones al día, pero menos es generalmente mejor para la salud.",
+      "avoid": "Evita beber en exceso — puede llevar a malas elecciones alimentarias, deshidratación y sueño interrumpido.\n\nLimita las bebidas mezcladas azucaradas y los cocteles altos en calorías.\n\nNo bebas con el estómago vacío.\n\nEvita beber si estás embarazada, tomando ciertos medicamentos o tienes historial de problemas con el alcohol.",
+      "examples": "Porciones estándar:\n- 355 ml de cerveza (regular, ~5% ABV)\n- 150 ml de vino (tinto o blanco)\n- 45 ml de destilados (vodka, whisky, ron, ginebra, tequila)\n\nOpciones más bajas en calorías:\n- Cerveza light\n- Spritzer de vino (vino + agua con gas)\n- Destilados con agua mineral y limón",
+      "portionSize": "Una bebida estándar: 355 ml de cerveza, 150 ml de vino o 45 ml de destilados"
+    }
+  },
+  "dailyCelebration": {
+    "message": "¡Lo lograste!",
+    "submessage": "El seguimiento de hoy está completo."
+  }
+}

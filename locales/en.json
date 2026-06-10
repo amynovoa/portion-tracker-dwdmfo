@@ -1,0 +1,466 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "continue": "Continue",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No",
+    "edit": "Edit",
+    "back": "Back",
+    "close": "Close",
+    "error": "Error",
+    "oops": "Oops!",
+    "portions": "portions",
+    "glasses": "glasses",
+    "servings": "servings",
+    "lbs": "lbs",
+    "kg": "kg",
+    "pastDay": "Past Day"
+  },
+  "tabs": {
+    "home": "Home",
+    "history": "History",
+    "weight": "Weight",
+    "more": "More",
+    "settings": "Settings",
+    "profile": "Profile",
+    "faqs": "FAQs",
+    "track": "Track"
+  },
+  "home": {
+    "loading": "Loading...",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "yourPlateToday": "Your Plate Today",
+    "tapToBuilder": "Tap the portions below to build your plate",
+    "congratulations": "Congratulations! You've built a balanced plate!"
+  },
+  "settings": {
+    "title": "Settings",
+    "subscription": "Subscription",
+    "celebration": "Celebration",
+    "dailyReset": "Daily Reset",
+    "dailyReminder": "Daily Reminder",
+    "privacyPolicy": "Privacy Policy",
+    "resetAppData": "Reset App Data",
+    "language": "Language",
+    "languageDescription": "English / Español",
+    "switchUnitTitle": "Switch weight unit?",
+    "switchUnitMessage": "Would you like to switch your weight unit to {{unit}}? You can change this anytime in your profile."
+  },
+  "more": {
+    "title": "More",
+    "subscriptionStatus": "Subscription Status",
+    "status": "Status:",
+    "platform": "Platform:",
+    "active": "Active",
+    "notActive": "Not Active",
+    "refreshSubscription": "Refresh Subscription Status",
+    "refreshDescription": "Check current subscription state",
+    "profile": "Profile",
+    "profileDescription": "View and edit your profile",
+    "settings": "Settings",
+    "settingsDescription": "App preferences and configuration",
+    "faqs": "FAQs",
+    "faqsDescription": "Frequently asked questions",
+    "backupRestore": "Backup & Restore",
+    "backupDescription": "Manage your data backups"
+  },
+  "profile": {
+    "title": "Profile",
+    "loadingProfile": "Loading profile...",
+    "noProfileFound": "No profile found",
+    "createProfile": "Create Profile",
+    "personalInformation": "Personal Information",
+    "sex": "Sex",
+    "startingWeight": "Starting Weight",
+    "goalWeight": "Goal Weight",
+    "goal": "Goal",
+    "editProfile": "Edit Profile",
+    "dailyPortionTargets": "Daily Portion Targets",
+    "protein": "Protein",
+    "veggies": "Veggies",
+    "fruits": "Fruits",
+    "wholeGrains": "Grains",
+    "nutsSeeds": "Nuts/Seeds",
+    "fats": "Fats",
+    "water": "Water",
+    "alcohol": "Alcohol",
+    "editTargets": "Edit Targets",
+    "exerciseNote": "Exercise can be tracked daily by checking it off, but doesn't have a numeric target.",
+    "sexMale": "Male",
+    "sexFemale": "Female",
+    "sexPreferNot": "Prefer not to say",
+    "sexNotSet": "Not set",
+    "goalLose": "Lose Weight",
+    "goalMaintain": "Maintain Weight",
+    "goalBuild": "Build Muscle",
+    "goalEatHealthier": "Eat Healthier",
+    "goalMoreEnergy": "Have More Energy",
+    "goalNotSet": "Not set",
+    "weightUnit": "Weight Unit",
+    "unitPounds": "Pounds (lbs)",
+    "unitKilograms": "Kilograms (kg)",
+    "changeUnitTitle": "Change weight unit?",
+    "changeUnitBody": "All your weight entries will be converted to {{unit}}.",
+    "changeUnitConfirm": "Confirm"
+  },
+  "setupProfile": {
+    "title": "Let's Set Up Your Profile",
+    "sex": "Sex",
+    "startingWeight": "Starting Weight",
+    "startingWeightHelper": "This will be your baseline for tracking progress",
+    "startingWeightPlaceholder": "Enter starting weight",
+    "goalWeight": "Goal Weight",
+    "goalWeightPlaceholder": "Enter goal weight",
+    "primaryGoal": "Primary Goal",
+    "activityLevel": "Activity Level",
+    "includeAlcohol": "Include Alcohol Tracking?",
+    "dailyAlcoholGoal": "Daily Alcohol Goal",
+    "alcoholHelper": "Recommended maximum: 2 servings per day",
+    "continue": "Continue",
+    "selectSex": "Select Sex",
+    "selectGoal": "Select Primary Goal",
+    "selectActivity": "Select Activity Level",
+    "selectAlcohol": "Daily Alcohol Goal",
+    "errorWeightRequired": "Please enter your starting and goal weight",
+    "errorWeightInvalid": "Please enter valid weight values",
+    "sexFemale": "Female",
+    "sexMale": "Male",
+    "sexPreferNot": "Prefer not to say",
+    "goalLose": "Lose Weight",
+    "goalMaintain": "Maintain Weight",
+    "goalBuild": "Build Muscle",
+    "goalEatHealthier": "Eat Healthier",
+    "goalMoreEnergy": "Have More Energy",
+    "activitySedentary": "Sedentary - Little to no exercise",
+    "activityLight": "Light - 1-3x/week or 6k-9k steps/day",
+    "activityModerate": "Moderate - 3-5x/week or 9k-12k steps/day",
+    "activityActive": "Active - Most days or 12k-15k+ steps/day",
+    "activityVeryActive": "Very Active - High daily activity",
+    "alcohol0": "0 servings",
+    "alcohol1": "1 serving",
+    "alcohol2": "2 servings (recommended max)",
+    "alcohol3": "3 servings",
+    "alcohol4": "4 servings",
+    "alcohol5": "5 servings",
+    "alcohol6": "6 servings",
+    "alcohol7": "7 servings",
+    "alcohol8": "8 servings",
+    "alcohol9": "9 servings",
+    "alcohol10": "10 servings"
+  },
+  "onboarding": {
+    "getStarted": "Get Started",
+    "continue": "Continue"
+  },
+  "welcome": {
+    "welcomeTo": "Welcome to",
+    "tagline": "Simple Portions. Balanced Eating. No Calorie Counting.",
+    "subtitle": "A simple way to eat well and build healthy habits for life.",
+    "getStarted": "Get Started"
+  },
+  "paywall": {
+    "features": {
+      "tracking": "Unlimited Portion Tracking",
+      "guidance": "Healthy Portion Guidance",
+      "targets": "Custom Portion Targets",
+      "weight": "Weight Tracking & Charts",
+      "history": "Progress History & Trends",
+      "reminders": "Daily Reminders"
+    },
+    "tryFree": "Try Free for 7 Days · then {{price}}/{{period}}",
+    "startTrial": "Start Free Trial",
+    "perYear": "yr",
+    "perMonth": "mo",
+    "subtitle": "Simple Portions. Balanced Eating.",
+    "freeTrial": "7-day free trial",
+    "bestValue": "Best Value",
+    "restore": "Restore Purchases",
+    "legalText": "Payment will be charged to your {{platform}} account. Subscription automatically renews unless canceled at least 24 hours before the end of the current period.",
+    "termsPrefix": "By subscribing, you agree to our ",
+    "termsMiddle": " and ",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "history": {
+    "title": "History",
+    "subtitle": "Your tracking history",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "consistencyTitle": "Consistency Over Time",
+    "dailyHistoryTitle": "Daily History",
+    "noTrackingYet": "No tracking history yet",
+    "noTrackingData": "No tracking data yet",
+    "startTracking": "Start tracking your portions to see your history here",
+    "percentComplete": "{{percent}}% complete",
+    "noProfileData": "No profile data available"
+  },
+  "weight": {
+    "title": "Weight"
+  },
+  "weightScreen": {
+    "title": "Weight Progress",
+    "starting": "Starting",
+    "current": "Current",
+    "goal": "Goal",
+    "fromStartingWeight": "{{n}} {{unit}} from starting weight",
+    "updateWeight": "Update Weight",
+    "logWeight": "Log Weight",
+    "forDate": "for {{date}}",
+    "update": "Update",
+    "add": "Add",
+    "progressChart": "Progress Chart",
+    "time7D": "7D",
+    "time30D": "30D",
+    "time90D": "90D",
+    "timeAll": "All",
+    "recentEntries": "Recent Entries",
+    "showAll": "Show All ({{n}})",
+    "showLess": "Show Less",
+    "invalidInput": "Invalid Input",
+    "invalidInputMessage": "Please enter a valid weight.",
+    "success": "Success",
+    "weightSaved": "Weight entry saved for {{date}}!",
+    "deleteEntry": "Delete Entry",
+    "deleteConfirm": "Are you sure you want to delete this weight entry?",
+    "delete": "Delete",
+    "failedSave": "Failed to save weight entry.",
+    "failedDelete": "Failed to delete weight entry.",
+    "failedLoad": "Failed to load weight data. Please try again.",
+    "retry": "Retry",
+    "today": "today",
+    "emptyState": "Add weight entries to see your progress",
+    "noData": "No data yet"
+  },
+  "faqs": {
+    "title": "FAQs",
+    "faqItems": {
+      "q1": {
+        "question": "What is Portion Track?",
+        "answer": "Portion Track helps you track food using simple portions instead of calories. It is designed to be flexible, realistic and easy to adjust to your goals and dietary preferences."
+      },
+      "q2": {
+        "question": "Do I need to count calories?",
+        "answer": "No. Portion Track is designed so you don't need to count calories at all."
+      },
+      "q3": {
+        "question": "Where do I log dairy or plant-based dairy?",
+        "answer": "Dairy and plant-based dairy are count as Protein, Fat, or Carbs depending on type. For example:\n\nGreek yogurt or cottage cheese = Protein\nCheese or cream = Fat\nMilk or plant-based milk = Carbs logged under Whole Grains"
+      },
+      "q4": {
+        "question": "Will Portion Track work with Keto or other diet plans?",
+        "answer": "Yes. Portion Track is designed to work with a wide variety of eating styles including keto, low-carb, Mediterranean, plant-based, and more.\n\nBecause the app focuses on portions and food groups, users can adjust their portion choices to match their preferred approach."
+      },
+      "q5": {
+        "question": "How do I know how much a \"portion\" is?",
+        "answer": "Tap the I info icon next to each food group to see portion examples and tips."
+      },
+      "q6": {
+        "question": "I forgot to log my food yesterday. What do I do?",
+        "answer": "No problem! You can go back and log food, exercise, or weight for up to 7 days prior. Just use the day selector at the top of the screen in Tracking and choose the day you want to update."
+      },
+      "q7": {
+        "question": "How do I log a food that isn't listed?",
+        "answer": "Choose the food group that best fits the item. You don't need perfect matches."
+      },
+      "q8": {
+        "question": "What if a food fits into more than one category?",
+        "answer": "Pick the category that best reflects the main component. There is no single right answer."
+      },
+      "q9": {
+        "question": "Do I need to be exact with portions?",
+        "answer": "Portion Track works best when it's consistent, not perfect. Portions do count and having larger or smaller portions of food items will impact your results."
+      },
+      "q10": {
+        "question": "How does alcohol affect my portions?",
+        "answer": "Alcohol impacts the number of whole grain and fat serving targets in your daily calculations for up to 2 per day. Going over 2 will not impact your targets so should be considered in your overall planning and tracking."
+      },
+      "q11": {
+        "question": "Can I change my portions or goals later?",
+        "answer": "Yes. You can update your goal and adjust portions at any time in your profile."
+      },
+      "q12": {
+        "question": "When does my day reset?",
+        "answer": "The default setting is 12:00 a.m. You can adjust this in settings."
+      },
+      "q13": {
+        "question": "Can Portion Track help with goals like improving cholesterol or blood sugar?",
+        "answer": "Portion Track does not diagnose or treat medical conditions. However, many people use portion control and balanced eating to support overall health. Eating consistent portions, choosing healthy options outlined in the app, and focusing on balanced meals can all play a role in supporting healthy blood sugar and cholesterol levels."
+      }
+    }
+  },
+  "dailyReset": {
+    "title": "Daily Reset",
+    "customResetTime": "Custom Reset Time",
+    "description": "By default, your daily portions reset at midnight (12:00 AM). Enable this to choose a custom reset time.",
+    "enableCustomTime": "Enable Custom Time",
+    "resetTime": "Reset Time",
+    "tapToChange": "Tap to change time",
+    "selectResetTime": "Select Reset Time",
+    "currentResetTime": "Current reset time: {{time}}"
+  },
+  "dailyReminder": {
+    "title": "Daily Reminder",
+    "notificationSettings": "🔔 Notification Settings",
+    "enableLabel": "Enable Daily Reminder",
+    "description": "Get reminded at 12:00 PM (noon) each day if you haven't logged any portions yet.",
+    "warningText": "⚠️ Notifications are not enabled for this app. To receive reminders, please enable notifications in your device settings.",
+    "infoText": "💡 This reminder helps you stay on track with your daily portion tracking. You'll only receive the notification if you haven't logged anything by noon.",
+    "aboutTitle": "ℹ️ About Reminders",
+    "aboutText": "- Reminders are sent at 12:00 PM daily\n- You must enable notifications in your device settings\n- Reminders only appear if you haven't tracked any portions yet\n- You can turn reminders on or off at any time",
+    "permissionRequiredTitle": "Permission Required",
+    "permissionRequiredMessage": "Please enable notifications in your device settings to use daily reminders.",
+    "openSettings": "Open Settings",
+    "unableToSetTitle": "Unable to Set Reminder",
+    "unableToSetMessage": "There was a problem setting up the reminder. Please try again."
+  },
+  "celebration": {
+    "title": "Celebration Settings",
+    "description": "Get a fun celebration animation when you complete all your daily portion targets. Turn this on or off based on your preference.",
+    "enableLabel": "Enable Celebrations",
+    "enabledDescription": "You will see a celebration when you complete all your portion targets for the day.",
+    "disabledDescription": "Celebrations are turned off. You will not see any animations when completing your targets."
+  },
+  "resetData": {
+    "title": "Reset App Data",
+    "headerTitle": "Reset All App Data",
+    "back": "Back",
+    "warningTitle": "⚠️ Warning",
+    "warningText": "This action will permanently delete ALL your data and cannot be undone.",
+    "whatDeletedTitle": "What will be deleted:",
+    "bullet1": "• Your profile information (sex, weight, goals)",
+    "bullet2": "• All daily portion tracking data",
+    "bullet3": "• Your tracking history",
+    "bullet4": "• Custom portion targets",
+    "bullet5": "• All settings and preferences",
+    "bullet6": "• Weight tracking history",
+    "whatNextTitle": "What happens next:",
+    "whatNextText": "After resetting, you'll be taken back to the welcome screen where you can set up your profile again from scratch.",
+    "resetButton": "Reset All Data",
+    "resettingButton": "Resetting...",
+    "cancelButton": "Cancel",
+    "modalTitle": "Final Confirmation",
+    "modalMessage": "Are you absolutely sure you want to reset all data? This cannot be undone.",
+    "modalConfirm": "Yes, Reset Everything",
+    "errorTitle": "Error",
+    "errorMessage": "Failed to reset app data. Please try again."
+  },
+  "activityLevel": {
+    "title": "Activity Level"
+  },
+  "backupRestore": {
+    "title": "Backup & Restore"
+  },
+  "notifications": {
+    "reminderTitle": "Portion Track Reminder",
+    "reminderBody": "Don't forget to track your portions today!"
+  },
+  "setupTargets": {
+    "title": "Set Your Daily Targets",
+    "subtitle": "We've recommended targets based on your profile. You can adjust them to fit your preferences.",
+    "saveError": "Failed to save profile. Please try again.",
+    "labelProtein": "Protein",
+    "labelVeggies": "Vegetables",
+    "labelFruits": "Fruit",
+    "labelWholeGrains": "Whole Grains",
+    "labelNutsSeeds": "Nuts & Seeds",
+    "labelFats": "Fats",
+    "labelWater": "Water (cups)",
+    "labelExercise": "Exercise",
+    "labelAlcohol": "Alcohol",
+    "exerciseNote": "Exercise can be tracked daily on the tracking page, but doesn't have a numeric target.",
+    "alcoholNote": "You can set your alcohol target to 0 if you don't drink, or adjust it to match your goals. Recommended maximum is 2 servings per day.",
+    "saveContinue": "Save & Continue"
+  },
+  "foodGroups": {
+    "protein": "Protein",
+    "veggies": "Vegetables",
+    "fruits": "Fruit",
+    "wholeGrains": "Grains",
+    "nutsSeeds": "Nuts/Seeds",
+    "fats": "Fats",
+    "water": "Water",
+    "exercise": "Exercise",
+    "alcohol": "Alcohol"
+  },
+  "portionTips": {
+    "title": "Portion Tips Available",
+    "body": "Tap the ℹ️ icon next to any food group to see examples and portion sizes.\n\nMore tips can be found in the FAQs.",
+    "gotIt": "Got It"
+  },
+  "foodGroupModal": {
+    "whatIs1Portion": "What is 1 Portion?",
+    "portionsGuide": "Portions don't need to be exact — this is a guide, not a scale.",
+    "benefits": "Benefits",
+    "goodChoices": "Good Choices",
+    "whatToAvoid": "What to Avoid",
+    "gotIt": "Got it!"
+  },
+  "foodGroupInfo": {
+    "protein": {
+      "benefit": "Protein supports muscle repair, satiety, and metabolism. It helps you feel full longer and preserves lean mass during weight loss.\n\nAim to include a protein source at most meals.\n\nQuality matters — choose lean, minimally processed options when possible.",
+      "avoid": "Avoid heavily processed meats (hot dogs, deli meats with nitrates).\n\nLimit fried or breaded proteins.\n\nWatch portion sizes on higher-fat cuts if you're trying to lose weight.",
+      "examples": "Animal sources:\n- Chicken breast (grilled or shredded)\n- Turkey\n- Lean beef or pork (carne asada, carnitas)\n- Fish (tuna, salmon, cod, or grilled fish — fresh or canned)\n- Eggs\n- Greek yogurt\n- Cottage cheese\n\nPlant sources:\n- Beans (black, pinto, etc.)\n- Tofu or tempeh\n- Edamame\n- Seitan",
+      "portionSize": "About the size of your palm (3-4 oz cooked meat, 1 cup Greek yogurt, 2 eggs, etc.)"
+    },
+    "veggies": {
+      "benefit": "Vegetables are packed with fiber, vitamins, and minerals. They support digestion, immunity, and overall health while being low in calories.\n\nThe more variety, the better — aim for different colors throughout the week.\n\nNon-starchy vegetables can be eaten freely and help you feel full.",
+      "avoid": "Avoid deep-fried vegetables or those loaded with heavy sauces.\n\nWatch portion sizes on starchy vegetables like potatoes (count those as whole grains instead).",
+      "examples": "Leafy greens:\n- Spinach, kale, arugula, lettuce\n\nCruciferous:\n- Broccoli, cauliflower, Brussels sprouts, cabbage\n\nOther favorites:\n- Bell peppers, tomatoes, onions, cucumbers, zucchini, carrots, green beans, asparagus, mushrooms\n- Jicama\n- Nopales (cactus)\n- Squash (calabacitas)",
+      "portionSize": "About 1 cup raw or ½ cup cooked"
+    },
+    "fruits": {
+      "benefit": "Fruit provides natural sugars, fiber, vitamins, and antioxidants. It's a great way to satisfy a sweet tooth while nourishing your body.\n\nWhole fruit is always better than juice — the fiber slows sugar absorption.\n\nBerries are especially nutrient-dense and lower in sugar.",
+      "avoid": "Avoid fruit juices and dried fruit in large amounts (they're concentrated in sugar and calories).\n\nLimit canned fruit in heavy syrup.",
+      "examples": "Berries:\n- Strawberries, blueberries, raspberries, blackberries\n\nTree fruit:\n- Apples, pears, peaches, plums\n\nTropical:\n- Bananas, oranges, pineapple, mango, papaya, guava, kiwi, melon, honeydew, watermelon",
+      "portionSize": "About 1 medium piece of fruit or 1 cup fruit"
+    },
+    "wholeGrains": {
+      "benefit": "Whole grains provide sustained energy, fiber, and B vitamins. They support digestion and help stabilize blood sugar.\n\nChoose whole grains over refined grains whenever possible.\n\nPair with protein and veggies for balanced meals.",
+      "avoid": "Avoid refined grains (white bread, white rice, pastries).\n\nLimit sugary cereals and baked goods.\n\nWatch portion sizes — grains are calorie-dense.",
+      "examples": "Grains:\n- Oats, quinoa, brown rice, barley\n\nBread & pasta:\n- Whole wheat bread, whole grain pasta, corn or whole grain tortillas\n\nStarchy vegetables (count as grains):\n- Sweet potatoes, white potatoes, corn, peas, plantains",
+      "portionSize": "About ½ cup cooked grains, 1 slice bread, or 1 small potato"
+    },
+    "nutsSeeds": {
+      "benefit": "Nuts and seeds provide healthy fats, protein, fiber, and important minerals like magnesium and zinc.\n\nThey support heart health and help with satiety.\n\nA little goes a long way — they're calorie-dense but nutrient-rich.",
+      "avoid": "Avoid heavily salted or candied nuts.\n\nWatch portion sizes — it's easy to overeat nuts.\n\nLimit nut butters with added sugar or oils.",
+      "examples": "Nuts:\n- Almonds, walnuts, cashews, pecans, pistachios\n- Peanuts (lower in omega-3s than other nuts)\n\nSeeds:\n- Chia seeds, flaxseeds, pumpkin seeds, sunflower seeds, hemp seeds\n\nNut butters:\n- Almond butter, peanut butter (natural, no added sugar), seed butters",
+      "portionSize": "About ¼ cup nuts or 2 tablespoons nut butter"
+    },
+    "fats": {
+      "benefit": "Healthy fats support hormone production, brain function, and nutrient absorption. They help you feel satisfied and add flavor to meals.\n\nFocus on healthy fats from plant sources and fatty fish.\n\nFats are essential but calorie-dense, so portion control matters.",
+      "avoid": "Avoid trans fats (partially hydrogenated oils) found in some processed foods.\n\nLimit saturated fats from butter, cream, and fatty meats.\n\nWatch portion sizes — fats are high in calories.",
+      "examples": "Healthy fat sources:\n- Olive oil, avocado oil\n- Avocados\n- Fatty fish (salmon, tuna, mackerel, sardines)\n- Olives\n- Dark chocolate (70%+ cacao, in moderation)\n\nCooking fats:\n- Extra virgin olive oil\n- Avocado oil\n- Grass-fed butter (small amounts)",
+      "portionSize": "About 1 tablespoon oil, ¼ avocado, or 1 oz fatty fish"
+    },
+    "water": {
+      "benefit": "Water is essential for every bodily function — digestion, circulation, temperature regulation, and more.\n\nStaying hydrated supports energy, focus, and physical performance.\n\nIt can also help with appetite control and reduce unnecessary snacking.",
+      "avoid": "Avoid sugary drinks (soda, sweetened coffee drinks, energy drinks).\n\nLimit fruit juices — they're high in sugar and low in fiber.\n\nWatch caffeine intake — it can be dehydrating in excess.",
+      "examples": "Best choices:\n- Plain water\n- Sparkling water (unsweetened)\n- Herbal tea\n- Water with lemon, cucumber, or mint\n\nOkay in moderation:\n- Black coffee, unsweetened tea",
+      "portionSize": "About 8 oz (1 cup) per serving — aim for 7-10+ servings per day"
+    },
+    "exercise": {
+      "benefit": "Regular exercise is essential for overall health, weight management, and mental well-being.\n\nIt helps build and maintain muscle, improves cardiovascular health, and boosts mood.\n\nConsistency matters more than intensity — find activities you enjoy and can sustain.",
+      "avoid": "Avoid overtraining without adequate rest and recovery.\n\nDon't exercise through pain or injury.\n\nAvoid comparing yourself to others — focus on your own progress.",
+      "examples": "Cardio:\n- Walking, jogging, running\n- Cycling, swimming\n- Dancing, sports\n\nStrength training:\n- Weight lifting\n- Bodyweight exercises\n- Resistance bands\n\nFlexibility & balance:\n- Yoga, Pilates\n- Stretching routines\n- Tai chi",
+      "portionSize": "One session counts as 1 portion (aim for 20-60 minutes of intentional movement)"
+    },
+    "alcohol": {
+      "benefit": "If you choose to drink, moderation is key. Some studies suggest moderate alcohol consumption may have social and relaxation benefits.\n\nHowever, alcohol provides empty calories and can interfere with weight loss and fitness goals.\n\nThe recommended maximum is 2 servings per day, but less is generally better for health.",
+      "avoid": "Avoid excessive drinking — it can lead to poor food choices, dehydration, and disrupted sleep.\n\nLimit sugary mixed drinks and high-calorie cocktails.\n\nDon't drink on an empty stomach.\n\nAvoid drinking if you're pregnant, taking certain medications, or have a history of alcohol issues.",
+      "examples": "Standard servings:\n- 12 oz beer (regular, ~5% ABV)\n- 5 oz wine (red or white)\n- 1.5 oz distilled spirits (vodka, whiskey, rum, gin, tequila)\n\nLower-calorie options:\n- Light beer\n- Wine spritzer (wine + sparkling water)\n- Spirits with soda water and lime",
+      "portionSize": "One standard drink: 12 oz beer, 5 oz wine, or 1.5 oz spirits"
+    }
+  },
+  "dailyCelebration": {
+    "message": "You did it!",
+    "submessage": "Today's tracking is complete."
+  }
+}
