@@ -6,7 +6,7 @@ import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
 import InfoHintTooltip from '@/components/InfoHintTooltip.ios';
-import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, RefreshControl } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
@@ -15,6 +15,7 @@ import DaySelector from '@/components/DaySelector.ios';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
+import { loadAllPhotosForDate, savePortionPhoto, deletePortionPhoto } from '@/utils/photoStorage';
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [photos, setPhotos] = useState<Record<string, string>>({});
   const router = useRouter();
   const { t, i18n } = useTranslation();
 
@@ -31,6 +33,11 @@ export default function HomeScreen() {
     const portions = await loadDailyPortions(date);
     console.log('Portions loaded:', portions);
     setDailyPortions(portions);
+
+    console.log('Loading photos for date:', date);
+    const photoMap = await loadAllPhotosForDate(date);
+    console.log('Photos loaded:', Object.keys(photoMap).length, 'entries');
+    setPhotos(photoMap);
   }, []);
 
   const loadData = useCallback(async () => {
@@ -189,6 +196,21 @@ export default function HomeScreen() {
               hideCount={foodGroupItem.key === 'exercise'}
               isFirstRow={index === 0}
               showInfoHint={index === 0 && showInfoHint}
+              photoUri={photos[foodGroupItem.key] ?? null}
+              onPhotoTaken={async (uri) => {
+                console.log('HomeScreen: photo taken for', foodGroupItem.key);
+                await savePortionPhoto(selectedDate, foodGroupItem.key, uri);
+                setPhotos(prev => ({ ...prev, [foodGroupItem.key]: uri }));
+              }}
+              onPhotoDeleted={async () => {
+                console.log('HomeScreen: photo deleted for', foodGroupItem.key);
+                await deletePortionPhoto(selectedDate, foodGroupItem.key);
+                setPhotos(prev => {
+                  const next = { ...prev };
+                  delete next[foodGroupItem.key];
+                  return next;
+                });
+              }}
             />
           ))}
         </View>

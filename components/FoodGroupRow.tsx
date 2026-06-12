@@ -1,12 +1,15 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ImageSourcePropType } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
+import PhotoViewerModal from './PhotoViewerModal';
 import { getFoodGroupInfo } from '@/constants/foodGroupInfo';
 import { FoodGroup } from '@/types';
 import { FOOD_GROUP_COLORS } from './DailyPlateProgress';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 interface FoodGroupRowProps {
   foodGroup: FoodGroup;
@@ -18,6 +21,15 @@ interface FoodGroupRowProps {
   hideCount?: boolean;
   showInfoHint?: boolean;
   isFirstRow?: boolean;
+  photoUri?: string | null;
+  onPhotoTaken?: (uri: string) => void;
+  onPhotoDeleted?: () => void;
+}
+
+function resolveImageSource(source: string | number | ImageSourcePropType | undefined): ImageSourcePropType {
+  if (!source) return { uri: '' };
+  if (typeof source === 'string') return { uri: source };
+  return source as ImageSourcePropType;
 }
 
 export default function FoodGroupRow({
@@ -30,8 +42,12 @@ export default function FoodGroupRow({
   hideCount = false,
   showInfoHint = false,
   isFirstRow = false,
+  photoUri,
+  onPhotoTaken,
+  onPhotoDeleted,
 }: FoodGroupRowProps) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const { t } = useTranslation();
   const info = getFoodGroupInfo(t)[foodGroup];
 
@@ -63,28 +79,69 @@ export default function FoodGroupRow({
   };
 
   // Calculate slot size based on target
-  // Smaller targets get larger circles, larger targets get smaller circles
-  // This creates better visual balance and usability
   const getSlotSize = () => {
-    if (target <= 2) return 40; // Large circles for small targets (1-2 portions)
-    if (target <= 4) return 36; // Medium-large circles (3-4 portions)
-    if (target <= 6) return 32; // Medium circles (5-6 portions)
-    if (target <= 8) return 28; // Medium-small circles (7-8 portions)
-    return 24; // Small circles for large targets (9+ portions)
+    if (target <= 2) return 40;
+    if (target <= 4) return 36;
+    if (target <= 6) return 32;
+    if (target <= 8) return 28;
+    return 24;
   };
 
   const slotSize = getSlotSize();
 
   // For exercise, always show only 1 circle
-  // For other food groups, show enough slots to accommodate completed portions, with extra slots for adding more
   const maxSlots = foodGroup === 'exercise' ? 1 : Math.max(target, completed + 3);
+
+  const handleCameraPress = async () => {
+    console.log('FoodGroupRow: camera button pressed for', foodGroup);
+
+    // Request camera permissions
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    console.log('FoodGroupRow: camera permission status', status);
+
+    if (status !== 'granted') {
+      Alert.alert(
+        'Camera Access Required',
+        'Please enable camera access in Settings to take photos.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    console.log('FoodGroupRow: camera result', { cancelled: result.canceled, foodGroup });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      console.log('FoodGroupRow: photo taken for', foodGroup, uri);
+      onPhotoTaken?.(uri);
+    }
+  };
+
+  const handleThumbnailPress = () => {
+    console.log('FoodGroupRow: thumbnail pressed for', foodGroup);
+    setPhotoViewerVisible(true);
+  };
+
+  const handlePhotoDelete = () => {
+    console.log('FoodGroupRow: photo deleted for', foodGroup);
+    onPhotoDeleted?.();
+  };
+
+  const thumbnailSource = resolveImageSource(photoUri ?? undefined);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.labelContainer}>
           {typeof icon === 'number' ? (
-            <Image source={icon} style={styles.iconImage} resizeMode="contain" />
+            <Image source={resolveImageSource(icon)} style={styles.iconImage} resizeMode="contain" />
           ) : (
             <Text style={styles.icon}>{icon}</Text>
           )}
@@ -112,6 +169,16 @@ export default function FoodGroupRow({
               <Text style={styles.infoIcon}>ℹ️</Text>
             </TouchableOpacity>
           )}
+          {/* Camera button */}
+          <TouchableOpacity onPress={handleCameraPress} style={styles.cameraButton}>
+            <Ionicons name="camera-outline" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+          {/* Thumbnail */}
+          {photoUri ? (
+            <TouchableOpacity onPress={handleThumbnailPress} style={styles.thumbnailButton}>
+              <Image source={thumbnailSource} style={styles.thumbnail} />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
 
@@ -157,6 +224,16 @@ export default function FoodGroupRow({
           portionSize={info.portionSize}
         />
       )}
+
+      <PhotoViewerModal
+        visible={photoViewerVisible}
+        uri={photoUri ?? null}
+        onClose={() => {
+          console.log('FoodGroupRow: photo viewer closed for', foodGroup);
+          setPhotoViewerVisible(false);
+        }}
+        onDelete={handlePhotoDelete}
+      />
     </View>
   );
 }
@@ -214,6 +291,18 @@ const styles = StyleSheet.create({
   },
   infoIcon: {
     fontSize: 20,
+  },
+  cameraButton: {
+    padding: 4,
+    marginLeft: 6,
+  },
+  thumbnailButton: {
+    marginLeft: 8,
+  },
+  thumbnail: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
   },
   slotsContainer: {
     flexDirection: 'row',
