@@ -1,12 +1,13 @@
 
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 import DailyPlateProgress from '@/components/DailyPlateProgress';
+import PhotoViewerModal from '@/components/PhotoViewerModal';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
 import InfoHintTooltip from '@/components/InfoHintTooltip.ios';
-import { ScrollView, StyleSheet, View, Text, RefreshControl } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity, Image, Alert } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
@@ -15,7 +16,9 @@ import DaySelector from '@/components/DaySelector.ios';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
-import { loadAllPhotosForDate, savePortionPhoto, deletePortionPhoto } from '@/utils/photoStorage';
+import { saveDailyPhoto, loadDailyPhoto, deleteDailyPhoto } from '@/utils/photoStorage';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -24,7 +27,8 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [photos, setPhotos] = useState<Record<string, string>>({});
+  const [dailyPhotoUri, setDailyPhotoUri] = useState<string | null>(null);
+  const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
   const router = useRouter();
   const { t, i18n } = useTranslation();
 
@@ -34,10 +38,10 @@ export default function HomeScreen() {
     console.log('Portions loaded:', portions);
     setDailyPortions(portions);
 
-    console.log('Loading photos for date:', date);
-    const photoMap = await loadAllPhotosForDate(date);
-    console.log('Photos loaded:', Object.keys(photoMap).length, 'entries');
-    setPhotos(photoMap);
+    console.log('Loading daily photo for date:', date);
+    const uri = await loadDailyPhoto(date);
+    console.log('Daily photo loaded:', { date, found: !!uri });
+    setDailyPhotoUri(uri);
   }, []);
 
   const loadData = useCallback(async () => {
@@ -134,6 +138,36 @@ export default function HomeScreen() {
     }
   };
 
+  const handleCameraPress = async () => {
+    console.log('HomeScreen: daily photo camera button pressed');
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    console.log('HomeScreen: camera permission status', status);
+    if (status !== 'granted') {
+      Alert.alert('Camera Access Required', 'Please enable camera access in Settings to log photos.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+    });
+    console.log('HomeScreen: camera result', { cancelled: result.canceled });
+    if (!result.canceled && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      console.log('HomeScreen: daily photo taken, saving for date', selectedDate);
+      await saveDailyPhoto(selectedDate, uri);
+      setDailyPhotoUri(uri);
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    console.log('HomeScreen: deleting daily photo for date', selectedDate);
+    await deleteDailyPhoto(selectedDate);
+    setDailyPhotoUri(null);
+    setPhotoViewerVisible(false);
+  };
+
   const handleDismissInfoHint = async () => {
     setShowInfoHint(false);
     await saveInfoHintSeen();
@@ -153,6 +187,7 @@ export default function HomeScreen() {
 
   const isToday = selectedDate === getTodayString();
   const pastDayLabel = t('common.pastDay');
+  const photoLogTitle = isToday ? '📷 Today\'s Meal Photo' : '📷 Meal Photo';
 
   return (
     <View style={styles.container}>
@@ -183,6 +218,28 @@ export default function HomeScreen() {
         {/* Divider */}
         <View style={styles.divider} />
 
+        {/* Daily Photo Log */}
+        <View style={styles.photoLogContainer}>
+          <Text style={styles.photoLogTitle}>{photoLogTitle}</Text>
+          {dailyPhotoUri ? (
+            <TouchableOpacity
+              onPress={() => {
+                console.log('HomeScreen: photo thumbnail pressed, opening viewer');
+                setPhotoViewerVisible(true);
+              }}
+              style={styles.photoThumbnailWrapper}
+            >
+              <Image source={{ uri: dailyPhotoUri }} style={styles.photoThumbnail} resizeMode="cover" />
+              <Text style={styles.photoTapHint}>Tap to view or delete</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleCameraPress} style={styles.addPhotoButton}>
+              <Ionicons name="camera-outline" size={22} color="#fff" />
+              <Text style={styles.addPhotoButtonText}>Log a Photo</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <View style={styles.portionsContainer}>
           {FOOD_GROUPS.map((foodGroupItem, index) => (
             <FoodGroupRow
@@ -196,21 +253,6 @@ export default function HomeScreen() {
               hideCount={foodGroupItem.key === 'exercise'}
               isFirstRow={index === 0}
               showInfoHint={index === 0 && showInfoHint}
-              photoUri={photos[foodGroupItem.key] ?? null}
-              onPhotoTaken={async (uri) => {
-                console.log('HomeScreen: photo taken for', foodGroupItem.key);
-                await savePortionPhoto(selectedDate, foodGroupItem.key, uri);
-                setPhotos(prev => ({ ...prev, [foodGroupItem.key]: uri }));
-              }}
-              onPhotoDeleted={async () => {
-                console.log('HomeScreen: photo deleted for', foodGroupItem.key);
-                await deletePortionPhoto(selectedDate, foodGroupItem.key);
-                setPhotos(prev => {
-                  const next = { ...prev };
-                  delete next[foodGroupItem.key];
-                  return next;
-                });
-              }}
             />
           ))}
         </View>
@@ -218,6 +260,15 @@ export default function HomeScreen() {
 
       <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
       <DailyCompletionCelebration visible={showCelebration} onDismiss={handleDismissCelebration} />
+      <PhotoViewerModal
+        visible={photoViewerVisible}
+        uri={dailyPhotoUri}
+        onClose={() => {
+          console.log('HomeScreen: photo viewer closed');
+          setPhotoViewerVisible(false);
+        }}
+        onDelete={handlePhotoDelete}
+      />
     </View>
   );
 }
@@ -257,6 +308,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginHorizontal: 16,
     marginVertical: 20,
+  },
+  photoLogContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  photoLogTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 10,
+  },
+  addPhotoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  addPhotoButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  photoThumbnailWrapper: {
+    alignItems: 'center',
+  },
+  photoThumbnail: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+  },
+  photoTapHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 6,
   },
   portionsContainer: {
     paddingHorizontal: 16,
