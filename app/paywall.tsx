@@ -51,6 +51,7 @@ export default function PaywallScreen() {
   const C = getColors(isDark ? "dark" : "light");
 
   const FEATURES = [
+    { title: t('paywall.features.scanPlate') },
     { title: t('paywall.features.tracking') },
     { title: t('paywall.features.guidance') },
     { title: t('paywall.features.targets') },

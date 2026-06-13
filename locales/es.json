@@ -165,6 +165,7 @@
   },
   "paywall": {
     "features": {
+      "scanPlate": "📷 Escanea un Plato para Registrar Porciones al Instante",
       "tracking": "Seguimiento ilimitado de porciones",
       "guidance": "Guía de porciones saludables",
       "targets": "Metas de porciones personalizadas",

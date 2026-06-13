@@ -165,6 +165,7 @@
   },
   "paywall": {
     "features": {
+      "scanPlate": "📷 Scan a Plate to Instantly Log Portions",
       "tracking": "Unlimited Portion Tracking",
       "guidance": "Healthy Portion Guidance",
       "targets": "Custom Portion Targets",
