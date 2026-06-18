@@ -23,7 +23,7 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library."
       },
-      "buildNumber": "73"
+      "buildNumber": "74"
     },
     "android": {
       "adaptiveIcon": {
@@ -62,7 +62,7 @@
     },
     "extra": {
       "router": {},
-      "backendUrl": "https://fv987frb83u56j46xpb3ydjzn68ur4df.app.specular.dev",
+      "backendUrl": "https://szd98p7pnacfzd38c6mpcp8ubsu3hydc.app.specular.dev",
       "eas": {
         "projectId": "3dace54e-74ca-4bd2-ae2d-790ecfd2a740"
       },
