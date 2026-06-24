@@ -1,6 +1,9 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import Constants from 'expo-constants';
 
+// Server-side backend URL (Liquid Backend), injected into app.json by Newly.
+const BACKEND_URL = (Constants.expoConfig?.extra?.backendUrl as string | undefined) ?? '';
+
 export interface MealPortionSuggestions {
   description: string;
   portions: {
@@ -15,24 +18,20 @@ export interface MealPortionSuggestions {
 }
 
 export async function analyzeMealPhoto(imageUri: string): Promise<MealPortionSuggestions> {
+  if (!BACKEND_URL) {
+    throw new Error('Backend URL is not configured.');
+  }
+
   console.log('[analyzeMealPhoto] Reading image as base64...');
-  const base64 = await FileSystem.readAsStringAsync(imageUri, {
+  const imageBase64 = await FileSystem.readAsStringAsync(imageUri, {
     encoding: FileSystem.EncodingType.Base64,
   });
 
-  const backendUrl = Constants.expoConfig?.extra?.backendUrl as string | undefined;
-  const url = __DEV__
-    ? '/analyze-meal-photo'
-    : `${backendUrl}/analyze-meal-photo`;
-
-  console.log('[analyzeMealPhoto] Sending to backend:', url);
-
-  const response = await fetch(url, {
+  console.log('[analyzeMealPhoto] Sending to backend for analysis...');
+  const response = await fetch(`${BACKEND_URL}/analyze-meal-photo`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ imageBase64: base64 }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64 }),
   });
 
   if (!response.ok) {
@@ -41,7 +40,6 @@ export async function analyzeMealPhoto(imageUri: string): Promise<MealPortionSug
     throw new Error('AI analysis failed. Please try again.');
   }
 
-  const data: MealPortionSuggestions = await response.json();
-  console.log('[analyzeMealPhoto] Response:', data.description);
-  return data;
+  const parsed: MealPortionSuggestions = await response.json();
+  return parsed;
 }
