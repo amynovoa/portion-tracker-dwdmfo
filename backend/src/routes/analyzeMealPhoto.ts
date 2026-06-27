@@ -40,7 +40,7 @@ export function registerAnalyzeMealPhotoRoute(app: App) {
 
     try {
       const { object } = await generateObject({
-        model: gateway('google/gemini-3-pro'),
+        model: gateway('openai/gpt-4o-mini'),
         schema: PortionSchema,
         system: SYSTEM_PROMPT,
         messages: [
