@@ -47,7 +47,7 @@ export function registerAnalyzeMealPhotoRoute(app: App) {
           {
             role: 'user',
             content: [
-              { type: 'image', image: Buffer.from(imageBase64, 'base64'), mimeType: 'image/jpeg' ` },
+              { type: 'image', image: Buffer.from(imageBase64, 'base64'), mimeType: 'image/jpeg' },
               { type: 'text', text: 'Analyse this meal and return the structured result.' },
             ],
           },
