@@ -25,6 +25,7 @@ import { PurchasesPackage } from "react-native-purchases";
 
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { markSubscribed } from "@/utils/userStateManager";
+import { logPurchase, logViewPaywall, logInitiateCheckout, logStartTrial, logSubscribe } from "@/utils/metaAnalytics";
 import { loadProfile } from "@/utils/storage";
 import AppLogo from "@/components/AppLogo";
 import { useTranslation } from "react-i18next";
@@ -63,7 +64,7 @@ export default function PaywallScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
 
-  const { packages, loading, purchasePackage, restorePurchases } =
+  const { packages, loading, purchasePackage, restorePurchases, mockNativePurchase } =
     useSubscription();
 
   const [selectedPackage, setSelectedPackage] =
@@ -77,6 +78,10 @@ export default function PaywallScreen() {
       setSelectedPackage(packages[0]);
     }
   }, [packages, selectedPackage]);
+
+  React.useEffect(() => {
+    logViewPaywall();
+  }, []);
 
   // Navigate after a successful purchase or restore
   const navigateAfterPurchase = async () => {
@@ -101,9 +106,14 @@ export default function PaywallScreen() {
 
     try {
       setPurchasing(true);
+      logInitiateCheckout();
       const success = await purchasePackage(selectedPackage);
       if (success) {
         console.log("[Paywall] Purchase successful");
+        const price = selectedPackage.product.price ?? 9.99;
+        logPurchase(price);
+        logStartTrial();
+        logSubscribe(price);
         await navigateAfterPurchase();
       } else {
         console.log("[Paywall] Purchase cancelled by user");
@@ -338,6 +348,18 @@ export default function PaywallScreen() {
             {t('paywall.privacyPolicy')}
           </Text>
         </Text>
+
+        {__DEV__ && (
+          <TouchableOpacity
+            style={styles.devBypassButton}
+            onPress={async () => {
+              await mockNativePurchase();
+              await navigateAfterPurchase();
+            }}
+          >
+            <Text style={styles.devBypassText}>⚙️ DEV: Skip Paywall</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -520,5 +542,19 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: "center",
     lineHeight: 14,
+  },
+  devBypassButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#aaa",
+    borderRadius: 8,
+    borderStyle: "dashed",
+  },
+  devBypassText: {
+    fontSize: 12,
+    color: "#888",
+    fontWeight: "600",
   },
 });

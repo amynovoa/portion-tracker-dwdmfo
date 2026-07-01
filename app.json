@@ -23,12 +23,24 @@
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library.",
         "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
           "NSExceptionDomains": {
             "localhost": {
               "NSExceptionAllowsInsecureHTTPLoads": true
+            },
+            "192.168.30.29": {
+              "NSExceptionAllowsInsecureHTTPLoads": true
             }
           }
-        }
+        },
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "v9wttpbfk9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "n38lu8286q.skadnetwork"
+          }
+        ]
       },
       "buildNumber": "74"
     },
@@ -41,10 +53,12 @@
       "package": "com.amynovoa.portiontracker",
       "versionCode": 3,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.INTERNET",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -56,13 +70,26 @@
       "expo-router",
       "expo-web-browser",
       [
+        "react-native-fbsdk-next",
+        {
+          "appID": "REPLACE_WITH_YOUR_FACEBOOK_APP_ID",
+          "clientToken": "REPLACE_WITH_YOUR_CLIENT_TOKEN",
+          "displayName": "Portion Track",
+          "scheme": "fbREPLACE_WITH_YOUR_FACEBOOK_APP_ID",
+          "advertiserIDCollectionEnabled": true,
+          "autoLogAppEventsEnabled": true,
+          "isAutoInitEnabled": true
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "This app needs access to your photo library to select meal photos.",
           "cameraPermission": "This app uses the camera to take photos of your meals for tracking purposes."
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "@react-native-community/datetimepicker"
     ],
     "scheme": "portiontrack",
     "experiments": {
@@ -70,17 +97,18 @@
     },
     "extra": {
       "router": {},
-      "backendUrl": "https://9vdy47w4npdaws7zqa6xz4zt52twrx3z.app.specular.dev",
-      "eas": {
-        "projectId": "3dace54e-74ca-4bd2-ae2d-790ecfd2a740"
-      },
+      "backendUrl": "https://portiontrackerapi.netlify.app/.netlify/functions",
       "revenueCatApiKeyIos": "appl_CuXblAvLmtgigmcFCsvMIgatAwI",
       "revenueCatApiKeyAndroid": "goog_XKBHXAYvojkkOKMAFBzanTPipxv",
       "revenueCatEntitlementId": "pro",
       "nativelyProjectId": "cf794022-4f46-40af-8c9d-e88fcb1e5354",
       "revenueCatTestApiKeyIos": "test_KtEgTHosuZccGMeUqzvMuHSPQcp",
-      "revenueCatTestApiKeyAndroid": "test_KtEgTHosuZccGMeUqzvMuHSPQcp"
-    }
+      "revenueCatTestApiKeyAndroid": "test_KtEgTHosuZccGMeUqzvMuHSPQcp",
+      "eas": {
+        "projectId": "3573e793-1f18-41b3-879a-4b28f3688494"
+      }
+    },
+    "owner": "muhammad_asad6202"
   },
   "scheme": "portion-tracker"
 }

@@ -25,10 +25,13 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "your-apple-id@example.com",
-        "ascAppId": "placeholder",
+        "appleId": "masadgill1122@gmail.com",
+        "ascAppId": "6756213687",
         "appleTeamId": "9978T8842P"
       }
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
 }

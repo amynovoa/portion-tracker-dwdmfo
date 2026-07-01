@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AppLogo from '@/components/AppLogo';
+import { logViewLanding } from '@/utils/metaAnalytics';
 
 const { width } = Dimensions.get('window');
 
@@ -56,6 +57,7 @@ export default function WelcomeScreen() {
   const buttonY = useRef(new Animated.Value(12)).current;
 
   useEffect(() => {
+    logViewLanding();
     // Run branding animation only — do NOT auto-show paywall
     Animated.sequence([
       Animated.parallel([
