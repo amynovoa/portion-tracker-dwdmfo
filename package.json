@@ -93,8 +93,5 @@
     "globals": "^15.14.0",
     "typescript": "^5.9.3"
   },
-  "resolutions": {
-    "@expo/prebuild-config": "latest"
-  },
   "private": true
 }
