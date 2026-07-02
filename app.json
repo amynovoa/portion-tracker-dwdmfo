@@ -70,18 +70,6 @@
       "expo-router",
       "expo-web-browser",
       [
-        "react-native-fbsdk-next",
-        {
-          "appID": "REPLACE_WITH_YOUR_FACEBOOK_APP_ID",
-          "clientToken": "REPLACE_WITH_YOUR_CLIENT_TOKEN",
-          "displayName": "Portion Track",
-          "scheme": "fbREPLACE_WITH_YOUR_FACEBOOK_APP_ID",
-          "advertiserIDCollectionEnabled": true,
-          "autoLogAppEventsEnabled": true,
-          "isAutoInitEnabled": true
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "This app needs access to your photo library to select meal photos.",
