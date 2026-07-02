@@ -6,8 +6,6 @@ import { colors } from '@/styles/commonStyles';
 import { resolveUserState } from '@/utils/userStateManager';
 import { checkForceUpdate, VersionCheckResult } from '@/utils/forceUpdateManager';
 import { appleRed } from '@/constants/Colors';
-import { supabase } from '@/utils/supabase';
-
 export default function Index() {
   const router = useRouter();
   const didRoute = useRef(false);
@@ -18,15 +16,6 @@ export default function Index() {
 
     async function route() {
       console.log('[Index] App opened — resolving user state and checking for updates...');
-
-      // Check Supabase auth first
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('[Index] No auth session — redirecting to /auth');
-        router.replace('/auth');
-        return;
-      }
-      console.log('[Index] Authenticated as:', session.user.email);
 
       const [state, versionResult] = await Promise.all([
         resolveUserState(),
