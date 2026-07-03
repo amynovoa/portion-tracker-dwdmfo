@@ -16,6 +16,7 @@ import {
   Platform,
   Linking,
   ScrollView,
+  TextInput,
   useColorScheme,
   useWindowDimensions,
 } from "react-native";
@@ -64,13 +65,17 @@ export default function PaywallScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
 
-  const { packages, loading, purchasePackage, restorePurchases, mockNativePurchase } =
+  const { packages, loading, purchasePackage, restorePurchases, mockNativePurchase, redeemPromoCode } =
     useSubscription();
 
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(packages[0] || null);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [showPromo, setShowPromo] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
 
   // Update selected package when packages load
   React.useEffect(() => {
@@ -145,6 +150,19 @@ export default function PaywallScreen() {
     } finally {
       setRestoring(false);
     }
+  };
+
+  const handlePromoRedeem = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError("");
+    const valid = await redeemPromoCode(promoCode.trim());
+    if (valid) {
+      await navigateAfterPurchase();
+    } else {
+      setPromoError("Invalid promo code. Please check and try again.");
+    }
+    setPromoLoading(false);
   };
 
   const handleClose = () => {
@@ -328,6 +346,38 @@ export default function PaywallScreen() {
             </Text>
           )}
         </TouchableOpacity>
+
+        {/* Promo code */}
+        {!showPromo ? (
+          <TouchableOpacity onPress={() => setShowPromo(true)} style={styles.promoToggle}>
+            <Text style={[styles.promoToggleText, { color: C.secondaryText }]}>Have a promo code?</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.promoContainer, { borderColor: C.border }]}>
+            <TextInput
+              style={[styles.promoInput, { color: C.text, borderColor: promoError ? "#E05A4D" : C.border }]}
+              placeholder="Enter promo code"
+              placeholderTextColor={C.secondaryText}
+              value={promoCode}
+              onChangeText={(t) => { setPromoCode(t); setPromoError(""); }}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
+            {promoError ? (
+              <Text style={styles.promoError}>{promoError}</Text>
+            ) : null}
+            <TouchableOpacity
+              style={[styles.promoButton, { backgroundColor: C.primary }, promoLoading && styles.buttonDisabled]}
+              onPress={handlePromoRedeem}
+              disabled={promoLoading || !promoCode.trim()}
+            >
+              {promoLoading
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.promoButtonText}>Apply Code</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        )}
 
         <Text style={[styles.legalText, { color: C.secondaryText }, isTablet && { fontSize: 13, lineHeight: 18 }]}>
           {t('paywall.legalText', { platform: platformName })}
@@ -542,6 +592,42 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: "center",
     lineHeight: 14,
+  },
+  promoToggle: {
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  promoToggleText: {
+    fontSize: 13,
+    textDecorationLine: "underline",
+  },
+  promoContainer: {
+    gap: 8,
+  },
+  promoInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+  promoError: {
+    fontSize: 12,
+    color: "#E05A4D",
+    textAlign: "center",
+  },
+  promoButton: {
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 42,
+  },
+  promoButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   devBypassButton: {
     marginTop: 12,
