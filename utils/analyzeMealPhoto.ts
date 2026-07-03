@@ -14,6 +14,7 @@ export interface MealPortionSuggestions {
     nutsSeeds: number;
     fats: number;
     water: number;
+    alcohol: number;
   };
 }
 
