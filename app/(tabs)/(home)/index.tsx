@@ -248,7 +248,7 @@ export default function HomeScreen() {
             <View style={styles.aiCard}>
               <Text style={styles.aiDescription}>{aiResult.description}</Text>
               <Text style={styles.aiSubtitle}>Adjust portions if needed:</Text>
-              {FOOD_GROUPS.filter(fg => fg.key !== 'exercise' && fg.key !== 'alcohol').map(fg => {
+              {FOOD_GROUPS.filter(fg => fg.key !== 'exercise').map(fg => {
                 const iconValue = typeof fg.icon === 'string' ? fg.icon : '🌰';
                 const labelText = t(`foodGroups.${fg.key}`);
                 const portionCount = aiPortionEdits[fg.key] ?? 0;
