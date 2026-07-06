@@ -150,7 +150,7 @@ export default function HomeScreen() {
     setAiLoading(true);
     setAiResult(null);
     try {
-      const analysis = await analyzeMealPhoto(uri);
+      const analysis = await analyzeMealPhoto(uri, i18n.language);
       console.log('[HomeScreen] AI analysis result:', analysis);
       logMealPhotoAnalyzed();
       setAiResult(analysis);
@@ -240,14 +240,14 @@ export default function HomeScreen() {
               <Ionicons name="camera-outline" size={20} color="#fff" />
             )}
             <Text style={styles.scanButtonText}>
-              {aiLoading ? 'Analysing…' : '📷 Scan a Meal'}
+              {aiLoading ? t('home.analysing') : t('home.scanMeal')}
             </Text>
           </TouchableOpacity>
 
           {aiResult && (
             <View style={styles.aiCard}>
               <Text style={styles.aiDescription}>{aiResult.description}</Text>
-              <Text style={styles.aiSubtitle}>Adjust portions if needed:</Text>
+              <Text style={styles.aiSubtitle}>{t('home.adjustPortions')}</Text>
               {FOOD_GROUPS.filter(fg => fg.key !== 'exercise').map(fg => {
                 const iconValue = typeof fg.icon === 'string' ? fg.icon : '🌰';
                 const labelText = t(`foodGroups.${fg.key}`);
@@ -289,10 +289,10 @@ export default function HomeScreen() {
                   }}
                   style={styles.cancelBtn}
                 >
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                  <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleLogAiPortions} style={styles.logBtn}>
-                  <Text style={styles.logBtnText}>Log Portions</Text>
+                  <Text style={styles.logBtnText}>{t('home.logPortions')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

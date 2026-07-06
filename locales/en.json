@@ -36,7 +36,11 @@
     "yesterday": "Yesterday",
     "yourPlateToday": "Your Plate Today",
     "tapToBuilder": "Tap the portions below to build your plate",
-    "congratulations": "Congratulations! You've built a balanced plate!"
+    "congratulations": "Congratulations! You've built a balanced plate!",
+    "scanMeal": "📷 Scan a Meal",
+    "analysing": "Analysing…",
+    "adjustPortions": "Adjust portions if needed:",
+    "logPortions": "Log Portions"
   },
   "settings": {
     "title": "Settings",

@@ -36,7 +36,11 @@
     "yesterday": "Ayer",
     "yourPlateToday": "Tu Plato de Hoy",
     "tapToBuilder": "Toca las porciones de abajo para armar tu plato",
-    "congratulations": "¡Felicitaciones! ¡Has armado un plato equilibrado!"
+    "congratulations": "¡Felicitaciones! ¡Has armado un plato equilibrado!",
+    "scanMeal": "📷 Escanear Comida",
+    "analysing": "Analizando…",
+    "adjustPortions": "Ajusta las porciones si es necesario:",
+    "logPortions": "Registrar Porciones"
   },
   "settings": {
     "title": "Ajustes",

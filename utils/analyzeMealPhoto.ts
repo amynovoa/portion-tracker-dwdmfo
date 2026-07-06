@@ -18,7 +18,7 @@ export interface MealPortionSuggestions {
   };
 }
 
-export async function analyzeMealPhoto(imageUri: string): Promise<MealPortionSuggestions> {
+export async function analyzeMealPhoto(imageUri: string, language = 'en'): Promise<MealPortionSuggestions> {
   if (!BACKEND_URL) {
     throw new Error('Backend URL is not configured.');
   }
@@ -32,7 +32,7 @@ export async function analyzeMealPhoto(imageUri: string): Promise<MealPortionSug
   const response = await fetch(`${BACKEND_URL}/analyze-meal-photo`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imageBase64 }),
+    body: JSON.stringify({ imageBase64, language }),
   });
 
   if (!response.ok) {
