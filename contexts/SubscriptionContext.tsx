@@ -53,12 +53,6 @@ const MOCK_PURCHASE_KEY = `rc_mock_purchased_${_PROJECT_SCOPE}`;
 const MOCK_NATIVE_KEY = `rc_dev_native_${_PROJECT_SCOPE}`;
 // Scoped native cache key — persists real subscription state for fast restore on bundle reload
 const NATIVE_PURCHASE_KEY = `rc_subscribed_${_PROJECT_SCOPE}`;
-// Promo code grant — stores ISO expiry date string
-const PROMO_EXPIRY_KEY = `promo_expiry_${_PROJECT_SCOPE}`;
-
-const VALID_PROMO_CODES: Record<string, number> = {
-  PORTIONTRACKCELEBRATION: 30, // 30 days free
-};
 
 interface SubscriptionContextType {
   /** Whether the user has an active subscription */
@@ -87,8 +81,8 @@ interface SubscriptionContextType {
   mockWebPurchase: () => void;
   /** Dev-only: simulate a purchase in Expo Go — persists across reloads via expo-secure-store */
   mockNativePurchase: () => Promise<void>;
-  /** Redeem a promo code — returns true if valid, false if invalid/expired */
-  redeemPromoCode: (code: string) => Promise<boolean>;
+  /** iOS only: open Apple's native offer code redemption sheet. Returns true if subscription was granted. */
+  presentCodeRedemptionSheet: () => Promise<boolean>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
@@ -159,13 +153,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
     const initRevenueCat = async () => {
       try {
-        // Web platform: SDK doesn't work, use REST API for basic info
-        // Check promo code grant first (works on all platforms)
-        const promoExpiry = await SecureStore.getItemAsync(PROMO_EXPIRY_KEY).catch(() => null);
-        if (promoExpiry && new Date(promoExpiry) > new Date()) {
-          setIsSubscribed(true);
-        }
-
         if (isWeb) {
           await fetchOfferingsViaRest();
           // Restore mock purchase state persisted from a previous session
@@ -364,14 +351,23 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setIsSubscribed(true);
   };
 
-  const redeemPromoCode = async (code: string): Promise<boolean> => {
-    const days = VALID_PROMO_CODES[code.trim().toUpperCase()];
-    if (!days) return false;
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + days);
-    await SecureStore.setItemAsync(PROMO_EXPIRY_KEY, expiry.toISOString()).catch(() => {});
-    setIsSubscribed(true);
-    return true;
+  const presentCodeRedemptionSheet = async (): Promise<boolean> => {
+    if (isWeb || Platform.OS !== 'ios') return false;
+    try {
+      await Purchases.presentCodeRedemptionSheet();
+      // After sheet dismisses, get fresh customer info to determine if subscription was granted.
+      // The customerInfoUpdateListener also fires automatically.
+      const customerInfo = await Purchases.getCustomerInfo();
+      const hasEntitlement = typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
+      if (hasEntitlement) {
+        setIsSubscribed(true);
+        await SecureStore.setItemAsync(NATIVE_PURCHASE_KEY, 'true').catch(() => {});
+      }
+      return hasEntitlement;
+    } catch (error) {
+      console.error('[RevenueCat] presentCodeRedemptionSheet error:', error);
+      return false;
+    }
   };
 
   return (
@@ -390,7 +386,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         refreshSubscription: checkSubscription,
         mockWebPurchase,
         mockNativePurchase,
-        redeemPromoCode,
+        presentCodeRedemptionSheet,
       }}
     >
       {children}
