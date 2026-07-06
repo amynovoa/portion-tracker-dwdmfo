@@ -111,7 +111,7 @@ export default function PaywallScreen() {
       const success = await purchasePackage(selectedPackage);
       if (success) {
         console.log("[Paywall] Purchase successful");
-        const price = selectedPackage.product.price ?? 9.99;
+        const price = selectedPackage.product.price ?? 4.99;
         logPurchase(price);
         logStartTrial();
         logSubscribe(price);

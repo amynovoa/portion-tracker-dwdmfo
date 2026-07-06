@@ -131,7 +131,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         identifier: pkg.identifier,
         product: {
           title: pkg.platform_product_identifier.includes('annual') ? 'Annual' : 'Monthly',
-          priceString: pkg.platform_product_identifier.includes('annual') ? '$29.99/year' : '$3.99/month',
+          priceString: pkg.platform_product_identifier.includes('annual') ? '$39.99/year' : '$4.99/month',
           description: pkg.platform_product_identifier.includes('annual') ? 'Best value — save over 35%' : 'Billed monthly',
           productIdentifier: pkg.platform_product_identifier,
         },
