@@ -25,7 +25,6 @@ import { PurchasesPackage } from "react-native-purchases";
 
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { markSubscribed } from "@/utils/userStateManager";
-import { logPurchase, logViewPaywall, logInitiateCheckout, logStartTrial, logSubscribe } from "@/utils/metaAnalytics";
 import { loadProfile } from "@/utils/storage";
 import AppLogo from "@/components/AppLogo";
 import { useTranslation } from "react-i18next";
@@ -80,9 +79,6 @@ export default function PaywallScreen() {
     }
   }, [packages, selectedPackage]);
 
-  React.useEffect(() => {
-    logViewPaywall();
-  }, []);
 
   // Navigate after a successful purchase or restore
   const navigateAfterPurchase = async () => {
@@ -107,14 +103,9 @@ export default function PaywallScreen() {
 
     try {
       setPurchasing(true);
-      logInitiateCheckout();
       const success = await purchasePackage(selectedPackage);
       if (success) {
         console.log("[Paywall] Purchase successful");
-        const price = selectedPackage.product.price ?? 4.99;
-        logPurchase(price);
-        logStartTrial();
-        logSubscribe(price);
         await navigateAfterPurchase();
       } else {
         console.log("[Paywall] Purchase cancelled by user");

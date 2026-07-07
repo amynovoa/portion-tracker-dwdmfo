@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 import { calculateRecommendedTargets } from '@/utils/portionCalculator';
 import { saveProfile } from '@/utils/storage';
 import { recordTargetsSaved } from '@/utils/reviewManager';
-import { logOnboardingComplete } from '@/utils/metaAnalytics';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel, PortionTargets, FOOD_GROUPS } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -175,7 +174,6 @@ export default function SetupTargetsScreen() {
       // Record that targets were saved for review metrics
       await recordTargetsSaved();
       
-      logOnboardingComplete();
       console.log('[SetupTargets] Profile saved — navigating to /(tabs)');
       router.replace('/(tabs)');
     } catch (error) {

@@ -7,7 +7,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/utils/supabase';
-import { logCompleteRegistration } from '@/utils/metaAnalytics';
 import AppLogo from '@/components/AppLogo';
 
 export default function AuthScreen() {
@@ -45,7 +44,6 @@ export default function AuthScreen() {
       if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        logCompleteRegistration('email');
         Alert.alert(
           'Check your email',
           'We sent you a confirmation link. Please verify your email then log in.',

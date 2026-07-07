@@ -11,7 +11,6 @@ import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
 import { initI18n } from '@/utils/i18n';
-import { initMeta } from '@/utils/metaAnalytics';
 import { supabase } from '@/utils/supabase';
 
 SplashScreen.preventAutoHideAsync();
@@ -27,8 +26,6 @@ function AppContent() {
       try {
         console.log('[Layout] App starting up — initializing notifications');
         await initializeNotifications();
-        await initMeta();
-
         console.log('[Layout] Running initial backup in background');
         setTimeout(async () => {
           try {

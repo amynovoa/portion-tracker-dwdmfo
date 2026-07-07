@@ -18,7 +18,6 @@ import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { analyzeMealPhoto, MealPortionSuggestions } from '@/utils/analyzeMealPhoto';
-import { logMealPhotoAnalyzed, logPortionsTracked, logDailyGoalCompleted } from '@/utils/metaAnalytics';
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -99,7 +98,6 @@ export default function HomeScreen() {
     });
 
     if (allComplete) {
-      logDailyGoalCompleted();
       setShowCelebration(true);
       await saveCelebrationShownToday();
     }
@@ -125,7 +123,6 @@ export default function HomeScreen() {
     await saveDailyPortions(updatedDailyPortions);
 
     if (increment) {
-      logPortionsTracked(foodGroup);
       await recordTrackingAction();
       await requestReviewIfEligible();
       await checkAndShowCelebration(updatedPortions);
@@ -152,7 +149,6 @@ export default function HomeScreen() {
     try {
       const analysis = await analyzeMealPhoto(uri, i18n.language);
       console.log('[HomeScreen] AI analysis result:', analysis);
-      logMealPhotoAnalyzed();
       setAiResult(analysis);
       setAiPortionEdits({ ...analysis.portions });
     } catch (err) {
