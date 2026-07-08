@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/styles/commonStyles';
 import { useTranslation } from 'react-i18next';
 
@@ -33,9 +34,8 @@ export default function FoodGroupInfoModal({
       visible={visible}
       animationType="slide"
       onRequestClose={onClose}
-      statusBarTranslucent={false}
     >
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <View style={styles.titleRow}>
@@ -96,7 +96,7 @@ export default function FoodGroupInfoModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,

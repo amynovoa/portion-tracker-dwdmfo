@@ -28,6 +28,10 @@
         "appleId": "masadgill1122@gmail.com",
         "ascAppId": "6756213687",
         "appleTeamId": "9978T8842P"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
       }
     }
   },
