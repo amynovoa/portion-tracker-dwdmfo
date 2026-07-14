@@ -313,6 +313,7 @@ export default function PaywallScreen() {
         style={[
           styles.bottomActions,
           isTablet && { width: 560, paddingHorizontal: 48 },
+          Platform.OS === "ios" && !isTablet && { paddingTop: 6, gap: 2 },
         ]}
       >
         <TouchableOpacity
@@ -339,7 +340,10 @@ export default function PaywallScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.restoreButton}
+          style={[
+            styles.restoreButton,
+            Platform.OS === "ios" && !isTablet && { paddingVertical: 6 },
+          ]}
           onPress={handleRestore}
           disabled={restoring}
         >
@@ -356,7 +360,7 @@ export default function PaywallScreen() {
         {Platform.OS === 'ios' && (
           <TouchableOpacity
             onPress={handleRedeemOfferCode}
-            style={styles.offerCodeButton}
+            style={[styles.offerCodeButton, !isTablet && { paddingVertical: 4 }]}
             disabled={redeemingCode}
           >
             {redeemingCode
@@ -386,12 +390,15 @@ export default function PaywallScreen() {
           </Text>
         </Text>
 
-        <TouchableOpacity
-          style={styles.devBypassButton}
-          onPress={async () => { await devBypass(); await navigateAfterPurchase(); }}
-        >
-          <Text style={styles.devBypassText}>⚙️ Developer Access</Text>
-        </TouchableOpacity>
+        {/* Developer bypass — hidden on iOS (not needed for TestFlight/App Store), kept on Android */}
+        {Platform.OS === "android" && (
+          <TouchableOpacity
+            style={styles.devBypassButton}
+            onPress={async () => { await devBypass(); await navigateAfterPurchase(); }}
+          >
+            <Text style={styles.devBypassText}>⚙️ Developer Access</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
