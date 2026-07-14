@@ -63,7 +63,7 @@ export default function PaywallScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
 
-  const { packages, loading, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet } =
+  const { packages, loading, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet, devBypass } =
     useSubscription();
 
   const [selectedPackage, setSelectedPackage] =
@@ -71,6 +71,7 @@ export default function PaywallScreen() {
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [redeemingCode, setRedeemingCode] = useState(false);
+  const [devTapCount, setDevTapCount] = useState(0);
 
   // Update selected package when packages load
   React.useEffect(() => {
@@ -207,16 +208,26 @@ export default function PaywallScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View style={[styles.header, isTablet && { gap: 8 }, { marginBottom: 8 }]}>
-          <AppLogo size={logoSize} />
+        <View style={[styles.header, isTablet && { gap: 8 }, { marginBottom: 6 }]}>
+          <TouchableOpacity
+            onPress={async () => {
+              const next = devTapCount + 1;
+              setDevTapCount(next);
+              if (next >= 7) {
+                setDevTapCount(0);
+                await devBypass();
+                await navigateAfterPurchase();
+              }
+            }}
+            activeOpacity={1}
+          >
+            <AppLogo size={logoSize} />
+          </TouchableOpacity>
           <Text style={[styles.title, { color: C.text }, isTablet && { fontSize: 28 }]}>Portion Track</Text>
-          <Text style={[styles.subtitle, { color: C.secondaryText }, isTablet && { fontSize: 17 }]}>
-            {t('paywall.subtitle')}
-          </Text>
         </View>
 
         {/* Features list */}
-        <View style={[styles.featuresList, { marginBottom: 8 }]}>
+        <View style={[styles.featuresList, { marginBottom: 6 }]}>
           {FEATURES.map((feature, index) => (
             <View key={index} style={[styles.featureRow, isTablet && { paddingVertical: 5 }]}>
               <Text style={[styles.featureCheckmark, { color: C.primary }, isTablet && { fontSize: 16 }]}>✓</Text>
@@ -281,10 +292,18 @@ export default function PaywallScreen() {
           </View>
         ) : (
           <View style={[styles.loadingPlansContainer, { marginBottom: 8 }]}>
-            {loading && <ActivityIndicator size="small" color={C.primary} />}
-            <Text style={[styles.loadingPlansText, { color: C.secondaryText }]}>
-              Loading plans...
-            </Text>
+            {loading ? (
+              <>
+                <ActivityIndicator size="small" color={C.primary} />
+                <Text style={[styles.loadingPlansText, { color: C.secondaryText }]}>
+                  Loading plans...
+                </Text>
+              </>
+            ) : (
+              <Text style={[styles.loadingPlansText, { color: C.secondaryText }]}>
+                Plans are not available right now. Please check your connection and try again.
+              </Text>
+            )}
           </View>
         )}
       </ScrollView>
@@ -354,7 +373,7 @@ export default function PaywallScreen() {
           {t('paywall.termsPrefix')}
           <Text
             style={{ color: C.primary }}
-            onPress={() => Linking.openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")}
+            onPress={() => Linking.openURL("https://portiontrack.com/terms-of-service")}
           >
             {t('paywall.termsOfService')}
           </Text>
@@ -367,17 +386,12 @@ export default function PaywallScreen() {
           </Text>
         </Text>
 
-        {__DEV__ && (
-          <TouchableOpacity
-            style={styles.devBypassButton}
-            onPress={async () => {
-              await mockNativePurchase();
-              await navigateAfterPurchase();
-            }}
-          >
-            <Text style={styles.devBypassText}>⚙️ DEV: Skip Paywall</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.devBypassButton}
+          onPress={async () => { await devBypass(); await navigateAfterPurchase(); }}
+        >
+          <Text style={styles.devBypassText}>⚙️ Developer Access</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -407,7 +421,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 8,
   },
   header: {
