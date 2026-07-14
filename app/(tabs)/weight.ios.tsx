@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,

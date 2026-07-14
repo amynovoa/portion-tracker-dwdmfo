@@ -54,6 +54,9 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 16,
     color: colors.text,
+    flex: 1,
+    flexShrink: 1,
+    marginRight: 12,
   },
   pickerContainer: {
     marginTop: 16,

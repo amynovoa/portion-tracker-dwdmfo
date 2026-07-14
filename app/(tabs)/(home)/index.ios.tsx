@@ -288,7 +288,7 @@ export default function HomeScreen() {
                   }}
                   style={styles.cancelBtn}
                 >
-                  <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
+                  <Text style={styles.cancelBtnText} numberOfLines={1} adjustsFontSizeToFit>{t('common.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleLogAiPortions} style={styles.logBtn}>
                   <Text style={styles.logBtnText}>{t('home.logPortions')}</Text>
