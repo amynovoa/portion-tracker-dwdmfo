@@ -2,7 +2,7 @@
   "expo": {
     "name": "Portion Track",
     "slug": "portion-track",
-    "version": "2.6.0",
+    "version": "2.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
     "userInterfaceStyle": "automatic",
@@ -42,7 +42,7 @@
           }
         ]
       },
-      "buildNumber": "74"
+      "buildNumber": "75"
     },
     "android": {
       "adaptiveIcon": {
@@ -51,7 +51,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.amynovoa.portiontracker",
-      "versionCode": 3,
+      "versionCode": 18,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -87,7 +87,7 @@
       "router": {},
       "backendUrl": "https://portiontrackerapi.netlify.app/.netlify/functions",
       "revenueCatApiKeyIos": "appl_CuXblAvLmtgigmcFCsvMIgatAwI",
-      "revenueCatApiKeyAndroid": "goog_XKBHXAYvojkkOKMAFBzanTPipxv",
+      "revenueCatApiKeyAndroid": "goog_jRDHQzkqHhTbJDMQdGiXaHOHMwA",
       "revenueCatEntitlementId": "pro",
       "nativelyProjectId": "cf794022-4f46-40af-8c9d-e88fcb1e5354",
       "revenueCatTestApiKeyIos": "test_KtEgTHosuZccGMeUqzvMuHSPQcp",
