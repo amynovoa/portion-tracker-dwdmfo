@@ -107,9 +107,10 @@ export default function SettingsScreen() {
     console.log('[Settings] Language changed to:', nextLang);
     if (suggestedUnit !== currentUnit) {
       const unitLabel = t(suggestedUnit === 'kg' ? 'common.kg' : 'common.lbs');
+      const nextLangLabel = nextLang === 'es' ? 'Español' : 'English';
       console.log('[Settings] Prompting unit switch to:', suggestedUnit);
       Alert.alert(
-        t('settings.switchUnitTitle'),
+        t('settings.switchUnitTitle', { language: nextLangLabel }),
         t('settings.switchUnitMessage', { unit: unitLabel }),
         [
           { text: t('common.no'), style: 'cancel' },

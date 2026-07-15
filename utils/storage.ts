@@ -10,11 +10,17 @@ const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
 const SUBSCRIPTION_STATUS_KEY = '@portion_tracker_subscription_status';
 const NOON_REMINDER_ENABLED_KEY = '@portion_tracker_noon_reminder_enabled';
+const REMINDER_TIME_KEY = '@portion_tracker_reminder_time';
 
 export interface ResetTimeConfig {
   hour: number;
   minute: number;
   enabled: boolean;
+}
+
+export interface ReminderTimeConfig {
+  hour: number;
+  minute: number;
 }
 
 // Subscription status functions
@@ -63,6 +69,29 @@ export async function loadNoonReminderEnabled(): Promise<boolean> {
     console.error('Error loading noon reminder preference:', error);
   }
   return false;
+}
+
+// Reminder time functions — same pattern as saveResetTime/loadResetTime
+export async function saveReminderTime(config: ReminderTimeConfig): Promise<void> {
+  try {
+    console.log('Saving reminder time:', config);
+    await AsyncStorage.setItem(REMINDER_TIME_KEY, JSON.stringify(config));
+  } catch (error) {
+    console.error('Error saving reminder time:', error);
+  }
+}
+
+export async function loadReminderTime(): Promise<ReminderTimeConfig> {
+  try {
+    const data = await AsyncStorage.getItem(REMINDER_TIME_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading reminder time:', error);
+  }
+  // Default: noon, matching the original fixed reminder time
+  return { hour: 12, minute: 0 };
 }
 
 // Profile functions

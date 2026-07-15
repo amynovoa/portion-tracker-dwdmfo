@@ -9,12 +9,35 @@ import { useTranslation } from 'react-i18next';
 interface WeightChartProps {
   entries: WeightEntry[];
   goalWeight?: number;
+  /** Unit label shown in the axis caption, e.g. "lbs" or "kg" */
+  unitLabel?: string;
 }
 
 const CHART_HEIGHT = 220;
 const CHART_PADDING = { top: 20, right: 10, bottom: 30, left: 45 };
 
-export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
+// Rounds a number to a "nice" value (1, 2, or 5 × a power of 10) for clean axis ticks.
+// Standard graph-labeling technique — see Heckbert's "nice numbers for graph labels".
+function niceNum(range: number, round: boolean): number {
+  if (range <= 0 || !isFinite(range)) return 1;
+  const exponent = Math.floor(Math.log10(range));
+  const fraction = range / Math.pow(10, exponent);
+  let niceFraction: number;
+  if (round) {
+    if (fraction < 1.5) niceFraction = 1;
+    else if (fraction < 3) niceFraction = 2;
+    else if (fraction < 7) niceFraction = 5;
+    else niceFraction = 10;
+  } else {
+    if (fraction <= 1) niceFraction = 1;
+    else if (fraction <= 2) niceFraction = 2;
+    else if (fraction <= 5) niceFraction = 5;
+    else niceFraction = 10;
+  }
+  return niceFraction * Math.pow(10, exponent);
+}
+
+export default function WeightChart({ entries, goalWeight, unitLabel }: WeightChartProps) {
   const { t, i18n } = useTranslation();
   const screenWidth = Dimensions.get('window').width;
   const chartWidth = Math.max(screenWidth - 80, 1); // Guard against zero/negative on tiny screens
@@ -134,11 +157,13 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
 
   const { points, trendLine, goalLine, yMin, yMax, safeYRange, plotWidth, plotHeight } = chartData;
 
-  // Generate y-axis labels (fewer labels for cleaner look)
+  // Generate y-axis labels on clean round increments (e.g. 175/180/185/190) instead of
+  // raw quartiles of the data range, which produced odd numbers like 177/186/194/203.
   const yAxisLabels: { weight: number; y: number }[] = [];
-  const labelCount = 4;
-  for (let i = 0; i < labelCount; i++) {
-    const weight = yMin + (safeYRange * i) / (labelCount - 1);
+  const targetTickCount = 4;
+  const tickStep = niceNum(safeYRange / (targetTickCount - 1), true);
+  const firstTick = Math.ceil(yMin / tickStep) * tickStep;
+  for (let weight = firstTick; weight <= yMax; weight += tickStep) {
     const y = CHART_PADDING.top + plotHeight - ((weight - yMin) / safeYRange) * plotHeight;
     if (isFinite(y)) {
       yAxisLabels.push({ weight: Math.round(weight), y });
@@ -283,12 +308,25 @@ export default function WeightChart({ entries, goalWeight }: WeightChartProps) {
     );
   }
 
-  return <View style={styles.container}>{svgContent}</View>;
+  return (
+    <View style={styles.container}>
+      {unitLabel ? (
+        <Text style={styles.unitCaption}>{t('weightScreen.chartUnitCaption', { unit: unitLabel })}</Text>
+      ) : null}
+      {svgContent}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     marginTop: 8,
+  },
+  unitCaption: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 2,
   },
   emptyContainer: {
     padding: 40,

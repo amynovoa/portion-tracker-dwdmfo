@@ -439,7 +439,7 @@ export default function WeightTrackingScreen() {
               );
             })}
           </View>
-          <WeightChart entries={filteredEntries} goalWeight={goalWeight} />
+          <WeightChart entries={filteredEntries} goalWeight={goalWeight} unitLabel={unitLabel} />
         </View>
 
         {/* Compact History */}

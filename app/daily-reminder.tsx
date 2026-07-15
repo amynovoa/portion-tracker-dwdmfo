@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, Alert, ScrollView, Linking } from 'react-native';
+import { View, Text, StyleSheet, Switch, Alert, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useFocusEffect } from 'expo-router';
-import { colors } from '@/styles/commonStyles';
-import { toggleNoonReminder, isNoonReminderEnabled, checkNotificationPermissions } from '@/utils/notificationManager';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { colors, buttonStyles } from '@/styles/commonStyles';
+import { toggleNoonReminder, isNoonReminderEnabled, checkNotificationPermissions, updateReminderTime } from '@/utils/notificationManager';
+import { loadReminderTime } from '@/utils/storage';
 import { useTranslation } from 'react-i18next';
 
 const styles = StyleSheet.create({
@@ -67,13 +69,38 @@ const styles = StyleSheet.create({
     color: '#856404',
     lineHeight: 20,
   },
+  timeButton: {
+    ...buttonStyles.secondary,
+    paddingVertical: 16,
+    marginTop: 8,
+    backgroundColor: colors.primary,
+  },
+  timeButtonText: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  timeButtonSubtext: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.8,
+    textAlign: 'center',
+    marginTop: 4,
+  },
 });
 
 export default function DailyReminderScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [noonReminderEnabled, setNoonReminderEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState(false);
+  const [reminderTime, setReminderTime] = useState(() => {
+    const defaultTime = new Date();
+    defaultTime.setHours(12, 0, 0, 0);
+    return defaultTime;
+  });
+  const [showPicker, setShowPicker] = useState(false);
 
   // Load reminder status when screen comes into focus
   useFocusEffect(
@@ -88,15 +115,48 @@ export default function DailyReminderScreen() {
       console.log('Loading reminder status...');
       const enabled = await isNoonReminderEnabled();
       const permission = await checkNotificationPermissions();
-      console.log('Reminder enabled:', enabled, 'Permission granted:', permission);
+      const timeConfig = await loadReminderTime();
+      console.log('Reminder enabled:', enabled, 'Permission granted:', permission, 'Time:', timeConfig);
       setNoonReminderEnabled(enabled);
       setHasPermission(permission);
+      const time = new Date();
+      time.setHours(timeConfig.hour, timeConfig.minute, 0, 0);
+      setReminderTime(time);
     } catch (error) {
       console.error('Error loading reminder status:', error);
       setNoonReminderEnabled(false);
       setHasPermission(false);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    const locale = i18n.language === 'es' ? 'es-ES' : 'en-US';
+    return date.toLocaleTimeString(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  const handleTimeButtonPress = () => {
+    console.log('Reminder time button pressed, showing time picker');
+    setShowPicker(true);
+  };
+
+  const handleTimeChange = async (event: any, selectedDate?: Date) => {
+    // On Android, the picker is a modal dialog, so we always hide it after interaction
+    setShowPicker(false);
+
+    if (selectedDate) {
+      console.log('New reminder time selected:', selectedDate.toLocaleTimeString());
+      setReminderTime(selectedDate);
+      await updateReminderTime({
+        hour: selectedDate.getHours(),
+        minute: selectedDate.getMinutes(),
+      });
+      console.log('Reminder time saved and rescheduled if enabled');
     }
   };
 
@@ -183,8 +243,30 @@ export default function DailyReminderScreen() {
           </View>
 
           <Text style={styles.description}>
-            {t('dailyReminder.description')}
+            {t('dailyReminder.description', { time: formatTime(reminderTime) })}
           </Text>
+
+          {noonReminderEnabled && (
+            <>
+              <Text style={styles.settingLabel}>{t('dailyReminder.reminderTime')}</Text>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={handleTimeButtonPress}
+              >
+                <Text style={styles.timeButtonText}>{formatTime(reminderTime)}</Text>
+                <Text style={styles.timeButtonSubtext}>{t('dailyReminder.tapToChange')}</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {showPicker && (
+            <DateTimePicker
+              value={reminderTime}
+              mode="time"
+              display="default"
+              onChange={handleTimeChange}
+            />
+          )}
 
           {!hasPermission && (
             <View style={styles.warningBox}>

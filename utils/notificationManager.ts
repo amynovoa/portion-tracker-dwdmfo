@@ -1,7 +1,7 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { saveNoonReminderEnabled, loadNoonReminderEnabled } from './storage';
+import { saveNoonReminderEnabled, loadNoonReminderEnabled, saveReminderTime, loadReminderTime, ReminderTimeConfig } from './storage';
 import i18n from '@/utils/i18n';
 
 const NOON_REMINDER_ID = 'noon_reminder';
@@ -93,16 +93,17 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 }
 
 /**
- * Schedule a daily reminder at noon if user hasn't logged anything
+ * Schedule the daily reminder at the user's chosen time (defaults to noon)
+ * if they haven't logged anything yet.
  */
 export async function scheduleNoonReminder(): Promise<void> {
   try {
-    console.log('Scheduling noon reminder...');
-    
-    // Cancel any existing noon reminder first
+    const { hour, minute } = await loadReminderTime();
+    console.log('Scheduling daily reminder at', hour, ':', minute);
+
+    // Cancel any existing reminder first
     await cancelNoonReminder();
 
-    // Schedule new reminder for 12:00 PM daily
     await Notifications.scheduleNotificationAsync({
       identifier: NOON_REMINDER_ID,
       content: {
@@ -112,16 +113,29 @@ export async function scheduleNoonReminder(): Promise<void> {
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: 12,
-        minute: 0,
+        hour,
+        minute,
         channelId: NOTIFICATION_CHANNEL_ID, // Link to our channel
       },
     });
 
-    console.log('Noon reminder scheduled successfully');
+    console.log('Daily reminder scheduled successfully');
   } catch (error) {
-    console.error('Error scheduling noon reminder:', error);
+    console.error('Error scheduling daily reminder:', error);
     throw error;
+  }
+}
+
+/**
+ * Update the reminder time and, if the reminder is currently enabled,
+ * reschedule it immediately so the change takes effect right away.
+ */
+export async function updateReminderTime(config: ReminderTimeConfig): Promise<void> {
+  console.log('Updating reminder time:', config);
+  await saveReminderTime(config);
+  const enabled = await isNoonReminderEnabled();
+  if (enabled) {
+    await scheduleNoonReminder();
   }
 }
 
