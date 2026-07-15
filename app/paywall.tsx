@@ -236,60 +236,64 @@ export default function PaywallScreen() {
           ))}
         </View>
 
-        {/* Package cards — side by side */}
+        {/* Package cards — side by side, compact single-block layout like the CTA button below */}
         {packages.length > 0 ? (
-          <View style={[styles.packagesContainer, { marginBottom: 8 }, isTablet && { gap: 16 }]}>
-            {packages.map((pkg) => {
-              const isSelected = selectedPackage?.identifier === pkg.identifier;
-              const showBestValue = isAnnual(pkg);
-              const borderColor = isSelected ? C.primaryBorder : C.border;
-              const borderWidth = isSelected ? 2 : 1;
-              return (
-                <TouchableOpacity
-                  key={pkg.identifier}
-                  style={[
-                    styles.packageCard,
-                    {
-                      backgroundColor: C.surface,
-                      borderColor,
-                      borderWidth,
-                    },
-                    isTablet && { padding: 18, borderRadius: 16 },
-                  ]}
-                  onPress={() => handlePackageSelect(pkg)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.freeTrialBadge, { color: C.primary }, isTablet && { fontSize: 14 }]}>
-                    {t('paywall.freeTrial')}
-                  </Text>
-                  {showBestValue && (
-                    <View style={[styles.bestValueBadge, { backgroundColor: C.accent }]}>
-                      <Text style={[styles.bestValueText, isTablet && { fontSize: 13 }]}>{t('paywall.bestValue')}</Text>
+          <>
+            <Text style={[styles.freeTrialShared, { color: C.primary }, isTablet && { fontSize: 14 }]}>
+              {t('paywall.freeTrial')}
+            </Text>
+            <View style={[styles.packagesContainer, { marginBottom: 8 }, isTablet && { gap: 16 }]}>
+              {packages.map((pkg) => {
+                const isSelected = selectedPackage?.identifier === pkg.identifier;
+                const showBestValue = isAnnual(pkg);
+                const borderColor = isSelected ? C.primaryBorder : C.border;
+                const borderWidth = isSelected ? 2 : 1;
+                return (
+                  <TouchableOpacity
+                    key={pkg.identifier}
+                    style={[
+                      styles.packageCard,
+                      {
+                        backgroundColor: C.surface,
+                        borderColor,
+                        borderWidth,
+                      },
+                      isTablet && { padding: 18, borderRadius: 16 },
+                    ]}
+                    onPress={() => handlePackageSelect(pkg)}
+                    activeOpacity={0.8}
+                  >
+                    {showBestValue && (
+                      <View style={[styles.bestValueBadge, { backgroundColor: C.accent }]}>
+                        <Text style={[styles.bestValueText, isTablet && { fontSize: 11 }]}>{t('paywall.bestValue')}</Text>
+                      </View>
+                    )}
+                    <View style={styles.packageHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.packageTitle, { color: C.text }, isTablet && { fontSize: 18 }]}>
+                          {pkg.product.title}
+                        </Text>
+                        <Text style={[styles.packagePrice, { color: C.primary }, isTablet && { fontSize: 20 }]}>
+                          {pkg.product.priceString}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.radioCircle,
+                          {
+                            borderColor: isSelected ? C.primaryBorder : C.secondaryText,
+                            backgroundColor: isSelected ? C.primaryBorder : "transparent",
+                          },
+                        ]}
+                      >
+                        {isSelected && <View style={styles.radioInner} />}
+                      </View>
                     </View>
-                  )}
-                  <View style={styles.packageHeader}>
-                    <Text style={[styles.packageTitle, { color: C.text }, isTablet && { fontSize: 18 }]}>
-                      {pkg.product.title}
-                    </Text>
-                    <View
-                      style={[
-                        styles.radioCircle,
-                        {
-                          borderColor: isSelected ? C.primaryBorder : C.secondaryText,
-                          backgroundColor: isSelected ? C.primaryBorder : "transparent",
-                        },
-                      ]}
-                    >
-                      {isSelected && <View style={styles.radioInner} />}
-                    </View>
-                  </View>
-                  <Text style={[styles.packagePrice, { color: C.primary }, isTablet && { fontSize: 22 }]}>
-                    {pkg.product.priceString}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </>
         ) : (
           <View style={[styles.loadingPlansContainer, { marginBottom: 8 }]}>
             {loading ? (
@@ -477,21 +481,24 @@ const styles = StyleSheet.create({
     padding: 10,
     overflow: "hidden",
   },
-  freeTrialBadge: {
-    fontSize: 10,
+  // One shared line above both cards, replacing the old per-card "7-day free trial" text
+  freeTrialShared: {
+    fontSize: 11,
     fontWeight: "600",
-    marginBottom: 3,
     letterSpacing: 0.2,
+    textAlign: "center",
+    marginBottom: 4,
   },
+  // Small in-flow pill — kept compact so it doesn't push the price line off-screen
   bestValueBadge: {
     alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
     borderRadius: 20,
-    marginBottom: 6,
+    marginBottom: 3,
   },
   bestValueText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "700",
     color: "#1A0F0E",
     letterSpacing: 0.3,
@@ -504,7 +511,6 @@ const styles = StyleSheet.create({
   packageTitle: {
     fontSize: 13,
     fontWeight: "600",
-    flex: 1,
   },
   radioCircle: {
     width: 18,
@@ -523,7 +529,7 @@ const styles = StyleSheet.create({
   packagePrice: {
     fontSize: 15,
     fontWeight: "700",
-    marginTop: 4,
+    marginTop: 2,
   },
   loadingPlansContainer: {
     flexDirection: "row",
