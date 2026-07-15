@@ -29,6 +29,20 @@ import { loadProfile } from "@/utils/storage";
 import AppLogo from "@/components/AppLogo";
 import { useTranslation } from "react-i18next";
 
+// DEV-ONLY: fake package data so the pricing card layout is visible in Expo Go,
+// where the RevenueCat native module isn't available and `packages` stays empty.
+// Never used for a real build (__DEV__ is false there) and never sent to purchasePackage.
+const DEV_MOCK_PACKAGES = [
+  {
+    identifier: "dev_mock_annual",
+    product: { title: "Annual", priceString: "$39.99/yr" },
+  },
+  {
+    identifier: "dev_mock_monthly",
+    product: { title: "Monthly Access", priceString: "$9.99/mo" },
+  },
+] as unknown as PurchasesPackage[];
+
 function getColors(scheme: "light" | "dark") {
   const isDark = scheme === "dark";
   return {
@@ -66,6 +80,11 @@ export default function PaywallScreen() {
   const { packages, loading, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet, devBypass } =
     useSubscription();
 
+  // Dev-only fallback: Expo Go has no RevenueCat native module, so `packages` stays empty.
+  // Shows the real card UI with fake prices so the layout can be checked without a build.
+  const isMockMode = __DEV__ && !loading && packages.length === 0;
+  const displayPackages = packages.length > 0 ? packages : (isMockMode ? DEV_MOCK_PACKAGES : []);
+
   const [selectedPackage, setSelectedPackage] =
     useState<PurchasesPackage | null>(packages[0] || null);
   const [purchasing, setPurchasing] = useState(false);
@@ -73,12 +92,12 @@ export default function PaywallScreen() {
   const [redeemingCode, setRedeemingCode] = useState(false);
   const [devTapCount, setDevTapCount] = useState(0);
 
-  // Update selected package when packages load
+  // Update selected package when packages (real or mock) load
   React.useEffect(() => {
-    if (packages.length > 0 && !selectedPackage) {
-      setSelectedPackage(packages[0]);
+    if (displayPackages.length > 0 && !selectedPackage) {
+      setSelectedPackage(displayPackages[0]);
     }
-  }, [packages, selectedPackage]);
+  }, [displayPackages, selectedPackage]);
 
 
   // Navigate after a successful purchase or restore
@@ -100,6 +119,13 @@ export default function PaywallScreen() {
   // Handle purchase
   const handlePurchase = async () => {
     if (!selectedPackage) return;
+    if (isMockMode) {
+      Alert.alert(
+        "Preview Mode",
+        "This is fake pricing data for layout testing in Expo Go. Use a dev-client or TestFlight build to test a real purchase."
+      );
+      return;
+    }
     console.log("[Paywall] Subscribe button pressed — package:", selectedPackage.identifier);
 
     try {
@@ -237,13 +263,16 @@ export default function PaywallScreen() {
         </View>
 
         {/* Package cards — side by side, compact single-block layout like the CTA button below */}
-        {packages.length > 0 ? (
+        {displayPackages.length > 0 ? (
           <>
+            {isMockMode && (
+              <Text style={styles.mockModeLabel}>PREVIEW — fake pricing, layout check only</Text>
+            )}
             <Text style={[styles.freeTrialShared, { color: C.primary }, isTablet && { fontSize: 14 }]}>
               {t('paywall.freeTrial')}
             </Text>
             <View style={[styles.packagesContainer, { marginBottom: 8 }, isTablet && { gap: 16 }]}>
-              {packages.map((pkg) => {
+              {displayPackages.map((pkg) => {
                 const isSelected = selectedPackage?.identifier === pkg.identifier;
                 const showBestValue = isAnnual(pkg);
                 const borderColor = isSelected ? C.primaryBorder : C.border;
@@ -310,16 +339,14 @@ export default function PaywallScreen() {
             )}
           </View>
         )}
-      </ScrollView>
 
-      {/* Bottom actions — always below content, never overlapping */}
-      <View
-        style={[
-          styles.bottomActions,
-          isTablet && { width: 560, paddingHorizontal: 48 },
-          Platform.OS === "ios" && !isTablet && { paddingTop: 6, gap: 2 },
-        ]}
-      >
+        {/* Actions — part of the same scroll flow, so nothing can ever hide behind a fixed footer */}
+        <View
+          style={[
+            styles.bottomActions,
+            Platform.OS === "ios" && !isTablet && { paddingTop: 8, gap: 4 },
+          ]}
+        >
         <TouchableOpacity
           style={[
             styles.primaryButton,
@@ -403,7 +430,8 @@ export default function PaywallScreen() {
             <Text style={styles.devBypassText}>⚙️ Developer Access</Text>
           </TouchableOpacity>
         )}
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -481,6 +509,17 @@ const styles = StyleSheet.create({
     padding: 10,
     overflow: "hidden",
   },
+  // Dev-only banner shown above mock pricing cards in Expo Go
+  mockModeLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    textAlign: "center",
+    color: "#B8860B",
+    backgroundColor: "#FFF3CD",
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
   // One shared line above both cards, replacing the old per-card "7-day free trial" text
   freeTrialShared: {
     fontSize: 11,
@@ -541,9 +580,8 @@ const styles = StyleSheet.create({
   loadingPlansText: {
     fontSize: 14,
   },
-  // Fixed bottom section — never overlaps content
+  // Sits inside the ScrollView's content — inherits horizontal padding from scrollContent
   bottomActions: {
-    paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 4,
     gap: 6,
