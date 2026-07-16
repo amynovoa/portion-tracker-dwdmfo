@@ -1,10 +1,11 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, DailyPortions, WeightEntry } from '@/types';
+import { UserProfile, DailyPortions, WeightEntry, ExerciseEntry } from '@/types';
 
 const PROFILE_KEY = '@portion_tracker_profile';
 const DAILY_PORTIONS_PREFIX = '@portion_tracker_daily_';
 const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
+const EXERCISE_ENTRIES_KEY = '@portion_tracker_exercise_entries';
 const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
@@ -281,6 +282,56 @@ export async function saveAllWeightEntries(entries: WeightEntry[]): Promise<void
     await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(entries));
   } catch (error) {
     console.error('[storage] Error saving all weight entries:', error);
+  }
+}
+
+// Exercise entries functions — unlike weight entries, multiple entries can share the same
+// date (e.g. several walks in one day), so entries are keyed by id, not upserted by date.
+export async function saveExerciseEntry(entry: ExerciseEntry): Promise<void> {
+  try {
+    const entries = await loadExerciseEntries();
+    entries.push(entry);
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+    await AsyncStorage.setItem(EXERCISE_ENTRIES_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error('Error saving exercise entry:', error);
+  }
+}
+
+export async function loadExerciseEntries(): Promise<ExerciseEntry[]> {
+  try {
+    const data = await AsyncStorage.getItem(EXERCISE_ENTRIES_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (!Array.isArray(parsed)) {
+        console.warn('[storage] Exercise entries is not an array, resetting');
+        return [];
+      }
+      return parsed.filter((e: any) =>
+        e && typeof e.id === 'string' && typeof e.date === 'string' &&
+        typeof e.category === 'string' &&
+        typeof e.durationMinutes === 'number' && isFinite(e.durationMinutes) &&
+        typeof e.timestamp === 'number' && isFinite(e.timestamp)
+      );
+    }
+  } catch (error) {
+    console.error('Error loading exercise entries:', error);
+  }
+  return [];
+}
+
+export async function loadExerciseEntriesForDate(date: string): Promise<ExerciseEntry[]> {
+  const entries = await loadExerciseEntries();
+  return entries.filter(e => e.date === date);
+}
+
+export async function deleteExerciseEntry(id: string): Promise<void> {
+  try {
+    const entries = await loadExerciseEntries();
+    const filtered = entries.filter(e => e.id !== id);
+    await AsyncStorage.setItem(EXERCISE_ENTRIES_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Error deleting exercise entry:', error);
   }
 }
 

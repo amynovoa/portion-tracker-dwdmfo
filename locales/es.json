@@ -336,6 +336,25 @@
     "enabledDescription": "Verás una celebración cuando completes todos tus objetivos de porciones del día.",
     "disabledDescription": "Las celebraciones están desactivadas. No verás animaciones al completar tus objetivos."
   },
+  "logExercise": {
+    "title": "Registrar Ejercicio",
+    "whatDidYouDo": "¿Qué hiciste?",
+    "howLong": "¿Cuánto tiempo?",
+    "minutes": "minutos",
+    "saveActivity": "Guardar Actividad",
+    "saveError": "Hubo un problema al guardar esta actividad. Por favor, inténtalo de nuevo.",
+    "categories": {
+      "cardio": "Cardio",
+      "strength": "Entrenamiento de Fuerza",
+      "yoga": "Yoga / Estiramiento",
+      "sports": "Deportes / Recreación",
+      "other": "Otro"
+    },
+    "yourActivity": "Tu Actividad",
+    "logExerciseButton": "Registrar Ejercicio",
+    "deleteConfirmTitle": "¿Eliminar Actividad?",
+    "deleteConfirmMessage": "Esto eliminará esta actividad registrada."
+  },
   "resetData": {
     "title": "Restablecer Datos",
     "headerTitle": "Restablecer Todos los Datos",

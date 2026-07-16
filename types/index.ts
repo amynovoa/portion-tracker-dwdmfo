@@ -39,6 +39,26 @@ export interface WeightEntry {
   timestamp: number; // Unix timestamp
 }
 
+export type ExerciseCategory = 'cardio' | 'strength' | 'yoga' | 'sports' | 'other';
+
+// A single logged activity. Unlike WeightEntry (one per day, upserted by date),
+// multiple ExerciseEntry records can share the same date — e.g. several walks in one day.
+export interface ExerciseEntry {
+  id: string;
+  date: string; // YYYY-MM-DD format
+  category: ExerciseCategory;
+  durationMinutes: number;
+  timestamp: number; // Unix timestamp
+}
+
+export const EXERCISE_CATEGORIES: { value: ExerciseCategory; icon: string }[] = [
+  { value: 'cardio', icon: '❤️' },
+  { value: 'strength', icon: '🏋️' },
+  { value: 'yoga', icon: '🧘' },
+  { value: 'sports', icon: '🏀' },
+  { value: 'other', icon: '⚡' },
+];
+
 export type FoodGroup = keyof PortionTargets;
 
 export const FOOD_GROUPS: { key: FoodGroup; label: string; icon: string | number }[] = [

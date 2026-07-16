@@ -3,25 +3,27 @@ import DailyCompletionCelebration from '@/components/DailyCompletionCelebration'
 import DailyPlateProgress from '@/components/DailyPlateProgress';
 import { colors } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
-import { loadProfile, loadDailyPortions, saveDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
+import { loadProfile, loadDailyPortions, saveDailyPortions, hasSeenInfoHint, saveInfoHintSeen, loadExerciseEntriesForDate, deleteExerciseEntry } from '@/utils/storage';
 import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
-import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity, Alert, ActivityIndicator, Modal, Image } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
+import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup, ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import DaySelector from '@/components/DaySelector';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { analyzeMealPhoto, MealPortionSuggestions } from '@/utils/analyzeMealPhoto';
 
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [dailyPortions, setDailyPortions] = useState<DailyPortions | null>(null);
+  const [exerciseEntries, setExerciseEntries] = useState<ExerciseEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
@@ -29,6 +31,11 @@ export default function HomeScreen() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<MealPortionSuggestions | null>(null);
   const [aiPortionEdits, setAiPortionEdits] = useState<Record<string, number>>({});
+  const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [shutterFlash, setShutterFlash] = useState(false);
+  const cameraRef = React.useRef<CameraView>(null);
   const router = useRouter();
   const { t, i18n } = useTranslation();
 
@@ -37,7 +44,34 @@ export default function HomeScreen() {
     const portions = await loadDailyPortions(date);
     console.log('Portions loaded:', portions);
     setDailyPortions(portions);
+    const entries = await loadExerciseEntriesForDate(date);
+    console.log('Exercise entries loaded:', entries.length);
+    setExerciseEntries(entries);
   }, []);
+
+  const handleLogExercise = () => {
+    console.log('[HomeScreen] Log Exercise pressed');
+    router.push('/log-exercise');
+  };
+
+  const handleDeleteExercise = (entry: ExerciseEntry) => {
+    Alert.alert(
+      t('logExercise.deleteConfirmTitle'),
+      t('logExercise.deleteConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.confirm'),
+          style: 'destructive',
+          onPress: async () => {
+            console.log('[HomeScreen] Deleting exercise entry:', entry.id);
+            await deleteExerciseEntry(entry.id);
+            await loadDateData(selectedDate);
+          },
+        },
+      ]
+    );
+  };
 
   const loadData = useCallback(async () => {
     console.log('Loading profile...');
@@ -131,19 +165,33 @@ export default function HomeScreen() {
 
   const handleScanMeal = async () => {
     console.log('[HomeScreen] Scan a Meal pressed');
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Camera Access Required', 'Please enable camera access in Settings to use meal scanning.');
-      return;
+    if (!cameraPermission?.granted) {
+      const { granted } = await requestCameraPermission();
+      if (!granted) {
+        Alert.alert('Camera Access Required', 'Please enable camera access in Settings to use meal scanning.');
+        return;
+      }
     }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7,
+    setCapturedPhotoUri(null);
+    setShowCamera(true);
+  };
+
+  const handleTakePhoto = async () => {
+    if (!cameraRef.current) return;
+    setShutterFlash(true);
+    setTimeout(() => setShutterFlash(false), 120);
+    const photo = await cameraRef.current.takePictureAsync({
+      quality: 0.6,
+      skipProcessing: true,
     });
-    if (result.canceled || !result.assets.length) return;
-    const uri = result.assets[0].uri;
+    if (photo?.uri) {
+      setShowCamera(false);
+      setCapturedPhotoUri(photo.uri);
+    }
+  };
+
+  const handleAnalyzePhoto = async (uri: string) => {
+    setCapturedPhotoUri(null);
     setAiLoading(true);
     setAiResult(null);
     try {
@@ -196,6 +244,56 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+
+      {/* Custom camera modal */}
+      <Modal visible={showCamera} animationType="fade" statusBarTranslucent>
+        <View style={styles.photoPreviewContainer}>
+          <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
+          {shutterFlash && <View style={styles.shutterFlash} pointerEvents="none" />}
+          <View style={styles.cameraTopBar}>
+            <TouchableOpacity onPress={() => setShowCamera(false)} style={styles.cameraCloseBtn}>
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.cameraBottomBar}>
+            <TouchableOpacity style={styles.captureButton} onPress={handleTakePhoto} activeOpacity={0.85}>
+              <View style={styles.captureButtonInner} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Photo preview modal — shown after capture, before AI analysis */}
+      <Modal visible={!!capturedPhotoUri} animationType="fade" statusBarTranslucent>
+        <View style={styles.photoPreviewContainer}>
+          {capturedPhotoUri && (
+            <Image source={{ uri: capturedPhotoUri }} style={styles.photoPreviewImage} resizeMode="cover" />
+          )}
+          <View style={styles.photoPreviewOverlay}>
+            <Text style={styles.photoPreviewTitle}>Meal Photo</Text>
+            <Text style={styles.photoPreviewSubtitle}>Ready to analyse your meal?</Text>
+          </View>
+          <View style={styles.photoPreviewButtons}>
+            <TouchableOpacity
+              style={styles.retakeButton}
+              onPress={() => { setCapturedPhotoUri(null); setShowCamera(true); }}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="camera-outline" size={20} color="#fff" />
+              <Text style={styles.retakeButtonText}>Retake</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.analyzeButton}
+              onPress={() => capturedPhotoUri && handleAnalyzePhoto(capturedPhotoUri)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="sparkles-outline" size={20} color="#fff" />
+              <Text style={styles.analyzeButtonText}>Analyse Meal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -312,6 +410,37 @@ export default function HomeScreen() {
             />
           ))}
         </View>
+
+        {/* Exercise activity — separate from the portion counters above; supports multiple
+            logged entries per day (e.g. several walks), each with a category and duration. */}
+        <View style={styles.activityContainer}>
+          <View style={styles.activityHeader}>
+            <Text style={styles.activityTitle}>{t('logExercise.yourActivity')}</Text>
+          </View>
+
+          <TouchableOpacity style={styles.logExerciseButton} onPress={handleLogExercise}>
+            <Text style={styles.logExerciseButtonText}>+ {t('logExercise.logExerciseButton')}</Text>
+          </TouchableOpacity>
+
+          {exerciseEntries.map((entry) => {
+            const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === entry.category);
+            const categoryLabel = t(`logExercise.categories.${entry.category}`);
+            return (
+              <View key={entry.id} style={styles.activityRow}>
+                <Text style={styles.activityRowIcon}>{categoryInfo?.icon}</Text>
+                <View style={styles.activityRowContent}>
+                  <Text style={styles.activityRowLabel}>{categoryLabel}</Text>
+                  <Text style={styles.activityRowDuration}>
+                    {entry.durationMinutes} {t('logExercise.minutes')}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDeleteExercise(entry)} style={styles.deleteIcon}>
+                  <Text style={styles.deleteIconText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
       </ScrollView>
 
       <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
@@ -321,6 +450,124 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  photoPreviewContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  shutterFlash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#fff',
+    opacity: 0.6,
+    zIndex: 10,
+  },
+  cameraTopBar: {
+    position: 'absolute',
+    top: 50,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  cameraCloseBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraBottomBar: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  captureButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderWidth: 3,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  captureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+  },
+  photoPreviewImage: {
+    flex: 1,
+    width: '100%',
+  },
+  photoPreviewOverlay: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  photoPreviewTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  photoPreviewSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  photoPreviewButtons: {
+    position: 'absolute',
+    bottom: 50,
+    left: 24,
+    right: 24,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  retakeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  retakeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  analyzeButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#C94A3D',
+  },
+  analyzeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -474,5 +721,66 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: colors.textSecondary,
+  },
+  activityContainer: {
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  activityHeader: {
+    marginBottom: 12,
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  logExerciseButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  logExerciseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    gap: 12,
+  },
+  activityRowIcon: {
+    fontSize: 22,
+  },
+  activityRowContent: {
+    flex: 1,
+  },
+  activityRowLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  activityRowDuration: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  deleteIcon: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteIconText: {
+    fontSize: 22,
+    color: colors.textSecondary,
+    lineHeight: 24,
   },
 });

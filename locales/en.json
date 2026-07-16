@@ -336,6 +336,25 @@
     "enabledDescription": "You will see a celebration when you complete all your portion targets for the day.",
     "disabledDescription": "Celebrations are turned off. You will not see any animations when completing your targets."
   },
+  "logExercise": {
+    "title": "Log Exercise",
+    "whatDidYouDo": "What did you do?",
+    "howLong": "How long?",
+    "minutes": "minutes",
+    "saveActivity": "Save Activity",
+    "saveError": "There was a problem saving this activity. Please try again.",
+    "categories": {
+      "cardio": "Cardio",
+      "strength": "Strength Training",
+      "yoga": "Yoga / Stretching",
+      "sports": "Sports / Recreation",
+      "other": "Other"
+    },
+    "yourActivity": "Your Activity",
+    "logExerciseButton": "Log Exercise",
+    "deleteConfirmTitle": "Delete Activity?",
+    "deleteConfirmMessage": "This will remove this logged activity."
+  },
   "resetData": {
     "title": "Reset App Data",
     "headerTitle": "Reset All App Data",
