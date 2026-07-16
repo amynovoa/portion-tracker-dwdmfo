@@ -119,6 +119,7 @@ export default function SettingsScreen() {
   };
 
   const settingsTitle = t('settings.title') || 'Settings';
+  const profileLabel = t('settings.profile') || 'Profile';
   const subscriptionLabel = t('settings.subscription') || 'Subscription';
   const celebrationLabel = t('settings.celebration') || 'Celebration';
   const dailyResetLabel = t('settings.dailyReset') || 'Daily Reset';
@@ -139,6 +140,21 @@ export default function SettingsScreen() {
           <AppLogo size={50} />
         </View>
         <Text style={styles.headerTitle}>{settingsTitle}</Text>
+
+        {/* Profile */}
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => {
+            console.log('Profile button pressed — navigating to /(tabs)/profile');
+            router.push('/(tabs)/profile');
+          }}
+        >
+          <Text style={styles.settingIcon}>👤</Text>
+          <View style={styles.settingContent} pointerEvents="none">
+            <Text style={styles.settingLabel}>{profileLabel}</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
 
         {/* Subscription */}
         <TouchableOpacity

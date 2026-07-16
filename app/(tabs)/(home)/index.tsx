@@ -3,13 +3,13 @@ import DailyCompletionCelebration from '@/components/DailyCompletionCelebration'
 import DailyPlateProgress from '@/components/DailyPlateProgress';
 import { colors } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
-import { loadProfile, loadDailyPortions, saveDailyPortions, hasSeenInfoHint, saveInfoHintSeen, loadExerciseEntriesForDate, deleteExerciseEntry } from '@/utils/storage';
+import { loadProfile, loadDailyPortions, saveDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
 import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity, Alert, ActivityIndicator, Modal, Image } from 'react-native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup, ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
+import { UserProfile, DailyPortions, PortionTargets, FOOD_GROUPS, FoodGroup } from '@/types';
 import { loadCelebrationEnabled, saveCelebrationShownToday, hasCelebrationBeenShownToday } from '@/utils/celebrationStorage';
 import DaySelector from '@/components/DaySelector';
 import FoodGroupRow from '@/components/FoodGroupRow';
@@ -23,7 +23,6 @@ import { analyzeMealPhoto, MealPortionSuggestions } from '@/utils/analyzeMealPho
 export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [dailyPortions, setDailyPortions] = useState<DailyPortions | null>(null);
-  const [exerciseEntries, setExerciseEntries] = useState<ExerciseEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
@@ -44,34 +43,7 @@ export default function HomeScreen() {
     const portions = await loadDailyPortions(date);
     console.log('Portions loaded:', portions);
     setDailyPortions(portions);
-    const entries = await loadExerciseEntriesForDate(date);
-    console.log('Exercise entries loaded:', entries.length);
-    setExerciseEntries(entries);
   }, []);
-
-  const handleLogExercise = () => {
-    console.log('[HomeScreen] Log Exercise pressed');
-    router.push('/log-exercise');
-  };
-
-  const handleDeleteExercise = (entry: ExerciseEntry) => {
-    Alert.alert(
-      t('logExercise.deleteConfirmTitle'),
-      t('logExercise.deleteConfirmMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.confirm'),
-          style: 'destructive',
-          onPress: async () => {
-            console.log('[HomeScreen] Deleting exercise entry:', entry.id);
-            await deleteExerciseEntry(entry.id);
-            await loadDateData(selectedDate);
-          },
-        },
-      ]
-    );
-  };
 
   const loadData = useCallback(async () => {
     console.log('Loading profile...');
@@ -410,37 +382,6 @@ export default function HomeScreen() {
             />
           ))}
         </View>
-
-        {/* Exercise activity — separate from the portion counters above; supports multiple
-            logged entries per day (e.g. several walks), each with a category and duration. */}
-        <View style={styles.activityContainer}>
-          <View style={styles.activityHeader}>
-            <Text style={styles.activityTitle}>{t('logExercise.yourActivity')}</Text>
-          </View>
-
-          <TouchableOpacity style={styles.logExerciseButton} onPress={handleLogExercise}>
-            <Text style={styles.logExerciseButtonText}>+ {t('logExercise.logExerciseButton')}</Text>
-          </TouchableOpacity>
-
-          {exerciseEntries.map((entry) => {
-            const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === entry.category);
-            const categoryLabel = t(`logExercise.categories.${entry.category}`);
-            return (
-              <View key={entry.id} style={styles.activityRow}>
-                <Text style={styles.activityRowIcon}>{categoryInfo?.icon}</Text>
-                <View style={styles.activityRowContent}>
-                  <Text style={styles.activityRowLabel}>{categoryLabel}</Text>
-                  <Text style={styles.activityRowDuration}>
-                    {entry.durationMinutes} {t('logExercise.minutes')}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => handleDeleteExercise(entry)} style={styles.deleteIcon}>
-                  <Text style={styles.deleteIconText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </View>
       </ScrollView>
 
       <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
@@ -721,66 +662,5 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: colors.textSecondary,
-  },
-  activityContainer: {
-    paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  activityHeader: {
-    marginBottom: 12,
-  },
-  activityTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  logExerciseButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  logExerciseButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    gap: 12,
-  },
-  activityRowIcon: {
-    fontSize: 22,
-  },
-  activityRowContent: {
-    flex: 1,
-  },
-  activityRowLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  activityRowDuration: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  deleteIcon: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteIconText: {
-    fontSize: 22,
-    color: colors.textSecondary,
-    lineHeight: 24,
   },
 });

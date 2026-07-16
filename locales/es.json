@@ -28,7 +28,8 @@
     "settings": "Ajustes",
     "profile": "Perfil",
     "faqs": "Preguntas",
-    "track": "Rastrear"
+    "track": "Rastrear",
+    "exercise": "Ejercicio"
   },
   "home": {
     "loading": "Cargando...",
@@ -44,6 +45,7 @@
   },
   "settings": {
     "title": "Ajustes",
+    "profile": "Perfil",
     "subscription": "Suscripción",
     "celebration": "Celebración",
     "dailyReset": "Reinicio Diario",
@@ -352,6 +354,7 @@
     },
     "yourActivity": "Tu Actividad",
     "logExerciseButton": "Registrar Ejercicio",
+    "emptyToday": "Aún no has registrado nada hoy. Toca arriba para añadir tu primera actividad.",
     "deleteConfirmTitle": "¿Eliminar Actividad?",
     "deleteConfirmMessage": "Esto eliminará esta actividad registrada."
   },

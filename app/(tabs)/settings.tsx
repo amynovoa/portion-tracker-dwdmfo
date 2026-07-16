@@ -143,6 +143,21 @@ export default function SettingsScreen() {
         </View>
         <Text style={styles.headerTitle}>{t('settings.title')}</Text>
 
+        {/* Profile */}
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => {
+            console.log('Profile button pressed — navigating to /(tabs)/profile');
+            router.push('/(tabs)/profile');
+          }}
+        >
+          <Text style={styles.settingIcon}>👤</Text>
+          <View style={styles.settingContent} pointerEvents="none">
+            <Text style={styles.settingLabel}>{t('settings.profile')}</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
         {/* Subscription */}
         <TouchableOpacity
           style={styles.settingItem}
