@@ -189,16 +189,19 @@ const styles = StyleSheet.create({
   },
   stepperBtnText: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '600',
-    lineHeight: 28,
+    lineHeight: 24,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   durationValueContainer: {
     alignItems: 'center',
     minWidth: 90,
   },
   durationValue: {
-    fontSize: 36,
+    fontSize: 26,
     fontWeight: '800',
     color: colors.text,
   },
