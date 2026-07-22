@@ -1,10 +1,10 @@
 
-import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets, ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
+import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets } from '@/types';
 import AppLogo from '@/components/AppLogo';
 import React, { useState, useEffect } from 'react';
 import AdherenceCard from '@/components/AdherenceCard';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } from 'react-native';
-import { getAllDailyPortions, loadProfile, loadDailyPortions, loadExerciseEntries } from '@/utils/storage';
+import { getAllDailyPortions, loadProfile, loadDailyPortions } from '@/utils/storage';
 import { useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
@@ -16,7 +16,6 @@ export default function HistoryScreen() {
   const { t, i18n } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [allPortions, setAllPortions] = useState<DailyPortions[]>([]);
-  const [allExercise, setAllExercise] = useState<ExerciseEntry[]>([]);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
 
@@ -31,14 +30,11 @@ export default function HistoryScreen() {
     try {
       const userProfile = await loadProfile();
       const portions = await getAllDailyPortions();
-      const exerciseEntries = await loadExerciseEntries();
 
       console.log('Profile loaded:', userProfile ? 'Found' : 'Not found');
       console.log('Portions loaded:', portions.length, 'days');
-      console.log('Exercise entries loaded:', exerciseEntries.length);
 
       setProfile(userProfile);
-      setAllExercise(exerciseEntries);
 
       // Sort by date descending (most recent first)
       const sortedPortions = portions.sort((a, b) => b.date.localeCompare(a.date));
@@ -178,20 +174,6 @@ export default function HistoryScreen() {
                           </View>
                         );
                       })}
-                      {allExercise
-                        .filter((entry) => entry.date === dayData.date)
-                        .map((entry) => {
-                          const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === entry.category);
-                          return (
-                            <View key={entry.id} style={styles.portionRow}>
-                              <Text style={styles.portionIcon}>{categoryInfo?.icon}</Text>
-                              <Text style={styles.portionLabel}>{t(`logExercise.categories.${entry.category}`)}</Text>
-                              <Text style={styles.portionCount}>
-                                {entry.durationMinutes} {t('logExercise.minutes')}
-                              </Text>
-                            </View>
-                          );
-                        })}
                     </View>
                   )}
                 </View>

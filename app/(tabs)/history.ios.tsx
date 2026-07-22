@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { getAllDailyPortions, loadProfile, loadDailyPortions, loadExerciseEntries } from '@/utils/storage';
+import { getAllDailyPortions, loadProfile, loadDailyPortions } from '@/utils/storage';
 import AdherenceCard from '@/components/AdherenceCard';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
 import { calculateDailyAdherence, calculateDailyAdherenceForDate, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
@@ -8,7 +8,7 @@ import ConsistencyChart from '@/components/ConsistencyChart';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useFocusEffect } from 'expo-router';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } from 'react-native';
-import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets, ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
+import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
@@ -116,7 +116,6 @@ const styles = StyleSheet.create({
 export default function HistoryScreen() {
   const { t, i18n } = useTranslation();
   const [allPortions, setAllPortions] = useState<DailyPortions[]>([]);
-  const [allExercise, setAllExercise] = useState<ExerciseEntry[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
@@ -131,15 +130,12 @@ export default function HistoryScreen() {
     console.log('Loading history data (iOS)...');
     const portions = await getAllDailyPortions();
     const userProfile = await loadProfile();
-    const exerciseEntries = await loadExerciseEntries();
 
     console.log('iOS - Portions loaded:', portions.length);
     console.log('iOS - Profile loaded:', userProfile ? 'Found' : 'Not found');
-    console.log('iOS - Exercise entries loaded:', exerciseEntries.length);
 
     setAllPortions(portions);
     setProfile(userProfile);
-    setAllExercise(exerciseEntries);
   };
 
   const onRefresh = async () => {
@@ -269,21 +265,6 @@ export default function HistoryScreen() {
                           </View>
                         );
                       })}
-                      {allExercise
-                        .filter((entry) => entry.date === dayData.date)
-                        .map((entry) => {
-                          const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === entry.category);
-                          return (
-                            <View key={entry.id} style={styles.foodGroupRow}>
-                              <Text style={styles.foodGroupName}>
-                                {categoryInfo?.icon} {t(`logExercise.categories.${entry.category}`)}
-                              </Text>
-                              <Text style={styles.foodGroupValue}>
-                                {entry.durationMinutes} {t('logExercise.minutes')}
-                              </Text>
-                            </View>
-                          );
-                        })}
                     </View>
                   )}
                 </TouchableOpacity>

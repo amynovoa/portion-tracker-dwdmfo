@@ -3,18 +3,37 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { getTodayString } from '@/utils/dateUtils';
-import { loadExerciseEntriesForDate, deleteExerciseEntry } from '@/utils/storage';
-import { ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
+import { getTodayString, formatDate } from '@/utils/dateUtils';
+import { loadExerciseEntriesForDate, loadExerciseEntries, deleteExerciseEntry } from '@/utils/storage';
+import { ExerciseEntry, EXERCISE_CATEGORIES, ExerciseCategory } from '@/types';
 import AppLogo from '@/components/AppLogo';
 import DaySelector from '@/components/DaySelector';
 import { useTranslation } from 'react-i18next';
+
+// Same 7-day window as DaySelector (today + 6 prior days), so the weekly
+// summary always matches what's actually selectable above it.
+function getLast7DayStrings(): string[] {
+  const days: string[] = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    days.push(formatDate(date));
+  }
+  return days;
+}
+
+interface CategoryTotal {
+  category: ExerciseCategory;
+  minutes: number;
+}
 
 export default function ExerciseScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [entries, setEntries] = useState<ExerciseEntry[]>([]);
+  const [weeklyTotals, setWeeklyTotals] = useState<CategoryTotal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async (date: string) => {
@@ -22,6 +41,21 @@ export default function ExerciseScreen() {
     const dateEntries = await loadExerciseEntriesForDate(date);
     console.log('[ExerciseScreen] Loaded entries:', dateEntries.length);
     setEntries(dateEntries);
+
+    // Weekly summary — total minutes per category across the same 7-day window as DaySelector
+    const weekDates = new Set(getLast7DayStrings());
+    const allEntries = await loadExerciseEntries();
+    const totalsByCategory = new Map<ExerciseCategory, number>();
+    for (const entry of allEntries) {
+      if (!weekDates.has(entry.date)) continue;
+      totalsByCategory.set(entry.category, (totalsByCategory.get(entry.category) ?? 0) + entry.durationMinutes);
+    }
+    const totals = EXERCISE_CATEGORIES
+      .map((c) => ({ category: c.value, minutes: totalsByCategory.get(c.value) ?? 0 }))
+      .filter((t) => t.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes);
+    setWeeklyTotals(totals);
+
     setIsLoading(false);
   }, []);
 
@@ -107,6 +141,30 @@ export default function ExerciseScreen() {
             );
           })}
         </View>
+
+        {weeklyTotals.length > 0 && (
+          <View style={styles.weekSummary}>
+            <Text style={styles.weekSummaryTitle}>{t('logExercise.thisWeek')}</Text>
+            <View style={styles.weekSummaryCard}>
+              {weeklyTotals.map((total, index) => {
+                const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === total.category);
+                const isLast = index === weeklyTotals.length - 1;
+                return (
+                  <View
+                    key={total.category}
+                    style={[styles.weekSummaryRow, isLast && styles.weekSummaryRowLast]}
+                  >
+                    <Text style={styles.weekSummaryIcon}>{categoryInfo?.icon}</Text>
+                    <Text style={styles.weekSummaryLabel}>{t(`logExercise.categories.${total.category}`)}</Text>
+                    <Text style={styles.weekSummaryMinutes}>
+                      {total.minutes} {t('logExercise.minutes')}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -187,5 +245,44 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.textSecondary,
     lineHeight: 24,
+  },
+  weekSummary: {
+    paddingHorizontal: 20,
+    marginTop: 8,
+  },
+  weekSummaryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 10,
+  },
+  weekSummaryCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+  },
+  weekSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    gap: 10,
+  },
+  weekSummaryRowLast: {
+    borderBottomWidth: 0,
+  },
+  weekSummaryIcon: {
+    fontSize: 18,
+  },
+  weekSummaryLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+  },
+  weekSummaryMinutes: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.primary,
   },
 });
