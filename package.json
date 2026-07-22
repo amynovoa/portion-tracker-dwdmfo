@@ -90,6 +90,7 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.4",
     "globals": "^15.14.0",
+    "metro-cache": "0.83.7",
     "typescript": "^5.9.3"
   },
   "private": true

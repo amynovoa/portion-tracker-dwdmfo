@@ -1,2 +1,18 @@
 allowBuilds:
   unrs-resolver: true
+
+# The Metro toolchain was resolving to two different version sets (0.83.3 and
+# 0.83.7) depending on which package pulled it in, so pnpm couldn't hoist a
+# single usable copy of metro-cache (or its siblings) at the top level —
+# breaking any fresh install (Cannot find module 'metro-cache'). Pinning
+# everything to one version removes the conflict entirely.
+overrides:
+  metro: 0.83.7
+  metro-cache: 0.83.7
+  metro-config: 0.83.7
+  metro-core: 0.83.7
+  metro-runtime: 0.83.7
+  metro-babel-transformer: 0.83.7
+  metro-resolver: 0.83.7
+  metro-source-map: 0.83.7
+  metro-transform-worker: 0.83.7
