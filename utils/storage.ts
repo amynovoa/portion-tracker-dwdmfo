@@ -325,6 +325,22 @@ export async function loadExerciseEntriesForDate(date: string): Promise<Exercise
   return entries.filter(e => e.date === date);
 }
 
+export async function updateExerciseEntry(updated: ExerciseEntry): Promise<void> {
+  try {
+    const entries = await loadExerciseEntries();
+    const index = entries.findIndex(e => e.id === updated.id);
+    if (index >= 0) {
+      entries[index] = updated;
+    } else {
+      entries.push(updated);
+    }
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+    await AsyncStorage.setItem(EXERCISE_ENTRIES_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error('Error updating exercise entry:', error);
+  }
+}
+
 export async function deleteExerciseEntry(id: string): Promise<void> {
   try {
     const entries = await loadExerciseEntries();

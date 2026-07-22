@@ -340,10 +340,12 @@
   },
   "logExercise": {
     "title": "Registrar Ejercicio",
+    "editTitle": "Editar Actividad",
     "whatDidYouDo": "¿Qué hiciste?",
     "howLong": "¿Cuánto tiempo?",
     "minutes": "minutos",
     "saveActivity": "Guardar Actividad",
+    "updateActivity": "Actualizar Actividad",
     "saveError": "Hubo un problema al guardar esta actividad. Por favor, inténtalo de nuevo.",
     "categories": {
       "cardio": "Cardio",
@@ -355,6 +357,7 @@
     "yourActivity": "Tu Actividad",
     "logExerciseButton": "Registrar Ejercicio",
     "emptyToday": "Aún no has registrado nada hoy. Toca arriba para añadir tu primera actividad.",
+    "emptyDay": "No hay nada registrado este día. Toca arriba para añadir una actividad.",
     "deleteConfirmTitle": "¿Eliminar Actividad?",
     "deleteConfirmMessage": "Esto eliminará esta actividad registrada."
   },

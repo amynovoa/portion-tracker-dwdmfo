@@ -340,10 +340,12 @@
   },
   "logExercise": {
     "title": "Log Exercise",
+    "editTitle": "Edit Activity",
     "whatDidYouDo": "What did you do?",
     "howLong": "How long?",
     "minutes": "minutes",
     "saveActivity": "Save Activity",
+    "updateActivity": "Update Activity",
     "saveError": "There was a problem saving this activity. Please try again.",
     "categories": {
       "cardio": "Cardio",
@@ -355,6 +357,7 @@
     "yourActivity": "Your Activity",
     "logExerciseButton": "Log Exercise",
     "emptyToday": "Nothing logged yet today. Tap above to add your first activity.",
+    "emptyDay": "Nothing logged for this day. Tap above to add an activity.",
     "deleteConfirmTitle": "Delete Activity?",
     "deleteConfirmMessage": "This will remove this logged activity."
   },

@@ -7,32 +7,38 @@ import { getTodayString } from '@/utils/dateUtils';
 import { loadExerciseEntriesForDate, deleteExerciseEntry } from '@/utils/storage';
 import { ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
 import AppLogo from '@/components/AppLogo';
+import DaySelector from '@/components/DaySelector';
 import { useTranslation } from 'react-i18next';
 
 export default function ExerciseScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [entries, setEntries] = useState<ExerciseEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
-    console.log('[ExerciseScreen] Loading today\'s exercise entries...');
-    const today = getTodayString();
-    const todayEntries = await loadExerciseEntriesForDate(today);
-    console.log('[ExerciseScreen] Loaded entries:', todayEntries.length);
-    setEntries(todayEntries);
+  const loadData = useCallback(async (date: string) => {
+    console.log('[ExerciseScreen] Loading exercise entries for', date);
+    const dateEntries = await loadExerciseEntriesForDate(date);
+    console.log('[ExerciseScreen] Loaded entries:', dateEntries.length);
+    setEntries(dateEntries);
     setIsLoading(false);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadData();
-    }, [loadData])
+      loadData(selectedDate);
+    }, [loadData, selectedDate])
   );
 
   const handleLogExercise = () => {
-    console.log('[ExerciseScreen] Log Exercise pressed');
-    router.push('/log-exercise');
+    console.log('[ExerciseScreen] Log Exercise pressed for date:', selectedDate);
+    router.push({ pathname: '/log-exercise', params: { date: selectedDate } });
+  };
+
+  const handleEditExercise = (entry: ExerciseEntry) => {
+    console.log('[ExerciseScreen] Edit exercise entry pressed:', entry.id);
+    router.push({ pathname: '/log-exercise', params: { date: entry.date, id: entry.id } });
   };
 
   const handleDeleteExercise = (entry: ExerciseEntry) => {
@@ -47,7 +53,7 @@ export default function ExerciseScreen() {
           onPress: async () => {
             console.log('[ExerciseScreen] Deleting exercise entry:', entry.id);
             await deleteExerciseEntry(entry.id);
-            await loadData();
+            await loadData(selectedDate);
           },
         },
       ]
@@ -64,20 +70,29 @@ export default function ExerciseScreen() {
           <Text style={styles.title}>{t('logExercise.yourActivity')}</Text>
         </View>
 
+        <DaySelector selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+
         <View style={styles.content}>
           <TouchableOpacity style={styles.logExerciseButton} onPress={handleLogExercise}>
             <Text style={styles.logExerciseButtonText}>+ {t('logExercise.logExerciseButton')}</Text>
           </TouchableOpacity>
 
           {!isLoading && entries.length === 0 && (
-            <Text style={styles.emptyText}>{t('logExercise.emptyToday')}</Text>
+            <Text style={styles.emptyText}>
+              {selectedDate === getTodayString() ? t('logExercise.emptyToday') : t('logExercise.emptyDay')}
+            </Text>
           )}
 
           {entries.map((entry) => {
             const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === entry.category);
             const categoryLabel = t(`logExercise.categories.${entry.category}`);
             return (
-              <View key={entry.id} style={styles.activityRow}>
+              <TouchableOpacity
+                key={entry.id}
+                style={styles.activityRow}
+                onPress={() => handleEditExercise(entry)}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.activityRowIcon}>{categoryInfo?.icon}</Text>
                 <View style={styles.activityRowContent}>
                   <Text style={styles.activityRowLabel}>{categoryLabel}</Text>
@@ -88,7 +103,7 @@ export default function ExerciseScreen() {
                 <TouchableOpacity onPress={() => handleDeleteExercise(entry)} style={styles.deleteIcon}>
                   <Text style={styles.deleteIconText}>×</Text>
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>

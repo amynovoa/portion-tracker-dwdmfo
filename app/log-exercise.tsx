@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
 import { EXERCISE_CATEGORIES, ExerciseCategory, ExerciseEntry } from '@/types';
-import { saveExerciseEntry, loadDailyPortions, saveDailyPortions } from '@/utils/storage';
+import { saveExerciseEntry, updateExerciseEntry, loadExerciseEntries, loadDailyPortions, saveDailyPortions } from '@/utils/storage';
 import { getTodayString } from '@/utils/dateUtils';
 import { useTranslation } from 'react-i18next';
 
@@ -18,9 +18,26 @@ const DURATION_DEFAULT = 30;
 export default function LogExerciseScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { date: dateParam, id: idParam } = useLocalSearchParams<{ date?: string; id?: string }>();
+  const isEditing = !!idParam;
   const [selectedCategory, setSelectedCategory] = useState<ExerciseCategory | null>(null);
   const [duration, setDuration] = useState(DURATION_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [loadingEntry, setLoadingEntry] = useState(isEditing);
+
+  // If editing, load the existing entry and prefill the form
+  useEffect(() => {
+    if (!idParam) return;
+    (async () => {
+      const entries = await loadExerciseEntries();
+      const existing = entries.find((e) => e.id === idParam);
+      if (existing) {
+        setSelectedCategory(existing.category);
+        setDuration(existing.durationMinutes);
+      }
+      setLoadingEntry(false);
+    })();
+  }, [idParam]);
 
   const handleDecrement = () => {
     setDuration((d) => Math.max(DURATION_MIN, d - DURATION_STEP));
@@ -34,27 +51,44 @@ export default function LogExerciseScreen() {
     if (!selectedCategory || saving) return;
     setSaving(true);
     try {
-      const date = getTodayString();
-      const entry: ExerciseEntry = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        date,
-        category: selectedCategory,
-        durationMinutes: duration,
-        timestamp: Date.now(),
-      };
-      console.log('[LogExercise] Saving entry:', entry);
-      await saveExerciseEntry(entry);
+      if (isEditing && idParam) {
+        // Editing: keep the original date/id/timestamp, just update what changed.
+        // The daily exercise counter was already incremented when this entry was first
+        // created, so it isn't touched again here.
+        const entries = await loadExerciseEntries();
+        const existing = entries.find((e) => e.id === idParam);
+        const updated: ExerciseEntry = {
+          id: idParam,
+          date: existing?.date ?? getTodayString(),
+          category: selectedCategory,
+          durationMinutes: duration,
+          timestamp: existing?.timestamp ?? Date.now(),
+        };
+        console.log('[LogExercise] Updating entry:', updated);
+        await updateExerciseEntry(updated);
+      } else {
+        const date = dateParam ?? getTodayString();
+        const entry: ExerciseEntry = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          date,
+          category: selectedCategory,
+          durationMinutes: duration,
+          timestamp: Date.now(),
+        };
+        console.log('[LogExercise] Saving entry:', entry);
+        await saveExerciseEntry(entry);
 
-      // Reflect "logged something today" in the existing exercise portion counter
-      // (feeds onboarding targets/adherence elsewhere) without touching that logic itself.
-      const dailyPortions = await loadDailyPortions(date);
-      await saveDailyPortions({
-        ...dailyPortions,
-        portions: {
-          ...dailyPortions.portions,
-          exercise: dailyPortions.portions.exercise + 1,
-        },
-      });
+        // Reflect "logged something on this date" in the existing exercise portion counter
+        // (feeds onboarding targets/adherence elsewhere) without touching that logic itself.
+        const dailyPortions = await loadDailyPortions(date);
+        await saveDailyPortions({
+          ...dailyPortions,
+          portions: {
+            ...dailyPortions.portions,
+            exercise: dailyPortions.portions.exercise + 1,
+          },
+        });
+      }
 
       router.back();
     } catch (error) {
@@ -70,13 +104,13 @@ export default function LogExerciseScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: t('logExercise.title'),
+          title: isEditing ? t('logExercise.editTitle') : t('logExercise.title'),
           headerBackTitle: t('common.back'),
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
         }}
       />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} scrollEnabled={!loadingEntry}>
         <Text style={styles.sectionTitle}>{t('logExercise.whatDidYouDo')}</Text>
         {EXERCISE_CATEGORIES.map((cat) => {
           const isSelected = selectedCategory === cat.value;
@@ -122,7 +156,9 @@ export default function LogExerciseScreen() {
           onPress={handleSave}
           disabled={!selectedCategory || saving}
         >
-          <Text style={styles.saveButtonText}>{t('logExercise.saveActivity')}</Text>
+          <Text style={styles.saveButtonText}>
+            {isEditing ? t('logExercise.updateActivity') : t('logExercise.saveActivity')}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
