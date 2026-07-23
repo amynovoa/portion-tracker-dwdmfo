@@ -355,12 +355,17 @@
       "other": "Otro"
     },
     "yourActivity": "Tu Actividad",
-    "thisWeek": "Esta Semana",
     "logExerciseButton": "Registrar Ejercicio",
     "emptyToday": "Aún no has registrado nada hoy. Toca arriba para añadir tu primera actividad.",
     "emptyDay": "No hay nada registrado este día. Toca arriba para añadir una actividad.",
     "deleteConfirmTitle": "¿Eliminar Actividad?",
-    "deleteConfirmMessage": "Esto eliminará esta actividad registrada."
+    "deleteConfirmMessage": "Esto eliminará esta actividad registrada.",
+    "activityOverTime": "Actividad en el Tiempo",
+    "chartNoData": "Aún no hay actividad",
+    "chartNoDataSubtext": "Registra ejercicio para ver tu tendencia aquí",
+    "allActivity": "Toda la Actividad",
+    "noHistory": "Aún no has registrado ejercicio",
+    "dailyTotal": "{{minutes}} min en total"
   },
   "resetData": {
     "title": "Restablecer Datos",

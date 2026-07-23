@@ -3,19 +3,27 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { getTodayString, formatDate } from '@/utils/dateUtils';
+import { getTodayString, formatDate, formatDisplayDate } from '@/utils/dateUtils';
 import { loadExerciseEntriesForDate, loadExerciseEntries, deleteExerciseEntry } from '@/utils/storage';
-import { ExerciseEntry, EXERCISE_CATEGORIES, ExerciseCategory } from '@/types';
+import { ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
 import AppLogo from '@/components/AppLogo';
 import DaySelector from '@/components/DaySelector';
+import ExerciseChart from '@/components/ExerciseChart';
 import { useTranslation } from 'react-i18next';
 
-// Same 7-day window as DaySelector (today + 6 prior days), so the weekly
-// summary always matches what's actually selectable above it.
-function getLast7DayStrings(): string[] {
+const CHART_DAYS = 14;
+const HISTORY_PREVIEW_COUNT = 5;
+
+interface DayGroup {
+  date: string;
+  entries: ExerciseEntry[];
+  totalMinutes: number;
+}
+
+function getLastNDayStrings(n: number): string[] {
   const days: string[] = [];
   const today = new Date();
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < n; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     days.push(formatDate(date));
@@ -23,17 +31,15 @@ function getLast7DayStrings(): string[] {
   return days;
 }
 
-interface CategoryTotal {
-  category: ExerciseCategory;
-  minutes: number;
-}
-
 export default function ExerciseScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [entries, setEntries] = useState<ExerciseEntry[]>([]);
-  const [weeklyTotals, setWeeklyTotals] = useState<CategoryTotal[]>([]);
+  const [chartData, setChartData] = useState<{ date: string; minutes: number }[]>([]);
+  const [dayGroups, setDayGroups] = useState<DayGroup[]>([]);
+  const [expandedHistoryDates, setExpandedHistoryDates] = useState<Set<string>>(new Set());
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async (date: string) => {
@@ -42,19 +48,31 @@ export default function ExerciseScreen() {
     console.log('[ExerciseScreen] Loaded entries:', dateEntries.length);
     setEntries(dateEntries);
 
-    // Weekly summary — total minutes per category across the same 7-day window as DaySelector
-    const weekDates = new Set(getLast7DayStrings());
     const allEntries = await loadExerciseEntries();
-    const totalsByCategory = new Map<ExerciseCategory, number>();
+
+    // Chart — total minutes per day for the last CHART_DAYS days, oldest to newest
+    const chartDates = getLastNDayStrings(CHART_DAYS).reverse();
+    const minutesByDate = new Map<string, number>();
     for (const entry of allEntries) {
-      if (!weekDates.has(entry.date)) continue;
-      totalsByCategory.set(entry.category, (totalsByCategory.get(entry.category) ?? 0) + entry.durationMinutes);
+      minutesByDate.set(entry.date, (minutesByDate.get(entry.date) ?? 0) + entry.durationMinutes);
     }
-    const totals = EXERCISE_CATEGORIES
-      .map((c) => ({ category: c.value, minutes: totalsByCategory.get(c.value) ?? 0 }))
-      .filter((t) => t.minutes > 0)
-      .sort((a, b) => b.minutes - a.minutes);
-    setWeeklyTotals(totals);
+    setChartData(chartDates.map((d) => ({ date: d, minutes: minutesByDate.get(d) ?? 0 })));
+
+    // Full history — every entry ever logged, grouped by date, most recent first
+    const groupsByDate = new Map<string, ExerciseEntry[]>();
+    for (const entry of allEntries) {
+      const group = groupsByDate.get(entry.date) ?? [];
+      group.push(entry);
+      groupsByDate.set(entry.date, group);
+    }
+    const groups: DayGroup[] = Array.from(groupsByDate.entries())
+      .map(([groupDate, groupEntries]) => ({
+        date: groupDate,
+        entries: groupEntries,
+        totalMinutes: groupEntries.reduce((sum, e) => sum + e.durationMinutes, 0),
+      }))
+      .sort((a, b) => b.date.localeCompare(a.date));
+    setDayGroups(groups);
 
     setIsLoading(false);
   }, []);
@@ -93,6 +111,17 @@ export default function ExerciseScreen() {
       ]
     );
   };
+
+  const toggleHistoryDate = (date: string) => {
+    setExpandedHistoryDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  };
+
+  const displayedGroups = showAllHistory ? dayGroups : dayGroups.slice(0, HISTORY_PREVIEW_COUNT);
 
   return (
     <View style={commonStyles.container}>
@@ -142,36 +171,77 @@ export default function ExerciseScreen() {
           })}
         </View>
 
-        {weeklyTotals.length > 0 && (
-          <View style={styles.weekSummary}>
-            <Text style={styles.weekSummaryTitle}>{t('logExercise.thisWeek')}</Text>
-            <View style={styles.weekSummaryCard}>
-              {weeklyTotals.map((total, index) => {
-                const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === total.category);
-                const isLast = index === weeklyTotals.length - 1;
-                return (
-                  <View
-                    key={total.category}
-                    style={[styles.weekSummaryRow, isLast && styles.weekSummaryRowLast]}
-                  >
-                    <Text style={styles.weekSummaryIcon}>{categoryInfo?.icon}</Text>
-                    <Text
-                      style={styles.weekSummaryLabel}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.75}
-                    >
-                      {t(`logExercise.categories.${total.category}`)}
-                    </Text>
-                    <Text style={styles.weekSummaryMinutes} numberOfLines={1}>
-                      {total.minutes} {t('logExercise.minutes')}
+        {/* Chart — total minutes per day, last CHART_DAYS days */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('logExercise.activityOverTime')}</Text>
+          <View style={styles.chartCard}>
+            <ExerciseChart dailyTotals={chartData} />
+          </View>
+        </View>
+
+        {/* Full history — every entry ever logged, grouped by date, unlimited */}
+        <View style={styles.section}>
+          <View style={styles.historyHeader}>
+            <Text style={styles.sectionTitle}>{t('logExercise.allActivity')}</Text>
+            {dayGroups.length > HISTORY_PREVIEW_COUNT && (
+              <TouchableOpacity onPress={() => setShowAllHistory((v) => !v)}>
+                <Text style={styles.showMoreText}>
+                  {showAllHistory ? t('weightScreen.showLess') : t('weightScreen.showAll', { n: dayGroups.length })}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {!isLoading && dayGroups.length === 0 && (
+            <Text style={styles.emptyText}>{t('logExercise.noHistory')}</Text>
+          )}
+
+          {displayedGroups.map((group) => {
+            const isExpanded = expandedHistoryDates.has(group.date);
+            return (
+              <View key={group.date} style={styles.dayCard}>
+                <TouchableOpacity style={styles.dayHeader} onPress={() => toggleHistoryDate(group.date)}>
+                  <View style={styles.dayHeaderLeft}>
+                    <Text style={styles.dayDate}>{formatDisplayDate(group.date, i18n.language)}</Text>
+                    <Text style={styles.dayTotal}>
+                      {t('logExercise.dailyTotal', { minutes: group.totalMinutes })}
                     </Text>
                   </View>
-                );
-              })}
-            </View>
-          </View>
-        )}
+                  <Text style={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</Text>
+                </TouchableOpacity>
+
+                {isExpanded && (
+                  <View style={styles.dayDetails}>
+                    {group.entries.map((entry) => {
+                      const categoryInfo = EXERCISE_CATEGORIES.find((c) => c.value === entry.category);
+                      return (
+                        <TouchableOpacity
+                          key={entry.id}
+                          style={styles.historyEntryRow}
+                          onPress={() => handleEditExercise(entry)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.activityRowIcon}>{categoryInfo?.icon}</Text>
+                          <View style={styles.activityRowContent}>
+                            <Text style={styles.activityRowLabel}>
+                              {t(`logExercise.categories.${entry.category}`)}
+                            </Text>
+                            <Text style={styles.activityRowDuration}>
+                              {entry.durationMinutes} {t('logExercise.minutes')}
+                            </Text>
+                          </View>
+                          <TouchableOpacity onPress={() => handleDeleteExercise(entry)} style={styles.deleteIcon}>
+                            <Text style={styles.deleteIconText}>×</Text>
+                          </TouchableOpacity>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
       </ScrollView>
     </View>
   );
@@ -253,43 +323,75 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 24,
   },
-  weekSummary: {
+  section: {
     paddingHorizontal: 20,
-    marginTop: 8,
+    marginTop: 24,
   },
-  weekSummaryTitle: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 10,
   },
-  weekSummaryCard: {
-    backgroundColor: colors.card,
+  chartCard: {
+    backgroundColor: colors.cardBackground,
     borderRadius: 12,
-    paddingHorizontal: 14,
+    padding: 12,
+    marginTop: 10,
+    overflow: 'hidden',
   },
-  weekSummaryRow: {
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  dayCard: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 12,
+    marginTop: 10,
+    overflow: 'hidden',
+  },
+  dayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  dayHeaderLeft: {
+    flex: 1,
+  },
+  dayDate: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  dayTotal: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  expandIcon: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginLeft: 12,
+  },
+  dayDetails: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    padding: 12,
+    paddingTop: 8,
+    gap: 8,
+  },
+  historyEntryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    gap: 10,
-  },
-  weekSummaryRowLast: {
-    borderBottomWidth: 0,
-  },
-  weekSummaryIcon: {
-    fontSize: 18,
-  },
-  weekSummaryLabel: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.text,
-  },
-  weekSummaryMinutes: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.primary,
+    backgroundColor: colors.card,
+    borderRadius: 10,
+    padding: 12,
+    gap: 12,
   },
 });
