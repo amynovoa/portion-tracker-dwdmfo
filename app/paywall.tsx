@@ -77,7 +77,7 @@ export default function PaywallScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
 
-  const { packages, loading, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet, devBypass } =
+  const { packages, loading, isSubscribed, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet, devBypass } =
     useSubscription();
 
   // Dev-only fallback: Expo Go has no RevenueCat native module, so `packages` stays empty.
@@ -99,9 +99,12 @@ export default function PaywallScreen() {
     }
   }, [displayPackages, selectedPackage]);
 
+  const hasNavigatedRef = React.useRef(false);
 
   // Navigate after a successful purchase or restore
   const navigateAfterPurchase = async () => {
+    if (hasNavigatedRef.current) return;
+    hasNavigatedRef.current = true;
     console.log("[Paywall] Purchase/restore confirmed — persisting subscription flag");
     await markSubscribed();
     const profile = await loadProfile();
@@ -115,6 +118,17 @@ export default function PaywallScreen() {
       router.replace("/setup-profile");
     }
   };
+
+  // Safety net: some purchase paths (e.g. the offer-code redemption sheet) resolve
+  // as soon as Apple's native UI is *presented*, not once the entitlement actually
+  // lands — so a one-time check right after can miss it. This reacts to the
+  // subscription context's real entitlement state changing at any point while the
+  // paywall is on screen, regardless of which action caused it.
+  React.useEffect(() => {
+    if (isSubscribed) {
+      navigateAfterPurchase();
+    }
+  }, [isSubscribed]);
 
   // Handle purchase
   const handlePurchase = async () => {
