@@ -155,8 +155,15 @@ export default function ExerciseScreen() {
                     style={[styles.weekSummaryRow, isLast && styles.weekSummaryRowLast]}
                   >
                     <Text style={styles.weekSummaryIcon}>{categoryInfo?.icon}</Text>
-                    <Text style={styles.weekSummaryLabel}>{t(`logExercise.categories.${total.category}`)}</Text>
-                    <Text style={styles.weekSummaryMinutes}>
+                    <Text
+                      style={styles.weekSummaryLabel}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.75}
+                    >
+                      {t(`logExercise.categories.${total.category}`)}
+                    </Text>
+                    <Text style={styles.weekSummaryMinutes} numberOfLines={1}>
                       {total.minutes} {t('logExercise.minutes')}
                     </Text>
                   </View>
