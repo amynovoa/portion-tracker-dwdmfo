@@ -83,6 +83,8 @@ interface SubscriptionContextType {
   mockNativePurchase: () => Promise<void>;
   /** iOS only: open Apple's native offer code redemption sheet. Returns true if subscription was granted. */
   presentCodeRedemptionSheet: () => Promise<boolean>;
+  /** Dev only: bypass subscription check in any build for testing */
+  devBypass: () => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
@@ -306,11 +308,35 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       return hasEntitlement;
     } catch (error: any) {
       // Don't treat user cancellation as an error
-      if (!error.userCancelled) {
-        console.error("[RevenueCat] Purchase failed:", error);
-        throw error;
+      if (error.userCancelled) {
+        return false;
       }
-      return false;
+
+      // Some StoreKit flows reject this promise even though the user is (or
+      // remains) entitled — most notably switching plans while already
+      // subscribed, where Apple schedules the change for the next renewal
+      // instead of completing an immediate new transaction, and the SDK
+      // surfaces that as an error rather than a clean success. Re-check real
+      // entitlement before showing the user a scary "purchase failed" alert.
+      try {
+        const recheckInfo = await Purchases.getCustomerInfo();
+        const stillEntitled =
+          typeof recheckInfo.entitlements.active[ENTITLEMENT_ID] !== "undefined";
+        if (stillEntitled) {
+          console.warn(
+            "[RevenueCat] purchasePackage rejected but entitlement is active — treating as success:",
+            error
+          );
+          setIsSubscribed(true);
+          await SecureStore.setItemAsync(NATIVE_PURCHASE_KEY, "true").catch(() => {});
+          return true;
+        }
+      } catch (recheckError) {
+        console.error("[RevenueCat] Error re-checking entitlement after purchase error:", recheckError);
+      }
+
+      console.error("[RevenueCat] Purchase failed:", error);
+      throw error;
     }
   };
 
@@ -351,6 +377,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setIsSubscribed(true);
   };
 
+  const devBypass = async (): Promise<void> => {
+    await SecureStore.setItemAsync(NATIVE_PURCHASE_KEY, "true").catch(() => {});
+    setIsSubscribed(true);
+  };
+
   const presentCodeRedemptionSheet = async (): Promise<boolean> => {
     if (isWeb || Platform.OS !== 'ios') return false;
     try {
@@ -387,6 +418,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         mockWebPurchase,
         mockNativePurchase,
         presentCodeRedemptionSheet,
+        devBypass,
       }}
     >
       {children}
