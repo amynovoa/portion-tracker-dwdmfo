@@ -124,8 +124,16 @@ export default function PaywallScreen() {
   // lands — so a one-time check right after can miss it. This reacts to the
   // subscription context's real entitlement state changing at any point while the
   // paywall is on screen, regardless of which action caused it.
+  //
+  // Only fires on an actual false→true transition, never just because isSubscribed
+  // is already true when this screen mounts — an already-subscribed user can reach
+  // this screen intentionally (Settings → Subscription) to view/manage their plan,
+  // redeem another code, etc., and that must not instantly bounce them back out.
+  const wasSubscribedRef = React.useRef(isSubscribed);
   React.useEffect(() => {
-    if (isSubscribed) {
+    const wasSubscribed = wasSubscribedRef.current;
+    wasSubscribedRef.current = isSubscribed;
+    if (isSubscribed && !wasSubscribed) {
       navigateAfterPurchase();
     }
   }, [isSubscribed]);
