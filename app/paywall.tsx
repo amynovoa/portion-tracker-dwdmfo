@@ -290,6 +290,9 @@ export default function PaywallScreen() {
             {isMockMode && (
               <Text style={styles.mockModeLabel}>PREVIEW — fake pricing, layout check only</Text>
             )}
+            <Text style={[styles.freeTrialShared, { color: C.primary }, isTablet && { fontSize: 14 }]}>
+              {t('paywall.freeTrial')}
+            </Text>
             <View style={[styles.packagesContainer, { marginBottom: 8 }, isTablet && { gap: 16 }]}>
               {displayPackages.map((pkg) => {
                 const isSelected = selectedPackage?.identifier === pkg.identifier;
@@ -538,6 +541,14 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
     marginBottom: 6,
+  },
+  // One shared line above both cards, replacing the old per-card "7-day free trial" text
+  freeTrialShared: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+    textAlign: "center",
+    marginBottom: 4,
   },
   // Small in-flow pill — kept compact so it doesn't push the price line off-screen
   bestValueBadge: {
