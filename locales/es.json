@@ -165,7 +165,7 @@
   },
   "welcome": {
     "welcomeTo": "Bienvenido a",
-    "tagline": "Porciones Simples. Alimentación Equilibrada. Sin Contar Calorías.",
+    "tagline": "La app de nutrición para crear hábitos alimenticios más saludables, una porción a la vez.",
     "subtitle": "Una forma sencilla de comer bien y crear hábitos saludables para toda la vida.",
     "getStarted": "Comenzar"
   },
@@ -179,12 +179,11 @@
       "history": "Historial completo y tendencias",
       "reminders": "Recordatorios diarios"
     },
-    "tryFree": "Prueba gratis 7 días · luego {{price}}/{{period}}",
-    "startTrial": "Iniciar prueba gratuita",
+    "subscribeWithPrice": "Suscribirse · {{price}}/{{period}}",
+    "subscribeNow": "Suscribirse Ahora",
     "perYear": "año",
     "perMonth": "mes",
     "subtitle": "Porciones Simples. Alimentación Equilibrada.",
-    "freeTrial": "Prueba gratis 7 días",
     "bestValue": "Mejor Valor",
     "restore": "Restaurar Compras",
     "legalText": "El pago se cargará a tu cuenta de {{platform}}. La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del final del período actual.",

@@ -165,7 +165,7 @@
   },
   "welcome": {
     "welcomeTo": "Welcome to",
-    "tagline": "Simple Portions. Balanced Eating. No Calorie Counting.",
+    "tagline": "The nutrition app to build healthier eating habits—one portion at a time.",
     "subtitle": "A simple way to eat well and build healthy habits for life.",
     "getStarted": "Get Started"
   },
@@ -179,12 +179,11 @@
       "history": "Progress History & Trends",
       "reminders": "Daily Reminders"
     },
-    "tryFree": "Try Free for 7 Days · then {{price}}/{{period}}",
-    "startTrial": "Start Free Trial",
+    "subscribeWithPrice": "Subscribe · {{price}}/{{period}}",
+    "subscribeNow": "Subscribe Now",
     "perYear": "yr",
     "perMonth": "mo",
     "subtitle": "Simple Portions. Balanced Eating.",
-    "freeTrial": "7-day free trial",
     "bestValue": "Best Value",
     "restore": "Restore Purchases",
     "legalText": "Payment will be charged to your {{platform}} account. Subscription automatically renews unless canceled at least 24 hours before the end of the current period.",
