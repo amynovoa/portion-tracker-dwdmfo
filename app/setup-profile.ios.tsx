@@ -219,7 +219,6 @@ export default function SetupProfileScreen() {
   const heightUnitSuffix = t(weightUnit === 'kg' ? 'common.cm' : 'common.in');
   const heightBaseText = t('setupProfile.height');
   const heightLabelText = heightBaseText + ' (' + heightUnitSuffix + ')';
-  const heightHelperText = t('setupProfile.heightHelper');
   const heightPlaceholderText = t('setupProfile.heightPlaceholder');
   const primaryGoalLabelText = t('setupProfile.primaryGoal');
   const activityLevelLabelText = t('setupProfile.activityLevel');
@@ -287,7 +286,6 @@ export default function SetupProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.label}>{heightLabelText}</Text>
-          <Text style={styles.helperText}>{heightHelperText}</Text>
           <TextInput
             style={styles.input}
             value={height}

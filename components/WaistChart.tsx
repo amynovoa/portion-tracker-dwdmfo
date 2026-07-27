@@ -283,7 +283,7 @@ export default function WaistChart({ entries, unitLabel }: WaistChartProps) {
   return (
     <View style={styles.container}>
       {unitLabel ? (
-        <Text style={styles.unitCaption}>{t('weightScreen.chartUnitCaption', { unit: unitLabel })}</Text>
+        <Text style={styles.unitCaption}>{t('weightScreen.waistChartUnitCaption', { unit: unitLabel })}</Text>
       ) : null}
       {svgContent}
     </View>

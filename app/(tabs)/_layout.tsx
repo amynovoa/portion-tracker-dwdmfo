@@ -30,16 +30,16 @@ export default function TabLayout() {
       label: t('tabs.weight'),
     },
     {
-      name: 'faqs',
-      route: '/(tabs)/faqs',
-      icon: 'help',
-      label: t('tabs.faqs'),
-    },
-    {
       name: 'exercise',
       route: '/(tabs)/exercise',
       icon: 'fitness-center',
       label: t('tabs.exercise'),
+    },
+    {
+      name: 'faqs',
+      route: '/(tabs)/faqs',
+      icon: 'help',
+      label: t('tabs.faqs'),
     },
     {
       name: 'settings',
@@ -60,8 +60,8 @@ export default function TabLayout() {
         <Stack.Screen name="(home)" />
         <Stack.Screen name="history" />
         <Stack.Screen name="weight" />
-        <Stack.Screen name="faqs" />
         <Stack.Screen name="exercise" />
+        <Stack.Screen name="faqs" />
         <Stack.Screen name="settings" />
       </Stack>
       <FloatingTabBar tabs={tabs} useFullWidth={true} />
