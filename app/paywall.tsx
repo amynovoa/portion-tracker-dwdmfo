@@ -77,7 +77,7 @@ export default function PaywallScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
 
-  const { packages, loading, isSubscribed, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet, devBypass } =
+  const { packages, loading, isSubscribed, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet } =
     useSubscription();
 
   // Dev-only fallback: Expo Go has no RevenueCat native module, so `packages` stays empty.
@@ -90,7 +90,6 @@ export default function PaywallScreen() {
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [redeemingCode, setRedeemingCode] = useState(false);
-  const [devTapCount, setDevTapCount] = useState(0);
 
   // Update selected package when packages (real or mock) load
   React.useEffect(() => {
@@ -257,20 +256,7 @@ export default function PaywallScreen() {
       >
         {/* Header */}
         <View style={[styles.header, isTablet && { gap: 8 }, { marginBottom: 6 }]}>
-          <TouchableOpacity
-            onPress={async () => {
-              const next = devTapCount + 1;
-              setDevTapCount(next);
-              if (next >= 7) {
-                setDevTapCount(0);
-                await devBypass();
-                await navigateAfterPurchase();
-              }
-            }}
-            activeOpacity={1}
-          >
-            <AppLogo size={logoSize} />
-          </TouchableOpacity>
+          <AppLogo size={logoSize} />
           <Text style={[styles.title, { color: C.text }, isTablet && { fontSize: 28 }]}>Portion Track</Text>
         </View>
 
@@ -442,16 +428,6 @@ export default function PaywallScreen() {
             {t('paywall.privacyPolicy')}
           </Text>
         </Text>
-
-        {/* Developer bypass — hidden on iOS (not needed for TestFlight/App Store), kept on Android */}
-        {Platform.OS === "android" && (
-          <TouchableOpacity
-            style={styles.devBypassButton}
-            onPress={async () => { await devBypass(); await navigateAfterPurchase(); }}
-          >
-            <Text style={styles.devBypassText}>⚙️ Developer Access</Text>
-          </TouchableOpacity>
-        )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -655,19 +631,5 @@ const styles = StyleSheet.create({
   offerCodeText: {
     fontSize: 13,
     textDecorationLine: "underline",
-  },
-  devBypassButton: {
-    marginTop: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#aaa",
-    borderRadius: 8,
-    borderStyle: "dashed",
-  },
-  devBypassText: {
-    fontSize: 12,
-    color: "#888",
-    fontWeight: "600",
   },
 });
