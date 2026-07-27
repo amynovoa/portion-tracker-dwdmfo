@@ -8,7 +8,6 @@ import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
 import { setStoredLanguage } from '@/utils/i18n';
 import { loadWeightUnit, saveWeightUnit, convertAllStoredWeights } from '@/utils/weightUnit';
-import { supabase } from '@/utils/supabase';
 
 const styles = StyleSheet.create({
   container: {
@@ -69,20 +68,6 @@ export default function SettingsScreen() {
   useEffect(() => {
     setCurrentLang(i18nInstance.language || 'en');
   }, [i18nInstance.language]);
-
-  const handleLogout = async () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log Out',
-        style: 'destructive',
-        onPress: async () => {
-          await supabase.auth.signOut();
-          router.replace('/auth');
-        },
-      },
-    ]);
-  };
 
   const handleResetAppData = () => {
     console.log('=== RESET APP DATA BUTTON PRESSED ===');
@@ -257,18 +242,6 @@ export default function SettingsScreen() {
             <Text style={styles.settingLabel}>{t('settings.resetAppData')}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
-        </TouchableOpacity>
-
-        {/* Log Out */}
-        <TouchableOpacity
-          style={[styles.settingItem, { marginTop: 16, borderColor: '#C94A3D' }]}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.settingIcon}>🚪</Text>
-          <View style={styles.settingContent} pointerEvents="none">
-            <Text style={[styles.settingLabel, { color: '#C94A3D' }]}>Log Out</Text>
-          </View>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

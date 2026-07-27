@@ -11,7 +11,6 @@ import { initializeNotifications } from '@/utils/notificationManager';
 import { createAutomaticBackup } from '@/utils/backupManager';
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
 import { initI18n } from '@/utils/i18n';
-import { supabase } from '@/utils/supabase';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -67,7 +66,6 @@ function AppContent() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
         <Stack.Screen name="welcome" />
         <Stack.Screen name="paywall" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="setup-profile" />
