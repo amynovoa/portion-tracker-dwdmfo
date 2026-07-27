@@ -480,7 +480,7 @@
     },
     "wholeGrains": {
       "benefit": "Los granos integrales proporcionan energía sostenida, fibra y vitaminas del complejo B. Apoyan la digestión y ayudan a estabilizar el azúcar en sangre.\n\nElige granos integrales sobre granos refinados siempre que sea posible.\n\nCombínalos con proteína y verduras para comidas equilibradas.",
-      "avoid": "Evita los granos refinados (pan blanco, arroz blanco, pasteles).\n\nLimita los cereales azucarados y los productos horneados.\n\nVigila las porciones — los granos son densos en calorías.",
+      "avoid": "Evita los granos refinados (pan blanco, arroz blanco, pasteles).\n\nLimita los cereales azucarados y los productos horneados.",
       "examples": "Granos:\n- Avena, quinoa, arroz integral, cebada\n\nPan y pasta:\n- Pan integral, pasta de grano entero, tortillas de maíz o grano entero\n\nVerduras con almidón (cuentan como granos):\n- Camotes, papas blancas, maíz, chícharos, plátanos machos",
       "portionSize": "Aproximadamente ½ taza de granos cocidos, 1 rebanada de pan o 1 papa pequeña"
     },
@@ -499,7 +499,7 @@
     "water": {
       "benefit": "El agua es esencial para todas las funciones corporales — digestión, circulación, regulación de temperatura y más.\n\nMantenerse hidratado apoya la energía, la concentración y el rendimiento físico.\n\nTambién puede ayudar con el control del apetito y reducir los antojos innecesarios.",
       "avoid": "Evita las bebidas azucaradas (refrescos, bebidas de café endulzadas, bebidas energéticas).\n\nLimita los jugos de fruta — son altos en azúcar y bajos en fibra.\n\nVigila el consumo de cafeína — puede deshidratar en exceso.",
-      "examples": "Mejores opciones:\n- Agua simple\n- Agua con gas (sin endulzar)\n- Té de hierbas\n- Agua con limón, pepino o menta\n\nBien con moderación:\n- Café negro, té sin endulzar",
+      "examples": "Mejores opciones:\n- Agua simple\n- Agua con gas (sin endulzar)\n- Té de hierbas\n- Agua con limón, pepino o menta",
       "portionSize": "Aproximadamente 240 ml (1 taza) por porción — busca 7-10+ porciones al día"
     },
     "exercise": {

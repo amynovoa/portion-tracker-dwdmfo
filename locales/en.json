@@ -480,7 +480,7 @@
     },
     "wholeGrains": {
       "benefit": "Whole grains provide sustained energy, fiber, and B vitamins. They support digestion and help stabilize blood sugar.\n\nChoose whole grains over refined grains whenever possible.\n\nPair with protein and veggies for balanced meals.",
-      "avoid": "Avoid refined grains (white bread, white rice, pastries).\n\nLimit sugary cereals and baked goods.\n\nWatch portion sizes — grains are calorie-dense.",
+      "avoid": "Avoid refined grains (white bread, white rice, pastries).\n\nLimit sugary cereals and baked goods.",
       "examples": "Grains:\n- Oats, quinoa, brown rice, barley\n\nBread & pasta:\n- Whole wheat bread, whole grain pasta, corn or whole grain tortillas\n\nStarchy vegetables (count as grains):\n- Sweet potatoes, white potatoes, corn, peas, plantains",
       "portionSize": "About ½ cup cooked grains, 1 slice bread, or 1 small potato"
     },
@@ -499,7 +499,7 @@
     "water": {
       "benefit": "Water is essential for every bodily function — digestion, circulation, temperature regulation, and more.\n\nStaying hydrated supports energy, focus, and physical performance.\n\nIt can also help with appetite control and reduce unnecessary snacking.",
       "avoid": "Avoid sugary drinks (soda, sweetened coffee drinks, energy drinks).\n\nLimit fruit juices — they're high in sugar and low in fiber.\n\nWatch caffeine intake — it can be dehydrating in excess.",
-      "examples": "Best choices:\n- Plain water\n- Sparkling water (unsweetened)\n- Herbal tea\n- Water with lemon, cucumber, or mint\n\nOkay in moderation:\n- Black coffee, unsweetened tea",
+      "examples": "Best choices:\n- Plain water\n- Sparkling water (unsweetened)\n- Herbal tea\n- Water with lemon, cucumber, or mint",
       "portionSize": "About 8 oz (1 cup) per serving — aim for 7-10+ servings per day"
     },
     "exercise": {
