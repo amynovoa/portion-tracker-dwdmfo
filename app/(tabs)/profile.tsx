@@ -128,6 +128,12 @@ export default function ProfileScreen() {
 
   const unitSuffix = t(weightUnit === 'kg' ? 'common.kg' : 'common.lbs');
   const heightUnitSuffix = t(weightUnit === 'kg' ? 'common.cm' : 'common.in');
+  const formatHeightImperial = (totalInches: number) => {
+    const rounded = Math.round(totalInches);
+    const feet = Math.floor(rounded / 12);
+    const inches = rounded % 12;
+    return `${feet}'${inches}"`;
+  };
   const headerText = t('profile.title');
   const personalInfoText = t('profile.personalInformation');
   const sexLabel = t('profile.sex');
@@ -137,7 +143,9 @@ export default function ProfileScreen() {
   const goalWeightLabel = t('profile.goalWeight');
   const goalWeightValue = profile.goalWeight + ' ' + unitSuffix;
   const heightLabel = t('profile.height');
-  const heightValue = profile.height ? profile.height + ' ' + heightUnitSuffix : t('profile.heightNotSet');
+  const heightValue = profile.height
+    ? (weightUnit === 'kg' ? profile.height + ' ' + heightUnitSuffix : formatHeightImperial(profile.height))
+    : t('profile.heightNotSet');
   const goalLabel = t('profile.goal');
   const goalValue = getGoalLabel(profile.goal);
   const editProfileText = t('profile.editProfile');

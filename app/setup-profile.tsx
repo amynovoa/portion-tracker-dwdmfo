@@ -92,6 +92,8 @@ export default function SetupProfileScreen() {
   const [weight, setWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
   const [height, setHeight] = useState('');
+  const [heightFeet, setHeightFeet] = useState('');
+  const [heightInches, setHeightInches] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
@@ -180,6 +182,13 @@ export default function SetupProfileScreen() {
       return;
     }
 
+    const isImperial = weightUnit !== 'kg';
+    const heightParam = isImperial
+      ? (heightFeet || heightInches
+        ? ((parseFloat(heightFeet) || 0) * 12 + (parseFloat(heightInches) || 0)).toString()
+        : '')
+      : height;
+
     console.log('Navigating to setup-targets with params:', {
       sex,
       weight: weightNum,
@@ -200,7 +209,7 @@ export default function SetupProfileScreen() {
         activityLevel,
         includeAlcohol: includeAlcohol.toString(),
         alcoholGoal: (includeAlcohol ? alcoholGoal : 0).toString(),
-        height: height,
+        height: heightParam,
       },
     });
   };
@@ -215,10 +224,11 @@ export default function SetupProfileScreen() {
   const goalWeightBaseText = t('setupProfile.goalWeight');
   const goalWeightLabelText = goalWeightBaseText + ' (' + unitSuffix + ')';
   const goalWeightPlaceholderText = t('setupProfile.goalWeightPlaceholder');
-  const heightUnitSuffix = t(weightUnit === 'kg' ? 'common.cm' : 'common.in');
   const heightBaseText = t('setupProfile.height');
-  const heightLabelText = heightBaseText + ' (' + heightUnitSuffix + ')';
+  const heightLabelText = weightUnit === 'kg' ? heightBaseText + ' (' + t('common.cm') + ')' : heightBaseText;
   const heightPlaceholderText = t('setupProfile.heightPlaceholder');
+  const ftUnitLabel = t('common.ft');
+  const inUnitLabel = t('common.in');
   const primaryGoalLabelText = t('setupProfile.primaryGoal');
   const activityLevelLabelText = t('setupProfile.activityLevel');
   const includeAlcoholLabelText = t('setupProfile.includeAlcohol');
@@ -285,14 +295,41 @@ export default function SetupProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.label}>{heightLabelText}</Text>
-          <TextInput
-            style={styles.input}
-            value={height}
-            onChangeText={setHeight}
-            keyboardType="numeric"
-            placeholder={heightPlaceholderText}
-            placeholderTextColor={colors.textSecondary}
-          />
+          {weightUnit === 'kg' ? (
+            <TextInput
+              style={styles.input}
+              value={height}
+              onChangeText={setHeight}
+              keyboardType="numeric"
+              placeholder={heightPlaceholderText}
+              placeholderTextColor={colors.textSecondary}
+            />
+          ) : (
+            <View style={styles.heightRow}>
+              <View style={styles.heightInputWrapper}>
+                <TextInput
+                  style={styles.heightInput}
+                  value={heightFeet}
+                  onChangeText={setHeightFeet}
+                  keyboardType="numeric"
+                  placeholder="0"
+                  placeholderTextColor={colors.textSecondary}
+                />
+                <Text style={styles.heightUnitSuffix}>{ftUnitLabel}</Text>
+              </View>
+              <View style={styles.heightInputWrapper}>
+                <TextInput
+                  style={styles.heightInput}
+                  value={heightInches}
+                  onChangeText={setHeightInches}
+                  keyboardType="numeric"
+                  placeholder="0"
+                  placeholderTextColor={colors.textSecondary}
+                />
+                <Text style={styles.heightUnitSuffix}>{inUnitLabel}</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -496,6 +533,32 @@ const styles = StyleSheet.create({
     color: colors.text,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  heightRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  heightInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  heightInput: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: colors.text,
+  },
+  heightUnitSuffix: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginLeft: 8,
   },
   selectButton: {
     backgroundColor: colors.surface,
