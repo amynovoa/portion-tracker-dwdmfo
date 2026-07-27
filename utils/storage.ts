@@ -1,10 +1,11 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, DailyPortions, WeightEntry, ExerciseEntry } from '@/types';
+import { UserProfile, DailyPortions, WeightEntry, ExerciseEntry, WaistEntry } from '@/types';
 
 const PROFILE_KEY = '@portion_tracker_profile';
 const DAILY_PORTIONS_PREFIX = '@portion_tracker_daily_';
 const WEIGHT_ENTRIES_KEY = '@portion_tracker_weight_entries';
+const WAIST_ENTRIES_KEY = '@portion_tracker_waist_entries';
 const EXERCISE_ENTRIES_KEY = '@portion_tracker_exercise_entries';
 const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
@@ -282,6 +283,68 @@ export async function saveAllWeightEntries(entries: WeightEntry[]): Promise<void
     await AsyncStorage.setItem(WEIGHT_ENTRIES_KEY, JSON.stringify(entries));
   } catch (error) {
     console.error('[storage] Error saving all weight entries:', error);
+  }
+}
+
+// Waist entries functions — mirrors the weight entry pattern exactly (one entry per date, upserted).
+export async function saveWaistEntry(entry: WaistEntry): Promise<void> {
+  try {
+    const entries = await loadWaistEntries();
+    const existingIndex = entries.findIndex(e => e.date === entry.date);
+
+    if (existingIndex >= 0) {
+      entries[existingIndex] = entry;
+    } else {
+      entries.push(entry);
+    }
+
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+    await AsyncStorage.setItem(WAIST_ENTRIES_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error('Error saving waist entry:', error);
+  }
+}
+
+export async function loadWaistEntries(): Promise<WaistEntry[]> {
+  try {
+    const data = await AsyncStorage.getItem(WAIST_ENTRIES_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (!Array.isArray(parsed)) {
+        console.warn('[storage] Waist entries is not an array, resetting');
+        return [];
+      }
+      const valid = parsed.filter((e: any) =>
+        e && typeof e.date === 'string' && typeof e.waist === 'number' &&
+        isFinite(e.waist) && typeof e.timestamp === 'number' && isFinite(e.timestamp)
+      );
+      if (valid.length !== parsed.length) {
+        console.warn(`[storage] Filtered ${parsed.length - valid.length} malformed waist entries`);
+      }
+      return valid;
+    }
+  } catch (error) {
+    console.error('[storage] Error loading waist entries:', error);
+  }
+  return [];
+}
+
+export async function deleteWaistEntry(date: string): Promise<void> {
+  try {
+    const entries = await loadWaistEntries();
+    const filtered = entries.filter(e => e.date !== date);
+    await AsyncStorage.setItem(WAIST_ENTRIES_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Error deleting waist entry:', error);
+  }
+}
+
+export async function saveAllWaistEntries(entries: WaistEntry[]): Promise<void> {
+  try {
+    console.log('[storage] Saving all waist entries, count:', entries.length);
+    await AsyncStorage.setItem(WAIST_ENTRIES_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error('[storage] Error saving all waist entries:', error);
   }
 }
 

@@ -13,6 +13,8 @@ export interface UserProfile {
   alcoholServings?: number;
   activityLevel?: ActivityLevel;
   portionTargets: PortionTargets;
+  // In inches when the weight unit is 'lbs', in cm when 'kg' — same convention as currentWeight/goalWeight.
+  height?: number;
 }
 
 export interface PortionTargets {
@@ -36,6 +38,12 @@ export interface DailyPortions {
 export interface WeightEntry {
   date: string; // YYYY-MM-DD format
   weight: number; // in pounds
+  timestamp: number; // Unix timestamp
+}
+
+export interface WaistEntry {
+  date: string; // YYYY-MM-DD format
+  waist: number; // in inches or cm, matching the weight unit preference at time of entry
   timestamp: number; // Unix timestamp
 }
 

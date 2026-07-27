@@ -137,6 +137,9 @@ export default function ProfileScreen() {
   const goalWeightValue = profile.goalWeight + ' ' + unitSuffix;
   const goalLabel = t('profile.goal');
   const goalValue = getGoalLabel(profile.goal);
+  const heightUnitSuffix = t(weightUnit === 'kg' ? 'common.cm' : 'common.in');
+  const heightLabel = t('profile.height');
+  const heightValue = profile.height ? profile.height + ' ' + heightUnitSuffix : t('profile.heightNotSet');
   const editProfileText = t('profile.editProfile');
   const dailyTargetsText = t('profile.dailyPortionTargets');
   const proteinLabel = t('profile.protein');
@@ -190,6 +193,11 @@ export default function ProfileScreen() {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>{goalLabel}</Text>
             <Text style={styles.infoValue}>{goalValue}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>{heightLabel}</Text>
+            <Text style={styles.infoValue}>{heightValue}</Text>
           </View>
 
           {/* Weight Unit Toggle */}

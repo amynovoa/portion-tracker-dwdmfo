@@ -103,6 +103,7 @@ export default function SetupTargetsScreen() {
   const activityLevel = params.activityLevel as string;
   const includeAlcohol = params.includeAlcohol as string;
   const alcoholGoal = params.alcoholGoal as string;
+  const height = params.height as string;
   
   const [targets, setTargets] = useState<PortionTargets>({
     protein: 3,
@@ -156,6 +157,7 @@ export default function SetupTargetsScreen() {
     
     try {
       const shouldIncludeAlcohol = includeAlcohol === 'true';
+      const parsedHeight = height ? parseFloat(height) : undefined;
       const profile = {
         sex: sex as Sex,
         currentWeight: parseFloat(weight),
@@ -165,6 +167,7 @@ export default function SetupTargetsScreen() {
         includeAlcohol: shouldIncludeAlcohol,
         alcoholServings: targets.alcohol,
         portionTargets: targets,
+        height: parsedHeight !== undefined && isFinite(parsedHeight) && parsedHeight > 0 ? parsedHeight : undefined,
       };
 
       console.log('Profile to save:', profile);

@@ -91,6 +91,7 @@ export default function SetupProfileScreen() {
   const [sex, setSex] = useState<Sex>('female');
   const [weight, setWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [goal, setGoal] = useState<Goal>('maintain');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
   const [includeAlcohol, setIncludeAlcohol] = useState(false);
@@ -200,6 +201,7 @@ export default function SetupProfileScreen() {
         activityLevel,
         includeAlcohol: includeAlcohol.toString(),
         alcoholGoal: (includeAlcohol ? alcoholGoal : 0).toString(),
+        height: height,
       },
     });
   };
@@ -214,6 +216,11 @@ export default function SetupProfileScreen() {
   const goalWeightBaseText = t('setupProfile.goalWeight');
   const goalWeightLabelText = goalWeightBaseText + ' (' + unitSuffix + ')';
   const goalWeightPlaceholderText = t('setupProfile.goalWeightPlaceholder');
+  const heightUnitSuffix = t(weightUnit === 'kg' ? 'common.cm' : 'common.in');
+  const heightBaseText = t('setupProfile.height');
+  const heightLabelText = heightBaseText + ' (' + heightUnitSuffix + ')';
+  const heightHelperText = t('setupProfile.heightHelper');
+  const heightPlaceholderText = t('setupProfile.heightPlaceholder');
   const primaryGoalLabelText = t('setupProfile.primaryGoal');
   const activityLevelLabelText = t('setupProfile.activityLevel');
   const includeAlcoholLabelText = t('setupProfile.includeAlcohol');
@@ -274,6 +281,19 @@ export default function SetupProfileScreen() {
             onChangeText={setGoalWeight}
             keyboardType="numeric"
             placeholder={goalWeightPlaceholderText}
+            placeholderTextColor={colors.textSecondary}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>{heightLabelText}</Text>
+          <Text style={styles.helperText}>{heightHelperText}</Text>
+          <TextInput
+            style={styles.input}
+            value={height}
+            onChangeText={setHeight}
+            keyboardType="numeric"
+            placeholder={heightPlaceholderText}
             placeholderTextColor={colors.textSecondary}
           />
         </View>

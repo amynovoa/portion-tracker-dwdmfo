@@ -1,12 +1,13 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loadProfile, saveProfile, loadWeightEntries, saveAllWeightEntries } from '@/utils/storage';
+import { loadProfile, saveProfile, loadWeightEntries, saveAllWeightEntries, loadWaistEntries, saveAllWaistEntries } from '@/utils/storage';
 
 export type WeightUnit = 'lbs' | 'kg';
 
 const WEIGHT_UNIT_KEY = '@portion_tracker_weight_unit';
 
 export const LBS_PER_KG = 2.20462;
+export const INCHES_PER_CM = 0.393701;
 
 export function lbsToKg(lbs: number): number {
   return Math.round((lbs / LBS_PER_KG) * 10) / 10;
@@ -14,6 +15,14 @@ export function lbsToKg(lbs: number): number {
 
 export function kgToLbs(kg: number): number {
   return Math.round((kg * LBS_PER_KG) * 10) / 10;
+}
+
+export function inchesToCm(inches: number): number {
+  return Math.round((inches / INCHES_PER_CM) * 10) / 10;
+}
+
+export function cmToInches(cm: number): number {
+  return Math.round((cm * INCHES_PER_CM) * 10) / 10;
 }
 
 export async function loadWeightUnit(): Promise<WeightUnit> {
@@ -56,17 +65,19 @@ export async function convertAllStoredWeights(from: WeightUnit, to: WeightUnit):
   console.log(`[WeightUnit] Switching from ${from} to ${to}`);
 
   const convert = from === 'lbs' ? lbsToKg : kgToLbs;
+  const convertLength = from === 'lbs' ? inchesToCm : cmToInches;
 
-  // Convert profile weights
+  // Convert profile weights and height
   const profile = await loadProfile();
   if (profile) {
     const updatedProfile = {
       ...profile,
       currentWeight: convert(profile.currentWeight),
       goalWeight: convert(profile.goalWeight),
+      height: profile.height !== undefined ? convertLength(profile.height) : undefined,
     };
     await saveProfile(updatedProfile);
-    console.log(`[WeightUnit] Profile weights converted: currentWeight=${updatedProfile.currentWeight}, goalWeight=${updatedProfile.goalWeight}`);
+    console.log(`[WeightUnit] Profile weights converted: currentWeight=${updatedProfile.currentWeight}, goalWeight=${updatedProfile.goalWeight}, height=${updatedProfile.height}`);
   }
 
   // Convert all weight entries
@@ -77,4 +88,13 @@ export async function convertAllStoredWeights(from: WeightUnit, to: WeightUnit):
   }));
   await saveAllWeightEntries(convertedEntries);
   console.log(`[WeightUnit] Converted ${convertedEntries.length} weight entries`);
+
+  // Convert all waist entries
+  const waistEntries = await loadWaistEntries();
+  const convertedWaistEntries = waistEntries.map(entry => ({
+    ...entry,
+    waist: convertLength(entry.waist),
+  }));
+  await saveAllWaistEntries(convertedWaistEntries);
+  console.log(`[WeightUnit] Converted ${convertedWaistEntries.length} waist entries`);
 }

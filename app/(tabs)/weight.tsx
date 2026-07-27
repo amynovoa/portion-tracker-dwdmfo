@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { WeightEntry } from '@/types';
-import { saveWeightEntry, loadWeightEntries, loadProfile, deleteWeightEntry } from '@/utils/storage';
+import { WeightEntry, WaistEntry } from '@/types';
+import { saveWeightEntry, loadWeightEntries, loadProfile, deleteWeightEntry, saveWaistEntry, loadWaistEntries, deleteWaistEntry } from '@/utils/storage';
 import WeightChart from '@/components/WeightChart';
+import WaistChart from '@/components/WaistChart';
 import DaySelector from '@/components/DaySelector';
 import { useFocusEffect } from 'expo-router';
 import { formatDate } from '@/utils/dateUtils';
@@ -28,8 +29,12 @@ export default function WeightTrackingScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('lbs');
+  const [waistInput, setWaistInput] = useState('');
+  const [waistEntries, setWaistEntries] = useState<WaistEntry[]>([]);
+  const [filteredWaistEntries, setFilteredWaistEntries] = useState<WaistEntry[]>([]);
+  const [showAllWaistHistory, setShowAllWaistHistory] = useState(false);
 
-  const formatEntryDate = useCallback((entry: WeightEntry): string => {
+  const formatEntryDate = useCallback((entry: { date: string; timestamp: number }): string => {
     try {
       const d = new Date(entry.timestamp);
       if (isNaN(d.getTime())) return entry.date;
@@ -45,9 +50,16 @@ export default function WeightTrackingScreen() {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const [profile, unit] = await Promise.all([loadProfile(), loadWeightUnit()]);
+      const [profile, unit, rawWaistEntries] = await Promise.all([loadProfile(), loadWeightUnit(), loadWaistEntries()]);
       console.log('[Weight] Weight unit loaded:', unit);
       setWeightUnit(unit);
+
+      const validWaistEntries = rawWaistEntries.filter(e =>
+        typeof e.waist === 'number' && isFinite(e.waist) && e.waist > 0
+        && typeof e.timestamp === 'number' && isFinite(e.timestamp) && e.timestamp > 0
+        && typeof e.date === 'string' && e.date.length === 10
+      );
+      setWaistEntries(validWaistEntries);
 
       if (profile) {
         console.log('[Weight] Profile found:', { currentWeight: profile.currentWeight, goalWeight: profile.goalWeight });
@@ -180,6 +192,36 @@ export default function WeightTrackingScreen() {
     setFilteredEntries(capped);
   }, [entries, timeRange]);
 
+  // Filter waist entries by the same time range as weight
+  useEffect(() => {
+    if (waistEntries.length === 0) {
+      setFilteredWaistEntries([]);
+      return;
+    }
+
+    const now = Date.now();
+    let cutoffTime = 0;
+
+    switch (timeRange) {
+      case 'week':
+        cutoffTime = now - 7 * 24 * 60 * 60 * 1000;
+        break;
+      case '30days':
+        cutoffTime = now - 30 * 24 * 60 * 60 * 1000;
+        break;
+      case '90days':
+        cutoffTime = now - 90 * 24 * 60 * 60 * 1000;
+        break;
+      case 'all':
+        cutoffTime = 0;
+        break;
+    }
+
+    const filtered = waistEntries.filter(entry => entry.timestamp >= cutoffTime);
+    const capped = filtered.slice(-90);
+    setFilteredWaistEntries(capped);
+  }, [waistEntries, timeRange]);
+
   useEffect(() => {
     // Load weight for selected date
     const entry = entries.find(e => e.date === selectedDate);
@@ -188,7 +230,15 @@ export default function WeightTrackingScreen() {
     } else {
       setWeightInput('');
     }
-  }, [selectedDate, entries]);
+
+    // Load waist for selected date
+    const waistEntry = waistEntries.find(e => e.date === selectedDate);
+    if (waistEntry) {
+      setWaistInput(waistEntry.waist.toString());
+    } else {
+      setWaistInput('');
+    }
+  }, [selectedDate, entries, waistEntries]);
 
   const handleAddWeight = async () => {
     const weight = parseFloat(weightInput);
@@ -289,6 +339,79 @@ export default function WeightTrackingScreen() {
     );
   };
 
+  const handleAddWaist = async () => {
+    const waist = parseFloat(waistInput);
+
+    if (isNaN(waist) || waist <= 0) {
+      console.log('[Weight] Invalid waist input:', waistInput);
+      Alert.alert(t('weightScreen.invalidInput'), t('weightScreen.invalidWaistInputMessage'));
+      return;
+    }
+
+    console.log('[Weight] Saving waist entry:', { date: selectedDate, waist });
+
+    const selectedDateObj = new Date(selectedDate + 'T12:00:00');
+    const entry: WaistEntry = {
+      date: selectedDate,
+      waist,
+      timestamp: selectedDateObj.getTime(),
+    };
+
+    try {
+      await saveWaistEntry(entry);
+      const updatedRaw = await loadWaistEntries();
+      const updatedValid = updatedRaw.filter(e =>
+        typeof e.waist === 'number' && isFinite(e.waist) && e.waist > 0
+        && typeof e.timestamp === 'number' && isFinite(e.timestamp) && e.timestamp > 0
+        && typeof e.date === 'string' && e.date.length === 10
+      );
+      setWaistEntries(updatedValid);
+
+      console.log('[Weight] Waist entry saved successfully');
+
+      const isTodayDate = selectedDate === formatDate(new Date());
+      const dateLabel = isTodayDate ? t('weightScreen.today') : selectedDate;
+      Alert.alert(t('weightScreen.success'), t('weightScreen.waistSaved', { date: dateLabel }));
+    } catch (error) {
+      Alert.alert(t('common.error'), t('weightScreen.failedSave'));
+      console.error('[Weight] Error saving waist:', error);
+    }
+  };
+
+  const handleDeleteWaistEntry = (date: string) => {
+    console.log('[Weight] Delete waist entry pressed for date:', date);
+    Alert.alert(
+      t('weightScreen.deleteEntry'),
+      t('weightScreen.deleteConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('weightScreen.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteWaistEntry(date);
+              const updatedRaw = await loadWaistEntries();
+              const updatedValid = updatedRaw.filter(e =>
+                typeof e.waist === 'number' && isFinite(e.waist) && e.waist > 0
+                && typeof e.timestamp === 'number' && isFinite(e.timestamp) && e.timestamp > 0
+                && typeof e.date === 'string' && e.date.length === 10
+              );
+              setWaistEntries(updatedValid);
+
+              if (date === selectedDate) {
+                setWaistInput('');
+              }
+            } catch (error) {
+              Alert.alert(t('common.error'), t('weightScreen.failedDelete'));
+              console.error('[Weight] Error deleting waist:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const latestWeight = entries.length > 0 ? entries[0].weight : currentWeight;
   const displayedHistory = showAllHistory ? entries : entries.slice(0, 3);
 
@@ -326,6 +449,19 @@ export default function WeightTrackingScreen() {
   const changeText = changeFromStartAbs !== null
     ? t('weightScreen.fromStartingWeight', { n: changeFromStartAbs, unit: unitLabel })
     : '';
+
+  // Waist section derived values
+  const waistUnitLabel = t(weightUnit === 'kg' ? 'common.cm' : 'common.in');
+  const hasWaistEntryForSelectedDate = waistEntries.some(e => e.date === selectedDate);
+  const displayedWaistHistory = showAllWaistHistory ? waistEntries : waistEntries.slice(0, 3);
+  const waistSectionTitle = t('weightScreen.waistTitle');
+  const waistProgressChartText = t('weightScreen.waistProgressChart');
+  const waistRecentEntriesText = t('weightScreen.waistRecentEntries');
+  const waistQuickAddLabelText = hasWaistEntryForSelectedDate
+    ? t('weightScreen.updateWaist')
+    : t('weightScreen.logWaist');
+  const waistQuickAddLabel = waistQuickAddLabelText + quickAddDateSuffix;
+  const waistAddButtonText = hasWaistEntryForSelectedDate ? t('weightScreen.update') : t('weightScreen.add');
 
   if (isLoading) {
     return (
@@ -470,6 +606,67 @@ export default function WeightTrackingScreen() {
                     <Text style={styles.historyDate}>{entryDateText}</Text>
                   </View>
                   <TouchableOpacity onPress={() => handleDeleteEntry(entry.date)} style={styles.deleteIcon}>
+                    <Text style={styles.deleteIconText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Waist Measurement Section */}
+        <Text style={styles.waistSectionHeader}>{waistSectionTitle}</Text>
+
+        <View style={styles.quickAddCard}>
+          <Text style={styles.quickAddLabel}>{waistQuickAddLabel}</Text>
+          <View style={styles.quickAddRow}>
+            <TextInput
+              style={styles.quickAddInput}
+              value={waistInput}
+              onChangeText={setWaistInput}
+              keyboardType="decimal-pad"
+              placeholder={waistUnitLabel}
+              placeholderTextColor={colors.textSecondary}
+            />
+            <TouchableOpacity style={styles.quickAddButton} onPress={handleAddWaist}>
+              <Text style={styles.quickAddButtonText}>{waistAddButtonText}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.chartCard}>
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>{waistProgressChartText}</Text>
+          </View>
+          <WaistChart entries={filteredWaistEntries} unitLabel={waistUnitLabel} />
+        </View>
+
+        {waistEntries.length > 0 && (
+          <View style={styles.historyCard}>
+            <View style={styles.historyHeader}>
+              <Text style={styles.historyTitle}>{waistRecentEntriesText}</Text>
+              {waistEntries.length > 3 && (
+                <TouchableOpacity onPress={() => {
+                  setShowAllWaistHistory(!showAllWaistHistory);
+                }}>
+                  <Text style={styles.showMoreText}>
+                    {showAllWaistHistory
+                      ? t('weightScreen.showLess')
+                      : t('weightScreen.showAll', { n: waistEntries.length })}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {displayedWaistHistory.map((entry, index) => {
+              const entryWaistText = entry.waist + ' ' + waistUnitLabel;
+              const entryDateText = formatEntryDate(entry);
+              return (
+                <View key={`${entry.date}-${index}`} style={styles.historyRow}>
+                  <View style={styles.historyLeft}>
+                    <Text style={styles.historyWeight}>{entryWaistText}</Text>
+                    <Text style={styles.historyDate}>{entryDateText}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleDeleteWaistEntry(entry.date)} style={styles.deleteIcon}>
                     <Text style={styles.deleteIconText}>×</Text>
                   </TouchableOpacity>
                 </View>
@@ -704,6 +901,14 @@ const styles = StyleSheet.create({
   historyDate: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  waistSectionHeader: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 16,
   },
   deleteIcon: {
     width: 32,
