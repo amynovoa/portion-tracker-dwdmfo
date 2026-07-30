@@ -77,7 +77,7 @@ export default function PaywallScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
 
-  const { packages, loading, isSubscribed, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet } =
+  const { packages, loading, isSubscribed, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet, devBypass } =
     useSubscription();
 
   // Dev-only fallback: Expo Go has no RevenueCat native module, so `packages` stays empty.
@@ -428,6 +428,16 @@ export default function PaywallScreen() {
             {t('paywall.privacyPolicy')}
           </Text>
         </Text>
+
+        {/* Developer bypass — hidden on iOS (not needed for TestFlight/App Store), kept on Android */}
+        {Platform.OS === "android" && (
+          <TouchableOpacity
+            style={styles.devBypassButton}
+            onPress={async () => { await devBypass(); await navigateAfterPurchase(); }}
+          >
+            <Text style={styles.devBypassText}>⚙️ Developer Access</Text>
+          </TouchableOpacity>
+        )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -631,5 +641,19 @@ const styles = StyleSheet.create({
   offerCodeText: {
     fontSize: 13,
     textDecorationLine: "underline",
+  },
+  devBypassButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#aaa",
+    borderRadius: 8,
+    borderStyle: "dashed",
+  },
+  devBypassText: {
+    fontSize: 12,
+    color: "#888",
+    fontWeight: "600",
   },
 });
