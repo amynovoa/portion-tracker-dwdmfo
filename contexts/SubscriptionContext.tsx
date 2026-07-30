@@ -206,13 +206,16 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
         if (__DEV__) {
           console.log("[RevenueCat] Initializing in DEV mode with key:", apiKey.substring(0, 10) + "...");
-          // Restore cached subscription state immediately to avoid paywall flash on bundle reload.
-          // The customerInfoUpdateListener (fired by configure() below) is the authoritative
-          // source and will immediately overwrite this with real RC Keychain data.
-          const cached = await SecureStore.getItemAsync(NATIVE_PURCHASE_KEY).catch(() => null);
-          if (cached === "true") {
-            setIsSubscribed(true);
-          }
+        }
+
+        // Restore cached subscription state immediately to avoid a paywall flash/bounce on
+        // cold start — most notably right after an app update, before RevenueCat has finished
+        // re-verifying entitlement over the network. The customerInfoUpdateListener (fired by
+        // configure() below) and checkSubscription() are the authoritative source and will
+        // overwrite this with real, fresh data as soon as they resolve.
+        const cached = await SecureStore.getItemAsync(NATIVE_PURCHASE_KEY).catch(() => null);
+        if (cached === "true") {
+          setIsSubscribed(true);
         }
 
         await Purchases.configure({ apiKey });
