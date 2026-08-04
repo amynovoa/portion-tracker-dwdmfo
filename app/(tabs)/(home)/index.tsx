@@ -15,7 +15,6 @@ import DaySelector from '@/components/DaySelector';
 import FoodGroupRow from '@/components/FoodGroupRow';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
-import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { analyzeMealPhoto, MealPortionSuggestions } from '@/utils/analyzeMealPhoto';
