@@ -83,6 +83,9 @@ interface SubscriptionContextType {
   mockNativePurchase: () => Promise<void>;
   /** iOS only: open Apple's native offer code redemption sheet. Returns true if subscription was granted. */
   presentCodeRedemptionSheet: () => Promise<boolean>;
+  /** App Store / Play Store reviewer access only — triggered via a hidden gesture, not
+   * exposed anywhere in the UI. Documented privately in each store's reviewer notes. */
+  devBypass: () => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
@@ -378,6 +381,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setIsSubscribed(true);
   };
 
+  const devBypass = async (): Promise<void> => {
+    await SecureStore.setItemAsync(NATIVE_PURCHASE_KEY, "true").catch(() => {});
+    setIsSubscribed(true);
+  };
+
   const presentCodeRedemptionSheet = async (): Promise<boolean> => {
     if (isWeb || Platform.OS !== 'ios') return false;
     try {
@@ -414,6 +422,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         mockWebPurchase,
         mockNativePurchase,
         presentCodeRedemptionSheet,
+        devBypass,
       }}
     >
       {children}

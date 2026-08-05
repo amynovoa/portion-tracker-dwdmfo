@@ -77,7 +77,7 @@ export default function PaywallScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
 
-  const { packages, loading, isSubscribed, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet } =
+  const { packages, loading, isSubscribed, purchasePackage, restorePurchases, mockNativePurchase, presentCodeRedemptionSheet, devBypass } =
     useSubscription();
 
   // Dev-only fallback: Expo Go has no RevenueCat native module, so `packages` stays empty.
@@ -90,6 +90,10 @@ export default function PaywallScreen() {
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [redeemingCode, setRedeemingCode] = useState(false);
+  // App Store / Play Store reviewer access — tap the logo 7 times. Not documented
+  // anywhere in the UI; instructions are provided privately in each store's
+  // reviewer notes (Play Console "Sign in details" / App Store review notes).
+  const [reviewerTapCount, setReviewerTapCount] = useState(0);
 
   // Update selected package when packages (real or mock) load
   React.useEffect(() => {
@@ -256,7 +260,20 @@ export default function PaywallScreen() {
       >
         {/* Header */}
         <View style={[styles.header, isTablet && { gap: 8 }, { marginBottom: 6 }]}>
-          <AppLogo size={logoSize} />
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={async () => {
+              const next = reviewerTapCount + 1;
+              setReviewerTapCount(next);
+              if (next >= 7) {
+                setReviewerTapCount(0);
+                await devBypass();
+                await navigateAfterPurchase();
+              }
+            }}
+          >
+            <AppLogo size={logoSize} />
+          </TouchableOpacity>
           <Text style={[styles.title, { color: C.text }, isTablet && { fontSize: 28 }]}>Portion Track</Text>
         </View>
 
