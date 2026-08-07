@@ -2,7 +2,7 @@
   "expo": {
     "name": "Portion Track",
     "slug": "portion-track",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
     "userInterfaceStyle": "automatic",
