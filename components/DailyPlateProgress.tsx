@@ -243,8 +243,18 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
             ))}
 
             <View style={[styles.centerHub, { left: centerX, top: centerY }]}>
-              <Text style={styles.centerPercent}>{overallPercent}%</Text>
-              <Text style={styles.centerLabel}>{t('home.dailyGoal')}</Text>
+              <Text
+                style={styles.centerPercent}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+                allowFontScaling={false}
+              >
+                {`${overallPercent}%`}
+              </Text>
+              <Text style={styles.centerLabel} allowFontScaling={false}>
+                {t('home.dailyGoal')}
+              </Text>
             </View>
           </View>
         </View>
@@ -322,14 +332,15 @@ const styles = StyleSheet.create({
   },
   centerHub: {
     position: 'absolute',
-    width: 88,
-    height: 88,
-    marginLeft: -44,
-    marginTop: -44,
-    borderRadius: 44,
+    width: 80,
+    height: 80,
+    marginLeft: -40,
+    marginTop: -40,
+    borderRadius: 40,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 8,
     zIndex: 15,
     shadowColor: '#1A2E28',
     shadowOffset: { width: 0, height: 1 },
@@ -338,15 +349,18 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   centerPercent: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.text,
-    lineHeight: 22,
+    lineHeight: 18,
+    textAlign: 'center',
+    width: '100%',
   },
   centerLabel: {
-    marginTop: 2,
-    fontSize: 10,
+    marginTop: 1,
+    fontSize: 9,
     fontWeight: '600',
     color: colors.textSecondary,
+    textAlign: 'center',
   },
 });

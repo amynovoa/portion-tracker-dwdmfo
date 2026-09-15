@@ -11,6 +11,7 @@ import { ScrollView, StyleSheet, View, Text, TouchableOpacity, RefreshControl } 
 import { DailyPortions, UserProfile, FOOD_GROUPS, PortionTargets } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
 import AppLogo from '@/components/AppLogo';
+import FoodGroupIcon from '@/components/FoodGroupIcon';
 import { useTranslation } from 'react-i18next';
 
 const styles = StyleSheet.create({
@@ -91,7 +92,15 @@ const styles = StyleSheet.create({
   foodGroupRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 4,
+  },
+  foodGroupNameWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    paddingRight: 8,
   },
   foodGroupName: {
     fontSize: 14,
@@ -258,7 +267,10 @@ export default function HistoryScreen() {
 
                         return (
                           <View key={fg.key} style={styles.foodGroupRow}>
-                            <Text style={styles.foodGroupName}>{fg.icon} {t(`foodGroups.${fg.key}`)}</Text>
+                            <View style={styles.foodGroupNameWrap}>
+                              <FoodGroupIcon icon={fg.icon} size={16} />
+                              <Text style={styles.foodGroupName}>{t(`foodGroups.${fg.key}`)}</Text>
+                            </View>
                             <Text style={styles.foodGroupValue}>
                               {completed} / {target}
                             </Text>

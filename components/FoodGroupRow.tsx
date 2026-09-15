@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ImageSourcePropType } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/styles/commonStyles';
 import FoodGroupInfoModal from './FoodGroupInfoModal';
 import { getFoodGroupInfo } from '@/constants/foodGroupInfo';
@@ -111,8 +112,9 @@ export default function FoodGroupRow({
                 setModalVisible(true);
               }}
               style={styles.infoButton}
+              accessibilityLabel="Portion tips"
             >
-              <Text style={styles.infoIcon}>ℹ️</Text>
+              <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
             </TouchableOpacity>
           )}
         </View>
@@ -216,9 +218,6 @@ const styles = StyleSheet.create({
   },
   infoButton: {
     padding: 4,
-  },
-  infoIcon: {
-    fontSize: 20,
   },
   slotsContainer: {
     flexDirection: 'row',

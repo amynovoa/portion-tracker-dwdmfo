@@ -10,6 +10,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
 import { calculateDailyAdherence, calculateDailyAdherenceForDate, calculateWeeklyAdherence, calculateMonthlyAdherence } from '@/utils/adherenceCalculator';
 import ConsistencyChart from '@/components/ConsistencyChart';
+import FoodGroupIcon from '@/components/FoodGroupIcon';
 import { useTranslation } from 'react-i18next';
 
 export default function HistoryScreen() {
@@ -166,7 +167,9 @@ export default function HistoryScreen() {
 
                         return (
                           <View key={fg.key} style={styles.portionRow}>
-                            <Text style={styles.portionIcon}>{fg.icon}</Text>
+                            <View style={styles.portionIconWrap}>
+                              <FoodGroupIcon icon={fg.icon} size={20} />
+                            </View>
                             <Text style={styles.portionLabel}>{t(`foodGroups.${fg.key}`)}</Text>
                             <Text style={styles.portionCount}>
                               {completed}/{target}
@@ -298,10 +301,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
   },
-  portionIcon: {
-    fontSize: 20,
-    marginRight: 12,
+  portionIconWrap: {
     width: 24,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   portionLabel: {
     fontSize: 14,
