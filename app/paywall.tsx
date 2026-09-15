@@ -2,7 +2,7 @@
  * Paywall Screen
  *
  * Shows subscription options and handles purchases.
- * Matches the app's warm red/cream design language.
+ * Matches the app's green plate and website brand colors.
  */
 
 import React, { useState } from "react";
@@ -46,14 +46,14 @@ const DEV_MOCK_PACKAGES = [
 function getColors(scheme: "light" | "dark") {
   const isDark = scheme === "dark";
   return {
-    background: isDark ? "#1A0F0E" : "#FDF6F5",
-    surface: isDark ? "#2A1A18" : "#FFFFFF",
-    primary: isDark ? "#E05A4D" : "#C94A3D",
-    text: isDark ? "#F5EDEC" : "#1A0F0E",
-    secondaryText: isDark ? "#B09490" : "#7A5C59",
-    border: isDark ? "rgba(224,90,77,0.12)" : "rgba(201,74,61,0.10)",
-    primaryBorder: isDark ? "#E05A4D" : "#C94A3D",
-    accent: "#C8D647",
+    background: isDark ? "#0F1C18" : "#F8FAF9",
+    surface: isDark ? "#1A2E28" : "#FFFFFF",
+    primary: isDark ? "#40916C" : "#2D6A4F",
+    text: isDark ? "#F0F7F4" : "#1A2E28",
+    secondaryText: isDark ? "#A7C0B6" : "#5C7369",
+    border: isDark ? "rgba(64,145,108,0.16)" : "rgba(45,106,79,0.12)",
+    primaryBorder: isDark ? "#40916C" : "#2D6A4F",
+    accent: "#40916C",
   };
 }
 
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 52,
-    shadowColor: "#C94A3D",
+    shadowColor: "#2D6A4F",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,

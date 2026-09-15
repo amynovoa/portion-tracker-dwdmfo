@@ -1,6 +1,7 @@
 
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 import DailyPlateProgress from '@/components/DailyPlateProgress';
+import TipsCarousel from '@/components/TipsCarousel';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, getAllDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
@@ -222,6 +223,8 @@ export default function HomeScreen() {
           completed={dailyPortions.portions} 
           targets={profile.portionTargets} 
         />
+
+        <TipsCarousel />
 
         {/* Divider */}
         <View style={styles.divider} />

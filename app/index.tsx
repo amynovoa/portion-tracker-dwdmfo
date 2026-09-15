@@ -5,7 +5,6 @@ import { View, ActivityIndicator, Text, TouchableOpacity, Linking, StyleSheet } 
 import { colors } from '@/styles/commonStyles';
 import { resolveUserState } from '@/utils/userStateManager';
 import { checkForceUpdate, VersionCheckResult } from '@/utils/forceUpdateManager';
-import { appleRed } from '@/constants/Colors';
 export default function Index() {
   const router = useRouter();
   const didRoute = useRef(false);
@@ -104,7 +103,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -128,7 +127,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
-    backgroundColor: appleRed,
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 48,

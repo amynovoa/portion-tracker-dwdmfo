@@ -2,24 +2,34 @@
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 export const colors = {
-  background: '#FFFFFF',
-  backgroundSecondary: '#F8F8F8',
-  text: '#333333',
-  textSecondary: '#7A7A7A',
-  primary: '#C94A3D',
-  primaryLight: '#FFE5E3',
-  secondary: '#C8D647',
-  accent: '#7A7A7A',
+  background: '#F8FAF9',
+  backgroundSecondary: '#D8F3DC',
+  text: '#1A2E28',
+  textSecondary: '#5C7369',
+  primary: '#2D6A4F',
+  primaryLight: '#D8F3DC',
+  secondary: '#40916C',
+  accent: '#4A90A4',
   card: '#FFFFFF',
-  cardBackground: '#F8F8F8',
-  highlight: '#FFF5F4',
-  border: '#E0E0E0',
+  cardBackground: '#F8FAF9',
+  highlight: '#E8F4F0',
+  border: '#E2EBE6',
   error: '#C94A3D',
-  success: '#C94A3D',
+  success: '#40916C',
   white: '#FFFFFF',
-  surface: '#F8F8F8',
+  surface: '#FFFFFF',
   warning: '#FF9800',
   warningLight: '#FFF3E0',
+};
+
+/** Shared with the website plate dial */
+export const plateColors = {
+  veggies: '#6F8F75',
+  fruits: '#8FAD94',
+  protein: '#E4D6C4',
+  wholeGrains: '#C16C4E',
+  fats: '#C5CBB8',
+  nutsSeeds: '#D4C4A8',
 };
 
 export const buttonStyles = StyleSheet.create({

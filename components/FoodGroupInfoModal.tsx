@@ -39,10 +39,10 @@ export default function FoodGroupInfoModal({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <View style={styles.titleRow}>
-              {typeof icon === 'number' ? (
-                <Image source={icon} style={styles.iconImage} resizeMode="contain" />
-              ) : (
+              {typeof icon === 'string' ? (
                 <Text style={styles.icon}>{icon}</Text>
+              ) : (
+                <Image source={icon} style={styles.iconImage} resizeMode="contain" />
               )}
               <Text style={styles.title}>{title}</Text>
             </View>

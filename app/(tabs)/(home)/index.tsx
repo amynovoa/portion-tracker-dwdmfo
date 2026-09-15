@@ -1,6 +1,7 @@
 
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 import DailyPlateProgress from '@/components/DailyPlateProgress';
+import TipsCarousel from '@/components/TipsCarousel';
 import { colors } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
 import { loadProfile, loadDailyPortions, saveDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
@@ -289,6 +290,8 @@ export default function HomeScreen() {
           targets={profile.portionTargets} 
         />
 
+        <TipsCarousel />
+
         {/* Divider */}
         <View style={styles.divider} />
 
@@ -501,7 +504,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 16,
     borderRadius: 16,
-    backgroundColor: '#C94A3D',
+    backgroundColor: colors.primary,
   },
   analyzeButtonText: {
     color: '#fff',

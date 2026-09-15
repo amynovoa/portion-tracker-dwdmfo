@@ -17,27 +17,27 @@ import AppLogo from '@/components/AppLogo';
 const { width } = Dimensions.get('window');
 
 const LIGHT = {
-  background: '#FDF6F5',
+  background: '#F8FAF9',
   surface: '#FFFFFF',
-  text: '#1A0F0E',
-  textSecondary: '#7A5C59',
-  textTertiary: '#B09490',
-  primary: '#C94A3D',
-  primaryMuted: '#FAE8E6',
-  accent: '#C8D647',
-  border: 'rgba(201,74,61,0.10)',
+  text: '#1A2E28',
+  textSecondary: '#5C7369',
+  textTertiary: '#8AA39A',
+  primary: '#2D6A4F',
+  primaryMuted: '#D8F3DC',
+  accent: '#40916C',
+  border: 'rgba(45,106,79,0.12)',
 };
 
 const DARK = {
-  background: '#1A0F0E',
-  surface: '#2A1A18',
-  text: '#F5EDEC',
-  textSecondary: '#B09490',
-  textTertiary: '#7A5C59',
-  primary: '#E05A4D',
-  primaryMuted: 'rgba(224,90,77,0.15)',
-  accent: '#C8D647',
-  border: 'rgba(224,90,77,0.12)',
+  background: '#0F1C18',
+  surface: '#1A2E28',
+  text: '#F0F7F4',
+  textSecondary: '#A7C0B6',
+  textTertiary: '#5C7369',
+  primary: '#40916C',
+  primaryMuted: 'rgba(64,145,108,0.18)',
+  accent: '#74C0D4',
+  border: 'rgba(64,145,108,0.16)',
 };
 
 export default function WelcomeScreen() {

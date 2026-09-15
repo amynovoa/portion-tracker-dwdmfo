@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import Svg, { Circle, Path, G, Defs, ClipPath } from 'react-native-svg';
-import { colors } from '@/styles/commonStyles';
+import Svg, { Circle, Path, G } from 'react-native-svg';
+import { colors, plateColors } from '@/styles/commonStyles';
 import { PortionTargets } from '@/types';
-import AppLogo from './AppLogo';
 import { useTranslation } from 'react-i18next';
 
 interface DailyPlateProgressProps {
@@ -12,34 +11,24 @@ interface DailyPlateProgressProps {
   targets: PortionTargets;
 }
 
-// All segments now use white background with black outlines
-// Progress fill: green (#4CAF50) for all sections
-const PLATE_SECTIONS: { key: keyof PortionTargets; label: string; backgroundColor: string; icon: string | number }[] = [
-  { key: 'protein', label: 'Protein', backgroundColor: '#FFFFFF', icon: '🍗' },
-  { key: 'veggies', label: 'Vegetables', backgroundColor: '#FFFFFF', icon: '🥦' },
-  { key: 'fruits', label: 'Fruit', backgroundColor: '#FFFFFF', icon: '🍎' },
-  { key: 'wholeGrains', label: 'Whole Grains', backgroundColor: '#FFFFFF', icon: '🌾' },
-  { key: 'nutsSeeds', label: 'Nuts & Seeds', backgroundColor: '#FFFFFF', icon: require('../assets/images/almond.png') },
-  { key: 'fats', label: 'Fats', backgroundColor: '#FFFFFF', icon: '🥑' },
+const PLATE_SECTIONS: { key: keyof PortionTargets; label: string; color: string; icon: string | number | { uri: string } }[] = [
+  { key: 'veggies', label: 'Vegetables', color: plateColors.veggies, icon: '🥦' },
+  { key: 'fruits', label: 'Fruit', color: plateColors.fruits, icon: '🍎' },
+  { key: 'protein', label: 'Protein', color: plateColors.protein, icon: '🍗' },
+  { key: 'wholeGrains', label: 'Whole Grains', color: plateColors.wholeGrains, icon: '🌾' },
+  { key: 'fats', label: 'Fats', color: plateColors.fats, icon: '🥑' },
+  { key: 'nutsSeeds', label: 'Nuts & Seeds', color: plateColors.nutsSeeds, icon: require('../assets/images/almond.png') },
 ];
 
-// Progress fill color - green for all sections
-const PROGRESS_FILL_COLOR = '#4CAF50'; // Green
-
-// Black outline color
-const OUTLINE_COLOR = '#1C1C1E'; // Black
-
-// Export the color mapping so FoodGroupRow can use it for the indicator dots
 export const FOOD_GROUP_COLORS: Record<string, string> = {
-  protein: '#FFFFFF',
-  veggies: '#FFFFFF',
-  fruits: '#FFFFFF',
-  wholeGrains: '#FFFFFF',
-  nutsSeeds: '#FFFFFF',
-  fats: '#FFFFFF',
+  veggies: plateColors.veggies,
+  fruits: plateColors.fruits,
+  protein: plateColors.protein,
+  wholeGrains: plateColors.wholeGrains,
+  fats: plateColors.fats,
+  nutsSeeds: plateColors.nutsSeeds,
 };
 
-// Helper function to create SVG path for a pie slice
 function createPieSlicePath(
   centerX: number,
   centerY: number,
@@ -60,7 +49,6 @@ function createPieSlicePath(
   return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
 }
 
-// Helper function to create a partial pie slice based on progress (0 to 1)
 function createProgressSlicePath(
   centerX: number,
   centerY: number,
@@ -69,9 +57,8 @@ function createProgressSlicePath(
   endAngle: number,
   progress: number
 ): string {
-  // Calculate the actual end angle based on progress
   const actualEndAngle = startAngle + (endAngle - startAngle) * progress;
-  
+
   const startAngleRad = (startAngle - 90) * (Math.PI / 180);
   const endAngleRad = (actualEndAngle - 90) * (Math.PI / 180);
 
@@ -85,7 +72,6 @@ function createProgressSlicePath(
   return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
 }
 
-// Helper function to calculate icon position
 function calculateIconPosition(
   centerX: number,
   centerY: number,
@@ -93,12 +79,12 @@ function calculateIconPosition(
   angle: number
 ): { x: number; y: number } {
   const angleRad = (angle - 90) * (Math.PI / 180);
-  const iconRadius = radius * 0.65; // Position icons 65% from center
-  
-  const iconX = centerX + iconRadius * Math.cos(angleRad);
-  const iconY = centerY + iconRadius * Math.sin(angleRad);
-  
-  return { x: iconX, y: iconY };
+  const iconRadius = radius * 0.62;
+
+  return {
+    x: centerX + iconRadius * Math.cos(angleRad),
+    y: centerY + iconRadius * Math.sin(angleRad),
+  };
 }
 
 export default function DailyPlateProgress({ completed, targets }: DailyPlateProgressProps) {
@@ -106,13 +92,10 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
   const plateSize = 280;
   const centerX = plateSize / 2;
   const centerY = plateSize / 2;
-  const outerRadius = plateSize / 2 - 10;
-  const innerRadius = 40;
-  
-  console.log('DailyPlateProgress - Targets:', targets);
-  console.log('DailyPlateProgress - Completed:', completed);
+  const outerRadius = plateSize / 2 - 16;
+  const innerRadius = 46;
+  const ringRadius = outerRadius + 7;
 
-  // Calculate progress for each section (0 to 1)
   const getSectionProgress = (key: keyof PortionTargets): number => {
     const target = targets[key];
     const done = completed[key] || 0;
@@ -129,29 +112,28 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
   const isPlateComplete = PLATE_SECTIONS.every((section) => isSectionComplete(section.key));
   const isPlateEmpty = PLATE_SECTIONS.every((section) => (completed[section.key] || 0) === 0);
 
-  // Build segments with EQUAL angles (60 degrees each for 6 sections)
-  const segmentAngle = 360 / PLATE_SECTIONS.length; // 60 degrees per section
+  const overallProgress =
+    PLATE_SECTIONS.reduce((sum, section) => sum + getSectionProgress(section.key), 0) /
+    PLATE_SECTIONS.length;
+  const overallPercent = Math.round(overallProgress * 100);
+  const circumference = 2 * Math.PI * ringRadius;
+
+  const segmentAngle = 360 / PLATE_SECTIONS.length;
   let currentAngle = 0;
-  
+
   const segments = PLATE_SECTIONS.map((section) => {
     const progress = getSectionProgress(section.key);
     const isComplete = isSectionComplete(section.key);
-    
     const startAngle = currentAngle;
     const endAngle = currentAngle + segmentAngle;
     currentAngle = endAngle;
-    
-    // Calculate midpoint angle for icon positioning
     const midAngle = startAngle + segmentAngle / 2;
     const iconPos = calculateIconPosition(centerX, centerY, outerRadius, midAngle);
-    
-    console.log(`Segment ${section.key}: angle=${segmentAngle.toFixed(1)}°, progress=${(progress * 100).toFixed(0)}%, color=${section.backgroundColor}`);
-    
+
     return {
       section,
       startAngle,
       endAngle,
-      segmentAngle,
       progress,
       isComplete,
       iconPos,
@@ -165,80 +147,83 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
       {isPlateEmpty && (
         <Text style={styles.hintText}>{t('home.tapToBuilder')}</Text>
       )}
-      
+
       <View style={styles.plateWrapper}>
-        <View style={styles.plateContainer}>
-          <Svg width={plateSize} height={plateSize} viewBox={`0 0 ${plateSize} ${plateSize}`}>
-            {/* Outer plate circle with black outline */}
-            <Circle
-              cx={centerX}
-              cy={centerY}
-              r={outerRadius}
-              fill="none"
-              stroke={OUTLINE_COLOR}
-              strokeWidth="2"
-            />
-            
-            {/* Pie slices for each food group - TWO LAYERS */}
-            {segments.map((seg) => {
-              // Background layer: white (full opacity)
-              const backgroundPath = createPieSlicePath(
-                centerX,
-                centerY,
-                outerRadius,
-                seg.startAngle,
-                seg.endAngle
-              );
-              
-              // Progress layer: green fill, only fills based on progress
-              const progressPath = createProgressSlicePath(
-                centerX,
-                centerY,
-                outerRadius,
-                seg.startAngle,
-                seg.endAngle,
-                seg.progress
-              );
-              
-              return (
-                <G key={seg.section.key}>
-                  {/* Background layer - white with black outline between segments */}
-                  <Path
-                    d={backgroundPath}
-                    fill={seg.section.backgroundColor}
-                    fillOpacity={1.0}
-                    stroke={OUTLINE_COLOR}
-                    strokeWidth="2"
-                  />
-                  
-                  {/* Progress layer - green fill */}
-                  {seg.progress > 0 && (
+        <View style={styles.plateShadow}>
+          <View style={styles.plateContainer}>
+            <Svg width={plateSize} height={plateSize} viewBox={`0 0 ${plateSize} ${plateSize}`}>
+              <Circle cx={centerX} cy={centerY} r={outerRadius + 10} fill="#FFFFFF" />
+
+              {segments.map((seg) => {
+                const backgroundPath = createPieSlicePath(
+                  centerX,
+                  centerY,
+                  outerRadius,
+                  seg.startAngle,
+                  seg.endAngle
+                );
+                const progressPath = createProgressSlicePath(
+                  centerX,
+                  centerY,
+                  outerRadius,
+                  seg.startAngle,
+                  seg.endAngle,
+                  seg.progress
+                );
+
+                return (
+                  <G key={seg.section.key}>
                     <Path
-                      d={progressPath}
-                      fill={PROGRESS_FILL_COLOR}
-                      fillOpacity={0.85}
-                      stroke={OUTLINE_COLOR}
-                      strokeWidth="1"
+                      d={backgroundPath}
+                      fill={seg.section.color}
+                      fillOpacity={0.28}
+                      stroke="#FFFFFF"
+                      strokeWidth="3"
                     />
-                  )}
-                </G>
-              );
-            })}
-            
-            {/* Center circle with black outline */}
-            <Circle
-              cx={centerX}
-              cy={centerY}
-              r={innerRadius}
-              fill={colors.background}
-              stroke={OUTLINE_COLOR}
-              strokeWidth="2"
-            />
-          </Svg>
-          
-          {/* Icons positioned absolutely on top of SVG - ALWAYS VISIBLE */}
-          {segments.map((seg) => {
-            return (
+                    {seg.progress > 0.02 && (
+                      <Path
+                        d={progressPath}
+                        fill={seg.section.color}
+                        fillOpacity={1}
+                        stroke="#FFFFFF"
+                        strokeWidth="2"
+                      />
+                    )}
+                  </G>
+                );
+              })}
+
+              <Circle
+                cx={centerX}
+                cy={centerY}
+                r={ringRadius}
+                fill="none"
+                stroke={colors.primaryLight}
+                strokeWidth="6"
+              />
+              {overallProgress > 0.02 && (
+                <Circle
+                  cx={centerX}
+                  cy={centerY}
+                  r={ringRadius}
+                  fill="none"
+                  stroke={colors.primary}
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={`${circumference * overallProgress} ${circumference}`}
+                  transform={`rotate(-90 ${centerX} ${centerY})`}
+                />
+              )}
+
+              <Circle
+                cx={centerX}
+                cy={centerY}
+                r={innerRadius}
+                fill="#FFFFFF"
+              />
+            </Svg>
+
+            {segments.map((seg) => (
               <View
                 key={`icon-${seg.section.key}`}
                 style={[
@@ -249,18 +234,18 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
                   },
                 ]}
               >
-                {typeof seg.section.icon === 'number' ? (
-                  <Image source={seg.section.icon} style={styles.iconImage} resizeMode="contain" />
-                ) : (
+                {typeof seg.section.icon === 'string' ? (
                   <Text style={styles.icon}>{seg.section.icon}</Text>
+                ) : (
+                  <Image source={seg.section.icon} style={styles.iconImage} resizeMode="contain" />
                 )}
               </View>
-            );
-          })}
-          
-          {/* Center logo - Portion Track branding */}
-          <View style={[styles.centerLogo, { left: centerX, top: centerY }]}>
-            <AppLogo size={50} />
+            ))}
+
+            <View style={[styles.centerHub, { left: centerX, top: centerY }]}>
+              <Text style={styles.centerPercent}>{overallPercent}%</Text>
+              <Text style={styles.centerLabel}>{t('home.dailyGoal')}</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -275,7 +260,7 @@ export default function DailyPlateProgress({ completed, targets }: DailyPlatePro
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 12,
     backgroundColor: colors.background,
   },
   title: {
@@ -283,11 +268,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   plateWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  plateShadow: {
+    borderRadius: 160,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#1A2E28',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 8,
   },
   plateContainer: {
     width: 280,
@@ -307,7 +301,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   icon: {
-    fontSize: 24,
+    fontSize: 22,
   },
   iconImage: {
     width: 24,
@@ -315,7 +309,7 @@ const styles = StyleSheet.create({
   },
   hintText: {
     fontSize: 13,
-    color: '#555555',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -324,20 +318,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '700',
-    color: '#000000',
+    color: colors.primary,
   },
-  centerLogo: {
+  centerHub: {
     position: 'absolute',
-    width: 70,
-    height: 70,
-    marginLeft: -35,
-    marginTop: -35,
-    borderRadius: 35,
-    backgroundColor: colors.background,
+    width: 88,
+    height: 88,
+    marginLeft: -44,
+    marginTop: -44,
+    borderRadius: 44,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: OUTLINE_COLOR,
     zIndex: 15,
+    shadowColor: '#1A2E28',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  centerPercent: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.text,
+    lineHeight: 22,
+  },
+  centerLabel: {
+    marginTop: 2,
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
 });

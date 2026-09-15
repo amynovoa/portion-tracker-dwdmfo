@@ -86,10 +86,10 @@ export default function FoodGroupRow({
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.labelContainer}>
-          {typeof icon === 'number' ? (
-            <Image source={resolveImageSource(icon)} style={styles.iconImage} resizeMode="contain" />
-          ) : (
+          {typeof icon === 'string' ? (
             <Text style={styles.icon}>{icon}</Text>
+          ) : (
+            <Image source={resolveImageSource(icon)} style={styles.iconImage} resizeMode="contain" />
           )}
           {/* Add small color indicator next to label for plate food groups */}
           {categoryColor && (
@@ -192,6 +192,8 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(26,46,40,0.18)',
   },
   label: {
     fontSize: 16,
