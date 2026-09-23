@@ -242,7 +242,7 @@ export default function SetupTargetsScreen() {
             return (
               <View key={key} style={styles.row}>
                 <View style={styles.labelContainer}>
-                  {typeof iconEmoji === 'number' ? (
+                  {typeof iconEmoji !== 'string' ? (
                     <Image source={iconEmoji} style={styles.iconImage} resizeMode="contain" />
                   ) : (
                     <Text style={styles.icon}>{iconEmoji}</Text>

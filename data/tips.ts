@@ -70,4 +70,116 @@ export const PORTION_TIPS: PortionTip[] = [
       es: 'Olvida las calorías. Toca las porciones al comer y mira cómo se llena tu plato.',
     },
   },
+  {
+    id: 'measure-oil',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Measure cooking oil or use a cooking spray — oil is high in calories and easy to over portion.',
+      es: 'Mide el aceite para cocinar o usa un aceite en spray: el aceite tiene muchas calorías y es fácil servir de más.',
+    },
+  },
+  {
+    id: 'walnuts-omega3',
+    title: { en: 'Did you know?', es: '¿Sabías que?' },
+    body: {
+      en: 'Walnuts provide plant-based omega-3 fats.',
+      es: 'Las nueces aportan grasas omega-3 de origen vegetal.',
+    },
+  },
+  {
+    id: 'potatoes-nutritious',
+    title: { en: 'Did you know?', es: '¿Sabías que?' },
+    body: {
+      en: 'Potatoes are nutritious. What you add to them matters.',
+      es: 'Las papas son nutritivas. Lo que les agregas es lo que importa.',
+    },
+  },
+  {
+    id: 'potato-skin',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Keep the skin on potatoes for more fiber.',
+      es: 'Deja la cáscara en las papas para obtener más fibra.',
+    },
+  },
+  {
+    id: 'baked-potato-toppings',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Top a baked potato with beans, salsa, or plain Greek yogurt.',
+      es: 'Cubre una papa al horno con frijoles, salsa o yogur griego natural.',
+    },
+  },
+  {
+    id: 'whole-fruit',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Choose whole fruit over juice. It has less sugar and more fiber and nutrients.',
+      es: 'Elige fruta entera en lugar de jugo. Tiene menos azúcar y más fibra y nutrientes.',
+    },
+  },
+  {
+    id: 'yogurt-berries-honey',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Add berries and a little honey to plain Greek yogurt for natural sweetness.',
+      es: 'Agrega bayas y un poco de miel al yogur griego natural para darle dulzor natural.',
+    },
+  },
+  {
+    id: 'frozen-produce',
+    title: { en: 'Did you know?', es: '¿Sabías que?' },
+    body: {
+      en: 'Frozen fruit and vegetables are nutritious choices.',
+      es: 'Las frutas y verduras congeladas son opciones nutritivas.',
+    },
+  },
+  {
+    id: 'rinse-canned-beans',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Rinse canned beans to reduce sodium.',
+      es: 'Enjuaga los frijoles de lata para reducir el sodio.',
+    },
+  },
+  {
+    id: 'canned-tuna-salad',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Add canned tuna to a salad for an easy protein.',
+      es: 'Agrega atún enlatado a una ensalada para obtener proteína fácilmente.',
+    },
+  },
+  {
+    id: 'jicama-snack',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Slice jícama for a crunchy snack.',
+      es: 'Corta jícama en rebanadas para un snack crujiente.',
+    },
+  },
+  {
+    id: 'ramekin-portions',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Put snacks in a ramekin or bowl so you can see and measure your portion.',
+      es: 'Pon los snacks en un tazón pequeño para poder ver y medir tu porción.',
+    },
+  },
+  {
+    id: 'eggs-vegetables',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Add vegetables to scrambled eggs for easy vegetable portions.',
+      es: 'Agrega verduras a los huevos revueltos para sumar porciones de verduras fácilmente.',
+    },
+  },
+  {
+    id: 'yogurt-instead-sour-cream',
+    title: { en: 'Tips for you', es: 'Consejos para ti' },
+    body: {
+      en: 'Use plain Greek yogurt instead of sour cream on tacos or baked potatoes.',
+      es: 'Usa yogur griego natural en lugar de crema agria en tacos o papas al horno.',
+    },
+  },
 ];
