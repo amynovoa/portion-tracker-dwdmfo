@@ -2,6 +2,8 @@ node_modules/
 backend/
 .git/
 .expo/
+...
+agent_chat_context.sqlite
 ios_distribution.cer
 google-play-service-account.json
 *.jks
