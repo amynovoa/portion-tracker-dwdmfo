@@ -1,0 +1,51 @@
+PORTION TRACK — Privacy Policy draft section: Steps / Health data
+Add this to https://www.portiontrack.com/privacy-policy
+Suggested placement: after “Data Collection” (or after “Meal Photo Analysis”)
+Last updated: 8 October 2026
+
+--------------------------------------------------------------------------------
+ENGLISH (paste into website)
+--------------------------------------------------------------------------------
+
+## Steps and Health Data
+
+Portion Track can optionally show today’s step count next to your food and exercise tracking.
+
+If you choose to connect Steps in Settings, Portion Track requests read-only access to step count from Apple Health (iOS) or Health Connect (Android). Portion Track uses this information only to display today’s total and progress toward a daily step goal that you set in the app.
+
+Step data is read and shown on your device. Portion Track does not upload your step count to Portion Track servers, does not sell step data, and does not use step data for advertising or marketing.
+
+Portion Track does not write step data (or other health data) back to Apple Health or Health Connect.
+
+You can disconnect Steps at any time in Settings. On Android, disconnecting also revokes Portion Track’s Health Connect steps permission where the platform allows. On iOS, you can also manage or revoke Health access in the system Health / Settings apps.
+
+Connecting Steps is optional. If you never connect, Portion Track does not read step data.
+
+--------------------------------------------------------------------------------
+SPANISH (optional website ES version, if the policy is localized)
+--------------------------------------------------------------------------------
+
+## Pasos y datos de salud
+
+Portion Track puede mostrar de forma opcional el recuento de pasos de hoy junto con el seguimiento de comida y ejercicio.
+
+Si eliges conectar Pasos en Ajustes, Portion Track solicita acceso de solo lectura al recuento de pasos de Apple Health (iOS) o Health Connect (Android). Portion Track usa esta información únicamente para mostrar el total de hoy y el progreso hacia una meta diaria de pasos que tú configuras en la app.
+
+Los datos de pasos se leen y muestran en tu dispositivo. Portion Track no sube tu recuento de pasos a sus servidores, no vende estos datos y no los usa para publicidad ni marketing.
+
+Portion Track no escribe datos de pasos (ni otros datos de salud) en Apple Health o Health Connect.
+
+Puedes desconectar Pasos en cualquier momento desde Ajustes. En Android, al desconectar también se revoca el permiso de pasos de Health Connect cuando la plataforma lo permite. En iOS, también puedes gestionar o revocar el acceso en las apps de Salud / Ajustes del sistema.
+
+Conectar Pasos es opcional. Si nunca lo conectas, Portion Track no lee datos de pasos.
+
+--------------------------------------------------------------------------------
+ALSO UPDATE (small related tweak on the same page)
+--------------------------------------------------------------------------------
+
+Under “Subscriptions and Payments”, current text mentions Apple only.
+If Android subscriptions are live, consider adding one sentence:
+
+Subscription purchases are processed by Apple through the App Store and by Google through Google Play. Portion Track does not receive or store your payment card or bank account information.
+
+(Only add this if it matches your current billing setup.)

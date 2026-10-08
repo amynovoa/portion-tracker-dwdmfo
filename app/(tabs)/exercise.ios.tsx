@@ -9,6 +9,7 @@ import { ExerciseEntry, EXERCISE_CATEGORIES } from '@/types';
 import AppLogo from '@/components/AppLogo';
 import DaySelector from '@/components/DaySelector';
 import ExerciseChart from '@/components/ExerciseChart';
+import StepsTodayCard from '@/components/StepsTodayCard';
 import { useTranslation } from 'react-i18next';
 
 const CHART_DAYS = 14;
@@ -134,6 +135,8 @@ export default function ExerciseScreen() {
         </View>
 
         <DaySelector selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+
+        <StepsTodayCard selectedDate={selectedDate} />
 
         <View style={styles.content}>
           <TouchableOpacity style={styles.logExerciseButton} onPress={handleLogExercise}>

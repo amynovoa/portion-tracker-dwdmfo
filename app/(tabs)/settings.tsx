@@ -173,6 +173,21 @@ export default function SettingsScreen() {
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>
 
+        {/* Steps */}
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => {
+            console.log('Steps button pressed');
+            router.push('/steps-settings');
+          }}
+        >
+          <Text style={styles.settingIcon}>🚶</Text>
+          <View style={styles.settingContent} pointerEvents="none">
+            <Text style={styles.settingLabel}>{t('settings.steps')}</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
         {/* Daily Reset */}
         <TouchableOpacity
           style={styles.settingItem}

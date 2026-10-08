@@ -51,7 +51,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.amynovoa.portiontracker",
-      "versionCode": 47,
+      "versionCode": 50,
       "allowBackup": false,
       "permissions": [
         "android.permission.CAMERA",
@@ -75,7 +75,19 @@
         }
       ],
       "expo-localization",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@appeeky/expo-healthkit",
+        {
+          "healthSharePermission": "Portion Track reads today’s step count from Apple Health so you can see daily movement next to your portions. Step data stays on your device and is not uploaded.",
+          "healthUpdatePermission": "Portion Track does not write health data to Apple Health.",
+          "isBackgroundDeliveryEnabled": false,
+          "healthConnectPermissions": [
+            "READ_STEPS"
+          ],
+          "healthConnectPrivacyPolicyUrl": "https://www.portiontrack.com/privacy-policy"
+        }
+      ]
     ],
     "scheme": "portiontrack",
     "experiments": {

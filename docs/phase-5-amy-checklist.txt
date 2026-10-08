@@ -1,0 +1,42 @@
+PORTION TRACK — Phase 5 checklist (compliance & store readiness)
+For Amy + Muhammad
+Date: 8 October 2026
+
+Goal: Privacy Policy and store forms ready so Steps can ship in a native build for TestFlight / Play testing.
+
+--------------------------------------------------------------------------------
+DONE IN APP / REPO
+--------------------------------------------------------------------------------
+[x] In-app EN + ES Steps strings (including privacy note)
+[x] App Store usage description strings in app.json (HealthKit share + update)
+[x] Health Connect READ_STEPS only (no write / no other types)
+[x] Health Connect privacy policy URL points to https://www.portiontrack.com/privacy-policy
+[x] Paste-ready store wording: docs/health-store-wording.txt
+[x] Privacy Policy Steps section draft: docs/privacy-policy-steps-section.txt
+[x] Settings → Privacy Policy still opens the live policy URL
+
+--------------------------------------------------------------------------------
+AMY ACTIONS (website + consoles)
+--------------------------------------------------------------------------------
+[ ] Publish the Steps section from docs/privacy-policy-steps-section.txt on
+    https://www.portiontrack.com/privacy-policy
+[ ] Confirm the live page loads and mentions on-device / no upload for steps
+[ ] App Store Connect — HealthKit questionnaire / review notes:
+      paste from docs/health-store-wording.txt (Apple section)
+[ ] Google Play Console — Health Connect / health permissions form:
+      paste READ_STEPS justification from docs/health-store-wording.txt
+[ ] Optional: update Subscriptions sentence on Privacy Policy if Android Play
+      billing should be mentioned alongside Apple
+
+--------------------------------------------------------------------------------
+MUHAMMAD ACTIONS (after Amy publishes / confirms)
+--------------------------------------------------------------------------------
+[ ] Spot-check live Privacy Policy includes Steps language
+[ ] Proceed to push + TestFlight / Play test builds when Amy is ready
+
+--------------------------------------------------------------------------------
+OUT OF SCOPE FOR THIS CHECKLIST
+--------------------------------------------------------------------------------
+- Expanding Health beyond steps
+- Uploading health data
+- Changing billing / RevenueCat

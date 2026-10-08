@@ -52,6 +52,7 @@
     "profile": "Perfil",
     "subscription": "Suscripción",
     "celebration": "Celebración",
+    "steps": "Pasos",
     "dailyReset": "Reinicio Diario",
     "dailyReminder": "Recordatorio Diario",
     "privacyPolicy": "Política de Privacidad",
@@ -355,6 +356,25 @@
     "enableLabel": "Activar Celebraciones",
     "enabledDescription": "Verás una celebración cuando completes todos tus objetivos de porciones del día.",
     "disabledDescription": "Las celebraciones están desactivadas. No verás animaciones al completar tus objetivos."
+  },
+  "steps": {
+    "title": "Pasos",
+    "headerDescription": "Lee los pasos de hoy en tu dispositivo. No subimos estos datos.",
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "connected": "Conectado",
+    "notConnected": "No conectado",
+    "connectHelp": "Vincula {{source}} para mostrar los pasos de hoy.",
+    "privacyNote": "Los pasos se quedan en tu dispositivo. Portion Track solo lee el recuento de hoy después de que des permiso.",
+    "unavailable": "Los pasos no están disponibles en este dispositivo. En Android, instala Health Connect desde Play Store.",
+    "permissionDenied": "No se concedió el permiso. Puedes activar los pasos en los ajustes de tu dispositivo.",
+    "readFailed": "No pudimos leer los pasos de hoy. Puede que se haya revocado el permiso o que aún no haya datos. Revisa los ajustes de salud e inténtalo de nuevo.",
+    "installHealthConnect": "Instalar Health Connect",
+    "openSettings": "Abrir Ajustes",
+    "goal": "Meta diaria de pasos",
+    "today": "Pasos de hoy",
+    "ofGoal": "{{steps}} de {{goal}}",
+    "connectError": "No se pudo conectar. Inténtalo de nuevo."
   },
   "logExercise": {
     "title": "Registrar Ejercicio",

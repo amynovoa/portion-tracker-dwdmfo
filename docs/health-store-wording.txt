@@ -1,0 +1,65 @@
+PORTION TRACK — Steps / Health store wording
+Paste-ready for App Store Connect and Google Play Console
+Last updated: 8 October 2026
+
+================================================================================
+APPLE APP STORE CONNECT — HealthKit
+================================================================================
+
+What data types does the app read?
+- Step count (HKQuantityTypeIdentifierStepCount) only
+
+Does the app write health data?
+- No. Portion Track does not write to Apple Health.
+
+Does the app use HealthKit for clinical research / clinical records?
+- No.
+
+NSHealthShareUsageDescription (Info.plist — already set in app build):
+Portion Track reads today’s step count from Apple Health so you can see daily movement next to your portions. Step data stays on your device and is not uploaded.
+
+NSHealthUpdateUsageDescription (required by platform even though we do not write):
+Portion Track does not write health data to Apple Health.
+
+Purpose of use (App Store Connect Health questionnaire / review notes):
+Portion Track optionally connects to Apple Health after the user opts in from Settings → Steps. We request read-only access to step count so we can show today’s total and progress toward a daily step goal the user sets in the app. Step data is read and displayed on the device only. We do not upload step data to our servers, do not sell it, and do not use it for advertising.
+
+App Review notes (optional short paragraph):
+Steps is optional. Path: Settings → Steps → enable connection → grant Steps in the Health permission sheet. The Exercise tab then shows today’s progress. Disconnect turns the feature off. No Health write permissions are requested.
+
+================================================================================
+GOOGLE PLAY CONSOLE — Health Connect
+================================================================================
+
+Permission declared:
+- android.permission.health.READ_STEPS
+
+Permissions NOT requested:
+- No write permissions
+- No background health read
+- No other Health Connect data types (heart rate, sleep, exercise, etc.)
+
+Privacy policy URL (also in app Health Connect config):
+https://www.portiontrack.com/privacy-policy
+
+Data types access justification (Play Console — Health apps / Health Connect form):
+Portion Track reads today’s step count from Health Connect after the user opts in from Settings → Steps. We use it only to display today’s total and a simple progress bar toward a user-selected daily goal. We do not write health data to Health Connect. We do not send step data to our servers. Step data stays on the user’s device.
+
+Short purpose statement (if a shorter field is required):
+Read today’s steps on-device to show daily progress toward a user goal. No upload. No write.
+
+User-facing flow for reviewers:
+1. Open Portion Track → Settings → Steps
+2. Turn on connection and allow Steps in Health Connect
+3. Confirm a step source (e.g. Google Fit / Samsung Health) is writing steps into Health Connect
+4. Today’s count appears in Settings → Steps and on the Exercise tab (today only)
+
+================================================================================
+IN-APP STRINGS (already in build — for reference)
+================================================================================
+
+EN privacy note:
+Steps stay on your device. Portion Track only reads today’s count after you grant permission.
+
+ES privacy note:
+Los pasos se quedan en tu dispositivo. Portion Track solo lee el recuento de hoy después de que des permiso.

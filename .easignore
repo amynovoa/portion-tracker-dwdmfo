@@ -15,7 +15,6 @@ google-play-service-account.json
 .env
 .env.local
 .DS_Store
-package-lock.json
 yarn.lock
 *.aab
 *.apk

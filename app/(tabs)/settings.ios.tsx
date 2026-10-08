@@ -122,6 +122,7 @@ export default function SettingsScreen() {
   const profileLabel = t('settings.profile') || 'Profile';
   const subscriptionLabel = t('settings.subscription') || 'Subscription';
   const celebrationLabel = t('settings.celebration') || 'Celebration';
+  const stepsLabel = t('settings.steps') || 'Steps';
   const dailyResetLabel = t('settings.dailyReset') || 'Daily Reset';
   const dailyReminderLabel = t('settings.dailyReminder') || 'Daily Reminder';
   const languageLabel = t('settings.language') || 'Language';
@@ -182,6 +183,21 @@ export default function SettingsScreen() {
           <Text style={styles.settingIcon}>🎉</Text>
           <View style={styles.settingContent} pointerEvents="none">
             <Text style={styles.settingLabel}>{celebrationLabel}</Text>
+          </View>
+          <Text style={styles.chevron} pointerEvents="none">›</Text>
+        </TouchableOpacity>
+
+        {/* Steps */}
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => {
+            console.log('Steps button pressed');
+            router.push('/steps-settings');
+          }}
+        >
+          <Text style={styles.settingIcon}>🚶</Text>
+          <View style={styles.settingContent} pointerEvents="none">
+            <Text style={styles.settingLabel}>{stepsLabel}</Text>
           </View>
           <Text style={styles.chevron} pointerEvents="none">›</Text>
         </TouchableOpacity>

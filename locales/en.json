@@ -52,6 +52,7 @@
     "profile": "Profile",
     "subscription": "Subscription",
     "celebration": "Celebration",
+    "steps": "Steps",
     "dailyReset": "Daily Reset",
     "dailyReminder": "Daily Reminder",
     "privacyPolicy": "Privacy Policy",
@@ -355,6 +356,25 @@
     "enableLabel": "Enable Celebrations",
     "enabledDescription": "You will see a celebration when you complete all your portion targets for the day.",
     "disabledDescription": "Celebrations are turned off. You will not see any animations when completing your targets."
+  },
+  "steps": {
+    "title": "Steps",
+    "headerDescription": "Read today’s steps on your device. We do not upload this data.",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "connectHelp": "Link {{source}} to show today’s steps.",
+    "privacyNote": "Steps stay on your device. Portion Track only reads today’s count after you grant permission.",
+    "unavailable": "Steps are not available on this device. On Android, install Health Connect from the Play Store.",
+    "permissionDenied": "Permission was not granted. You can enable steps in your device settings.",
+    "readFailed": "We couldn’t read today’s steps. Permission may have been revoked, or no step data is available yet. Check Health settings, then try again.",
+    "installHealthConnect": "Install Health Connect",
+    "openSettings": "Open Settings",
+    "goal": "Daily step goal",
+    "today": "Today’s steps",
+    "ofGoal": "{{steps}} of {{goal}}",
+    "connectError": "Could not connect. Please try again."
   },
   "logExercise": {
     "title": "Log Exercise",
