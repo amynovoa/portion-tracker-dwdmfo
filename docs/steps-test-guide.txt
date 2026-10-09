@@ -1,0 +1,529 @@
+PORTION TRACK — Steps feature
+QA Test Guide (simple, step-by-step)
+For testers who may not be technical
+Last updated: 8 October 2026
+
+================================================================================
+WHAT THIS FEATURE DOES (plain English)
+================================================================================
+
+Portion Track can show how many steps the user walked today.
+
+- The user turns this on in Settings.
+- The phone’s health app shares today’s step number with Portion Track.
+- Portion Track shows that number and a simple progress bar toward a daily goal.
+- The step number stays on the phone. We do not upload it to our servers.
+- This is optional. If the user never turns it on, nothing changes.
+
+Important:
+- This will NOT work in Expo Go.
+- You need a real phone install (Android test APK or iPhone TestFlight).
+- On the Android test APK, real subscription purchase will NOT work.
+  Use the special unlock below.
+
+================================================================================
+WHAT YOU NEED BEFORE TESTING
+================================================================================
+
+Android phone
+[ ] Android phone in your hand
+[ ] Install this test app (APK):
+    https://expo.dev/artifacts/eas/txqLFn35qmyK62w0mCv5SQzd1Bru0xrImsaP1BWEaNM.apk
+[ ] Install “Health Connect” from the Play Store (if the phone does not already have it)
+[ ] Install “Google Fit” (or Samsung Health on Samsung phones)
+    This is needed so the phone actually records steps.
+
+iPhone
+[ ] iPhone with a TestFlight build of Portion Track (when available)
+[ ] Apple Health app (comes with iPhone)
+[ ] Phone or Watch that records steps
+
+Also helpful
+[ ] Ability to walk for 2–3 minutes with the phone in your pocket
+[ ] Ability to switch the app language between English and Spanish
+
+================================================================================
+SPECIAL NOTE FOR ANDROID TEST APK (read this first)
+================================================================================
+
+When you open the test APK, you may see a payment / “Try free for 7 days” screen.
+
+Do NOT try to buy or start the free trial on this test build.
+It will fail with a billing error. That is normal for this test file.
+
+Instead:
+1. Stay on that payment screen.
+2. Tap the Portion Track logo at the top 7 times.
+3. The app should unlock so you can continue and reach Settings.
+
+If you cannot get past the payment screen, stop and tell the developer.
+Do not keep pressing Try free / Subscribe on this test APK.
+
+================================================================================
+TEST 1 — Install and open the app
+================================================================================
+
+Goal: Make sure the test app opens and you can reach Settings.
+
+Steps
+1. Install the app from the APK (Android) or TestFlight (iPhone).
+2. Open Portion Track.
+3. If you see the payment screen on Android test APK, tap the logo 7 times.
+4. If the app asks you to set up a profile or targets, complete that.
+5. Look for the main tabs / menu and open Settings.
+
+Pass if
+- App opens without crashing
+- You can reach Settings
+
+Fail if
+- App crashes on open
+- You are stuck on payment and logo taps do not unlock
+- Settings is missing
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 2 — Find Steps in Settings
+================================================================================
+
+Goal: Confirm there is a clear place to turn Steps on.
+
+Steps
+1. Open Settings.
+2. Look for a row named “Steps” (English) or “Pasos” (Spanish).
+3. Tap it.
+4. Confirm you see a Steps settings screen with:
+   - A short explanation that steps stay on your device / are not uploaded
+   - A connect switch (Connected / Not connected)
+   - A daily step goal with minus (−) and plus (+)
+   - Privacy note at the bottom
+
+Pass if
+- Steps row exists
+- Screen opens and shows connect + goal + privacy text
+
+Fail if
+- No Steps option
+- Screen is blank / crashes
+- Text is missing or shows raw codes like “steps.title”
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 3 — Connect Steps (first time)
+================================================================================
+
+Goal: User can connect and allow permission.
+
+Steps
+1. In Settings → Steps, confirm it says Not connected.
+2. Turn the switch ON.
+3. The phone should show a permission screen:
+   - Android: Health Connect asking to allow Steps
+   - iPhone: Apple Health asking to allow Steps
+4. Allow / turn on Steps.
+5. Return to Portion Track.
+6. Confirm Settings → Steps now says Connected.
+7. Confirm a “Today’s steps” number is shown
+   (0 is okay if you have not walked yet).
+
+Pass if
+- Permission screen appears
+- After allowing, status is Connected
+- Today’s number is shown (including 0)
+
+Fail if
+- Switch does nothing
+- App crashes
+- Permission screen never appears
+- Status stays Not connected after you allowed access
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 4 — Make sure the phone is actually counting steps
+================================================================================
+
+Goal: Confirm the phone health app has step numbers.
+If the phone has 0 steps, Portion Track will also show 0. That is not an app bug.
+
+Android steps
+1. Open the Health Connect app.
+2. Go to Data and access (or Data).
+3. Tap Steps.
+4. Check that some app is allowed to write/add steps
+   (usually Google Fit or Samsung Health).
+5. Check that Portion Track is allowed to read steps.
+6. Open Google Fit (or Samsung Health), open it once, allow activity if asked.
+7. Put the phone in your pocket and walk for 2–3 minutes.
+8. Open Health Connect again and check whether today’s steps went up.
+
+iPhone steps
+1. Open the Apple Health app.
+2. Find Steps (Browse → Activity → Steps is fine).
+3. Check today’s number.
+4. If it is 0, walk for 2–3 minutes with the iPhone.
+5. Confirm today’s steps went up in Apple Health.
+
+Pass if
+- Health Connect / Apple Health shows steps for today, or the number increases after walking
+
+Fail if
+- No app is writing steps on Android and you cannot get any step data
+  (tell the developer; Portion Track cannot invent steps)
+
+Tester notes: _______________________________________________________________
+Today’s steps in Health app before walk: __________
+Today’s steps in Health app after walk: __________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 5 — Portion Track shows the increasing step number
+================================================================================
+
+Goal: After walking, Portion Track shows a higher number.
+
+Steps
+1. Make sure Steps is Connected in Portion Track.
+2. Write down the number shown under Today’s steps in Settings → Steps.
+3. Walk for a few minutes (phone in pocket).
+4. Confirm the Health app number went up (Test 4).
+5. Go back to Portion Track.
+6. Leave Settings → Steps, then open it again
+   (or switch to another tab and come back).
+7. Check whether Today’s steps increased.
+
+Pass if
+- Portion Track number matches or moves toward the Health app number
+- Number went up after walking and reopening the screen
+
+Fail if
+- Health app has steps but Portion Track stays stuck at 0 forever after refresh
+- Number is wildly wrong compared with Health
+- App crashes when reopening Steps
+
+Tester notes: _______________________________________________________________
+Portion Track steps before: __________
+Portion Track steps after: __________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 6 — Daily goal controls
+================================================================================
+
+Goal: User can set a personal step goal.
+
+Steps
+1. Open Settings → Steps while Connected.
+2. Find Daily step goal.
+3. Tap minus (−) a few times.
+4. Confirm the goal number goes down (it should move in steps of 500).
+5. Tap plus (+) a few times.
+6. Confirm the goal number goes up.
+7. Leave the screen, then come back.
+8. Confirm the goal you set is still there.
+
+Pass if
+- Goal changes with − / +
+- Goal is still saved after leaving and returning
+
+Fail if
+- Buttons do nothing
+- Goal resets every time
+- App crashes
+
+Tester notes: _______________________________________________________________
+Goal set to: __________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 7 — Exercise tab shows today’s progress
+================================================================================
+
+Goal: After connecting, Exercise shows a simple progress card for today.
+
+Steps
+1. Keep Steps Connected.
+2. Set a goal you can understand (for example 8,000).
+3. Open the Exercise tab.
+4. Make sure the day selector is on Today.
+5. Look for a card about today’s steps.
+6. Confirm it shows:
+   - A title about today’s steps
+   - Text like “X of Y” (your steps of your goal)
+   - A percentage / progress bar
+
+Pass if
+- Card appears on Exercise for Today
+- Numbers look consistent with Settings → Steps
+
+Fail if
+- Connected but no card on Exercise for Today
+- Card shows wrong goal
+- App crashes on Exercise
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 8 — Steps card only for today (not other days)
+================================================================================
+
+Goal: The steps card should not appear when looking at another day.
+
+Steps
+1. Stay on Exercise with Steps Connected.
+2. Confirm the steps card is visible on Today.
+3. In the day selector, tap Yesterday (or another past day).
+4. Confirm the steps card is gone / hidden.
+5. Tap back to Today.
+6. Confirm the steps card comes back.
+
+Pass if
+- Hidden on other days
+- Visible again on Today
+
+Fail if
+- Card still shows on yesterday/other days
+- Card never comes back on Today
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 9 — Refresh when returning to the app
+================================================================================
+
+Goal: If you walk while the app is closed, the number updates when you come back.
+
+Steps
+1. Open Exercise or Settings → Steps and note today’s steps.
+2. Press Home / leave Portion Track (do not uninstall).
+3. Walk for a few minutes.
+4. Confirm Health app steps increased.
+5. Open Portion Track again.
+6. Go to Exercise (Today) or Settings → Steps.
+7. Confirm the step number updated.
+
+Pass if
+- Number updates after coming back to the app
+
+Fail if
+- Health increased but Portion Track never updates even after reopening screens
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 10 — Disconnect turns the feature off
+================================================================================
+
+Goal: Turning Steps off removes it from the daily view.
+
+Steps
+1. Open Settings → Steps.
+2. Turn the switch OFF.
+3. Confirm status says Not connected.
+4. Confirm today’s steps preview is gone on that settings screen.
+5. Open Exercise (Today).
+6. Confirm the steps progress card is gone.
+7. Turn Steps ON again and allow permission if asked.
+8. Confirm the card can come back on Exercise.
+
+Pass if
+- Disconnect hides the feature
+- Reconnect brings it back
+
+Fail if
+- Disconnect does nothing
+- Card stays after disconnect
+- Reconnect fails
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 11 — Android: Health Connect missing / install path
+================================================================================
+
+Goal: If Health Connect is not available, the user gets clear help.
+(Skip on iPhone.)
+
+Steps
+1. If Health Connect is already installed, you can still check that the
+   Settings → Steps screen mentions Health Connect clearly when not ready.
+2. When Steps cannot connect because Health Connect is missing:
+   - User should see a clear message
+   - There should be a way to Install Health Connect
+3. Tapping Install Health Connect should open the Play Store page
+   (or a store listing for Health Connect).
+
+Pass if
+- Message is understandable
+- Install link opens the right store page
+
+Fail if
+- App crashes
+- User gets a blank/confusing error with no next step
+
+Tester notes: _______________________________________________________________
+Skipped [ ]   Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 12 — Permission removed after connecting
+================================================================================
+
+Goal: If the user later turns off permission, the app handles it calmly.
+
+Android
+1. Connect Steps successfully.
+2. Open Health Connect.
+3. Find Portion Track app permissions.
+4. Turn off / remove Steps read access for Portion Track.
+5. Return to Portion Track → Settings → Steps.
+6. Confirm the app does not crash.
+7. Confirm you get a clear message that steps could not be read,
+   with options like Open Settings or Disconnect.
+
+iPhone
+1. Connect Steps successfully.
+2. Open iPhone Settings → Health → Data Access & Devices → Portion Track
+   (wording may vary slightly by iOS version).
+3. Turn off Steps for Portion Track.
+4. Return to Portion Track → Settings → Steps.
+5. Confirm no crash and a clear message / empty read state with a way to fix it.
+
+Pass if
+- No crash
+- User can understand what to do next
+
+Fail if
+- App freezes or crashes
+- App pretends everything is fine with no way to recover
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 13 — English and Spanish
+================================================================================
+
+Goal: Steps text appears correctly in both languages.
+
+Steps
+1. Open Settings and switch language to Español.
+2. Confirm Settings shows “Pasos”.
+3. Open Pasos and confirm Spanish labels for:
+   - title
+   - connected / not connected
+   - goal
+   - today’s steps
+   - privacy note
+4. Open Exercise and confirm the steps card is in Spanish
+   (for example “Pasos de hoy” and “X de Y”).
+5. Switch language back to English.
+6. Confirm English labels are back.
+
+Pass if
+- Both languages look complete and readable
+- No strange codes like “steps.today” on screen
+
+Fail if
+- Missing translations
+- Mixed broken text
+- Crash when switching language
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+TEST 14 — Privacy wording (quick check)
+================================================================================
+
+Goal: User can see we keep steps on the device.
+
+Steps
+1. Open Settings → Steps.
+2. Read the privacy note on the screen.
+3. Confirm it says steps stay on the device / are not uploaded.
+4. Open Settings → Privacy Policy.
+5. Confirm the website opens.
+6. After the website is updated by the team, confirm the Privacy Policy page
+   also mentions Steps / health data.
+
+Pass if
+- In-app note is clear
+- Privacy Policy link opens
+
+Fail if
+- No privacy explanation
+- Privacy Policy link is broken
+
+Tester notes: _______________________________________________________________
+
+Result:  Pass [ ]   Fail [ ]
+
+================================================================================
+DO NOT TEST / EXPECT ON THE ANDROID TEST APK
+================================================================================
+
+- Real “Try free for 7 days” / paid subscription purchase
+- Expo Go
+- iPhone behavior from an Android APK
+- Steps from thin air if Health Connect / Apple Health itself has 0 steps
+
+================================================================================
+FINAL SIGN-OFF
+================================================================================
+
+Tester name: ______________________________
+Date: ____________________________________
+Phone model: ______________________________
+Android / iPhone: _________________________
+App build / APK date: _____________________
+
+Summary
+Total Pass: __________
+Total Fail: __________
+Blocked: ____________
+
+Overall recommendation
+[ ] Ready for Amy / TestFlight review
+[ ] Needs fixes before review
+[ ] Blocked — cannot complete testing
+
+Biggest issues found
+1. __________________________________________________________________________
+2. __________________________________________________________________________
+3. __________________________________________________________________________
+
+================================================================================
+10-MINUTE SMOKE TEST (if short on time)
+================================================================================
+
+1. Unlock Android test APK with logo ×7 if needed
+2. Settings → Steps → Connect → Allow
+3. Walk 2–3 minutes and confirm Health app steps went up
+4. Reopen Portion Track and confirm today’s steps updated
+5. Exercise Today → progress card visible
+6. Other day → card hidden; Today → card back
+7. Disconnect → card gone
+8. Switch language to Spanish and back once
+
+If all 8 pass, core Steps flow is working.
