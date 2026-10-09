@@ -1,6 +1,4 @@
 node_modules/
-.env
-.env.local
 
 .git/
 .expo/
@@ -48,3 +46,4 @@ build/
 yarn.lock
 next-env.d.ts
 
+config.bat
