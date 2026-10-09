@@ -1,0 +1,65 @@
+PORTION TRACK — Phase 6 handoff (builds + Amy testing)
+Date: 9 October 2026
+
+Status
+- Steps feature is on main (pushed)
+- Android test build is available and in testing
+- iOS TestFlight build could not be started from this machine (Apple credentials need interactive setup / Amy’s Mac or Expo login with certs)
+- Phase 5 wording is ready; live Privacy Policy Steps section still needs Amy to publish
+
+--------------------------------------------------------------------------------
+ANDROID — READY TO TEST NOW
+--------------------------------------------------------------------------------
+
+APK:
+https://expo.dev/artifacts/eas/txqLFn35qmyK62w0mCv5SQzd1Bru0xrImsaP1BWEaNM.apk
+
+Build page:
+https://expo.dev/accounts/muhammad_asad6202/projects/portion-track/builds/232e3938-ea7c-4485-995e-4f2eb50293cf
+
+How to unlock test APK (billing will not work):
+- On the paywall, tap the Portion Track logo 7 times
+
+QA guide (plain language):
+docs/steps-test-guide.txt
+
+--------------------------------------------------------------------------------
+iOS — AMY TESTFLIGHT
+--------------------------------------------------------------------------------
+
+Code is already on GitHub main with HealthKit plugin configured.
+
+Amy / interactive machine needs to run:
+  cd portion-track-app
+  npx eas-cli build --platform ios --profile production
+
+Then submit to TestFlight (Amy’s usual flow), or:
+  npx eas-cli submit --platform ios --latest
+
+Why blocked here:
+EAS said iOS credentials are not set up for non-interactive builds.
+Needs interactive credential validation on a machine signed into the Apple team.
+
+--------------------------------------------------------------------------------
+PRIVACY POLICY (still needed before store release)
+--------------------------------------------------------------------------------
+
+Paste Steps section from:
+docs/privacy-policy-steps-section.txt
+onto:
+https://www.portiontrack.com/privacy-policy
+
+Store form paste text:
+docs/health-store-wording.txt
+
+--------------------------------------------------------------------------------
+SUGGESTED ORDER
+--------------------------------------------------------------------------------
+
+1. Amy (or Muhammad on interactive Mac) starts iOS production EAS build
+2. Amy launches TestFlight
+3. Both sides test with docs/steps-test-guide.txt
+4. Amy publishes Privacy Policy Steps section
+5. When signed off, bump marketing version (e.g. 3.3.0) and ship store builds
+
+Do NOT ship public production release until Android + iOS testing and Privacy Policy are done.
