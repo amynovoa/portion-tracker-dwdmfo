@@ -16,12 +16,17 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.amynovoa.portiontracker",
       "appleTeamId": "9978T8842P",
+      "entitlements": {
+        "com.apple.developer.healthkit": true
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDisplayName": "Portion Track",
         "NSCameraUsageDescription": "This app uses the camera to take photos of your meals for tracking purposes.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library.",
+        "NSHealthShareUsageDescription": "Portion Track reads today’s step count from Apple Health so you can see daily movement next to your portions. Step data stays on your device and is not uploaded.",
+        "NSHealthUpdateUsageDescription": "Portion Track does not write health data to Apple Health.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
           "NSExceptionDomains": {
@@ -42,7 +47,7 @@
           }
         ]
       },
-      "buildNumber": "85"
+      "buildNumber": "86"
     },
     "android": {
       "adaptiveIcon": {

@@ -36,8 +36,18 @@ export default function StepsSettingsScreen() {
   const { connected, goal, steps, status, refresh } = useStepsToday();
   const [localGoal, setLocalGoal] = useState(DEFAULT_STEP_GOAL);
   const [busy, setBusy] = useState(false);
+  const [availability, setAvailability] = useState<ReturnType<typeof getStepsAvailability>>('unavailable');
   const alertedRef = useRef<string | null>(null);
-  const availability = getStepsAvailability();
+
+  // Defer Health kit probe off the first render so a native miss cannot crash mount.
+  useEffect(() => {
+    try {
+      setAvailability(getStepsAvailability());
+    } catch (error) {
+      console.warn('[steps] availability check failed:', error);
+      setAvailability('unavailable');
+    }
+  }, []);
 
   // Keep local goal in sync with storage after refresh
   useEffect(() => {

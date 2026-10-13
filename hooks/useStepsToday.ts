@@ -32,39 +32,46 @@ export function useStepsToday(options?: { enabled?: boolean }): StepsTodayState 
   const refresh = useCallback(async () => {
     if (!enabled) return;
 
-    const day = getTodayString();
-    setCalendarDay(day);
+    try {
+      const day = getTodayString();
+      setCalendarDay(day);
 
-    const isConnected = await loadStepsConnected();
-    const stepGoal = await loadStepGoal();
-    if (!activeRef.current) return;
+      const isConnected = await loadStepsConnected();
+      const stepGoal = await loadStepGoal();
+      if (!activeRef.current) return;
 
-    setConnected(isConnected);
-    setGoal(stepGoal);
+      setConnected(isConnected);
+      setGoal(stepGoal);
 
-    if (!isConnected) {
-      setSteps(null);
-      setStatus('idle');
-      return;
-    }
+      if (!isConnected) {
+        setSteps(null);
+        setStatus('idle');
+        return;
+      }
 
-    if (getStepsAvailability() !== 'ready') {
+      if (getStepsAvailability() !== 'ready') {
+        setSteps(null);
+        setStatus('unavailable');
+        return;
+      }
+
+      const count = await readTodayStepCount();
+      if (!activeRef.current) return;
+
+      if (count === null) {
+        setSteps(null);
+        setStatus('read_failed');
+        return;
+      }
+
+      setSteps(count);
+      setStatus('ok');
+    } catch (error) {
+      console.error('[steps] refresh failed:', error);
+      if (!activeRef.current) return;
       setSteps(null);
       setStatus('unavailable');
-      return;
     }
-
-    const count = await readTodayStepCount();
-    if (!activeRef.current) return;
-
-    if (count === null) {
-      setSteps(null);
-      setStatus('read_failed');
-      return;
-    }
-
-    setSteps(count);
-    setStatus('ok');
   }, [enabled]);
 
   useFocusEffect(
