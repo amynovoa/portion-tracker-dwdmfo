@@ -16,14 +16,10 @@ export function __resetStepsHealthCacheForTests(): void {
 
 /**
  * Soft-check whether the ExpoHealthKit native binary is present.
- * Returns:
- *  - true  → native module found
- *  - false → native module missing
- *  - null  → probe API unavailable; caller may try a guarded require
+ * Informational only — never used to block a guarded require attempt.
  */
 function probeNativeHealthKit(): boolean | null {
   try {
-    // Prefer expo-modules-core (same source Expo re-exports).
     let requireOptionalNativeModule: ((name: string) => unknown) | undefined;
     try {
       requireOptionalNativeModule = require('expo-modules-core').requireOptionalNativeModule;
@@ -48,7 +44,11 @@ function probeNativeHealthKit(): boolean | null {
 
 /**
  * Lazily load the Health JS module.
- * Never throws. Missing / broken native code → null (feature shows unavailable).
+ * Never throws. Missing / broken native code → null.
+ *
+ * Important: a soft probe of "missing" must NOT skip require().
+ * On some builds the optional probe can return null even when the
+ * module is linked; skipping require left Steps stuck on "unavailable".
  */
 function loadHealth(): HealthModule | null {
   if (cachedHealth !== undefined) {
@@ -62,14 +62,10 @@ function loadHealth(): HealthModule | null {
 
   try {
     const probe = probeNativeHealthKit();
-    if (probe === false) {
-      console.warn('[steps] ExpoHealthKit native module is not in this build');
-      cachedHealth = null;
-      return null;
-    }
+    console.log('[steps] native probe result:', probe);
 
-    // Only require the JS package after soft probe (or if probe API missing).
-    // The package top-level calls requireNativeModule — must stay inside try/catch.
+    // Always attempt a guarded require. The package calls requireNativeModule
+    // at load time — that throw is caught here and becomes "unavailable".
     const mod = require('@appeeky/expo-healthkit');
     const Health = (mod?.default ?? mod) as HealthModule | undefined;
     if (!Health || typeof Health.isAvailable !== 'function') {
@@ -79,6 +75,7 @@ function loadHealth(): HealthModule | null {
     }
 
     cachedHealth = Health;
+    console.log('[steps] Health module loaded');
     return cachedHealth;
   } catch (error) {
     console.warn('[steps] Health module not available:', error);
@@ -99,9 +96,14 @@ export function getStepsAvailability(): StepsAvailability {
       return 'unsupported';
     }
     const Health = loadHealth();
-    if (!Health) return 'unavailable';
+    if (!Health) {
+      console.warn('[steps] availability=unavailable (module not loaded)');
+      return 'unavailable';
+    }
     try {
-      return Health.isAvailable() ? 'ready' : 'unavailable';
+      const ready = Health.isAvailable();
+      console.log('[steps] isAvailable:', ready);
+      return ready ? 'ready' : 'unavailable';
     } catch (error) {
       console.warn('[steps] isAvailable threw:', error);
       return 'unavailable';

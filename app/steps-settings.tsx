@@ -64,12 +64,15 @@ function StepsSettingsContent() {
     if (status === 'unavailable' && alertedRef.current !== 'unavailable') {
       alertedRef.current = 'unavailable';
       if (Platform.OS === 'android') {
-        Alert.alert(t('steps.title'), t('steps.unavailable'), [
+        Alert.alert(t('steps.title'), t('steps.unavailableAndroid'), [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('steps.installHealthConnect'), onPress: () => openHealthConnectInstall() },
         ]);
       } else {
-        Alert.alert(t('steps.title'), t('steps.unavailable'));
+        Alert.alert(t('steps.title'), t('steps.unavailableIos'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
+        ]);
       }
     }
     if (status === 'read_failed' && alertedRef.current !== 'read_failed') {
@@ -103,12 +106,15 @@ function StepsSettingsContent() {
 
     if (availability !== 'ready') {
       if (Platform.OS === 'android') {
-        Alert.alert(t('steps.title'), t('steps.unavailable'), [
+        Alert.alert(t('steps.title'), t('steps.unavailableAndroid'), [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('steps.installHealthConnect'), onPress: () => openHealthConnectInstall() },
         ]);
       } else {
-        Alert.alert(t('steps.title'), t('steps.unavailable'));
+        Alert.alert(t('steps.title'), t('steps.unavailableIos'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
+        ]);
       }
       return;
     }
@@ -155,14 +161,17 @@ function StepsSettingsContent() {
   const sourceLabel = Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect';
   const todaySteps = steps;
 
-  let statusDescription = t('steps.unavailable');
+  const unavailableMessage =
+    Platform.OS === 'ios' ? t('steps.unavailableIos') : t('steps.unavailableAndroid');
+
+  let statusDescription = unavailableMessage;
   if (availability === 'ready') {
     statusDescription = t('steps.connectHelp', { source: sourceLabel });
   }
   if (connected && status === 'read_failed') {
     statusDescription = t('steps.readFailed');
   } else if (connected && status === 'unavailable') {
-    statusDescription = t('steps.unavailable');
+    statusDescription = unavailableMessage;
   }
 
   return (

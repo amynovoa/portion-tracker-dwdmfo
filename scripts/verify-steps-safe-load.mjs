@@ -61,8 +61,9 @@ function probeNativeHealthKit(requireOptionalNativeModule) {
 }
 
 function loadHealth({ probe, requireHealthKit }) {
+  // Probe is informational only — always attempt guarded require.
   try {
-    if (probe === false) return null;
+    void probe;
     return requireHealthKit();
   } catch {
     return null;
@@ -96,7 +97,7 @@ function check(label, fn) {
   }
 }
 
-check('missing native module → probe false → null health → unavailable (no throw)', () => {
+check('missing native module → probe false still tries require → catch → unavailable', () => {
   const probe = probeNativeHealthKit(() => null);
   assert.equal(probe, false);
   const health = loadHealth({
@@ -107,6 +108,15 @@ check('missing native module → probe false → null health → unavailable (no
   });
   assert.equal(health, null);
   assert.equal(getStepsAvailability({ platform: 'ios', health }), 'unavailable');
+});
+
+check('false probe must not block a working require', () => {
+  const health = loadHealth({
+    probe: false,
+    requireHealthKit: () => ({ isAvailable: () => true }),
+  });
+  assert.ok(health);
+  assert.equal(getStepsAvailability({ platform: 'ios', health }), 'ready');
 });
 
 check('requireNativeModule throw on package load is caught → unavailable', () => {
