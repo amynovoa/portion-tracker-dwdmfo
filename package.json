@@ -39,6 +39,7 @@
     "eventemitter3": "^5.0.4",
     "expo": "~54.0.31",
     "expo-blur": "^15.0.6",
+    "expo-build-properties": "~1.0.10",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.8",
     "expo-document-picker": "^14.0.8",

@@ -130,15 +130,25 @@ function StepsSettingsContent() {
     const avail = getStepsAvailability();
     setAvailability(avail);
     if (avail !== 'ready') {
-      if (Platform.OS === 'android') {
-        Alert.alert(t('steps.title'), t('steps.unavailableAndroid'), [
+      const message =
+        avail === 'missing_module'
+          ? Platform.OS === 'ios'
+            ? t('steps.missingModuleIos')
+            : t('steps.missingModuleAndroid')
+          : Platform.OS === 'ios'
+            ? t('steps.unavailableIos')
+            : t('steps.unavailableAndroid');
+      if (Platform.OS === 'android' && avail !== 'missing_module') {
+        Alert.alert(t('steps.title'), message, [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('steps.installHealthConnect'), onPress: () => openHealthConnectInstall() },
         ]);
       } else {
-        Alert.alert(t('steps.title'), t('steps.unavailableIos'), [
+        Alert.alert(t('steps.title'), message, [
           { text: t('common.cancel'), style: 'cancel' },
-          { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
+          ...(avail === 'missing_module'
+            ? []
+            : [{ text: t('steps.openSettings'), onPress: () => Linking.openSettings() }]),
         ]);
       }
       return;
@@ -192,7 +202,13 @@ function StepsSettingsContent() {
   const goalLabel = localGoal.toLocaleString(locale);
   const sourceLabel = Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect';
   const unavailableMessage =
-    Platform.OS === 'ios' ? t('steps.unavailableIos') : t('steps.unavailableAndroid');
+    availability === 'missing_module'
+      ? Platform.OS === 'ios'
+        ? t('steps.missingModuleIos')
+        : t('steps.missingModuleAndroid')
+      : Platform.OS === 'ios'
+        ? t('steps.unavailableIos')
+        : t('steps.unavailableAndroid');
 
   let statusDescription = unavailableMessage;
   if (checking) {

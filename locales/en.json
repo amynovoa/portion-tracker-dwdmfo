@@ -367,8 +367,10 @@
     "connectHelp": "Link {{source}} to show today’s steps.",
     "privacyNote": "Steps stay on your device. Portion Track only reads today’s count after you grant permission.",
     "unavailable": "Steps are not available on this device right now.",
-    "unavailableIos": "Apple Health steps are not available in this build, or Health access is off on this iPhone. Update to the latest TestFlight build, then try again. You can also check Settings → Health → Data Access & Devices.",
+    "unavailableIos": "Apple Health is off or unavailable on this iPhone. Check Settings → Health → Data Access & Devices, then try again.",
+    "missingModuleIos": "Apple Health is not included in this app build yet. Please install the latest TestFlight build (3.3.0 build 90+). Your phone Health settings are fine; the app binary needs the HealthKit module.",
     "unavailableAndroid": "Steps are not available on this device. Install Health Connect from the Play Store, then try again.",
+    "missingModuleAndroid": "Health Connect support is missing from this app build. Please install the latest build and try again.",
     "permissionDenied": "Permission was not granted. You can enable steps in your device settings.",
     "readFailed": "We couldn’t read today’s steps. Permission may have been revoked, or no step data is available yet. Check Health settings, then try again.",
     "installHealthConnect": "Install Health Connect",
@@ -376,7 +378,11 @@
     "goal": "Daily step goal",
     "today": "Today’s steps",
     "ofGoal": "{{steps}} of {{goal}}",
-    "connectError": "Could not connect. Please try again."
+    "connectError": "Could not connect. Please try again.",
+    "exerciseCtaTitle": "Today’s steps",
+    "exerciseCtaReady": "Connect Apple Health / Health Connect to show today’s steps next to your activity.",
+    "exerciseCtaSetup": "Steps need the latest app build with Apple Health / Health Connect support. Open Steps settings for details.",
+    "exerciseCtaAction": "Open Steps settings →"
   },
   "logExercise": {
     "title": "Log Exercise",

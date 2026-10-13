@@ -1,14 +1,12 @@
 import { Linking, Platform } from 'react-native';
 
-export type StepsAvailability = 'ready' | 'unavailable' | 'unsupported';
+export type StepsAvailability = 'ready' | 'unavailable' | 'missing_module' | 'unsupported';
 
 const HEALTH_CONNECT_PLAY_STORE =
   'https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata';
 
-/** HealthKit / Health Connect step count identifier (Apple string; Android maps it). */
 const STEP_COUNT = 'HKQuantityTypeIdentifierStepCount';
 const UNIT_COUNT = 'count';
-/** HKStatisticsOptionCumulativeSum */
 const CUMULATIVE_SUM = 8;
 
 type NativeHealth = {
@@ -31,7 +29,6 @@ type NativeHealth = {
 
 let cachedNative: NativeHealth | null | undefined;
 
-/** Reset cache — tests only. */
 export function __resetStepsHealthCacheForTests(): void {
   cachedNative = undefined;
 }
@@ -53,9 +50,8 @@ function getOptionalNativeLoader(): ((name: string) => NativeHealth | null) | nu
 }
 
 /**
- * Get ExpoHealthKit ONLY through requireOptionalNativeModule.
- * Never `require('@appeeky/expo-healthkit')` — that package calls
- * requireNativeModule at import time and has crashed TestFlight.
+ * Resolve ExpoHealthKit without importing @appeeky/expo-healthkit
+ * (that package calls requireNativeModule at import time and crashed TestFlight).
  */
 function getNativeHealth(): NativeHealth | null {
   if (cachedNative !== undefined) {
@@ -75,13 +71,13 @@ function getNativeHealth(): NativeHealth | null {
       return null;
     }
     const native = load('ExpoHealthKit');
-    if (!native || typeof native.isHealthDataAvailable !== 'function') {
-      console.warn('[steps] ExpoHealthKit native module missing or incomplete');
+    if (!native) {
+      console.warn('[steps] ExpoHealthKit is not linked in this native binary');
       cachedNative = null;
       return null;
     }
     cachedNative = native;
-    console.log('[steps] ExpoHealthKit native module ready');
+    console.log('[steps] ExpoHealthKit native module linked');
     return cachedNative;
   } catch (error) {
     console.warn('[steps] Failed to access ExpoHealthKit:', error);
@@ -102,16 +98,24 @@ export function getStepsAvailability(): StepsAvailability {
       return 'unsupported';
     }
     const native = getNativeHealth();
-    if (!native) return 'unavailable';
+    if (!native) return 'missing_module';
+
+    // Sync helpers may be missing on some proxies — if linked, treat iOS as ready
+    // and let requestAuthorization / queryStatistics fail softly later.
+    if (typeof native.isHealthDataAvailable !== 'function') {
+      console.warn('[steps] isHealthDataAvailable missing on proxy; assuming ready');
+      return 'ready';
+    }
+
     try {
-      return native.isHealthDataAvailable?.() ? 'ready' : 'unavailable';
+      return native.isHealthDataAvailable() ? 'ready' : 'unavailable';
     } catch (error) {
-      console.warn('[steps] isHealthDataAvailable threw:', error);
-      return 'unavailable';
+      console.warn('[steps] isHealthDataAvailable threw; assuming ready because module is linked:', error);
+      return 'ready';
     }
   } catch (error) {
     console.warn('[steps] getStepsAvailability failed:', error);
-    return 'unavailable';
+    return 'missing_module';
   }
 }
 
@@ -119,11 +123,6 @@ export async function requestStepsAccess(): Promise<boolean> {
   try {
     const native = getNativeHealth();
     if (!native?.requestAuthorization) return false;
-    try {
-      if (!native.isHealthDataAvailable?.()) return false;
-    } catch {
-      return false;
-    }
 
     const granted = await native.requestAuthorization({
       toRead: [STEP_COUNT],
@@ -155,11 +154,6 @@ export async function readTodayStepCount(): Promise<number | null> {
   try {
     const native = getNativeHealth();
     if (!native?.queryStatistics) return null;
-    try {
-      if (!native.isHealthDataAvailable?.()) return null;
-    } catch {
-      return null;
-    }
 
     const stats = await native.queryStatistics({
       type: STEP_COUNT,

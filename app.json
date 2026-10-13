@@ -47,7 +47,7 @@
           }
         ]
       },
-      "buildNumber": "89"
+      "buildNumber": "90"
     },
     "android": {
       "adaptiveIcon": {
@@ -91,6 +91,17 @@
             "READ_STEPS"
           ],
           "healthConnectPrivacyPolicyUrl": "https://www.portiontrack.com/privacy-policy"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.4"
+          },
+          "android": {
+            "minSdkVersion": 26
+          }
         }
       ]
     ],
