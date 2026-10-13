@@ -14,6 +14,7 @@ import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/styles/commonStyles';
+import StepsErrorBoundary from '@/components/StepsErrorBoundary';
 import { useStepsToday } from '@/hooks/useStepsToday';
 import {
   DEFAULT_STEP_GOAL,
@@ -31,7 +32,7 @@ import {
   revokeStepsAccess,
 } from '@/utils/stepsHealth';
 
-export default function StepsSettingsScreen() {
+function StepsSettingsContent() {
   const { t, i18n } = useTranslation();
   const { connected, goal, steps, status, refresh } = useStepsToday();
   const [localGoal, setLocalGoal] = useState(DEFAULT_STEP_GOAL);
@@ -232,6 +233,17 @@ export default function StepsSettingsScreen() {
         <Text style={styles.privacyNote}>{t('steps.privacyNote')}</Text>
       </View>
     </SafeAreaView>
+  );
+}
+
+export default function StepsSettingsScreen() {
+  return (
+    <StepsErrorBoundary
+      title="Steps unavailable"
+      message="Something went wrong opening Steps. Go back to Settings and try again — the rest of the app should still work."
+    >
+      <StepsSettingsContent />
+    </StepsErrorBoundary>
   );
 }
 

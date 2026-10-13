@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import AdherenceCard from '@/components/AdherenceCard';
+import StepsErrorBoundary from '@/components/StepsErrorBoundary';
 import { useStepsToday } from '@/hooks/useStepsToday';
 import { getTodayString } from '@/utils/dateUtils';
 
@@ -9,7 +10,7 @@ type Props = {
   selectedDate?: string;
 };
 
-export default function StepsTodayCard({ selectedDate }: Props) {
+function StepsTodayCardInner({ selectedDate }: Props) {
   const { t, i18n } = useTranslation();
   const isToday = !selectedDate || selectedDate === getTodayString();
   const { connected, goal, steps } = useStepsToday({ enabled: isToday });
@@ -29,5 +30,13 @@ export default function StepsTodayCard({ selectedDate }: Props) {
         goal: goal.toLocaleString(locale),
       })}
     />
+  );
+}
+
+export default function StepsTodayCard(props: Props) {
+  return (
+    <StepsErrorBoundary>
+      <StepsTodayCardInner {...props} />
+    </StepsErrorBoundary>
   );
 }
