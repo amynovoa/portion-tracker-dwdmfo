@@ -9,18 +9,20 @@ import {
   Linking,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '@/styles/commonStyles';
 import StepsErrorBoundary from '@/components/StepsErrorBoundary';
-import { useStepsToday } from '@/hooks/useStepsToday';
 import {
   DEFAULT_STEP_GOAL,
   MAX_STEP_GOAL,
   MIN_STEP_GOAL,
   STEP_GOAL_STEP,
+  loadStepGoal,
+  loadStepsConnected,
   saveStepGoal,
   saveStepsConnected,
 } from '@/utils/stepsStorage';
@@ -30,81 +32,104 @@ import {
   readTodayStepCount,
   requestStepsAccess,
   revokeStepsAccess,
+  type StepsAvailability,
 } from '@/utils/stepsHealth';
 
 function StepsSettingsContent() {
   const { t, i18n } = useTranslation();
-  const { connected, goal, steps, status, refresh } = useStepsToday();
+  const [connected, setConnected] = useState(false);
   const [localGoal, setLocalGoal] = useState(DEFAULT_STEP_GOAL);
+  const [todaySteps, setTodaySteps] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
-  const [availability, setAvailability] = useState<ReturnType<typeof getStepsAvailability>>('unavailable');
+  const [availability, setAvailability] = useState<StepsAvailability>('unavailable');
+  const [checking, setChecking] = useState(true);
   const alertedRef = useRef<string | null>(null);
 
-  // Defer Health kit probe off the first render so a native miss cannot crash mount.
-  useEffect(() => {
+  const refresh = useCallback(async () => {
     try {
-      setAvailability(getStepsAvailability());
+      const isConnected = await loadStepsConnected();
+      const stepGoal = await loadStepGoal();
+      setConnected(isConnected);
+      setLocalGoal(stepGoal);
+
+      const avail = getStepsAvailability();
+      setAvailability(avail);
+
+      if (!isConnected) {
+        setTodaySteps(null);
+        return;
+      }
+      if (avail !== 'ready') {
+        setTodaySteps(null);
+        return;
+      }
+      const count = await readTodayStepCount();
+      setTodaySteps(count);
     } catch (error) {
-      console.warn('[steps] availability check failed:', error);
+      console.error('[steps] settings refresh failed:', error);
       setAvailability('unavailable');
+      setTodaySteps(null);
     }
   }, []);
 
-  // Keep local goal in sync with storage after refresh
   useEffect(() => {
-    setLocalGoal(goal);
-  }, [goal]);
+    let active = true;
+    (async () => {
+      try {
+        await refresh();
+      } finally {
+        if (active) setChecking(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [refresh]);
 
-  // One-time guidance when connected but Health cannot serve steps
   useEffect(() => {
-    if (!connected) {
+    if (!connected || checking) {
       alertedRef.current = null;
       return;
     }
-    if (status === 'unavailable' && alertedRef.current !== 'unavailable') {
+    if (availability === 'unavailable' && alertedRef.current !== 'unavailable') {
       alertedRef.current = 'unavailable';
+      const message =
+        Platform.OS === 'ios' ? t('steps.unavailableIos') : t('steps.unavailableAndroid');
       if (Platform.OS === 'android') {
-        Alert.alert(t('steps.title'), t('steps.unavailableAndroid'), [
+        Alert.alert(t('steps.title'), message, [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('steps.installHealthConnect'), onPress: () => openHealthConnectInstall() },
         ]);
       } else {
-        Alert.alert(t('steps.title'), t('steps.unavailableIos'), [
+        Alert.alert(t('steps.title'), message, [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
         ]);
       }
     }
-    if (status === 'read_failed' && alertedRef.current !== 'read_failed') {
-      alertedRef.current = 'read_failed';
-      Alert.alert(t('steps.title'), t('steps.readFailed'), [
-        { text: t('common.cancel'), style: 'cancel' },
-        { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
-        {
-          text: t('steps.disconnect'),
-          style: 'destructive',
-          onPress: async () => {
-            await revokeStepsAccess();
-            await saveStepsConnected(false);
-            await refresh();
-          },
-        },
-      ]);
-    }
-  }, [connected, status, t, refresh]);
+  }, [connected, availability, checking, t]);
 
   const handleToggle = async (value: boolean) => {
-    if (busy) return;
+    if (busy || checking) return;
+
     if (!value) {
       setBusy(true);
-      await revokeStepsAccess();
-      await saveStepsConnected(false);
-      await refresh();
-      setBusy(false);
+      try {
+        await revokeStepsAccess();
+        await saveStepsConnected(false);
+        setConnected(false);
+        setTodaySteps(null);
+      } catch (error) {
+        console.error('[steps] disconnect failed:', error);
+      } finally {
+        setBusy(false);
+      }
       return;
     }
 
-    if (availability !== 'ready') {
+    const avail = getStepsAvailability();
+    setAvailability(avail);
+    if (avail !== 'ready') {
       if (Platform.OS === 'android') {
         Alert.alert(t('steps.title'), t('steps.unavailableAndroid'), [
           { text: t('common.cancel'), style: 'cancel' },
@@ -130,49 +155,53 @@ function StepsSettingsContent() {
         return;
       }
       await saveStepsConnected(true);
+      setConnected(true);
       const count = await readTodayStepCount();
+      setTodaySteps(count);
       if (count === null) {
         Alert.alert(t('steps.title'), t('steps.readFailed'), [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
         ]);
       }
-      await refresh();
     } catch (error) {
       console.error('[steps] connect failed:', error);
       Alert.alert(t('common.error'), t('steps.connectError'));
+      try {
+        await saveStepsConnected(false);
+        setConnected(false);
+      } catch {
+        // ignore
+      }
     } finally {
       setBusy(false);
     }
   };
 
-  const adjustGoal = useCallback(
-    async (delta: number) => {
+  const adjustGoal = useCallback(async (delta: number) => {
+    try {
       const next = Math.min(MAX_STEP_GOAL, Math.max(MIN_STEP_GOAL, localGoal + delta));
       setLocalGoal(next);
       await saveStepGoal(next);
-      await refresh();
-    },
-    [localGoal, refresh]
-  );
+    } catch (error) {
+      console.error('[steps] save goal failed:', error);
+    }
+  }, [localGoal]);
 
   const locale = i18n.language?.startsWith('es') ? 'es' : 'en';
   const goalLabel = localGoal.toLocaleString(locale);
   const sourceLabel = Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect';
-  const todaySteps = steps;
-
   const unavailableMessage =
     Platform.OS === 'ios' ? t('steps.unavailableIos') : t('steps.unavailableAndroid');
 
   let statusDescription = unavailableMessage;
-  if (availability === 'ready') {
+  if (checking) {
+    statusDescription = t('common.loading');
+  } else if (availability === 'ready') {
     statusDescription = t('steps.connectHelp', { source: sourceLabel });
   }
-  if (connected && status === 'read_failed') {
-    statusDescription = t('steps.readFailed');
-  } else if (connected && status === 'unavailable') {
-    statusDescription = unavailableMessage;
-  }
+
+  const switchDisabled = checking || busy || (availability !== 'ready' && !connected);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -186,9 +215,9 @@ function StepsSettingsContent() {
         }}
       />
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>🚶 {t('steps.title')}</Text>
+          <Text style={styles.headerTitle}>{t('steps.title')}</Text>
           <Text style={styles.headerDescription}>{t('steps.headerDescription')}</Text>
         </View>
 
@@ -200,19 +229,19 @@ function StepsSettingsContent() {
               </Text>
               <Text style={styles.settingDescription}>{statusDescription}</Text>
             </View>
-            {busy ? (
+            {busy || checking ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <Switch
                 value={connected}
                 onValueChange={handleToggle}
-                disabled={availability !== 'ready' && !connected}
+                disabled={switchDisabled}
                 trackColor={{ false: colors.textSecondary, true: colors.primary }}
                 thumbColor="#fff"
               />
             )}
           </View>
-          {availability !== 'ready' && Platform.OS === 'android' && (
+          {!checking && availability !== 'ready' && Platform.OS === 'android' && (
             <TouchableOpacity style={styles.linkButton} onPress={() => openHealthConnectInstall()}>
               <Text style={styles.linkButtonText}>{t('steps.installHealthConnect')}</Text>
             </TouchableOpacity>
@@ -240,7 +269,7 @@ function StepsSettingsContent() {
         )}
 
         <Text style={styles.privacyNote}>{t('steps.privacyNote')}</Text>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -249,7 +278,7 @@ export default function StepsSettingsScreen() {
   return (
     <StepsErrorBoundary
       title="Steps unavailable"
-      message="Something went wrong opening Steps. Go back to Settings and try again — the rest of the app should still work."
+      message="Something went wrong opening Steps. Go back to Settings and try again. The rest of the app should still work."
     >
       <StepsSettingsContent />
     </StepsErrorBoundary>
@@ -263,6 +292,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    paddingBottom: 40,
   },
   header: {
     marginBottom: 24,
@@ -313,7 +343,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
-    gap: 20,
   },
   goalButton: {
     width: 44,
@@ -322,6 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 10,
   },
   goalButtonText: {
     fontSize: 24,

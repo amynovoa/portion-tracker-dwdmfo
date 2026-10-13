@@ -168,51 +168,56 @@ export default function SetupProfileScreen() {
   };
 
   const handleContinue = () => {
-    console.log('Setup profile - Continue clicked');
+    try {
+      console.log('Setup profile - Continue clicked');
 
-    if (!weight || !goalWeight) {
-      showError(t('setupProfile.errorWeightRequired'));
-      return;
-    }
+      if (!weight || !goalWeight) {
+        showError(t('setupProfile.errorWeightRequired'));
+        return;
+      }
 
-    const weightNum = parseFloat(weight);
-    const goalWeightNum = parseFloat(goalWeight);
+      const weightNum = parseFloat(weight);
+      const goalWeightNum = parseFloat(goalWeight);
 
-    if (isNaN(weightNum) || isNaN(goalWeightNum) || weightNum <= 0 || goalWeightNum <= 0) {
-      showError(t('setupProfile.errorWeightInvalid'));
-      return;
-    }
+      if (isNaN(weightNum) || isNaN(goalWeightNum) || weightNum <= 0 || goalWeightNum <= 0) {
+        showError(t('setupProfile.errorWeightInvalid'));
+        return;
+      }
 
-    const isImperial = weightUnit !== 'kg';
-    const heightParam = isImperial
-      ? (heightFeet || heightInches
-        ? ((parseFloat(heightFeet) || 0) * 12 + (parseFloat(heightInches) || 0)).toString()
-        : '')
-      : height;
+      const isImperial = weightUnit !== 'kg';
+      const heightParam = isImperial
+        ? (heightFeet || heightInches
+          ? ((parseFloat(heightFeet) || 0) * 12 + (parseFloat(heightInches) || 0)).toString()
+          : '')
+        : height;
 
-    console.log('Navigating to setup-targets with params:', {
-      sex,
-      weight: weightNum,
-      goalWeight: goalWeightNum,
-      goal,
-      activityLevel,
-      includeAlcohol,
-      alcoholGoal: includeAlcohol ? alcoholGoal : 0,
-    });
-
-    router.push({
-      pathname: '/setup-targets',
-      params: {
+      console.log('Navigating to setup-targets with params:', {
         sex,
-        weight: weight,
-        goalWeight: goalWeight,
+        weight: weightNum,
+        goalWeight: goalWeightNum,
         goal,
         activityLevel,
-        includeAlcohol: includeAlcohol.toString(),
-        alcoholGoal: (includeAlcohol ? alcoholGoal : 0).toString(),
-        height: heightParam,
-      },
-    });
+        includeAlcohol,
+        alcoholGoal: includeAlcohol ? alcoholGoal : 0,
+      });
+
+      router.push({
+        pathname: '/setup-targets',
+        params: {
+          sex,
+          weight: weight,
+          goalWeight: goalWeight,
+          goal,
+          activityLevel,
+          includeAlcohol: includeAlcohol.toString(),
+          alcoholGoal: (includeAlcohol ? alcoholGoal : 0).toString(),
+          height: heightParam,
+        },
+      });
+    } catch (error) {
+      console.error('[setup-profile] Continue failed:', error);
+      showError(t('common.error'));
+    }
   };
 
   const unitSuffix = t(weightUnit === 'kg' ? 'common.kg' : 'common.lbs');

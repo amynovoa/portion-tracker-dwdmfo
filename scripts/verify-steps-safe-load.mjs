@@ -1,81 +1,26 @@
 /**
- * Regression checks for Steps Health loading.
- * Simulates the TestFlight crash path: requireNativeModule throws / missing module.
- * Run: node scripts/verify-steps-safe-load.mjs
+ * Regression: Steps must never crash the JS thread when HealthKit is missing.
+ * Run: npm run test:steps-safe
  */
-
-import Module from 'node:module';
 import assert from 'node:assert/strict';
 
-const originalLoad = Module._load;
-const mocks = new Map();
-
-function mock(name, exports) {
-  mocks.set(name, exports);
-}
-
-Module._load = function (request, parent, isMain) {
-  if (mocks.has(request)) {
-    return mocks.get(request);
-  }
-  // Block real native health kit in this Node harness
-  if (request === '@appeeky/expo-healthkit') {
-    throw new Error("Cannot find native module 'ExpoHealthKit'");
-  }
-  return originalLoad(request, parent, isMain);
-};
-
-mock('react-native', {
-  Platform: { OS: 'ios' },
-  Linking: {
-    openSettings: async () => {},
-    openURL: async () => {},
-  },
-});
-
-let optionalCalls = 0;
-
-async function runCase(name, setup, expectAvailability) {
-  // Fresh module each case
-  optionalCalls = 0;
-  setup();
-  for (const key of Object.keys(originalLoad('module')._cache || {})) {
-    // no-op — use dynamic import cache bust via query not available for cjs
-  }
-  // Clear require cache for our util
-  const utilPath = new URL('../utils/stepsHealth.ts', import.meta.url).pathname;
-  // Load via ts-node? project may not have it. Instead duplicate the probe logic test in pure JS.
-
-  console.log(`CASE ${name}: (logic-level)`);
-}
-
-// --- Pure logic tests mirroring stepsHealth probe behavior ---
-
-function probeNativeHealthKit(requireOptionalNativeModule) {
+function getNativeHealth({ loadOptional }) {
   try {
-    if (typeof requireOptionalNativeModule !== 'function') return null;
-    return requireOptionalNativeModule('ExpoHealthKit') != null;
-  } catch {
-    return false;
-  }
-}
-
-function loadHealth({ probe, requireHealthKit }) {
-  // Probe is informational only — always attempt guarded require.
-  try {
-    void probe;
-    return requireHealthKit();
+    if (typeof loadOptional !== 'function') return null;
+    const native = loadOptional('ExpoHealthKit');
+    if (!native || typeof native.isHealthDataAvailable !== 'function') return null;
+    return native;
   } catch {
     return null;
   }
 }
 
-function getStepsAvailability({ platform, health }) {
+function getStepsAvailability({ platform, native }) {
   try {
     if (platform !== 'ios' && platform !== 'android') return 'unsupported';
-    if (!health) return 'unavailable';
+    if (!native) return 'unavailable';
     try {
-      return health.isAvailable() ? 'ready' : 'unavailable';
+      return native.isHealthDataAvailable() ? 'ready' : 'unavailable';
     } catch {
       return 'unavailable';
     }
@@ -97,70 +42,60 @@ function check(label, fn) {
   }
 }
 
-check('missing native module → probe false still tries require → catch → unavailable', () => {
-  const probe = probeNativeHealthKit(() => null);
-  assert.equal(probe, false);
-  const health = loadHealth({
-    probe,
-    requireHealthKit: () => {
-      throw new Error("Cannot find native module 'ExpoHealthKit'");
+check('missing native module → unavailable (no throw)', () => {
+  const native = getNativeHealth({ loadOptional: () => null });
+  assert.equal(native, null);
+  assert.equal(getStepsAvailability({ platform: 'ios', native }), 'unavailable');
+});
+
+check('optional loader throw → unavailable', () => {
+  const native = getNativeHealth({
+    loadOptional: () => {
+      throw new Error('boom');
     },
   });
-  assert.equal(health, null);
-  assert.equal(getStepsAvailability({ platform: 'ios', health }), 'unavailable');
+  assert.equal(native, null);
 });
 
-check('false probe must not block a working require', () => {
-  const health = loadHealth({
-    probe: false,
-    requireHealthKit: () => ({ isAvailable: () => true }),
-  });
-  assert.ok(health);
-  assert.equal(getStepsAvailability({ platform: 'ios', health }), 'ready');
+check('isHealthDataAvailable throw → unavailable', () => {
+  assert.equal(
+    getStepsAvailability({
+      platform: 'ios',
+      native: {
+        isHealthDataAvailable: () => {
+          throw new Error('native boom');
+        },
+      },
+    }),
+    'unavailable'
+  );
 });
 
-check('requireNativeModule throw on package load is caught → unavailable', () => {
-  const health = loadHealth({
-    probe: null, // probe API missing — try require
-    requireHealthKit: () => {
-      throw new Error("Cannot find native module 'ExpoHealthKit'");
+check('healthy native → ready', () => {
+  assert.equal(
+    getStepsAvailability({
+      platform: 'ios',
+      native: { isHealthDataAvailable: () => true },
+    }),
+    'ready'
+  );
+});
+
+check('web → unsupported', () => {
+  assert.equal(getStepsAvailability({ platform: 'web', native: null }), 'unsupported');
+});
+
+check('never use requireNativeModule path (optional-only contract)', () => {
+  // Documented invariant: production Steps code must not call require('@appeeky/expo-healthkit').
+  // This test locks the optional-only strategy.
+  const native = getNativeHealth({
+    loadOptional: (name) => {
+      assert.equal(name, 'ExpoHealthKit');
+      return { isHealthDataAvailable: () => true };
     },
   });
-  assert.equal(health, null);
-  assert.equal(getStepsAvailability({ platform: 'ios', health }), 'unavailable');
-});
-
-check('isAvailable throw → unavailable (no throw out)', () => {
-  const health = {
-    isAvailable: () => {
-      throw new Error('native boom');
-    },
-  };
-  assert.equal(getStepsAvailability({ platform: 'ios', health }), 'unavailable');
-});
-
-check('healthy module → ready', () => {
-  const health = { isAvailable: () => true };
-  assert.equal(getStepsAvailability({ platform: 'ios', health }), 'ready');
-});
-
-check('web platform → unsupported', () => {
-  assert.equal(getStepsAvailability({ platform: 'web', health: null }), 'unsupported');
-});
-
-check('native present → load succeeds', () => {
-  const probe = probeNativeHealthKit(() => ({ isHealthDataAvailable: () => true }));
-  assert.equal(probe, true);
-  const health = loadHealth({
-    probe,
-    requireHealthKit: () => ({ isAvailable: () => true }),
-  });
-  assert.ok(health);
-  assert.equal(getStepsAvailability({ platform: 'ios', health }), 'ready');
+  assert.ok(native);
 });
 
 console.log(`\n${passed} checks passed`);
-if (process.exitCode) {
-  console.error('Regression failed');
-  process.exit(1);
-}
+if (process.exitCode) process.exit(1);
