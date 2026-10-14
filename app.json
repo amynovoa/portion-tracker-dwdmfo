@@ -56,7 +56,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.amynovoa.portiontracker",
-      "versionCode": 52,
+      "versionCode": 53,
       "allowBackup": false,
       "permissions": [
         "android.permission.CAMERA",
