@@ -1,5 +1,5 @@
 PORTION TRACK — Steps + Weight retest (Android APK)
-Build: 3.3.0 versionCode 56
+Build: 3.3.0 versionCode 57+
 
 --------------------------------------------------------------------------------
 SETUP
@@ -21,22 +21,19 @@ TEST STEPS
    - Confirm the Steps card updates for that day.
    - Confirm the count matches Health Connect for the same date.
 
-3. Settings → Steps
-   - Confirm “Today’s steps” shows.
-   - Confirm “Recent steps” lists about the last 14 days.
-   - Spot-check 2–3 dates against Health Connect.
+3. Exercise → Steps over time chart
+   - Confirm a bar chart of recent daily steps appears (same area as Activity over time).
+   - Confirm bars match past-day totals from Health Connect / Apple Health.
 
 4. Settings → Steps
+   - Confirm connect toggle, daily goal, and today’s steps preview.
+   - Confirm there is no past-day history list in Settings.
    - Confirm there is no privacy line like “Steps stay on your device” or “We do not upload this data.”
 
 5. Settings → Steps
    - Turn Connected OFF → go to Exercise → Today → confirm connect CTA (no live count).
-   - Turn Connected ON again → confirm today’s steps and recent history return.
+   - Turn Connected ON again → confirm today’s steps and chart return on Exercise.
 
 6. Weight tab
    - Log/update a decimal weight (e.g. 150.5).
    - Confirm Starting / Current / Goal values stay on one line (no wrap like “150.” / “5”).
-
-7. Exercise → Steps over time chart
-   - Confirm a bar chart of recent daily steps appears (same area as Activity over time).
-   - Confirm bars match past-day totals from Health Connect / Apple Health.
