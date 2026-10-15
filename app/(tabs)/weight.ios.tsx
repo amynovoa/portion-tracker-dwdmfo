@@ -761,17 +761,22 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: 'center',
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 4,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,
+    width: '100%',
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 12,
     color: colors.textSecondary,
     fontWeight: '500',
+    textAlign: 'center',
   },
   statDivider: {
     width: 1,
