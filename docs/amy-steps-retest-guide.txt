@@ -42,16 +42,3 @@ TEST STEPS
 6. Weight tab
    - Log/update a decimal weight (e.g. 150.5).
    - Confirm Starting / Current / Goal values stay on one line (no wrap like “150.” / “5”).
-
---------------------------------------------------------------------------------
-RESULTS
---------------------------------------------------------------------------------
-
-[ ] 1 Today steps
-[ ] 2 History on day picker
-[ ] 3 Recent steps in Settings
-[ ] 4 Privacy copy removed
-[ ] 5 Connect / disconnect
-[ ] 6 Weight decimal wrap
-
-Device: _______________   Date: ________   Pass / Fail: ________
