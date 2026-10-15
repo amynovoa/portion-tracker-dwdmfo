@@ -1,0 +1,195 @@
+PORTION TRACK — Steps + Weight retest
+QA checklist for Amy’s latest feedback
+Build required: iOS TestFlight 3.3.0 build 92+
+Last updated: 15 October 2026
+
+================================================================================
+WHAT CHANGED (what to verify)
+================================================================================
+
+1. Steps history from Apple Health / Health Connect
+   - Not today-only anymore
+   - Aligns with Exercise day picker (like Weight day tracking)
+
+2. Privacy / “we don’t keep your data” note removed from Steps UI
+   - That wording should not appear in Settings → Steps
+   - Privacy policy is the right place for that (not this screen)
+
+3. Weight stats UI wrap fix
+   - Starting / Current / Goal values like 150.5 stay on one line
+
+================================================================================
+BEFORE YOU START
+================================================================================
+
+[ ] Install TestFlight build 3.3.0 build 92 or higher
+[ ] Confirm build number in TestFlight (not an older build)
+[ ] Apple Health has step history for several past days
+[ ] Portion Track → Settings → Steps is Connected (toggle ON)
+[ ] Health permission includes Steps for Portion Track
+    (Settings → Health → Data Access & Devices → Portion Track)
+
+Pass if you can open the app and reach Exercise + Settings + Weight.
+
+================================================================================
+TEST 1 — Steps on Exercise for TODAY
+================================================================================
+
+Goal: Today’s steps still show on Exercise after connect.
+
+Steps
+1. Open Portion Track → Exercise tab.
+2. Make sure Day Selector is on Today.
+3. Look for the Steps card near the top (under the day picker).
+
+Pass if
+- You see today’s step count and progress toward the daily goal
+- Number roughly matches Apple Health for today
+
+Fail if
+- No steps card when connected
+- App crashes
+- Count is blank / clearly wrong vs Health for today
+
+Result: [ ] Pass  [ ] Fail   Notes: _______________________
+
+================================================================================
+TEST 2 — Steps HISTORY via Exercise day picker
+================================================================================
+
+Goal: Past days show steps from Health (main request).
+
+Steps
+1. Stay on Exercise.
+2. In the day picker, tap Yesterday.
+3. Confirm the Steps card updates for that day.
+4. Tap 1–2 older days that you know have steps in Apple Health.
+5. Compare each day’s count to Apple Health for that same date.
+
+Pass if
+- Steps card appears for past days (not only Today)
+- Counts match Health for those days (same day totals)
+- Changing the day changes the steps shown
+
+Fail if
+- Steps card disappears on past days
+- Always shows today’s number for every day
+- Shows 0 when Health clearly has steps for that day
+- Crashes when changing dates
+
+Result: [ ] Pass  [ ] Fail   Notes: _______________________
+
+================================================================================
+TEST 3 — Recent steps list in Settings
+================================================================================
+
+Goal: Settings also shows history, not only today’s total.
+
+Steps
+1. Open Settings → Steps.
+2. Confirm Connected is ON.
+3. Confirm “Today’s steps” still shows.
+4. Scroll for “Recent steps” (last ~14 days).
+5. Spot-check 2–3 dates against Apple Health.
+
+Pass if
+- Recent steps list is visible
+- Dates include today + past days
+- Values look consistent with Health / Exercise card
+
+Fail if
+- No recent list
+- Only today appears and nothing else
+- Numbers wildly wrong vs Health
+
+Result: [ ] Pass  [ ] Fail   Notes: _______________________
+
+================================================================================
+TEST 4 — Privacy copy removed from Steps UI
+================================================================================
+
+Goal: No over-the-top “we don’t keep / don’t upload” line on Steps.
+
+Steps
+1. Open Settings → Steps.
+2. Read the header / description and the whole screen.
+3. Confirm there is NO line like:
+   - “Steps stay on your device…”
+   - “We do not upload this data…”
+   - Similar privacy disclaimer under the settings cards
+
+Pass if
+- Screen feels like other Settings screens (connect + goal + counts)
+- Privacy disclaimer text is gone from this screen
+
+Fail if
+- Old privacy note is still visible anywhere on Steps settings
+
+Result: [ ] Pass  [ ] Fail   Notes: _______________________
+
+================================================================================
+TEST 5 — Connect / disconnect still works
+================================================================================
+
+Goal: Toggle still solid after history changes.
+
+Steps
+1. Settings → Steps → turn Connected OFF.
+2. Go to Exercise → Today.
+3. You should see a connect CTA (not a live step count).
+4. Turn Connected ON again and allow Health if prompted.
+5. Confirm today’s steps and recent history return.
+
+Pass if
+- Off / on works without crash
+- After reconnect, today + history load again
+
+Fail if
+- Crash, stuck toggle, or history never returns after reconnect
+
+Result: [ ] Pass  [ ] Fail   Notes: _______________________
+
+================================================================================
+TEST 6 — Weight UI (150.5 wrap fix)
+================================================================================
+
+Goal: Decimal weights do not break onto two lines.
+
+Steps
+1. Open Weight tab.
+2. Log or update a weight with a decimal (example: 150.5).
+3. Look at the top stats card: Starting / Current / Goal.
+4. Confirm Current (and any decimal values) stay on ONE line.
+5. If needed, try another decimal (e.g. 149.2) and recheck.
+
+Pass if
+- Values like 150.5 stay on a single line
+- Labels (Starting / Current / Goal) still readable
+
+Fail if
+- Number splits (e.g. “150.” on one line and “5” on the next)
+
+Result: [ ] Pass  [ ] Fail   Notes: _______________________
+
+================================================================================
+QUICK SIGN-OFF
+================================================================================
+
+Build tested: 3.3.0 (______)   Device: _______________   Date: ________
+
+[ ] Test 1 Today steps on Exercise
+[ ] Test 2 History via day picker
+[ ] Test 3 Recent steps in Settings
+[ ] Test 4 Privacy copy removed
+[ ] Test 5 Connect / disconnect
+[ ] Test 6 Weight decimal wrap
+
+Overall: [ ] Ready  [ ] Not ready — blockers: _______________________
+
+================================================================================
+OUT OF SCOPE FOR THIS RETEST
+================================================================================
+
+- Android Play / APK (unless asked separately)
+- Privacy policy website text
+- Writing steps back into Apple Health (app is read-only)
