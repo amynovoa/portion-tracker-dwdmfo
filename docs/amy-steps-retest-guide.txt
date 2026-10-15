@@ -1,55 +1,83 @@
-PORTION TRACK — Steps + Weight retest
+PORTION TRACK — Steps + Weight retest (Android APK)
 QA checklist for Amy’s latest feedback
-Build required: iOS TestFlight 3.3.0 build 92+
+Build: Android 3.3.0 versionCode 56 (preview APK)
 Last updated: 15 October 2026
 
 ================================================================================
-WHAT CHANGED (what to verify)
+INSTALL THIS BUILD
 ================================================================================
 
-1. Steps history from Apple Health / Health Connect
-   - Not today-only anymore
-   - Aligns with Exercise day picker (like Weight day tracking)
+Install link (open on your Android phone):
+https://expo.dev/accounts/muhammad_asad6202/projects/portion-track/builds/61f79baf-ec43-4826-8664-1f2daa90ce21
 
+Direct APK download:
+https://expo.dev/artifacts/eas/lWjz6vhwPDpkJXFRqWc6d7XgytdJJhZqqlxB_19ZF6M.apk
+
+This APK includes:
+1. Steps history from Health Connect (not today-only)
 2. Privacy / “we don’t keep your data” note removed from Steps UI
-   - That wording should not appear in Settings → Steps
-   - Privacy policy is the right place for that (not this screen)
-
-3. Weight stats UI wrap fix
-   - Starting / Current / Goal values like 150.5 stay on one line
+3. Weight stats wrap fix (values like 150.5 stay on one line)
 
 ================================================================================
 BEFORE YOU START
 ================================================================================
 
-[ ] Install TestFlight build 3.3.0 build 92 or higher
-[ ] Confirm build number in TestFlight (not an older build)
-[ ] Apple Health has step history for several past days
-[ ] Portion Track → Settings → Steps is Connected (toggle ON)
-[ ] Health permission includes Steps for Portion Track
-    (Settings → Health → Data Access & Devices → Portion Track)
+[ ] Android phone
+[ ] Install the APK from the link above (versionCode 56)
+[ ] Install Health Connect from the Play Store (if not already installed)
+[ ] Install Google Fit or Samsung Health so the phone records steps
+[ ] Confirm Health Connect already has step history for several past days
+    (open Health Connect / Fit and check past days)
 
-Pass if you can open the app and reach Exercise + Settings + Weight.
+================================================================================
+SPECIAL NOTE — PAYWALL ON THIS TEST APK
+================================================================================
+
+When you open the test APK, you may see a payment / “Try free for 7 days” screen.
+
+Do NOT buy or start the free trial on this test build.
+It will fail with a billing error. That is normal for this APK.
+
+Instead:
+1. Stay on that payment screen.
+2. Tap the Portion Track logo at the top 7 times.
+3. The app should unlock so you can continue.
+
+If you cannot get past the payment screen, stop and tell the developer.
+
+================================================================================
+SETUP STEPS (do this first)
+================================================================================
+
+1. Open Portion Track (after unlock if needed).
+2. Go to Settings → Steps.
+3. Turn Connected ON.
+4. Allow Steps permission in Health Connect when prompted.
+5. Confirm “Today’s steps” shows a number (or 0 if you have not walked yet).
+6. Go to the Exercise tab and confirm a Steps card appears for Today.
+
+Pass if connect works and today’s steps show.
+Fail if connect errors, crashes, or says Health Connect is missing from this build.
 
 ================================================================================
 TEST 1 — Steps on Exercise for TODAY
 ================================================================================
 
-Goal: Today’s steps still show on Exercise after connect.
+Goal: Today’s steps show on Exercise after connect.
 
 Steps
-1. Open Portion Track → Exercise tab.
-2. Make sure Day Selector is on Today.
-3. Look for the Steps card near the top (under the day picker).
+1. Open Exercise tab.
+2. Make sure the day picker is on Today.
+3. Look for the Steps card under the day picker.
 
 Pass if
-- You see today’s step count and progress toward the daily goal
-- Number roughly matches Apple Health for today
+- You see today’s step count and progress toward the goal
+- Number roughly matches Health Connect / Fit for today
 
 Fail if
 - No steps card when connected
 - App crashes
-- Count is blank / clearly wrong vs Health for today
+- Count is clearly wrong vs Health Connect for today
 
 Result: [ ] Pass  [ ] Fail   Notes: _______________________
 
@@ -57,24 +85,24 @@ Result: [ ] Pass  [ ] Fail   Notes: _______________________
 TEST 2 — Steps HISTORY via Exercise day picker
 ================================================================================
 
-Goal: Past days show steps from Health (main request).
+Goal: Past days show steps from Health Connect (main request).
 
 Steps
 1. Stay on Exercise.
 2. In the day picker, tap Yesterday.
 3. Confirm the Steps card updates for that day.
-4. Tap 1–2 older days that you know have steps in Apple Health.
-5. Compare each day’s count to Apple Health for that same date.
+4. Tap 1–2 older days that you know have steps in Health Connect / Fit.
+5. Compare each day’s count to Health Connect for that same date.
 
 Pass if
 - Steps card appears for past days (not only Today)
-- Counts match Health for those days (same day totals)
+- Counts match Health Connect for those days
 - Changing the day changes the steps shown
 
 Fail if
 - Steps card disappears on past days
 - Always shows today’s number for every day
-- Shows 0 when Health clearly has steps for that day
+- Shows 0 when Health Connect clearly has steps for that day
 - Crashes when changing dates
 
 Result: [ ] Pass  [ ] Fail   Notes: _______________________
@@ -90,17 +118,17 @@ Steps
 2. Confirm Connected is ON.
 3. Confirm “Today’s steps” still shows.
 4. Scroll for “Recent steps” (last ~14 days).
-5. Spot-check 2–3 dates against Apple Health.
+5. Spot-check 2–3 dates against Health Connect / Fit.
 
 Pass if
 - Recent steps list is visible
 - Dates include today + past days
-- Values look consistent with Health / Exercise card
+- Values look consistent with Health Connect / Exercise card
 
 Fail if
 - No recent list
 - Only today appears and nothing else
-- Numbers wildly wrong vs Health
+- Numbers wildly wrong vs Health Connect
 
 Result: [ ] Pass  [ ] Fail   Notes: _______________________
 
@@ -137,7 +165,7 @@ Steps
 1. Settings → Steps → turn Connected OFF.
 2. Go to Exercise → Today.
 3. You should see a connect CTA (not a live step count).
-4. Turn Connected ON again and allow Health if prompted.
+4. Turn Connected ON again and allow Health Connect if prompted.
 5. Confirm today’s steps and recent history return.
 
 Pass if
@@ -175,8 +203,9 @@ Result: [ ] Pass  [ ] Fail   Notes: _______________________
 QUICK SIGN-OFF
 ================================================================================
 
-Build tested: 3.3.0 (______)   Device: _______________   Date: ________
+APK tested: 3.3.0 versionCode 56   Device: _______________   Date: ________
 
+[ ] Setup (Health Connect connected)
 [ ] Test 1 Today steps on Exercise
 [ ] Test 2 History via day picker
 [ ] Test 3 Recent steps in Settings
@@ -187,9 +216,10 @@ Build tested: 3.3.0 (______)   Device: _______________   Date: ________
 Overall: [ ] Ready  [ ] Not ready — blockers: _______________________
 
 ================================================================================
-OUT OF SCOPE FOR THIS RETEST
+NOTES
 ================================================================================
 
-- Android Play / APK (unless asked separately)
-- Privacy policy website text
-- Writing steps back into Apple Health (app is read-only)
+- This guide is for the Android test APK only.
+- App reads steps only (does not write steps into Health Connect).
+- If Health Connect has no past-day data, history tests will show 0. That is a
+  phone data issue, not an app bug. Confirm steps exist in Fit / Health Connect first.
