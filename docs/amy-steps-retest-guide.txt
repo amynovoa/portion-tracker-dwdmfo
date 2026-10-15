@@ -36,3 +36,7 @@ TEST STEPS
 6. Weight tab
    - Log/update a decimal weight (e.g. 150.5).
    - Confirm Starting / Current / Goal values stay on one line (no wrap like “150.” / “5”).
+
+7. Exercise → Steps over time chart
+   - Confirm a bar chart of recent daily steps appears (same area as Activity over time).
+   - Confirm bars match past-day totals from Health Connect / Apple Health.

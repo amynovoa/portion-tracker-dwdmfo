@@ -383,7 +383,10 @@
     "exerciseCtaTitle": "Steps",
     "exerciseCtaReady": "Connect Apple Health / Health Connect to show daily steps next to your activity.",
     "exerciseCtaSetup": "Steps need the latest app build with Apple Health / Health Connect support. Open Steps settings for details.",
-    "exerciseCtaAction": "Open Steps settings →"
+    "exerciseCtaAction": "Open Steps settings →",
+    "overTime": "Steps over time",
+    "chartNoData": "No steps yet",
+    "chartNoDataSubtext": "Walk with your phone, or check Health Connect / Apple Health has step history."
   },
   "logExercise": {
     "title": "Log Exercise",

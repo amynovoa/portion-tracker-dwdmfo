@@ -10,6 +10,7 @@ import AppLogo from '@/components/AppLogo';
 import DaySelector from '@/components/DaySelector';
 import ExerciseChart from '@/components/ExerciseChart';
 import StepsTodayCard from '@/components/StepsTodayCard';
+import StepsHistoryChartCard from '@/components/StepsHistoryChartCard';
 import { useTranslation } from 'react-i18next';
 
 const CHART_DAYS = 14;
@@ -173,6 +174,9 @@ export default function ExerciseScreen() {
             );
           })}
         </View>
+
+        {/* Steps chart — last CHART_DAYS days from Health */}
+        <StepsHistoryChartCard />
 
         {/* Chart — total minutes per day, last CHART_DAYS days */}
         <View style={styles.section}>
