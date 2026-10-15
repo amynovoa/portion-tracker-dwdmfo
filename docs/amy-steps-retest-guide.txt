@@ -1,13 +1,15 @@
 PORTION TRACK — Steps + Weight retest (Android APK)
-QA checklist for Amy’s latest feedback
-Build: Android 3.3.0 versionCode 56 (preview APK)
+QA checklist (internal QA — not a client/Amy message)
+Build: Android 3.3.0 versionCode 56 (preview APK) — ready today
 Last updated: 15 October 2026
 
 ================================================================================
-INSTALL THIS BUILD
+INSTALL THIS BUILD (APK IS AVAILABLE)
 ================================================================================
 
-Install link (open on your Android phone):
+Use this Android APK for QA today (versionCode 56):
+
+Install link (open on Android phone):
 https://expo.dev/accounts/muhammad_asad6202/projects/portion-track/builds/61f79baf-ec43-4826-8664-1f2daa90ce21
 
 Direct APK download:
@@ -219,7 +221,7 @@ Overall: [ ] Ready  [ ] Not ready — blockers: _______________________
 NOTES
 ================================================================================
 
-- This guide is for the Android test APK only.
+- This guide is for internal QA on the Android test APK (not for sending to Amy).
 - App reads steps only (does not write steps into Health Connect).
 - If Health Connect has no past-day data, history tests will show 0. That is a
   phone data issue, not an app bug. Confirm steps exist in Fit / Health Connect first.
