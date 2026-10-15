@@ -497,17 +497,38 @@ export default function WeightTrackingScreen() {
         <View style={styles.mainStatsCard}>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{startingWeight ? `${startingWeight}` : '--'}</Text>
+              <Text
+                style={styles.statValue}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
+                {startingWeight ? `${startingWeight}` : '--'}
+              </Text>
               <Text style={styles.statLabel}>{startingLabel}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{latestWeight ? `${latestWeight}` : '--'}</Text>
+              <Text
+                style={styles.statValue}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
+                {latestWeight ? `${latestWeight}` : '--'}
+              </Text>
               <Text style={styles.statLabel}>{currentLabel}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{goalWeight ? `${goalWeight}` : '--'}</Text>
+              <Text
+                style={styles.statValue}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+              >
+                {goalWeight ? `${goalWeight}` : '--'}
+              </Text>
               <Text style={styles.statLabel}>{goalLabel}</Text>
             </View>
           </View>
@@ -740,17 +761,22 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: 'center',
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 4,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,
+    width: '100%',
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 12,
     color: colors.textSecondary,
     fontWeight: '500',
+    textAlign: 'center',
   },
   statDivider: {
     width: 1,
