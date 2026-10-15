@@ -1,17 +1,11 @@
 PORTION TRACK — Steps + Weight retest (Android APK)
 Build: 3.3.0 versionCode 56
 
-Install:
-https://expo.dev/accounts/muhammad_asad6202/projects/portion-track/builds/61f79baf-ec43-4826-8664-1f2daa90ce21
-
-Direct APK:
-https://expo.dev/artifacts/eas/lWjz6vhwPDpkJXFRqWc6d7XgytdJJhZqqlxB_19ZF6M.apk
-
 --------------------------------------------------------------------------------
 SETUP
 --------------------------------------------------------------------------------
 
-1. Install the APK on an Android phone.
+1. Install the provided APK on an Android phone.
 2. If the paywall / “Try free” screen appears, tap the Portion Track logo 7 times to unlock. Do not subscribe.
 3. Install Health Connect (and Google Fit or Samsung Health) if needed.
 4. Open Settings → Steps → turn Connected ON → allow Steps in Health Connect.
