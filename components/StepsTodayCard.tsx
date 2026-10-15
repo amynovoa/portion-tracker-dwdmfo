@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import AdherenceCard from '@/components/AdherenceCard';
 import StepsErrorBoundary from '@/components/StepsErrorBoundary';
 import { colors } from '@/styles/commonStyles';
-import { getTodayString } from '@/utils/dateUtils';
+import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
 import { loadStepGoal, loadStepsConnected } from '@/utils/stepsStorage';
-import { getStepsAvailability, readTodayStepCount } from '@/utils/stepsHealth';
+import { getStepsAvailability, readStepCountForDate } from '@/utils/stepsHealth';
 
 type Props = {
   selectedDate?: string;
@@ -16,7 +16,8 @@ type Props = {
 function StepsTodayCardInner({ selectedDate }: Props) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const isToday = !selectedDate || selectedDate === getTodayString();
+  const dateKey = selectedDate || getTodayString();
+  const isToday = dateKey === getTodayString();
   const [connected, setConnected] = useState(false);
   const [goal, setGoal] = useState(8000);
   const [steps, setSteps] = useState<number | null>(null);
@@ -24,12 +25,6 @@ function StepsTodayCardInner({ selectedDate }: Props) {
 
   useFocusEffect(
     useCallback(() => {
-      if (!isToday) {
-        setConnected(false);
-        setSteps(null);
-        return;
-      }
-
       let active = true;
       (async () => {
         try {
@@ -47,7 +42,7 @@ function StepsTodayCardInner({ selectedDate }: Props) {
             return;
           }
 
-          const count = await readTodayStepCount();
+          const count = await readStepCountForDate(dateKey);
           if (!active) return;
           setConnected(true);
           setSteps(count);
@@ -63,20 +58,21 @@ function StepsTodayCardInner({ selectedDate }: Props) {
       return () => {
         active = false;
       };
-    }, [isToday])
+    }, [dateKey])
   );
 
-  if (!isToday) return null;
-
-  // Connected: show progress on Exercise (main place Amy wants to see it)
+  // Connected: show progress for the selected Exercise date (today or history)
   if (connected) {
     const count = steps ?? 0;
     const percentage = goal > 0 ? Math.max(0, Math.min(100, Math.round((count / goal) * 100))) : 0;
     const locale = i18n.language?.startsWith('es') ? 'es' : 'en';
+    const title = isToday
+      ? t('steps.today')
+      : t('steps.forDate', { date: formatDisplayDate(dateKey, i18n.language) });
 
     return (
       <AdherenceCard
-        title={t('steps.today')}
+        title={title}
         percentage={percentage}
         subtitle={t('steps.ofGoal', {
           steps: count.toLocaleString(locale),
@@ -86,7 +82,9 @@ function StepsTodayCardInner({ selectedDate }: Props) {
     );
   }
 
-  // Not connected: still show under Exercise with a clear CTA into Settings → Steps
+  // Not connected: CTA only on today (past days stay quiet until connected)
+  if (!isToday) return null;
+
   return (
     <TouchableOpacity
       style={styles.ctaCard}

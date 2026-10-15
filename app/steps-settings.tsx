@@ -26,12 +26,15 @@ import {
   saveStepGoal,
   saveStepsConnected,
 } from '@/utils/stepsStorage';
+import { formatDisplayDate } from '@/utils/dateUtils';
 import {
   getStepsAvailability,
   openHealthConnectInstall,
+  readRecentDailySteps,
   readTodayStepCount,
   requestStepsAccess,
   revokeStepsAccess,
+  type DailyStepCount,
   type StepsAvailability,
 } from '@/utils/stepsHealth';
 
@@ -40,6 +43,7 @@ function StepsSettingsContent() {
   const [connected, setConnected] = useState(false);
   const [localGoal, setLocalGoal] = useState(DEFAULT_STEP_GOAL);
   const [todaySteps, setTodaySteps] = useState<number | null>(null);
+  const [history, setHistory] = useState<DailyStepCount[]>([]);
   const [busy, setBusy] = useState(false);
   const [availability, setAvailability] = useState<StepsAvailability>('unavailable');
   const [checking, setChecking] = useState(true);
@@ -57,18 +61,25 @@ function StepsSettingsContent() {
 
       if (!isConnected) {
         setTodaySteps(null);
+        setHistory([]);
         return;
       }
       if (avail !== 'ready') {
         setTodaySteps(null);
+        setHistory([]);
         return;
       }
-      const count = await readTodayStepCount();
+      const [count, recent] = await Promise.all([
+        readTodayStepCount(),
+        readRecentDailySteps(14),
+      ]);
       setTodaySteps(count);
+      setHistory(recent);
     } catch (error) {
       console.error('[steps] settings refresh failed:', error);
       setAvailability('unavailable');
       setTodaySteps(null);
+      setHistory([]);
     }
   }, []);
 
@@ -119,6 +130,7 @@ function StepsSettingsContent() {
         await saveStepsConnected(false);
         setConnected(false);
         setTodaySteps(null);
+        setHistory([]);
       } catch (error) {
         console.error('[steps] disconnect failed:', error);
       } finally {
@@ -166,8 +178,12 @@ function StepsSettingsContent() {
       }
       await saveStepsConnected(true);
       setConnected(true);
-      const count = await readTodayStepCount();
+      const [count, recent] = await Promise.all([
+        readTodayStepCount(),
+        readRecentDailySteps(14),
+      ]);
       setTodaySteps(count);
+      setHistory(recent);
       if (count === null) {
         Alert.alert(t('steps.title'), t('steps.readFailed'), [
           { text: t('common.cancel'), style: 'cancel' },
@@ -284,7 +300,24 @@ function StepsSettingsContent() {
           </View>
         )}
 
-        <Text style={styles.privacyNote}>{t('steps.privacyNote')}</Text>
+        {connected && history.length > 0 && (
+          <View style={styles.settingCard}>
+            <Text style={styles.settingLabel}>{t('steps.history')}</Text>
+            {history.map((row, index) => (
+              <View
+                key={row.date}
+                style={[styles.historyRow, index === 0 && styles.historyRowFirst]}
+              >
+                <Text style={styles.historyDate}>
+                  {formatDisplayDate(row.date, i18n.language)}
+                </Text>
+                <Text style={styles.historySteps}>
+                  {row.steps.toLocaleString(locale)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -388,10 +421,29 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginTop: 8,
   },
-  privacyNote: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    marginTop: 4,
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 14,
+    marginTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  historyRowFirst: {
+    borderTopWidth: 0,
+    marginTop: 8,
+    paddingTop: 8,
+  },
+  historyDate: {
+    fontSize: 15,
+    color: colors.text,
+    flex: 1,
+    marginRight: 12,
+  },
+  historySteps: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

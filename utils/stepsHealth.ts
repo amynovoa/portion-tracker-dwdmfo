@@ -1,6 +1,12 @@
 import { Linking, Platform } from 'react-native';
+import { formatDate, getTodayString, parseDate } from '@/utils/dateUtils';
 
 export type StepsAvailability = 'ready' | 'unavailable' | 'missing_module' | 'unsupported';
+
+export type DailyStepCount = {
+  date: string;
+  steps: number;
+};
 
 const HEALTH_CONNECT_PLAY_STORE =
   'https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata';
@@ -8,6 +14,12 @@ const HEALTH_CONNECT_PLAY_STORE =
 const STEP_COUNT = 'HKQuantityTypeIdentifierStepCount';
 const UNIT_COUNT = 'count';
 const CUMULATIVE_SUM = 8;
+
+type NativeStatistics = {
+  sum?: number | null;
+  startDate?: string | Date;
+  endDate?: string | Date;
+};
 
 type NativeHealth = {
   isHealthDataAvailable?: () => boolean;
@@ -23,7 +35,20 @@ type NativeHealth = {
     from?: string;
     to?: string;
     options?: number;
-  }) => Promise<{ sum?: number | null }>;
+  }) => Promise<NativeStatistics>;
+  queryStatisticsCollection?: (options: {
+    type: string;
+    unit: string;
+    from?: string;
+    to?: string;
+    options?: number;
+    year?: number;
+    month?: number;
+    day?: number;
+    hour?: number;
+    minute?: number;
+    second?: number;
+  }) => Promise<NativeStatistics[]>;
   revokeAllPermissions?: () => Promise<void>;
 };
 
@@ -86,10 +111,31 @@ function getNativeHealth(): NativeHealth | null {
   }
 }
 
-function startOfTodayIso(): string {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date.toISOString();
+function dayBoundsIso(dateString: string): { from: string; to: string } {
+  const start = parseDate(dateString);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  const today = getTodayString();
+  if (dateString === today) {
+    return { from: start.toISOString(), to: new Date().toISOString() };
+  }
+
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+function roundSteps(sum: unknown): number {
+  if (typeof sum !== 'number' || !Number.isFinite(sum)) return 0;
+  return Math.max(0, Math.round(sum));
+}
+
+function dateKeyFromNative(value: string | Date | undefined, fallback: string): string {
+  if (!value) return fallback;
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return fallback;
+  return formatDate(date);
 }
 
 export function getStepsAvailability(): StepsAvailability {
@@ -150,24 +196,93 @@ export async function requestStepsAccess(): Promise<boolean> {
   }
 }
 
-export async function readTodayStepCount(): Promise<number | null> {
+export async function readStepCountForDate(dateString: string): Promise<number | null> {
   try {
     const native = getNativeHealth();
     if (!native?.queryStatistics) return null;
 
+    const { from, to } = dayBoundsIso(dateString);
     const stats = await native.queryStatistics({
       type: STEP_COUNT,
       unit: UNIT_COUNT,
-      from: startOfTodayIso(),
-      to: new Date().toISOString(),
+      from,
+      to,
       options: CUMULATIVE_SUM,
     });
-    const sum = stats?.sum;
-    if (typeof sum !== 'number' || !Number.isFinite(sum)) return 0;
-    return Math.max(0, Math.round(sum));
+    return roundSteps(stats?.sum);
   } catch (error) {
-    console.error('[steps] queryStatistics failed:', error);
+    console.error('[steps] queryStatistics failed for', dateString, error);
     return null;
+  }
+}
+
+export async function readTodayStepCount(): Promise<number | null> {
+  return readStepCountForDate(getTodayString());
+}
+
+/**
+ * Recent daily step totals from Apple Health / Health Connect (newest first).
+ * Uses statistics collection when available; falls back to per-day queries.
+ */
+export async function readRecentDailySteps(dayCount = 14): Promise<DailyStepCount[]> {
+  const days = Math.max(1, Math.min(90, Math.floor(dayCount)));
+  const dates: string[] = [];
+  const today = parseDate(getTodayString());
+  for (let i = 0; i < days; i += 1) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    dates.push(formatDate(d));
+  }
+
+  try {
+    const native = getNativeHealth();
+    if (!native) return [];
+
+    const oldest = dates[dates.length - 1];
+    const { from } = dayBoundsIso(oldest);
+    const to = new Date().toISOString();
+
+    if (typeof native.queryStatisticsCollection === 'function') {
+      try {
+        const buckets = await native.queryStatisticsCollection({
+          type: STEP_COUNT,
+          unit: UNIT_COUNT,
+          from,
+          to,
+          options: CUMULATIVE_SUM,
+          year: 0,
+          month: 0,
+          day: 1,
+          hour: 0,
+          minute: 0,
+          second: 0,
+        });
+
+        const byDate = new Map<string, number>();
+        for (const bucket of buckets ?? []) {
+          const key = dateKeyFromNative(bucket.startDate, '');
+          if (!key) continue;
+          byDate.set(key, roundSteps(bucket.sum));
+        }
+
+        return dates.map((date) => ({
+          date,
+          steps: byDate.get(date) ?? 0,
+        }));
+      } catch (error) {
+        console.warn('[steps] queryStatisticsCollection failed; falling back per day:', error);
+      }
+    }
+
+    const results: DailyStepCount[] = [];
+    for (const date of dates) {
+      const steps = await readStepCountForDate(date);
+      results.push({ date, steps: steps ?? 0 });
+    }
+    return results;
+  } catch (error) {
+    console.error('[steps] readRecentDailySteps failed:', error);
+    return [];
   }
 }
 
