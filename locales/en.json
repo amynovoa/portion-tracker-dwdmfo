@@ -123,6 +123,7 @@
   },
   "setupProfile": {
     "title": "Let's Set Up Your Profile",
+    "units": "Units",
     "sex": "Sex",
     "startingWeight": "Starting Weight",
     "startingWeightHelper": "This will be your baseline for tracking progress",
@@ -383,7 +384,9 @@
     "exerciseCtaTitle": "Steps",
     "exerciseCtaReady": "Connect Apple Health / Health Connect to show daily steps next to your activity.",
     "exerciseCtaSetup": "Steps need the latest app build with Apple Health / Health Connect support. Open Steps settings for details.",
-    "exerciseCtaAction": "Open Steps settings →",
+    "exerciseCtaAction": "Connect steps",
+    "exerciseCtaNotNow": "Not now",
+    "exerciseCtaLater": "You can turn this on later in Settings → Steps.",
     "overTime": "Steps over time",
     "chartNoData": "No steps yet",
     "chartNoDataSubtext": "Walk with your phone, or check Health Connect / Apple Health has step history."

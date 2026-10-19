@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CONNECTED_KEY = '@portion_tracker_steps_connected';
 const GOAL_KEY = '@portion_tracker_steps_goal';
+const PROMPT_HIDDEN_KEY = '@portion_tracker_steps_prompt_hidden';
 
 export const DEFAULT_STEP_GOAL = 8000;
 export const MIN_STEP_GOAL = 1000;
@@ -22,8 +23,30 @@ export async function saveStepsConnected(connected: boolean): Promise<void> {
   try {
     await AsyncStorage.setItem(CONNECTED_KEY, connected ? 'true' : 'false');
     console.log('[steps] Connected flag saved:', connected);
+    if (connected) {
+      await AsyncStorage.setItem(PROMPT_HIDDEN_KEY, 'false');
+    }
   } catch (error) {
     console.error('[steps] Error saving connected flag:', error);
+  }
+}
+
+export async function loadStepsPromptHidden(): Promise<boolean> {
+  try {
+    const data = await AsyncStorage.getItem(PROMPT_HIDDEN_KEY);
+    return data === 'true';
+  } catch (error) {
+    console.error('[steps] Error loading prompt hidden flag:', error);
+    return false;
+  }
+}
+
+export async function saveStepsPromptHidden(hidden: boolean): Promise<void> {
+  try {
+    await AsyncStorage.setItem(PROMPT_HIDDEN_KEY, hidden ? 'true' : 'false');
+    console.log('[steps] Prompt hidden flag saved:', hidden);
+  } catch (error) {
+    console.error('[steps] Error saving prompt hidden flag:', error);
   }
 }
 

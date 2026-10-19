@@ -123,6 +123,7 @@
   },
   "setupProfile": {
     "title": "Configuremos Tu Perfil",
+    "units": "Unidades",
     "sex": "Sexo",
     "startingWeight": "Peso Inicial",
     "startingWeightHelper": "Este será tu punto de partida para seguir tu progreso",
@@ -383,7 +384,9 @@
     "exerciseCtaTitle": "Pasos",
     "exerciseCtaReady": "Conecta Apple Health / Health Connect para ver tus pasos diarios junto a tu actividad.",
     "exerciseCtaSetup": "Los pasos necesitan la última versión de la app con soporte de Apple Health / Health Connect. Abre Ajustes de Pasos para más detalles.",
-    "exerciseCtaAction": "Abrir ajustes de Pasos →",
+    "exerciseCtaAction": "Conectar pasos",
+    "exerciseCtaNotNow": "Ahora no",
+    "exerciseCtaLater": "Puedes activarlo más tarde en Ajustes → Pasos.",
     "overTime": "Pasos en el tiempo",
     "chartNoData": "Aún no hay pasos",
     "chartNoDataSubtext": "Camina con tu teléfono, o confirma que Health Connect / Apple Health tenga historial de pasos."

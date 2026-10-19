@@ -7,7 +7,13 @@ import { Sex, Goal, ActivityLevel } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/IconSymbol';
 import { useTranslation } from 'react-i18next';
-import { loadWeightUnit, WeightUnit } from '@/utils/weightUnit';
+import {
+  convertTypedHeight,
+  convertTypedWeight,
+  loadWeightUnit,
+  saveWeightUnit,
+  WeightUnit,
+} from '@/utils/weightUnit';
 
 type DropdownModalProps = {
   visible: boolean;
@@ -167,9 +173,27 @@ export default function SetupProfileScreen() {
     setGoal(value);
   };
 
-  const handleContinue = () => {
+  const handleUnitToggle = (nextUnit: WeightUnit) => {
+    if (nextUnit === weightUnit) return;
+    const convertedHeight = convertTypedHeight(
+      weightUnit,
+      nextUnit,
+      height,
+      heightFeet,
+      heightInches
+    );
+    setWeight(convertTypedWeight(weight, weightUnit, nextUnit));
+    setGoalWeight(convertTypedWeight(goalWeight, weightUnit, nextUnit));
+    setHeight(convertedHeight.height);
+    setHeightFeet(convertedHeight.heightFeet);
+    setHeightInches(convertedHeight.heightInches);
+    setWeightUnit(nextUnit);
+  };
+
+  const handleContinue = async () => {
     try {
       console.log('Setup profile - Continue clicked');
+      await saveWeightUnit(weightUnit);
 
       if (!weight || !goalWeight) {
         showError(t('setupProfile.errorWeightRequired'));
@@ -272,6 +296,28 @@ export default function SetupProfileScreen() {
               color={colors.text}
             />
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>{t('setupProfile.units')}</Text>
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={[styles.toggleButton, weightUnit === 'lbs' && styles.toggleButtonActive]}
+              onPress={() => handleUnitToggle('lbs')}
+            >
+              <Text style={[styles.toggleButtonText, weightUnit === 'lbs' && styles.toggleButtonTextActive]}>
+                {t('profile.unitPounds')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleButton, weightUnit === 'kg' && styles.toggleButtonActive]}
+              onPress={() => handleUnitToggle('kg')}
+            >
+              <Text style={[styles.toggleButtonText, weightUnit === 'kg' && styles.toggleButtonTextActive]}>
+                {t('profile.unitKilograms')}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -532,6 +578,30 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 8,
     fontStyle: 'italic',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+  },
+  toggleButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  toggleButtonTextActive: {
+    color: '#FFFFFF',
   },
   input: {
     backgroundColor: colors.surface,

@@ -6,7 +6,7 @@ import AdherenceCard from '@/components/AdherenceCard';
 import StepsErrorBoundary from '@/components/StepsErrorBoundary';
 import { colors } from '@/styles/commonStyles';
 import { formatDisplayDate, getTodayString } from '@/utils/dateUtils';
-import { loadStepGoal, loadStepsConnected } from '@/utils/stepsStorage';
+import { loadStepGoal, loadStepsConnected, loadStepsPromptHidden, saveStepsPromptHidden } from '@/utils/stepsStorage';
 import { getStepsAvailability, readStepCountForDate } from '@/utils/stepsHealth';
 
 type Props = {
@@ -22,6 +22,7 @@ function StepsTodayCardInner({ selectedDate }: Props) {
   const [goal, setGoal] = useState(8000);
   const [steps, setSteps] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
+  const [promptHidden, setPromptHidden] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -31,10 +32,12 @@ function StepsTodayCardInner({ selectedDate }: Props) {
           const availability = getStepsAvailability();
           const isConnected = await loadStepsConnected();
           const stepGoal = await loadStepGoal();
+          const hidden = await loadStepsPromptHidden();
           if (!active) return;
 
           setReady(availability === 'ready');
           setGoal(stepGoal);
+          setPromptHidden(hidden);
 
           if (!isConnected || availability !== 'ready') {
             setConnected(false);
@@ -84,19 +87,28 @@ function StepsTodayCardInner({ selectedDate }: Props) {
 
   // Not connected: CTA only on today (past days stay quiet until connected)
   if (!isToday) return null;
+  if (promptHidden) return null;
 
   return (
-    <TouchableOpacity
-      style={styles.ctaCard}
-      activeOpacity={0.85}
-      onPress={() => router.push('/steps-settings')}
-    >
+    <View style={styles.ctaCard}>
       <Text style={styles.ctaTitle}>{t('steps.exerciseCtaTitle')}</Text>
       <Text style={styles.ctaBody}>
         {ready ? t('steps.exerciseCtaReady') : t('steps.exerciseCtaSetup')}
       </Text>
-      <Text style={styles.ctaAction}>{t('steps.exerciseCtaAction')}</Text>
-    </TouchableOpacity>
+      <TouchableOpacity activeOpacity={0.85} onPress={() => router.push('/steps-settings')}>
+        <Text style={styles.ctaAction}>{t('steps.exerciseCtaAction')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={async () => {
+          await saveStepsPromptHidden(true);
+          setPromptHidden(true);
+        }}
+      >
+        <Text style={styles.ctaNotNow}>{t('steps.exerciseCtaNotNow')}</Text>
+      </TouchableOpacity>
+      <Text style={styles.ctaLater}>{t('steps.exerciseCtaLater')}</Text>
+    </View>
   );
 }
 
@@ -133,5 +145,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: colors.primary,
+    marginBottom: 8,
+  },
+  ctaNotNow: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  ctaLater: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
 });

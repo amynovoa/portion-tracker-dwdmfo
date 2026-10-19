@@ -33,18 +33,57 @@ export async function loadWeightUnit(): Promise<WeightUnit> {
   } catch (error) {
     console.error('[WeightUnit] Error loading weight unit:', error);
   }
-  // No stored preference — pick a sensible default based on system locale.
+  // No stored preference — metric unless the device is clearly US.
   try {
     const Localization = require('expo-localization');
-    const systemLocale = Localization.getLocales?.()[0]?.languageCode;
-    if (systemLocale === 'es') {
-      console.log('[WeightUnit] No stored preference; system locale is Spanish — defaulting to kg');
+    const locale = Localization.getLocales?.()[0];
+    const languageCode = locale?.languageCode;
+    const regionCode = locale?.regionCode;
+    if (languageCode === 'es') {
+      console.log('[WeightUnit] No stored preference; Spanish locale — defaulting to kg');
+      return 'kg';
+    }
+    if (regionCode && regionCode !== 'US') {
+      console.log('[WeightUnit] No stored preference; region', regionCode, '— defaulting to kg');
       return 'kg';
     }
   } catch (error) {
     console.error('[WeightUnit] Error detecting system locale:', error);
   }
   return 'lbs';
+}
+
+export function convertTypedWeight(value: string, from: WeightUnit, to: WeightUnit): string {
+  if (from === to) return value;
+  const n = parseFloat(value);
+  if (!value || !Number.isFinite(n)) return value;
+  return String(from === 'lbs' ? lbsToKg(n) : kgToLbs(n));
+}
+
+export function convertTypedHeight(
+  from: WeightUnit,
+  to: WeightUnit,
+  height: string,
+  heightFeet: string,
+  heightInches: string
+): { height: string; heightFeet: string; heightInches: string } {
+  if (from === to) return { height, heightFeet, heightInches };
+
+  if (from === 'lbs' && to === 'kg') {
+    if (!heightFeet && !heightInches) {
+      return { height: '', heightFeet: '', heightInches: '' };
+    }
+    const inches = (parseFloat(heightFeet) || 0) * 12 + (parseFloat(heightInches) || 0);
+    return { height: String(inchesToCm(inches)), heightFeet: '', heightInches: '' };
+  }
+
+  if (!height) return { height: '', heightFeet: '', heightInches: '' };
+  const cm = parseFloat(height);
+  if (!Number.isFinite(cm)) return { height: '', heightFeet: '', heightInches: '' };
+  const totalInches = cmToInches(cm);
+  const feet = Math.floor(totalInches / 12);
+  const inches = Math.round(totalInches - feet * 12);
+  return { height: '', heightFeet: String(feet), heightInches: String(inches) };
 }
 
 export async function saveWeightUnit(unit: WeightUnit): Promise<void> {
