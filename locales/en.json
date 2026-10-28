@@ -183,8 +183,8 @@
     "features": {
       "scanPlate": "📷 Scan a Plate to Instantly Log Portions",
       "tracking": "Unlimited Portion Tracking",
-      "guidance": "Healthy Portion Guidance",
-      "targets": "Custom Portion Targets",
+      "exercise": "Exercise Tracking",
+      "steps": "Step Tracking (Apple Health / Health Connect)",
       "weight": "Weight Tracking & Charts",
       "history": "Progress History & Trends",
       "reminders": "Daily Reminders"

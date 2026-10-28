@@ -67,8 +67,8 @@ export default function PaywallScreen() {
   const FEATURES = [
     { title: t('paywall.features.scanPlate') },
     { title: t('paywall.features.tracking') },
-    { title: t('paywall.features.guidance') },
-    { title: t('paywall.features.targets') },
+    { title: t('paywall.features.exercise') },
+    { title: t('paywall.features.steps') },
     { title: t('paywall.features.weight') },
     { title: t('paywall.features.history') },
     { title: t('paywall.features.reminders') },

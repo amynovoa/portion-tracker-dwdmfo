@@ -25,7 +25,7 @@
         "NSCameraUsageDescription": "This app uses the camera to take photos of your meals for tracking purposes.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select meal photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos to your library.",
-        "NSHealthShareUsageDescription": "Portion Track reads today’s step count from Apple Health so you can see daily movement next to your portions. Step data stays on your device and is not uploaded.",
+        "NSHealthShareUsageDescription": "Portion Track reads today\u2019s step count from Apple Health so you can see daily movement next to your portions. Step data stays on your device and is not uploaded.",
         "NSHealthUpdateUsageDescription": "Portion Track does not write health data to Apple Health.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
@@ -47,7 +47,7 @@
           }
         ]
       },
-      "buildNumber": "96"
+      "buildNumber": "359"
     },
     "android": {
       "adaptiveIcon": {
@@ -56,7 +56,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.amynovoa.portiontracker",
-      "versionCode": 59,
+      "versionCode": 61,
       "allowBackup": false,
       "permissions": [
         "android.permission.CAMERA",
@@ -84,7 +84,7 @@
       [
         "@appeeky/expo-healthkit",
         {
-          "healthSharePermission": "Portion Track reads today’s step count from Apple Health so you can see daily movement next to your portions. Step data stays on your device and is not uploaded.",
+          "healthSharePermission": "Portion Track reads today\u2019s step count from Apple Health so you can see daily movement next to your portions. Step data stays on your device and is not uploaded.",
           "healthUpdatePermission": "Portion Track does not write health data to Apple Health.",
           "isBackgroundDeliveryEnabled": false,
           "healthConnectPermissions": [
