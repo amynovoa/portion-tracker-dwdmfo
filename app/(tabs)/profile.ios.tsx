@@ -1,14 +1,19 @@
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { loadProfile } from '@/utils/storage';
+import { loadProfile, saveProfile } from '@/utils/storage';
 import { UserProfile, Sex, Goal } from '@/types';
 import AppLogo from '@/components/AppLogo';
 import { useTranslation } from 'react-i18next';
 import { loadWeightUnit, saveWeightUnit, convertAllStoredWeights, WeightUnit } from '@/utils/weightUnit';
+import {
+  evaluateKgCorrectionForProfile,
+  loadKgCorrectionOffered,
+  saveKgCorrectionOffered,
+} from '@/utils/targetsRecalc';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -18,12 +23,48 @@ export default function ProfileScreen() {
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('lbs');
   const [unitModalVisible, setUnitModalVisible] = useState(false);
   const [pendingUnit, setPendingUnit] = useState<WeightUnit>('lbs');
+  const kgPromptShownRef = useRef(false);
 
   useFocusEffect(
     React.useCallback(() => {
       loadProfileData();
     }, [])
   );
+
+  const maybeOfferKgCorrection = async (data: UserProfile, unit: WeightUnit) => {
+    if (unit !== 'kg' || kgPromptShownRef.current) return;
+    const offered = await loadKgCorrectionOffered();
+    const decision = evaluateKgCorrectionForProfile(data, unit, offered);
+    if (decision.trigger !== 'kg-correction' || !decision.shouldPrompt || !decision.current) {
+      return;
+    }
+    kgPromptShownRef.current = true;
+    Alert.alert(t('setupTargets.recalcTitle'), t('setupTargets.recalcKgMessage'), [
+      {
+        text: t('setupTargets.recalcKeep'),
+        style: 'cancel',
+        onPress: async () => {
+          await saveKgCorrectionOffered(true);
+        },
+      },
+      {
+        text: t('setupTargets.recalcAccept'),
+        onPress: async () => {
+          const next = {
+            ...data,
+            portionTargets: {
+              ...decision.proposed,
+              alcohol: data.alcoholServings ?? data.portionTargets.alcohol ?? 0,
+              exercise: 0,
+            },
+          };
+          await saveProfile(next);
+          await saveKgCorrectionOffered(true);
+          setProfile(next);
+        },
+      },
+    ]);
+  };
 
   const loadProfileData = async () => {
     try {
@@ -32,6 +73,9 @@ export default function ProfileScreen() {
       console.log('[Profile] Weight unit loaded:', unit);
       setProfile(data);
       setWeightUnit(unit);
+      if (data) {
+        await maybeOfferKgCorrection(data, unit);
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -94,6 +138,8 @@ export default function ProfileScreen() {
         return t('profile.goalEatHealthier');
       case 'have-more-energy':
         return t('profile.goalMoreEnergy');
+      case 'glp-1':
+        return t('profile.goalGlp1');
       default:
         return t('profile.goalNotSet');
     }
