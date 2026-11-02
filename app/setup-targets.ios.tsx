@@ -5,18 +5,12 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { saveProfile, loadProfile } from '@/utils/storage';
+import { calculateRecommendedTargets } from '@/utils/portionCalculator';
+import { saveProfile } from '@/utils/storage';
 import { recordTargetsSaved } from '@/utils/reviewManager';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel, PortionTargets, FOOD_GROUPS } from '@/types';
 import { IconSymbol } from '@/components/IconSymbol';
-import { loadWeightUnit, WeightUnit } from '@/utils/weightUnit';
-import { foodTargetsEqual } from '@/utils/portionCalculator';
-import {
-  evaluateTargetsRecalc,
-  loadKgCorrectionOffered,
-  saveKgCorrectionOffered,
-} from '@/utils/targetsRecalc';
 
 const PICKER_HEIGHT = 216;
 
@@ -110,7 +104,6 @@ export default function SetupTargetsScreen() {
   const includeAlcohol = params.includeAlcohol as string;
   const alcoholGoal = params.alcoholGoal as string;
   const height = params.height as string;
-  const weightUnitParam = params.weightUnit as string;
   
   const [targets, setTargets] = useState<PortionTargets>({
     protein: 3,
@@ -127,98 +120,37 @@ export default function SetupTargetsScreen() {
   const [activePickerKey, setActivePickerKey] = useState<keyof PortionTargets | null>(null);
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      console.log('SetupTargetsScreen calculating targets');
-      if (!(sex && weight && goal)) {
-        console.log('Missing required params, using defaults');
-        return;
-      }
-
+    console.log('SetupTargetsScreen calculating targets');
+    if (sex && weight && goal) {
       const parsedWeight = parseFloat(weight);
       const parsedActivityLevel = (activityLevel as ActivityLevel) || 'moderate';
       const shouldIncludeAlcohol = includeAlcohol === 'true';
-      const parsedAlcoholGoal = shouldIncludeAlcohol ? parseInt(alcoholGoal, 10) || 0 : 0;
-      const storedUnit = await loadWeightUnit();
-      const weightUnit: WeightUnit =
-        weightUnitParam === 'kg' || weightUnitParam === 'lbs'
-          ? (weightUnitParam as WeightUnit)
-          : storedUnit;
+      const parsedAlcoholGoal = shouldIncludeAlcohol ? parseInt(alcoholGoal) || 0 : 0;
 
-      const existing = await loadProfile();
-      const kgOffered = await loadKgCorrectionOffered();
-      const decision = evaluateTargetsRecalc({
-        existing,
-        sex: sex as Sex,
-        weight: parsedWeight,
-        goal: goal as Goal,
-        activityLevel: parsedActivityLevel,
-        alcoholServings: parsedAlcoholGoal,
-        weightUnit,
-        kgCorrectionAlreadyOffered: kgOffered,
+      console.log('Calculating recommended targets with:', { 
+        sex, 
+        weight: parsedWeight, 
+        goal, 
+        activityLevel: parsedActivityLevel, 
+        includeAlcohol: shouldIncludeAlcohol, 
+        alcoholGoal: parsedAlcoholGoal 
       });
-
-      if (!active) return;
-
-      console.log('Targets recalc decision:', {
-        shouldPrompt: decision.shouldPrompt,
-        trigger: decision.trigger,
-        proposed: decision.proposed,
-      });
-
-      if (!decision.shouldPrompt || !decision.current) {
-        // New profile or matching numbers → recommended.
-        // Same inputs but different numbers (hand edits / older rules) → keep current.
-        if (decision.current && !foodTargetsEqual(decision.current, decision.proposed)) {
-          setTargets({
-            ...decision.current,
-            alcohol: parsedAlcoholGoal,
-            exercise: 0,
-          });
-        } else {
-          setTargets(decision.proposed);
-        }
-        return;
-      }
-
-      const message =
-        decision.trigger === 'kg-correction'
-          ? t('setupTargets.recalcKgMessage')
-          : t('setupTargets.recalcMessage');
-
-      Alert.alert(t('setupTargets.recalcTitle'), message, [
-        {
-          text: t('setupTargets.recalcKeep'),
-          style: 'cancel',
-          onPress: async () => {
-            if (!active) return;
-            setTargets({
-              ...decision.current!,
-              alcohol: parsedAlcoholGoal,
-              exercise: 0,
-            });
-            if (decision.trigger === 'kg-correction') {
-              await saveKgCorrectionOffered(true);
-            }
-          },
-        },
-        {
-          text: t('setupTargets.recalcAccept'),
-          onPress: async () => {
-            if (!active) return;
-            setTargets(decision.proposed);
-            if (decision.trigger === 'kg-correction') {
-              await saveKgCorrectionOffered(true);
-            }
-          },
-        },
-      ]);
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [sex, weight, goal, activityLevel, includeAlcohol, alcoholGoal, weightUnitParam, t]);
+      
+      const recommended = calculateRecommendedTargets(
+        sex as Sex, 
+        parsedWeight, 
+        goal as Goal, 
+        parsedActivityLevel
+      );
+      recommended.alcohol = parsedAlcoholGoal;
+      recommended.exercise = 0;
+      
+      console.log('Recommended targets:', recommended);
+      setTargets(recommended);
+    } else {
+      console.log('Missing required params, using defaults');
+    }
+  }, [sex, weight, goal, activityLevel, includeAlcohol, alcoholGoal]);
 
   const handleSave = async () => {
     console.log('Saving profile with targets:', targets);

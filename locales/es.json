@@ -119,8 +119,7 @@
     "unitKilograms": "Kilogramos (kg)",
     "changeUnitTitle": "¿Cambiar unidad de peso?",
     "changeUnitBody": "Todas tus entradas de peso se convertirán a {{unit}}.",
-    "changeUnitConfirm": "Confirmar",
-    "goalGlp1": "Apoyo GLP-1"
+    "changeUnitConfirm": "Confirmar"
   },
   "setupProfile": {
     "title": "Configuremos Tu Perfil",
@@ -168,8 +167,7 @@
     "alcohol7": "7 porciones",
     "alcohol8": "8 porciones",
     "alcohol9": "9 porciones",
-    "alcohol10": "10 porciones",
-    "goalGlp1": "Apoyo GLP-1"
+    "alcohol10": "10 porciones"
   },
   "onboarding": {
     "getStarted": "Comenzar",
@@ -472,13 +470,8 @@
     "labelExercise": "Ejercicio",
     "labelAlcohol": "Alcohol",
     "exerciseNote": "El ejercicio se puede registrar diariamente en la página de seguimiento, pero no tiene una meta numérica.",
-    "alcoholNote": "Puedes poner tu meta de alcohol en 0 si no bebes, o ajustarla a tus objetivos. El máximo recomendado es 2 porciones al día. La 1.ª porción reduce los granos integrales en 1; la 2.ª reduce las grasas en 1 (nunca por debajo de 1).",
-    "saveContinue": "Guardar y continuar",
-    "recalcTitle": "¿Actualizar tus metas?",
-    "recalcMessage": "Según tu perfil más reciente, recomendamos nuevas metas diarias. Acepta para aplicarlas, o Mantén para dejar tus metas actuales. Luego puedes editar cualquier número.",
-    "recalcKgMessage": "Tu peso está en kilogramos. Ahora convertimos kg a libras antes de clasificar el tamaño, lo que puede cambiar tus metas recomendadas. Acepta las metas actualizadas, o Mantén las actuales.",
-    "recalcAccept": "Aceptar nuevas metas",
-    "recalcKeep": "Mantener mis metas"
+    "alcoholNote": "Puedes establecer tu meta de alcohol en 0 si no bebes, o ajustarla según tus objetivos. El máximo recomendado es de 2 porciones por día.",
+    "saveContinue": "Guardar y continuar"
   },
   "foodGroups": {
     "protein": "Proteína",
