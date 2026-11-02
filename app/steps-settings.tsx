@@ -6,7 +6,6 @@ import {
   Switch,
   TouchableOpacity,
   Alert,
-  Linking,
   Platform,
   ActivityIndicator,
   ScrollView,
@@ -29,8 +28,10 @@ import {
 import {
   getStepsAvailability,
   openHealthConnectInstall,
+  openStepsSystemSettings,
   readTodayStepCount,
   requestStepsAccess,
+  resetStepsHealthCache,
   revokeStepsAccess,
   type StepsAvailability,
 } from '@/utils/stepsHealth';
@@ -103,7 +104,7 @@ function StepsSettingsContent() {
       } else {
         Alert.alert(t('steps.title'), message, [
           { text: t('common.cancel'), style: 'cancel' },
-          { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
+          { text: t('steps.openSettings'), onPress: () => openStepsSystemSettings() },
         ]);
       }
     }
@@ -127,51 +128,57 @@ function StepsSettingsContent() {
       return;
     }
 
-    const avail = getStepsAvailability();
-    setAvailability(avail);
-    if (avail !== 'ready') {
-      const message =
-        avail === 'missing_module'
-          ? Platform.OS === 'ios'
-            ? t('steps.missingModuleIos')
-            : t('steps.missingModuleAndroid')
-          : Platform.OS === 'ios'
-            ? t('steps.unavailableIos')
-            : t('steps.unavailableAndroid');
-      if (Platform.OS === 'android' && avail !== 'missing_module') {
-        Alert.alert(t('steps.title'), message, [
+    setBusy(true);
+    try {
+      // Re-probe native module on every connect attempt (fixes stale "unavailable" cache on iOS).
+      resetStepsHealthCache();
+      const avail = getStepsAvailability();
+      setAvailability(avail);
+
+      if (avail === 'missing_module') {
+        Alert.alert(
+          t('steps.title'),
+          Platform.OS === 'ios' ? t('steps.missingModuleIos') : t('steps.missingModuleAndroid'),
+          [{ text: t('common.cancel'), style: 'cancel' }]
+        );
+        return;
+      }
+
+      if (avail === 'unavailable' && Platform.OS === 'android') {
+        Alert.alert(t('steps.title'), t('steps.unavailableAndroid'), [
           { text: t('common.cancel'), style: 'cancel' },
           { text: t('steps.installHealthConnect'), onPress: () => openHealthConnectInstall() },
         ]);
-      } else {
-        Alert.alert(t('steps.title'), message, [
-          { text: t('common.cancel'), style: 'cancel' },
-          ...(avail === 'missing_module'
-            ? []
-            : [{ text: t('steps.openSettings'), onPress: () => Linking.openSettings() }]),
-        ]);
+        return;
       }
-      return;
-    }
 
-    setBusy(true);
-    try {
+      // iOS: still attempt authorization when availability looks "unavailable"
+      // (false negatives happen; HealthKit request is the real test).
       const granted = await requestStepsAccess();
       if (!granted) {
         Alert.alert(t('steps.title'), t('steps.permissionDenied'), [
           { text: t('common.cancel'), style: 'cancel' },
-          { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
+          { text: t('steps.openSettings'), onPress: () => openStepsSystemSettings() },
         ]);
         return;
       }
+
       await saveStepsConnected(true);
       setConnected(true);
+      setAvailability('ready');
       const count = await readTodayStepCount();
       setTodaySteps(count);
+
       if (count === null) {
         Alert.alert(t('steps.title'), t('steps.readFailed'), [
           { text: t('common.cancel'), style: 'cancel' },
-          { text: t('steps.openSettings'), onPress: () => Linking.openSettings() },
+          { text: t('steps.openSettings'), onPress: () => openStepsSystemSettings() },
+        ]);
+      } else if (Platform.OS === 'ios' && count === 0) {
+        // Common iOS case: sheet dismissed without enabling Steps, or no data yet.
+        Alert.alert(t('steps.title'), t('steps.iosZeroStepsHint'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('steps.openHealth'), onPress: () => openStepsSystemSettings() },
         ]);
       }
     } catch (error) {
@@ -217,7 +224,9 @@ function StepsSettingsContent() {
     statusDescription = t('steps.connectHelp', { source: sourceLabel });
   }
 
-  const switchDisabled = checking || busy || (availability !== 'ready' && !connected);
+  // Keep the switch tappable even when Health looks unavailable so the user can retry.
+  // Only block while a connect/disconnect is in flight.
+  const switchDisabled = checking || busy;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -260,6 +269,11 @@ function StepsSettingsContent() {
           {!checking && availability !== 'ready' && Platform.OS === 'android' && (
             <TouchableOpacity style={styles.linkButton} onPress={() => openHealthConnectInstall()}>
               <Text style={styles.linkButtonText}>{t('steps.installHealthConnect')}</Text>
+            </TouchableOpacity>
+          )}
+          {!checking && Platform.OS === 'ios' && (
+            <TouchableOpacity style={styles.linkButton} onPress={() => openStepsSystemSettings()}>
+              <Text style={styles.linkButtonText}>{t('steps.openHealth')}</Text>
             </TouchableOpacity>
           )}
         </View>

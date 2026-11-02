@@ -29,6 +29,11 @@ type NativeHealth = {
     includeBackgroundRead?: boolean;
   }) => Promise<boolean>;
   getGrantedPermissions?: (candidates: string[]) => Promise<string[]>;
+  getRequestStatusForAuthorization?: (options: {
+    toRead: string[];
+    toShare: string[];
+    includeBackgroundRead?: boolean;
+  }) => Promise<number>;
   queryStatistics?: (options: {
     type: string;
     unit: string;
@@ -54,8 +59,33 @@ type NativeHealth = {
 
 let cachedNative: NativeHealth | null | undefined;
 
+const AUTH_TIMEOUT_MS = 20000;
+
 export function __resetStepsHealthCacheForTests(): void {
   cachedNative = undefined;
+}
+
+/** Clear cached native module so the next call re-probes (retry after failed connect). */
+export function resetStepsHealthCache(): void {
+  cachedNative = undefined;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`));
+    }, ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
 }
 
 function getOptionalNativeLoader(): ((name: string) => NativeHealth | null) | null {
@@ -74,6 +104,17 @@ function getOptionalNativeLoader(): ((name: string) => NativeHealth | null) | nu
   return null;
 }
 
+function readGlobalExpoHealth(): NativeHealth | null {
+  try {
+    const modules = (globalThis as { expo?: { modules?: Record<string, NativeHealth> } }).expo
+      ?.modules;
+    const native = modules?.ExpoHealthKit ?? null;
+    return native && typeof native === 'object' ? native : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Resolve ExpoHealthKit without importing @appeeky/expo-healthkit
  * (that package calls requireNativeModule at import time and crashed TestFlight).
@@ -90,17 +131,29 @@ function getNativeHealth(): NativeHealth | null {
 
   try {
     const load = getOptionalNativeLoader();
-    if (!load) {
-      console.warn('[steps] requireOptionalNativeModule unavailable');
-      cachedNative = null;
-      return null;
+    let native: NativeHealth | null = null;
+
+    if (typeof load === 'function') {
+      native = load('ExpoHealthKit');
+    } else {
+      console.warn('[steps] requireOptionalNativeModule unavailable; trying global registry');
     }
-    const native = load('ExpoHealthKit');
+
+    // Some iOS binaries briefly miss the optional loader but still expose the module
+    // on the Expo host object — same registry requireOptionalNativeModule reads.
+    if (!native) {
+      native = readGlobalExpoHealth();
+      if (native) {
+        console.log('[steps] ExpoHealthKit resolved via global expo.modules');
+      }
+    }
+
     if (!native) {
       console.warn('[steps] ExpoHealthKit is not linked in this native binary');
       cachedNative = null;
       return null;
     }
+
     cachedNative = native;
     console.log('[steps] ExpoHealthKit native module linked');
     return cachedNative;
@@ -167,14 +220,32 @@ export function getStepsAvailability(): StepsAvailability {
 
 export async function requestStepsAccess(): Promise<boolean> {
   try {
+    // Always re-probe on connect so a stale null cache cannot block a later retry.
+    resetStepsHealthCache();
     const native = getNativeHealth();
     if (!native?.requestAuthorization) return false;
 
-    const granted = await native.requestAuthorization({
+    const authOptions = {
       toRead: [STEP_COUNT],
-      toShare: [],
+      toShare: [] as string[],
       includeBackgroundRead: false,
-    });
+    };
+
+    if (typeof native.getRequestStatusForAuthorization === 'function') {
+      try {
+        const status = await native.getRequestStatusForAuthorization(authOptions);
+        // 0 = unnecessary (already asked), 1 = shouldRequest, 2 = unknown
+        console.log('[steps] getRequestStatusForAuthorization:', status);
+      } catch (error) {
+        console.warn('[steps] getRequestStatusForAuthorization failed:', error);
+      }
+    }
+
+    const granted = await withTimeout(
+      native.requestAuthorization(authOptions),
+      AUTH_TIMEOUT_MS,
+      'requestAuthorization'
+    );
     console.log('[steps] requestAuthorization:', granted);
 
     if (Platform.OS === 'android' && native.getGrantedPermissions) {
@@ -189,6 +260,9 @@ export async function requestStepsAccess(): Promise<boolean> {
       return hasSteps || !!granted;
     }
 
+    // iOS: Apple does not disclose read grants. A false here means the request
+    // itself failed (not "user denied"). Treat false as failure; true/void as ok.
+    if (granted === false) return false;
     return true;
   } catch (error) {
     console.error('[steps] requestStepsAccess failed:', error);
@@ -307,6 +381,35 @@ export async function openHealthConnectInstall(): Promise<void> {
     await Linking.openURL(HEALTH_CONNECT_PLAY_STORE);
   } catch (error) {
     console.warn('[steps] Could not open Health Connect store page:', error);
+    try {
+      await Linking.openSettings();
+    } catch {
+      // ignore
+    }
+  }
+}
+
+/**
+ * Open the system place where the user can grant Steps access.
+ * iOS: app Settings (from there → Health → Data Access & Devices).
+ * Android: Health Connect install / Play Store listing.
+ */
+export async function openStepsSystemSettings(): Promise<void> {
+  try {
+    if (Platform.OS === 'ios') {
+      // Prefer the Health app deep link when available; fall back to app Settings.
+      try {
+        await Linking.openURL('x-apple-health://');
+        return;
+      } catch {
+        // continue to app Settings
+      }
+      await Linking.openSettings();
+      return;
+    }
+    await openHealthConnectInstall();
+  } catch (error) {
+    console.warn('[steps] Could not open Steps system settings:', error);
     try {
       await Linking.openSettings();
     } catch {
