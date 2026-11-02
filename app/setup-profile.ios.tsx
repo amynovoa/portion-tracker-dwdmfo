@@ -133,6 +133,7 @@ export default function SetupProfileScreen() {
     { label: t('setupProfile.goalBuild'), value: 'build' as Goal },
     { label: t('setupProfile.goalEatHealthier'), value: 'eat-healthier' as Goal },
     { label: t('setupProfile.goalMoreEnergy'), value: 'have-more-energy' as Goal },
+    { label: t('setupProfile.goalGlp1'), value: 'glp-1' as Goal },
   ];
 
   const activityOptions = [
@@ -236,6 +237,7 @@ export default function SetupProfileScreen() {
           includeAlcohol: includeAlcohol.toString(),
           alcoholGoal: (includeAlcohol ? alcoholGoal : 0).toString(),
           height: heightParam,
+          weightUnit,
         },
       });
     } catch (error) {

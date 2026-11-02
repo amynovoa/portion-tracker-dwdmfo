@@ -1,12 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ActivityLevel, ACTIVITY_LEVELS, ACTIVITY_LEVEL_INFO } from '@/types';
+import { ActivityLevel, ACTIVITY_LEVELS } from '@/types';
 import { loadProfile, saveProfile } from '@/utils/storage';
-import { calculateRecommendedTargets } from '@/utils/portionCalculator';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { calculateRecommendedTargets, foodTargetsEqual } from '@/utils/portionCalculator';
+import { colors } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
+import { loadWeightUnit } from '@/utils/weightUnit';
+import { useTranslation } from 'react-i18next';
 
 const styles = StyleSheet.create({
   container: {
@@ -60,6 +61,7 @@ const styles = StyleSheet.create({
 
 export default function ActivityLevelScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<ActivityLevel>('moderate');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,12 +72,12 @@ export default function ActivityLevelScreen() {
   const loadCurrentLevel = async () => {
     try {
       const profile = await loadProfile();
-      if (profile) {
+      if (profile?.activityLevel) {
         setSelectedLevel(profile.activityLevel);
       }
     } catch (error) {
       console.error('Error loading activity level:', error);
-      Alert.alert('Error', 'Failed to load current activity level');
+      Alert.alert(t('common.error'), t('common.error'));
     } finally {
       setIsLoading(false);
     }
@@ -85,39 +87,69 @@ export default function ActivityLevelScreen() {
     try {
       const profile = await loadProfile();
       if (!profile) {
-        Alert.alert('Error', 'Profile not found. Please complete setup first.');
+        Alert.alert(t('common.error'), t('profile.noProfileFound'));
         return;
       }
 
-      const newTargets = calculateRecommendedTargets(
+      const weightUnit = await loadWeightUnit();
+      const alcoholServings = profile.alcoholServings ?? profile.portionTargets?.alcohol ?? 0;
+      const proposed = calculateRecommendedTargets(
         profile.sex,
         profile.currentWeight,
         profile.goal,
-        profile.includeAlcohol,
-        profile.alcoholServings,
-        level
+        level,
+        { weightUnit, alcoholServings }
       );
+      proposed.exercise = 0;
+      proposed.alcohol = alcoholServings;
 
-      const updatedProfile = {
-        ...profile,
-        activityLevel: level,
-        targets: newTargets,
+      const apply = async (useProposed: boolean) => {
+        const updatedProfile = {
+          ...profile,
+          activityLevel: level,
+          portionTargets: useProposed
+            ? proposed
+            : {
+                ...profile.portionTargets,
+                alcohol: alcoholServings,
+                exercise: 0,
+              },
+        };
+        await saveProfile(updatedProfile);
+        setSelectedLevel(level);
+        router.back();
       };
 
-      await saveProfile(updatedProfile);
-      setSelectedLevel(level);
-      Alert.alert('Success', 'Activity level updated and portion targets recalculated.');
-      router.back();
+      if (
+        level !== profile.activityLevel &&
+        profile.portionTargets &&
+        !foodTargetsEqual(proposed, profile.portionTargets)
+      ) {
+        Alert.alert(t('setupTargets.recalcTitle'), t('setupTargets.recalcMessage'), [
+          {
+            text: t('setupTargets.recalcKeep'),
+            style: 'cancel',
+            onPress: () => apply(false),
+          },
+          {
+            text: t('setupTargets.recalcAccept'),
+            onPress: () => apply(true),
+          },
+        ]);
+        return;
+      }
+
+      await apply(true);
     } catch (error) {
       console.error('Error updating activity level:', error);
-      Alert.alert('Error', 'Failed to update activity level. Please try again.');
+      Alert.alert(t('common.error'), t('common.error'));
     }
   };
 
   if (isLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: colors.text }}>Loading...</Text>
+        <Text style={{ color: colors.text }}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -131,30 +163,29 @@ export default function ActivityLevelScreen() {
       <ScrollView>
         {ACTIVITY_LEVELS.map((level) => (
           <TouchableOpacity
-            key={level}
+            key={level.value}
             style={[
               styles.levelItem,
-              selectedLevel === level && styles.levelItemSelected,
+              selectedLevel === level.value && styles.levelItemSelected,
             ]}
-            onPress={() => handleSelectLevel(level)}
+            onPress={() => handleSelectLevel(level.value)}
           >
             <View style={styles.levelContent}>
-              <Text style={styles.levelTitle}>{ACTIVITY_LEVEL_INFO[level].label}</Text>
-              <Text style={styles.levelDescription}>{ACTIVITY_LEVEL_INFO[level].description}</Text>
+              <Text style={styles.levelTitle}>{level.label}</Text>
+              <Text style={styles.levelDescription}>{level.description}</Text>
             </View>
-            {selectedLevel === level && (
+            {selectedLevel === level.value && (
               <View style={styles.checkIcon}>
-                <IconSymbol 
-                  ios_icon_name="checkmark.circle.fill" 
-                  android_material_icon_name="check-circle" 
-                  size={24} 
-                  color={colors.primary} 
+                <IconSymbol
+                  ios_icon_name="checkmark.circle.fill"
+                  android_material_icon_name="check-circle"
+                  size={24}
+                  color={colors.primary}
                 />
               </View>
             )}
           </TouchableOpacity>
         ))}
-        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
