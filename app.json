@@ -2,7 +2,7 @@
   "expo": {
     "name": "Portion Track",
     "slug": "portion-track",
-    "version": "3.3.0",
+    "version": "3.4.0",
     "orientation": "portrait",
     "icon": "./assets/images/9b2acb8c-6cd5-475b-8286-4171fe236ec4.png",
     "userInterfaceStyle": "automatic",
@@ -47,7 +47,7 @@
           }
         ]
       },
-      "buildNumber": "363"
+      "buildNumber": "364"
     },
     "android": {
       "adaptiveIcon": {
@@ -56,7 +56,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.amynovoa.portiontracker",
-      "versionCode": 65,
+      "versionCode": 66,
       "allowBackup": false,
       "permissions": [
         "android.permission.CAMERA",
