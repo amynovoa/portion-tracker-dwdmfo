@@ -8,8 +8,8 @@ Status board for journal / TestFlight / store-link work. Do **one workstream at 
 |---|------------|------|--------|
 | 1 | GLP-1 goal list → alphabetical | 15–30 min | Done |
 | 2 | Steps option in profile setup (iOS + Android) | 1.5–2.5 hr | Done |
-| 3 | Smart link `https://portiontrack.com/app` | 2–3 hr | Pending |
-| 4 | Portion targets spreadsheet for journal | 1–1.5 hr | Pending |
+| 3 | Smart link `https://portiontrack.com/app` | 2–3 hr | Code live on Vercel; Netlify domain pending redeploy |
+| 4 | Portion targets spreadsheet for journal | 1–1.5 hr | Done — `docs/portion-targets-matrix.xlsx` |
 
 ---
 
@@ -57,6 +57,12 @@ Status board for journal / TestFlight / store-link work. Do **one workstream at 
 
 **Deliver:** Live URL for Amy to test on iPhone + Android.
 
+### Deploy notes (Nov 4, 2026)
+- **Code:** `asad6202/portion-track-website` — middleware + `/app` page + verify script. Latest includes empty redeploy trigger `cf22a46`.
+- **Works now:** `https://portiontrack-website.vercel.app/app` (iPhone UA → App Store 302; Android → Play; desktop → branded page). Auto-deployed by Vercel on push.
+- **Custom domain:** `portiontrack.com` is on **Netlify** site `imaginative-cat-bd65cd` (id `7f2cba0c-0aad-4c0c-a96b-7ffccf8af0c6`), **not** Vercel. Netlify is **not** picking up GitHub pushes (`/app` still 404).
+- **To finish:** Log into Netlify for that site → Trigger deploy of latest `main`, **or** point DNS to the Vercel project and drop Netlify for the marketing site.
+
 ---
 
 ## 4) Portion targets table for journal
@@ -65,6 +71,10 @@ Status board for journal / TestFlight / store-link work. Do **one workstream at 
 **Axes:** goal × sex × size (S/M/L) × activity; alcohol 0/1/2 as needed.  
 **Columns:** Protein, Veggies, Fruit, Grains, Nuts & Seeds, Fats, Water, Alcohol limit.  
 **Note:** Size bands are in **pounds**.
+
+### Delivered
+- `docs/portion-targets-matrix.xlsx` (+ `.csv`) — 540 rows (6 goals × 2 sexes × 3 sizes × 5 activities × 3 alcohol).
+- Regenerator: `node scripts/export-portion-targets-spreadsheet.mjs`
 
 ---
 
