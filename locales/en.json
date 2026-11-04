@@ -169,7 +169,12 @@
     "alcohol7": "7 servings",
     "alcohol8": "8 servings",
     "alcohol9": "9 servings",
-    "alcohol10": "10 servings"
+    "alcohol10": "10 servings",
+    "stepsTitle": "Steps",
+    "stepsHelp": "Optionally connect Apple Health / Health Connect to show daily steps with your activity. You can skip and turn this on later in Settings → Steps.",
+    "stepsConnected": "Connected",
+    "stepsNotConnected": "Not connected",
+    "stepsBusy": "Connecting…"
   },
   "onboarding": {
     "getStarted": "Get Started",

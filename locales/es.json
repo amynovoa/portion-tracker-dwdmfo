@@ -169,7 +169,12 @@
     "alcohol8": "8 porciones",
     "alcohol9": "9 porciones",
     "alcohol10": "10 porciones",
-    "goalGlp1": "Apoyo GLP-1"
+    "goalGlp1": "Apoyo GLP-1",
+    "stepsTitle": "Pasos",
+    "stepsHelp": "Opcionalmente conecta Apple Health / Health Connect para ver tus pasos diarios con tu actividad. Puedes omitirlo y activarlo después en Ajustes → Pasos.",
+    "stepsConnected": "Conectado",
+    "stepsNotConnected": "No conectado",
+    "stepsBusy": "Conectando…"
   },
   "onboarding": {
     "getStarted": "Comenzar",

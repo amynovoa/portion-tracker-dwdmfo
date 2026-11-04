@@ -1,6 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Switch,
+  Alert,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { Sex, Goal, ActivityLevel } from '@/types';
@@ -14,6 +26,14 @@ import {
   saveWeightUnit,
   WeightUnit,
 } from '@/utils/weightUnit';
+import { loadStepsConnected, saveStepsConnected } from '@/utils/stepsStorage';
+import {
+  getStepsAvailability,
+  openStepsSystemSettings,
+  requestStepsAccess,
+  resetStepsHealthCache,
+  revokeStepsAccess,
+} from '@/utils/stepsHealth';
 
 type DropdownModalProps = {
   visible: boolean;
@@ -93,7 +113,7 @@ function DropdownModal({ visible, onClose, onSelect, selectedValue, items, title
 
 export default function SetupProfileScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [sex, setSex] = useState<Sex>('female');
   const [weight, setWeight] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
@@ -107,6 +127,8 @@ export default function SetupProfileScreen() {
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('lbs');
+  const [stepsConnected, setStepsConnected] = useState(false);
+  const [stepsBusy, setStepsBusy] = useState(false);
 
   // Modal visibility states
   const [sexPickerVisible, setSexPickerVisible] = useState(false);
@@ -119,7 +141,65 @@ export default function SetupProfileScreen() {
       console.log('[SetupProfile] Loaded weight unit:', unit);
       setWeightUnit(unit);
     });
+    loadStepsConnected()
+      .then((connected) => setStepsConnected(connected))
+      .catch(() => setStepsConnected(false));
   }, []);
+
+  const handleStepsToggle = async (value: boolean) => {
+    if (stepsBusy) return;
+    if (!value) {
+      setStepsBusy(true);
+      try {
+        await revokeStepsAccess();
+        await saveStepsConnected(false);
+        setStepsConnected(false);
+      } catch (error) {
+        console.error('[SetupProfile] Steps disconnect failed:', error);
+      } finally {
+        setStepsBusy(false);
+      }
+      return;
+    }
+
+    setStepsBusy(true);
+    try {
+      resetStepsHealthCache();
+      const avail = getStepsAvailability();
+      if (avail === 'missing_module') {
+        Alert.alert(
+          t('setupProfile.stepsTitle'),
+          Platform.OS === 'ios' ? t('steps.missingModuleIos') : t('steps.missingModuleAndroid')
+        );
+        return;
+      }
+      if (avail === 'unavailable' && Platform.OS === 'android') {
+        Alert.alert(t('setupProfile.stepsTitle'), t('steps.unavailableAndroid'));
+        return;
+      }
+      const granted = await requestStepsAccess();
+      if (!granted) {
+        Alert.alert(t('setupProfile.stepsTitle'), t('steps.permissionDenied'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('steps.openSettings'), onPress: () => openStepsSystemSettings() },
+        ]);
+        return;
+      }
+      await saveStepsConnected(true);
+      setStepsConnected(true);
+    } catch (error) {
+      console.error('[SetupProfile] Steps connect failed:', error);
+      Alert.alert(t('common.error'), t('steps.connectError'));
+      try {
+        await saveStepsConnected(false);
+        setStepsConnected(false);
+      } catch {
+        // ignore
+      }
+    } finally {
+      setStepsBusy(false);
+    }
+  };
 
   const sexOptions = [
     { label: t('setupProfile.sexFemale'), value: 'female' as Sex },
@@ -127,14 +207,15 @@ export default function SetupProfileScreen() {
     { label: t('setupProfile.sexPreferNot'), value: 'prefer-not-to-say' as Sex },
   ];
 
+  // Alphabetical by displayed label (EN + ES) so GLP-1 is not stuck at the bottom.
   const goalOptions = [
-    { label: t('setupProfile.goalLose'), value: 'lose' as Goal },
-    { label: t('setupProfile.goalMaintain'), value: 'maintain' as Goal },
     { label: t('setupProfile.goalBuild'), value: 'build' as Goal },
     { label: t('setupProfile.goalEatHealthier'), value: 'eat-healthier' as Goal },
-    { label: t('setupProfile.goalMoreEnergy'), value: 'have-more-energy' as Goal },
     { label: t('setupProfile.goalGlp1'), value: 'glp-1' as Goal },
-  ];
+    { label: t('setupProfile.goalMoreEnergy'), value: 'have-more-energy' as Goal },
+    { label: t('setupProfile.goalLose'), value: 'lose' as Goal },
+    { label: t('setupProfile.goalMaintain'), value: 'maintain' as Goal },
+  ].sort((a, b) => a.label.localeCompare(b.label, i18n.language || 'en', { sensitivity: 'base' }));
 
   const activityOptions = [
     { label: t('setupProfile.activitySedentary'), value: 'sedentary' as ActivityLevel },
@@ -484,6 +565,30 @@ export default function SetupProfileScreen() {
           </View>
         )}
 
+        <View style={styles.section}>
+          <Text style={styles.label}>{t('setupProfile.stepsTitle')}</Text>
+          <Text style={styles.helperText}>{t('setupProfile.stepsHelp')}</Text>
+          <View style={styles.stepsRow}>
+            <Text style={styles.stepsStatus}>
+              {stepsBusy
+                ? t('setupProfile.stepsBusy')
+                : stepsConnected
+                  ? t('setupProfile.stepsConnected')
+                  : t('setupProfile.stepsNotConnected')}
+            </Text>
+            {stepsBusy ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <Switch
+                value={stepsConnected}
+                onValueChange={handleStepsToggle}
+                trackColor={{ false: colors.textSecondary, true: colors.primary }}
+                thumbColor="#fff"
+              />
+            )}
+          </View>
+        </View>
+
         <TouchableOpacity style={buttonStyles.primary} onPress={handleContinue}>
           <Text style={buttonStyles.primaryText}>{continueText}</Text>
         </TouchableOpacity>
@@ -580,6 +685,24 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 8,
     fontStyle: 'italic',
+  },
+  stepsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  stepsStatus: {
+    flex: 1,
+    marginRight: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
   },
   toggleContainer: {
     flexDirection: 'row',
