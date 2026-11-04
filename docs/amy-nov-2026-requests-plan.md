@@ -8,7 +8,7 @@ Status board for journal / TestFlight / store-link work. Do **one workstream at 
 |---|------------|------|--------|
 | 1 | GLP-1 goal list → alphabetical | 15–30 min | Done |
 | 2 | Steps option in profile setup (iOS + Android) | 1.5–2.5 hr | Done |
-| 3 | Smart link `https://portiontrack.com/app` | 2–3 hr | Code live on Vercel; Netlify domain pending redeploy |
+| 3 | Smart link `https://portiontrack.com/app` | 2–3 hr | Code done; **blocked** — Netlify host needs login/redeploy |
 | 4 | Portion targets spreadsheet for journal | 1–1.5 hr | Done — `docs/portion-targets-matrix.xlsx` |
 
 ---
