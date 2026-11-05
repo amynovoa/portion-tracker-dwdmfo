@@ -9,7 +9,7 @@ Status board for journal / TestFlight / store-link work. Do **one workstream at 
 | 1 | GLP-1 goal list → alphabetical | 15–30 min | Done |
 | 2 | Steps option in profile setup (iOS + Android) | 1.5–2.5 hr | Done |
 | 3 | Smart link `https://portiontrack.com/app` | 2–3 hr | Code done; **blocked** — Netlify host needs login/redeploy |
-| 4 | Portion targets spreadsheet for journal | 1–1.5 hr | Done — `docs/portion-targets-matrix.xlsx` |
+| 4 | Portion targets spreadsheet for journal | 1–1.5 hr | Done — then **updated Nov 5** to Amy’s new rules (540-row match) |
 
 ---
 
@@ -73,7 +73,9 @@ Status board for journal / TestFlight / store-link work. Do **one workstream at 
 **Note:** Size bands are in **pounds**.
 
 ### Delivered
-- `docs/portion-targets-matrix.xlsx` (+ `.csv`) — 540 rows (6 goals × 2 sexes × 3 sizes × 5 activities × 3 alcohol).
+- `docs/portion-targets-matrix.xlsx` (+ `.csv`) — 540 rows; matches Amy’s `PortionTrack-portion-targets-NEW.xlsx` exactly.
+- Source of truth in app: `utils/portionCalculator.ts` (Nov 5 rules: sex×size base; Active/VA or Build +1 protein/+1 grain once; Lose +1 veg/−1 fat; GLP-1 +1 water; no alcohol food adjustments; exercise unchanged).
+- Alcohol awareness note on setup-targets + FAQ (EN/ES).
 - Regenerator: `node scripts/export-portion-targets-spreadsheet.mjs`
 
 ---

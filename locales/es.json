@@ -315,7 +315,7 @@
       },
       "q10": {
         "question": "¿Cómo afecta el alcohol a mis porciones?",
-        "answer": "El alcohol impacta el número de metas de porciones de granos integrales y grasas en tus cálculos diarios para hasta 2 por día. Superar 2 no afectará tus metas, por lo que debe considerarse en tu planificación y seguimiento general."
+        "answer": "Las bebidas pueden afectar tus metas: se acumulan, pueden aumentar el hambre y afectar el sueño. Disfrútalas con conciencia, no con culpa. El alcohol no cambia tus metas de porciones de comida; elige tu límite diario de alcohol (0–2 recomendado) según lo que planees beber."
       },
       "q11": {
         "question": "¿Puedo cambiar mis porciones u objetivos más adelante?",
@@ -477,7 +477,7 @@
     "labelExercise": "Ejercicio",
     "labelAlcohol": "Alcohol",
     "exerciseNote": "El ejercicio se puede registrar diariamente en la página de seguimiento, pero no tiene una meta numérica.",
-    "alcoholNote": "Puedes poner tu meta de alcohol en 0 si no bebes, o ajustarla a tus objetivos. El máximo recomendado es 2 porciones al día. La 1.ª porción reduce los granos integrales en 1; la 2.ª reduce las grasas en 1 (nunca por debajo de 1).",
+    "alcoholNote": "Nota sobre el alcohol: las bebidas pueden afectar tus metas. Se acumulan, pueden aumentar el hambre y afectar el sueño. Disfrútalas con conciencia, no con culpa. Puedes poner tu meta en 0 si no bebes. El máximo recomendado es 2 porciones al día.",
     "saveContinue": "Guardar y continuar",
     "recalcTitle": "¿Actualizar tus metas?",
     "recalcMessage": "Según tu perfil más reciente, recomendamos nuevas metas diarias. Acepta para aplicarlas, o Mantén para dejar tus metas actuales. Luego puedes editar cualquier número.",

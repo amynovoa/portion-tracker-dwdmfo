@@ -4,9 +4,38 @@ import { LBS_PER_KG, type WeightUnit } from './weightUnit';
 export type CalculateTargetsOptions = {
   /** Unit of the `weight` argument. Cutoffs are always applied in pounds. */
   weightUnit?: WeightUnit;
-  /** Daily alcohol servings (0–n). Drives grain/fat reductions after goal + activity. */
+  /**
+   * Daily alcohol servings (0–n). Sets Alcohol_limit only — does NOT change food targets
+   * (Amy Nov 2026 rules: grain/fat alcohol adjustments removed).
+   */
   alcoholServings?: number;
 };
+
+/** Base food targets by sex × size (Sedentary/Light/Moderate; non–Build Muscle goals). */
+type FoodBase = {
+  protein: number;
+  veggies: number;
+  fruits: number;
+  wholeGrains: number;
+  nutsSeeds: number;
+  fats: number;
+  water: number;
+};
+
+const BASE_TARGETS: Record<'female' | 'male', Record<SizeCategory, FoodBase>> = {
+  female: {
+    small: { protein: 4, veggies: 4, fruits: 2, wholeGrains: 3, nutsSeeds: 1, fats: 2, water: 7 },
+    medium: { protein: 5, veggies: 5, fruits: 3, wholeGrains: 4, nutsSeeds: 1, fats: 2, water: 8 },
+    large: { protein: 6, veggies: 5, fruits: 3, wholeGrains: 5, nutsSeeds: 1, fats: 3, water: 10 },
+  },
+  male: {
+    small: { protein: 5, veggies: 4, fruits: 2, wholeGrains: 4, nutsSeeds: 1, fats: 2, water: 8 },
+    medium: { protein: 6, veggies: 5, fruits: 3, wholeGrains: 5, nutsSeeds: 1, fats: 2, water: 10 },
+    large: { protein: 7, veggies: 5, fruits: 3, wholeGrains: 6, nutsSeeds: 1, fats: 3, water: 12 },
+  },
+};
+
+const FOOD_MINIMUM = 1;
 
 /** Convert a weight in the user's unit to pounds for size cutoffs. */
 export function weightInPounds(weight: number, weightUnit: WeightUnit = 'lbs'): number {
@@ -15,7 +44,7 @@ export function weightInPounds(weight: number, weightUnit: WeightUnit = 'lbs'): 
 }
 
 /**
- * Size cutoffs are defined in pounds.
+ * Size cutoffs are defined in pounds (unchanged).
  * Callers must pass pounds (use `weightInPounds` when the stored unit may be kg).
  */
 export function classifySize(sex: Sex, weightPounds: number): SizeCategory {
@@ -30,101 +59,109 @@ export function classifySize(sex: Sex, weightPounds: number): SizeCategory {
   return 'large';
 }
 
+function sexKeyForBase(sex: Sex): 'female' | 'male' {
+  return sex === 'female' ? 'female' : 'male';
+}
+
+function getBaseFoodTargets(sex: Sex, size: SizeCategory): FoodBase {
+  return { ...BASE_TARGETS[sexKeyForBase(sex)][size] };
+}
+
+function enforceFoodMinimums(portions: PortionTargets): PortionTargets {
+  return {
+    ...portions,
+    protein: Math.max(FOOD_MINIMUM, portions.protein),
+    veggies: Math.max(FOOD_MINIMUM, portions.veggies),
+    fruits: Math.max(FOOD_MINIMUM, portions.fruits),
+    wholeGrains: Math.max(FOOD_MINIMUM, portions.wholeGrains),
+    nutsSeeds: Math.max(FOOD_MINIMUM, portions.nutsSeeds),
+    fats: Math.max(FOOD_MINIMUM, portions.fats),
+    water: Math.max(FOOD_MINIMUM, portions.water),
+  };
+}
+
+/**
+ * Exercise targets — unchanged from pre–Nov 5 food rules (copied into Amy’s matrix).
+ * Kept as the old baseline → size → goal → activity pipeline.
+ */
+export function calculateExerciseTarget(
+  size: SizeCategory,
+  goal: Goal,
+  activityLevel: ActivityLevel
+): number {
+  let exercise = 3;
+
+  if (size === 'small') {
+    exercise = Math.max(2, exercise - 1);
+  } else if (size === 'large') {
+    exercise = Math.min(5, exercise + 1);
+  }
+
+  if (goal === 'lose') {
+    exercise = Math.min(7, exercise + 1);
+  } else if (goal === 'build') {
+    exercise = Math.min(7, exercise + 2);
+  }
+
+  switch (activityLevel) {
+    case 'sedentary':
+      exercise = Math.max(2, exercise);
+      break;
+    case 'light':
+      exercise = Math.max(3, exercise);
+      break;
+    case 'moderate':
+      exercise = Math.max(4, exercise + 1);
+      break;
+    case 'active':
+      exercise = Math.max(5, exercise + 2);
+      break;
+    case 'veryActive':
+      exercise = Math.max(6, exercise + 3);
+      break;
+  }
+
+  return exercise;
+}
+
+/** @deprecated Prefer getBaseFoodTargets via calculateRecommendedTargets. Kept for any legacy imports. */
 export function getBaselinePortions(_sex: Sex, _goal: Goal): PortionTargets {
   return {
-    protein: 3,
+    protein: 4,
     veggies: 4,
     fruits: 2,
-    wholeGrains: 2,
+    wholeGrains: 3,
     nutsSeeds: 1,
     fats: 2,
-    water: 8,
+    water: 7,
     exercise: 3,
     alcohol: 2,
   };
 }
 
-export function applySizeAdjustment(portions: PortionTargets, size: SizeCategory): PortionTargets {
-  const adjusted = { ...portions };
-
-  if (size === 'small') {
-    adjusted.protein = Math.max(2, adjusted.protein - 1);
-    adjusted.veggies = Math.max(3, adjusted.veggies - 1);
-    adjusted.fruits = Math.max(2, adjusted.fruits);
-    adjusted.wholeGrains = Math.max(1, adjusted.wholeGrains - 1);
-    adjusted.nutsSeeds = 1;
-    adjusted.fats = Math.max(1, adjusted.fats - 1);
-    adjusted.water = Math.max(7, adjusted.water - 1);
-    adjusted.exercise = Math.max(2, adjusted.exercise - 1);
-  } else if (size === 'large') {
-    adjusted.protein = Math.min(5, adjusted.protein + 1);
-    adjusted.veggies = Math.min(6, adjusted.veggies + 1);
-    adjusted.fruits = Math.min(4, adjusted.fruits + 1);
-    adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
-    adjusted.nutsSeeds = 1;
-    adjusted.fats = Math.min(3, adjusted.fats + 1);
-    adjusted.water = Math.min(12, adjusted.water + 2);
-    adjusted.exercise = Math.min(5, adjusted.exercise + 1);
-  }
-
-  return adjusted;
+/** @deprecated Size is now baked into BASE_TARGETS. */
+export function applySizeAdjustment(portions: PortionTargets, _size: SizeCategory): PortionTargets {
+  return { ...portions };
 }
 
+/** @deprecated Activity food bonuses are applied inside calculateRecommendedTargets. */
 export function applyActivityAdjustment(
   portions: PortionTargets,
-  activityLevel: ActivityLevel,
-  options?: { skipProteinBonus?: boolean }
+  _activityLevel: ActivityLevel,
+  _options?: { skipProteinBonus?: boolean }
 ): PortionTargets {
-  const adjusted = { ...portions };
-  const skipProtein = !!options?.skipProteinBonus;
-
-  switch (activityLevel) {
-    case 'sedentary':
-      adjusted.exercise = Math.max(2, adjusted.exercise);
-      break;
-    case 'light':
-      if (!skipProtein) adjusted.protein = Math.min(6, adjusted.protein + 1);
-      adjusted.wholeGrains = Math.min(4, adjusted.wholeGrains + 1);
-      adjusted.exercise = Math.max(3, adjusted.exercise);
-      break;
-    case 'moderate':
-      if (!skipProtein) adjusted.protein = Math.min(6, adjusted.protein + 1);
-      adjusted.wholeGrains = Math.min(5, adjusted.wholeGrains + 1);
-      adjusted.exercise = Math.max(4, adjusted.exercise + 1);
-      break;
-    case 'active':
-      if (!skipProtein) adjusted.protein = Math.min(6, adjusted.protein + 2);
-      adjusted.wholeGrains = Math.min(6, adjusted.wholeGrains + 2);
-      adjusted.exercise = Math.max(5, adjusted.exercise + 2);
-      break;
-    case 'veryActive':
-      if (!skipProtein) adjusted.protein = Math.min(7, adjusted.protein + 2);
-      adjusted.wholeGrains = Math.min(7, adjusted.wholeGrains + 3);
-      adjusted.nutsSeeds = 1;
-      adjusted.exercise = Math.max(6, adjusted.exercise + 3);
-      break;
-  }
-
-  return adjusted;
+  return { ...portions };
 }
 
 /**
- * FAQ rule: 1st alcohol serving → whole grains −1; 2nd → fats −1.
- * Never below 1. Does not touch protein or veggies. Extra servings beyond 2 have no further effect.
+ * Alcohol no longer adjusts grains/fats (Amy Nov 2026).
+ * Kept as a no-op so older call sites stay safe.
  */
 export function applyAlcoholAdjustment(
   portions: PortionTargets,
-  alcoholServings: number
+  _alcoholServings: number
 ): PortionTargets {
-  const adjusted = { ...portions };
-  const servings = Math.max(0, Math.floor(Number(alcoholServings) || 0));
-  if (servings >= 1) {
-    adjusted.wholeGrains = Math.max(1, adjusted.wholeGrains - 1);
-  }
-  if (servings >= 2) {
-    adjusted.fats = Math.max(1, adjusted.fats - 1);
-  }
-  return adjusted;
+  return { ...portions };
 }
 
 /** Compare food/water targets that the calculator owns (ignore exercise/alcohol UI values). */
@@ -140,6 +177,16 @@ export function foodTargetsEqual(a: PortionTargets, b: PortionTargets): boolean 
   );
 }
 
+/**
+ * Amy-approved rules (Nov 4/5 2026):
+ * - Base by sex × size
+ * - Active / Very Active OR Build Muscle: +1 protein and +1 grain (once, not twice)
+ * - Lose Weight: +1 veggies, −1 fats (floor 1); does NOT apply on GLP-1
+ * - GLP-1: base + 1 water; Active bonus still applies
+ * - Alcohol servings do not change food targets
+ * - Every food group minimum 1
+ * - Exercise unchanged from prior app logic
+ */
 export function calculateRecommendedTargets(
   sex: Sex,
   weight: number,
@@ -151,6 +198,7 @@ export function calculateRecommendedTargets(
   const alcoholServings = options.alcoholServings ?? 0;
   const pounds = weightInPounds(weight, weightUnit);
   const size = classifySize(sex, pounds);
+  const base = getBaseFoodTargets(sex, size);
 
   console.log('Calculating recommended targets for:', {
     sex,
@@ -163,36 +211,44 @@ export function calculateRecommendedTargets(
     alcoholServings,
   });
 
-  let portions = getBaselinePortions(sex, goal);
-  portions = applySizeAdjustment(portions, size);
+  let protein = base.protein;
+  let veggies = base.veggies;
+  let fruits = base.fruits;
+  let wholeGrains = base.wholeGrains;
+  let nutsSeeds = base.nutsSeeds;
+  let fats = base.fats;
+  let water = base.water;
 
-  // Goal-specific adjustments
-  if (goal === 'lose') {
-    portions.wholeGrains = Math.max(0, portions.wholeGrains - 1);
-    portions.fats = Math.max(0, portions.fats - 1);
-    portions.veggies = Math.min(6, portions.veggies + 1);
-    portions.exercise = Math.min(7, portions.exercise + 1);
-  } else if (goal === 'build') {
-    portions.protein = Math.min(6, portions.protein + 1);
-    portions.nutsSeeds = 1;
-    portions.fats = Math.min(4, portions.fats + 1);
-    portions.exercise = Math.min(7, portions.exercise + 2);
-  } else if (goal === 'glp-1') {
-    // Maintain pipeline + protein +1 (cap 5). Activity protein bonus is skipped below.
-    portions.protein = Math.min(5, portions.protein + 1);
+  const activeBonus =
+    activityLevel === 'active' || activityLevel === 'veryActive' || goal === 'build';
+  if (activeBonus) {
+    protein += 1;
+    wholeGrains += 1;
   }
-  // maintain / eat-healthier / have-more-energy: no extra goal food changes
 
-  portions = applyActivityAdjustment(portions, activityLevel, {
-    skipProteinBonus: goal === 'glp-1',
-  });
+  if (goal === 'lose') {
+    veggies += 1;
+    fats = Math.max(FOOD_MINIMUM, fats - 1);
+  }
 
-  portions = applyAlcoholAdjustment(portions, alcoholServings);
+  if (goal === 'glp-1') {
+    water += 1;
+  }
 
-  // Protein floor after all calculator adjustments (manual edits can still go lower later)
-  portions.protein = Math.max(3, portions.protein);
+  let portions: PortionTargets = {
+    protein,
+    veggies,
+    fruits,
+    wholeGrains,
+    nutsSeeds,
+    fats,
+    water,
+    exercise: calculateExerciseTarget(size, goal, activityLevel),
+    // Callers overwrite with the user's chosen servings; default mirrors prior baseline.
+    alcohol: 2,
+  };
 
-  portions.nutsSeeds = 1;
+  portions = enforceFoodMinimums(portions);
 
   console.log('Final recommended portions:', portions);
   return portions;

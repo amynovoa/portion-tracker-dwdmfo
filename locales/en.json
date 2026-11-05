@@ -315,7 +315,7 @@
       },
       "q10": {
         "question": "How does alcohol affect my portions?",
-        "answer": "Alcohol impacts the number of whole grain and fat serving targets in your daily calculations for up to 2 per day. Going over 2 will not impact your targets so should be considered in your overall planning and tracking."
+        "answer": "Drinks can affect your goals — they add up, can make you hungrier, and can affect your sleep. Enjoy them with awareness, not guilt. Alcohol does not change your food portion targets; set your daily alcohol limit (0–2 recommended) to match what you plan to drink."
       },
       "q11": {
         "question": "Can I change my portions or goals later?",
@@ -477,7 +477,7 @@
     "labelExercise": "Exercise",
     "labelAlcohol": "Alcohol",
     "exerciseNote": "Exercise can be tracked daily on the tracking page, but doesn't have a numeric target.",
-    "alcoholNote": "You can set your alcohol target to 0 if you don't drink, or adjust it to match your goals. Recommended maximum is 2 servings per day. The 1st serving reduces whole grains by 1; the 2nd reduces fats by 1 (never below 1).",
+    "alcoholNote": "A note on alcohol: drinks can affect your goals. They add up, can make you hungrier, and can affect your sleep. Enjoy them with awareness, not guilt. You can set your target to 0 if you don't drink. Recommended maximum is 2 servings per day.",
     "saveContinue": "Save & Continue",
     "recalcTitle": "Update your targets?",
     "recalcMessage": "Based on your latest profile, we recommend new daily targets. Accept to apply them, or Keep to leave your current targets as they are. You can still edit any number afterward.",
