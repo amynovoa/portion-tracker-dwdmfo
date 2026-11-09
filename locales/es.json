@@ -328,6 +328,10 @@
       "q13": {
         "question": "¿Puede Portion Track ayudar con objetivos como mejorar el colesterol o el azúcar en sangre?",
         "answer": "Portion Track no diagnostica ni trata condiciones médicas. Sin embargo, muchas personas usan el control de porciones y una alimentación equilibrada para apoyar la salud en general. Comer porciones consistentes, elegir opciones saludables descritas en la app y enfocarse en comidas equilibradas puede contribuir a mantener niveles saludables de azúcar en sangre y colesterol."
+      },
+      "q14": {
+        "question": "Mantener todo en movimiento",
+        "answer": "• Hidratación, hidratación, hidratación. El agua, el agua con gas y el té de hierbas o helado también cuentan. Bebe a lo largo del día, no todo de una vez. El amarillo pálido significa que vas bien.\n\n• Fibra en cada comida: Legumbres, verduras, fruta con la piel, granos integrales y una cucharada de chía o linaza molida en yogur o avena."
       }
     }
   },

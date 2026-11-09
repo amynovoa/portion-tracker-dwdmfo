@@ -71,7 +71,7 @@ export default function FAQScreen() {
 
   const FAQ_DATA = useMemo<FAQItem[]>(
     () =>
-      Array.from({ length: 13 }, (_, i) => ({
+      Array.from({ length: 14 }, (_, i) => ({
         question: t(`faqs.faqItems.q${i + 1}.question`),
         answer: t(`faqs.faqItems.q${i + 1}.answer`),
       })),
