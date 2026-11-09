@@ -330,9 +330,29 @@
         "answer": "Portion Track does not diagnose or treat medical conditions. However, many people use portion control and balanced eating to support overall health. Eating consistent portions, choosing healthy options outlined in the app, and focusing on balanced meals can all play a role in supporting healthy blood sugar and cholesterol levels."
       },
       "q14": {
+        "question": "What is GLP-1 Support?",
+        "answer": "GLP-1 Support is a goal for people taking a GLP-1 medication, such as semaglutide or tirzepatide. Your portion targets stay balanced, and your plan adds an extra glass of water each day. You'll also see tips made for GLP-1 users and a daily appetite check-in. PortionTrack doesn't track your medication or give medical advice. Talk with your provider about your dose, side effects, and any changes to how you eat."
+      },
+      "q15": {
         "question": "Keeping things moving",
-        "answer": "• Hydration, hydration, hydration. Water, sparkling water, and herbal or iced tea all count. Sip all day, not all at once. Pale yellow means you're on track.\n\n• Fiber at every meal: Legumes, vegetables, fruit with the skin, whole grains, and a spoonful of chia or ground flax on yogurt or oats."
+        "answer": "Slower digestion is one of the most common side effects of GLP-1 medications, and a protein-forward plate can make it worse. A few simple habits help:\n\n• Hydration, hydration, hydration. Water, sparkling water, and herbal or iced tea all count. Sip all day, not all at once. Pale yellow means you're on track.\n\n• Let beans and lentils do double duty. They count as a protein portion and give you the fiber you need.\n\n• Fiber at every meal. Legumes, vegetables, fruit with the skin, whole grains, and a spoonful of chia or ground flax on yogurt or oats.\n\n• Consider psyllium husk. If food alone isn't enough, a psyllium fiber supplement can help. Start small, follow the label, always take it with a full glass of water, and take it at a different time than your other medications. Ask your provider first.\n\n• Move every day. A walk after meals helps your digestion too.\n\n• Talk to your provider if it lasts more than a few days or is painful. It's common, and it's treatable."
       }
+    }
+  },
+  "glp1": {
+    "welcomeTitle": "Welcome to GLP-1 Support",
+    "welcomeBody": "Your plan includes an extra glass of water. Three habits to start: eat your protein first, sip water all day, and stop when you're comfortably satisfied. Tip: see \"Keeping things moving\" in FAQs.",
+    "welcomeOk": "OK",
+    "appetiteQuestion": "How's your appetite today?",
+    "appetite": {
+      "low": "Low",
+      "okay": "Okay",
+      "hungry": "Hungry"
+    },
+    "appetiteMessage": {
+      "low": "Low appetite is common. Still eat: small, protein-first meals and snacks add up. Greek yogurt, eggs or a smoothie are easy wins.",
+      "okay": "Nice. Start each meal with protein and stop when you're comfortably satisfied.",
+      "hungry": "That's okay, your body is asking for fuel. Eat slowly, start with protein and veggies, and have a glass of water."
     }
   },
   "dailyReset": {

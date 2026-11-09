@@ -330,9 +330,29 @@
         "answer": "Portion Track no diagnostica ni trata condiciones médicas. Sin embargo, muchas personas usan el control de porciones y una alimentación equilibrada para apoyar la salud en general. Comer porciones consistentes, elegir opciones saludables descritas en la app y enfocarse en comidas equilibradas puede contribuir a mantener niveles saludables de azúcar en sangre y colesterol."
       },
       "q14": {
+        "question": "¿Qué es Apoyo GLP-1?",
+        "answer": "Apoyo GLP-1 es un objetivo para personas que toman un medicamento GLP-1, como semaglutida o tirzepatida. Tus metas de porciones se mantienen equilibradas, y tu plan agrega un vaso extra de agua cada día. También verás consejos hechos para usuarios de GLP-1 y un registro diario del apetito. PortionTrack no rastrea tu medicación ni da consejos médicos. Habla con tu proveedor sobre tu dosis, efectos secundarios y cualquier cambio en cómo comes."
+      },
+      "q15": {
         "question": "Mantener todo en movimiento",
-        "answer": "• Hidratación, hidratación, hidratación. El agua, el agua con gas y el té de hierbas o el té helado también cuentan. Bebe a lo largo del día, no todo de una vez. El amarillo pálido significa que vas bien.\n\n• Fibra en cada comida: Legumbres, verduras, fruta con la piel, granos integrales y una cucharada de chía o linaza molida en yogur o avena."
+        "answer": "La digestión más lenta es uno de los efectos secundarios más comunes de los medicamentos GLP-1, y un plato enfocado en proteína puede empeorarlo. Algunos hábitos simples ayudan:\n\n• Hidratación, hidratación, hidratación. El agua, el agua con gas y el té de hierbas o el té helado también cuentan. Bebe a lo largo del día, no todo de una vez. El amarillo pálido significa que vas bien.\n\n• Deja que los frijoles y las lentejas hagan doble trabajo. Cuentan como una porción de proteína y te dan la fibra que necesitas.\n\n• Fibra en cada comida. Legumbres, verduras, fruta con la piel, granos integrales y una cucharada de chía o linaza molida en yogur o avena.\n\n• Considera la cáscara de psilio. Si la comida sola no es suficiente, un suplemento de fibra de psilio puede ayudar. Empieza con poco, sigue la etiqueta, tómalo siempre con un vaso lleno de agua y en un momento distinto al de tus otros medicamentos. Pregunta primero a tu proveedor.\n\n• Muévete todos los días. Una caminata después de las comidas también ayuda a la digestión.\n\n• Habla con tu proveedor si dura más de unos días o es doloroso. Es común y se puede tratar."
       }
+    }
+  },
+  "glp1": {
+    "welcomeTitle": "Bienvenido a Apoyo GLP-1",
+    "welcomeBody": "Tu plan incluye un vaso extra de agua. Tres hábitos para empezar: come primero la proteína, bebe agua a lo largo del día y para cuando te sientas cómodamente satisfecho. Tip: mira \"Mantener todo en movimiento\" en Preguntas Frecuentes.",
+    "welcomeOk": "OK",
+    "appetiteQuestion": "¿Cómo está tu apetito hoy?",
+    "appetite": {
+      "low": "Bajo",
+      "okay": "Bien",
+      "hungry": "Hambre"
+    },
+    "appetiteMessage": {
+      "low": "El apetito bajo es común. Aun así come: comidas y snacks pequeños, con proteína primero, suman. Yogur griego, huevos o un batido son opciones fáciles.",
+      "okay": "Genial. Empieza cada comida con proteína y para cuando te sientas cómodamente satisfecho.",
+      "hungry": "Está bien, tu cuerpo pide combustible. Come despacio, empieza con proteína y verduras, y toma un vaso de agua."
     }
   },
   "dailyReset": {

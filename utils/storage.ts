@@ -10,9 +10,13 @@ const EXERCISE_ENTRIES_KEY = '@portion_tracker_exercise_entries';
 const RESET_TIME_KEY = '@portion_tracker_reset_time';
 const LAST_RESET_DATE_KEY = '@portion_tracker_last_reset_date';
 const INFO_HINT_SEEN_KEY = '@portion_tracker_info_hint_seen';
+const GLP1_WELCOME_SEEN_KEY = '@portion_tracker_glp1_welcome_seen';
+const GLP1_APPETITE_PREFIX = '@portion_tracker_glp1_appetite_';
 const SUBSCRIPTION_STATUS_KEY = '@portion_tracker_subscription_status';
 const NOON_REMINDER_ENABLED_KEY = '@portion_tracker_noon_reminder_enabled';
 const REMINDER_TIME_KEY = '@portion_tracker_reminder_time';
+
+export type Glp1AppetiteAnswer = 'low' | 'okay' | 'hungry';
 
 export interface ResetTimeConfig {
   hour: number;
@@ -469,5 +473,44 @@ export async function saveInfoHintSeen(): Promise<void> {
     await AsyncStorage.setItem(INFO_HINT_SEEN_KEY, 'true');
   } catch (error) {
     console.error('Error saving info hint seen:', error);
+  }
+}
+
+export async function hasSeenGlp1Welcome(): Promise<boolean> {
+  try {
+    const data = await AsyncStorage.getItem(GLP1_WELCOME_SEEN_KEY);
+    return data === 'true';
+  } catch (error) {
+    console.error('Error checking GLP-1 welcome:', error);
+    return false;
+  }
+}
+
+export async function saveGlp1WelcomeSeen(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(GLP1_WELCOME_SEEN_KEY, 'true');
+  } catch (error) {
+    console.error('Error saving GLP-1 welcome seen:', error);
+  }
+}
+
+export async function loadGlp1Appetite(date: string): Promise<Glp1AppetiteAnswer | null> {
+  try {
+    const data = await AsyncStorage.getItem(`${GLP1_APPETITE_PREFIX}${date}`);
+    if (data === 'low' || data === 'okay' || data === 'hungry') {
+      return data;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error loading GLP-1 appetite:', error);
+    return null;
+  }
+}
+
+export async function saveGlp1Appetite(date: string, answer: Glp1AppetiteAnswer): Promise<void> {
+  try {
+    await AsyncStorage.setItem(`${GLP1_APPETITE_PREFIX}${date}`, answer);
+  } catch (error) {
+    console.error('Error saving GLP-1 appetite:', error);
   }
 }

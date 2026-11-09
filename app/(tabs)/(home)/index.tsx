@@ -2,9 +2,22 @@
 import DailyCompletionCelebration from '@/components/DailyCompletionCelebration';
 import DailyPlateProgress from '@/components/DailyPlateProgress';
 import TipsCarousel from '@/components/TipsCarousel';
+import AppetiteCheckIn from '@/components/AppetiteCheckIn';
+import Glp1WelcomeCard from '@/components/Glp1WelcomeCard';
 import { colors } from '@/styles/commonStyles';
 import { getTodayString, formatDisplayDate } from '@/utils/dateUtils';
-import { loadProfile, loadDailyPortions, saveDailyPortions, hasSeenInfoHint, saveInfoHintSeen } from '@/utils/storage';
+import {
+  loadProfile,
+  loadDailyPortions,
+  saveDailyPortions,
+  hasSeenInfoHint,
+  saveInfoHintSeen,
+  hasSeenGlp1Welcome,
+  saveGlp1WelcomeSeen,
+  loadGlp1Appetite,
+  saveGlp1Appetite,
+  Glp1AppetiteAnswer,
+} from '@/utils/storage';
 import { recordAppOpen, recordTrackingAction, requestReviewIfEligible } from '@/utils/reviewManager';
 import InfoHintTooltip from '@/components/InfoHintTooltip';
 import { ScrollView, StyleSheet, View, Text, RefreshControl, TouchableOpacity, Alert, ActivityIndicator, Modal, Image } from 'react-native';
@@ -26,6 +39,8 @@ export default function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoHint, setShowInfoHint] = useState(false);
+  const [showGlp1Welcome, setShowGlp1Welcome] = useState(false);
+  const [appetiteAnswer, setAppetiteAnswer] = useState<Glp1AppetiteAnswer | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<MealPortionSuggestions | null>(null);
@@ -63,6 +78,25 @@ export default function HomeScreen() {
       setShowInfoHint(true);
     }
 
+    if (userProfile.goal === 'glp-1') {
+      // Don't stack on top of the info hint — show welcome after that is dismissed.
+      if (hasSeenHint) {
+        const welcomeSeen = await hasSeenGlp1Welcome();
+        if (!welcomeSeen) {
+          setShowGlp1Welcome(true);
+        }
+      }
+      const today = getTodayString();
+      if (selectedDate === today) {
+        setAppetiteAnswer(await loadGlp1Appetite(today));
+      } else {
+        setAppetiteAnswer(null);
+      }
+    } else {
+      setShowGlp1Welcome(false);
+      setAppetiteAnswer(null);
+    }
+
     // Record app open for review metrics
     await recordAppOpen();
   }, [router, selectedDate, loadDateData]);
@@ -77,6 +111,26 @@ export default function HomeScreen() {
   useEffect(() => {
     loadDateData(selectedDate);
   }, [selectedDate, loadDateData]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (profile?.goal !== 'glp-1') {
+        if (active) setAppetiteAnswer(null);
+        return;
+      }
+      const today = getTodayString();
+      if (selectedDate !== today) {
+        if (active) setAppetiteAnswer(null);
+        return;
+      }
+      const saved = await loadGlp1Appetite(today);
+      if (active) setAppetiteAnswer(saved);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [selectedDate, profile?.goal]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -196,6 +250,23 @@ export default function HomeScreen() {
   const handleDismissInfoHint = async () => {
     setShowInfoHint(false);
     await saveInfoHintSeen();
+    if (profile?.goal === 'glp-1') {
+      const welcomeSeen = await hasSeenGlp1Welcome();
+      if (!welcomeSeen) {
+        setShowGlp1Welcome(true);
+      }
+    }
+  };
+
+  const handleDismissGlp1Welcome = async () => {
+    setShowGlp1Welcome(false);
+    await saveGlp1WelcomeSeen();
+  };
+
+  const handleAppetiteSelect = async (answer: Glp1AppetiteAnswer) => {
+    const today = getTodayString();
+    setAppetiteAnswer(answer);
+    await saveGlp1Appetite(today, answer);
   };
 
   const handleDismissCelebration = () => {
@@ -290,7 +361,11 @@ export default function HomeScreen() {
           targets={profile.portionTargets} 
         />
 
-        <TipsCarousel />
+        <TipsCarousel goal={profile.goal} />
+
+        {profile.goal === 'glp-1' && isToday ? (
+          <AppetiteCheckIn answer={appetiteAnswer} onSelect={handleAppetiteSelect} />
+        ) : null}
 
         {/* Divider */}
         <View style={styles.divider} />
@@ -387,6 +462,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       <InfoHintTooltip visible={showInfoHint} onDismiss={handleDismissInfoHint} />
+      <Glp1WelcomeCard visible={showGlp1Welcome} onDismiss={handleDismissGlp1Welcome} />
       <DailyCompletionCelebration visible={showCelebration} onDismiss={handleDismissCelebration} />
     </View>
   );

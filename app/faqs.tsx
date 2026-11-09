@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,13 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
+import { loadProfile } from '@/utils/storage';
+import { getFaqKeysForGoal } from '@/utils/faqOrder';
+import type { Goal } from '@/types';
 
 interface FAQItem {
   question: string;
@@ -22,16 +25,30 @@ interface FAQItem {
 export default function FAQScreen() {
   const { t } = useTranslation();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [goal, setGoal] = useState<Goal | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const itemRefs = useRef<(View | null)[]>([]);
 
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        const profile = await loadProfile();
+        if (active) setGoal(profile?.goal ?? null);
+      })();
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
   const faqData = useMemo<FAQItem[]>(
     () =>
-      Array.from({ length: 14 }, (_, i) => ({
-        question: t(`faqs.faqItems.q${i + 1}.question`),
-        answer: t(`faqs.faqItems.q${i + 1}.answer`),
+      getFaqKeysForGoal(goal).map((key) => ({
+        question: t(`faqs.faqItems.${key}.question`),
+        answer: t(`faqs.faqItems.${key}.answer`),
       })),
-    [t]
+    [t, goal]
   );
 
   const toggleExpand = (index: number) => {

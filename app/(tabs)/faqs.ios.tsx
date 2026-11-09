@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import AppLogo from '@/components/AppLogo';
+import { loadProfile } from '@/utils/storage';
+import { getFaqKeysForGoal } from '@/utils/faqOrder';
+import type { Goal } from '@/types';
 
 interface FAQItem {
   question: string;
@@ -68,14 +72,28 @@ const styles = StyleSheet.create({
 export default function FAQScreen() {
   const { t } = useTranslation();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [goal, setGoal] = useState<Goal | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        const profile = await loadProfile();
+        if (active) setGoal(profile?.goal ?? null);
+      })();
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
 
   const FAQ_DATA = useMemo<FAQItem[]>(
     () =>
-      Array.from({ length: 14 }, (_, i) => ({
-        question: t(`faqs.faqItems.q${i + 1}.question`),
-        answer: t(`faqs.faqItems.q${i + 1}.answer`),
+      getFaqKeysForGoal(goal).map((key) => ({
+        question: t(`faqs.faqItems.${key}.question`),
+        answer: t(`faqs.faqItems.${key}.answer`),
       })),
-    [t]
+    [t, goal]
   );
 
   const toggleExpand = (index: number) => {

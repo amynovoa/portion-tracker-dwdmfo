@@ -1,24 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { PORTION_TIPS } from '@/data/tips';
+import { getTipsForGoal } from '@/data/tips';
 import { colors } from '@/styles/commonStyles';
+import type { Goal } from '@/types';
 
-export default function TipsCarousel() {
+type TipsCarouselProps = {
+  goal?: Goal | null;
+};
+
+export default function TipsCarousel({ goal = null }: TipsCarouselProps) {
   const { i18n } = useTranslation();
   const [index, setIndex] = useState(0);
   const lang = i18n.language?.startsWith('es') ? 'es' : 'en';
-  const tip = PORTION_TIPS[index];
+  const tips = useMemo(() => getTipsForGoal(goal), [goal]);
+  const tip = tips[index] ?? tips[0];
 
   useEffect(() => {
+    setIndex(0);
+  }, [goal]);
+
+  useEffect(() => {
+    if (tips.length === 0) return;
     const id = setInterval(() => {
-      setIndex((current) => (current + 1) % PORTION_TIPS.length);
+      setIndex((current) => (current + 1) % tips.length);
     }, 5500);
     return () => clearInterval(id);
-  }, [index]);
+  }, [index, tips.length]);
+
+  if (!tip) return null;
 
   const goTo = (next: number) => {
-    const total = PORTION_TIPS.length;
+    const total = tips.length;
     setIndex(((next % total) + total) % total);
   };
 
@@ -55,7 +68,7 @@ export default function TipsCarousel() {
       </View>
 
       <View style={styles.dots}>
-        {PORTION_TIPS.map((item, i) => (
+        {tips.map((item, i) => (
           <TouchableOpacity
             key={item.id}
             onPress={() => setIndex(i)}
@@ -143,6 +156,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginTop: 12,
+    flexWrap: 'wrap',
   },
   dot: {
     width: 6,
