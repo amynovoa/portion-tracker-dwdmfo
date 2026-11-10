@@ -13,8 +13,11 @@
     "close": "Cerrar",
     "error": "Error",
     "oops": "¡Ups!",
+    "portion": "porción",
     "portions": "porciones",
+    "glass": "vaso",
     "glasses": "vasos",
+    "serving": "porción",
     "servings": "porciones",
     "lbs": "lbs",
     "kg": "kg",
@@ -530,15 +533,15 @@
     "portionsGuide": "Las porciones no necesitan ser exactas — esto es una guía, no una báscula.",
     "benefits": "Beneficios",
     "goodChoices": "Buenas Opciones",
-    "whatToAvoid": "Qué Evitar",
+    "whatToAvoid": "Elige con menos frecuencia",
     "gotIt": "¡Entendido!"
   },
   "foodGroupInfo": {
     "protein": {
       "benefit": "La proteína apoya la reparación muscular, la saciedad y el metabolismo. Te ayuda a sentirte lleno por más tiempo y preserva la masa magra durante la pérdida de peso.\n\nIntenta incluir una fuente de proteína en la mayoría de las comidas.\n\nLa calidad importa — elige opciones magras y mínimamente procesadas cuando sea posible.",
       "avoid": "Evita las carnes muy procesadas (hot dogs, embutidos con nitratos).\n\nLimita las proteínas fritas o empanizadas.\n\nVigila las porciones en cortes con más grasa si estás tratando de perder peso.",
-      "examples": "Fuentes animales:\n- Pechuga de pollo (a la parrilla o deshebrada)\n- Pavo\n- Res o cerdo magro (carne asada, carnitas)\n- Pescado (atún, salmón, bacalao o pescado a la parrilla — fresco o en lata)\n- Huevos o claras de huevo\n- Yogur griego\n- Requesón\n\nFuentes vegetales:\n- Frijoles (negros, pintos, etc.)\n- Tofu o tempeh\n- Edamame\n- Seitán",
-      "portionSize": "Aproximadamente del tamaño de tu palma (85-115 g de carne cocida, 1 taza de yogur griego, 2 huevos o 4 claras de huevo, etc.)"
+      "examples": "Fuentes animales:\n- Pechuga de pollo (a la parrilla o deshebrada)\n- Pavo\n- Res o cerdo magro (carne asada, carnitas)\n- Pescado (atún, salmón, bacalao o pescado a la parrilla — fresco o en lata)\n- Huevos o claras de huevo\n- Yogur griego\n- Requesón\n\nFuentes vegetales:\n- Frijoles (negros, pintos, etc.)\n- Tofu o tempeh\n- Edamame\n- Seitán\n\nLas legumbres hacen doble trabajo: 1 taza de frijoles, lentejas o garbanzos cocidos te da proteína y fibra a la vez. El tofu, el tempeh y el edamame también cuentan.",
+      "portionSize": "Aproximadamente del tamaño de tu palma (85-115 g de carne cocida, 1 taza de yogur griego, 3 huevos, o 2 huevos más 3 claras, etc.)"
     },
     "veggies": {
       "benefit": "Las verduras están llenas de fibra, vitaminas y minerales. Apoyan la digestión, la inmunidad y la salud en general, siendo bajas en calorías.\n\nCuanta más variedad, mejor — busca diferentes colores durante la semana.\n\nLas verduras sin almidón se pueden comer libremente y ayudan a sentirse lleno.",
@@ -556,7 +559,7 @@
       "benefit": "Los granos integrales proporcionan energía sostenida, fibra y vitaminas del complejo B. Apoyan la digestión y ayudan a estabilizar el azúcar en sangre.\n\nElige granos integrales sobre granos refinados siempre que sea posible.\n\nCombínalos con proteína y verduras para comidas equilibradas.",
       "avoid": "Evita los granos refinados (pan blanco, arroz blanco, pasteles).\n\nLimita los cereales azucarados y los productos horneados.",
       "examples": "Granos:\n- Avena, quinoa, arroz integral, cebada\n\nPan y pasta:\n- Pan integral, pasta de grano entero, tortillas de maíz o grano entero\n\nVerduras con almidón (cuentan como granos):\n- Camotes, papas blancas, maíz, chícharos, plátanos machos",
-      "portionSize": "Aproximadamente ½ taza de granos cocidos, 1 rebanada de pan o 1 papa pequeña"
+      "portionSize": "Aproximadamente ½ taza de granos cocidos, 1 rebanada de pan integral o de masa madre, o 1 papa pequeña"
     },
     "nutsSeeds": {
       "benefit": "Las nueces y semillas aportan grasas saludables, proteína, fibra y minerales importantes como magnesio y zinc.\n\nApoyan la salud del corazón y ayudan con la saciedad.\n\nUn poco rinde mucho — son densas en calorías pero ricas en nutrientes.",

@@ -248,8 +248,16 @@ export const GLP1_TIPS: PortionTip[] = [
     id: 'glp1-stop-satisfied',
     title: GLP1_TIP_TITLE,
     body: {
-      en: "Stop when you're comfortably satisfied. Eating past full can bring on nausea.",
-      es: 'Para cuando te sientas cómodamente satisfecho. Comer de más puede causar náuseas.',
+      en: 'Fullness comes fast now. Eat slowly and stop at the first sign of it. Save the rest for later.',
+      es: 'La saciedad llega rápido ahora. Come despacio y para al primer signo. Guarda el resto para después.',
+    },
+  },
+  {
+    id: 'glp1-hair',
+    title: GLP1_TIP_TITLE,
+    body: {
+      en: "More hair in your brush? It's common in the first months and usually temporary. Protein at every meal helps.",
+      es: '¿Más cabello en el cepillo? Es común en los primeros meses y suele ser temporal. La proteína en cada comida ayuda.',
     },
   },
   {

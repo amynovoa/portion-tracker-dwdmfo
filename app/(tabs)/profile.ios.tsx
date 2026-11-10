@@ -204,9 +204,8 @@ export default function ProfileScreen() {
   const fatsLabel = t('profile.fats');
   const waterLabel = t('profile.water');
   const alcoholLabel = t('profile.alcohol');
-  const portionsUnit = t('common.portions');
-  const glassesUnit = t('common.glasses');
-  const servingsUnit = t('common.servings');
+  const unitLabel = (count: number, singularKey: string, pluralKey: string) =>
+    `${count} ${t(count === 1 ? singularKey : pluralKey)}`;
   const editTargetsText = t('profile.editTargets');
   const exerciseNoteText = t('profile.exerciseNote');
   const weightUnitLabel = t('profile.weightUnit');
@@ -289,43 +288,57 @@ export default function ProfileScreen() {
             <>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{proteinLabel}</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.protein} {portionsUnit}</Text>
+                <Text style={styles.infoValue}>
+                  {unitLabel(profile.portionTargets.protein, 'common.portion', 'common.portions')}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{veggiesLabel}</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.veggies} {portionsUnit}</Text>
+                <Text style={styles.infoValue}>
+                  {unitLabel(profile.portionTargets.veggies, 'common.portion', 'common.portions')}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{fruitsLabel}</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.fruits} {portionsUnit}</Text>
+                <Text style={styles.infoValue}>
+                  {unitLabel(profile.portionTargets.fruits, 'common.portion', 'common.portions')}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{wholeGrainsLabel}</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.wholeGrains} {portionsUnit}</Text>
+                <Text style={styles.infoValue}>
+                  {unitLabel(profile.portionTargets.wholeGrains, 'common.portion', 'common.portions')}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{nutsSeedsLabel}</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.nutsSeeds} {portionsUnit}</Text>
+                <Text style={styles.infoValue}>
+                  {unitLabel(profile.portionTargets.nutsSeeds, 'common.portion', 'common.portions')}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{fatsLabel}</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.fats} {portionsUnit}</Text>
+                <Text style={styles.infoValue}>
+                  {unitLabel(profile.portionTargets.fats, 'common.portion', 'common.portions')}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{waterLabel}</Text>
-                <Text style={styles.infoValue}>{profile.portionTargets.water} {glassesUnit}</Text>
+                <Text style={styles.infoValue}>
+                  {unitLabel(profile.portionTargets.water, 'common.glass', 'common.glasses')}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>{alcoholLabel}</Text>
                 <Text style={styles.infoValue}>
-                  {profile.portionTargets.alcohol || 0} {servingsUnit}
+                  {unitLabel(profile.portionTargets.alcohol || 0, 'common.serving', 'common.servings')}
                 </Text>
               </View>
             </>

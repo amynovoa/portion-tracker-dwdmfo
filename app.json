@@ -47,7 +47,7 @@
           }
         ]
       },
-      "buildNumber": "368"
+      "buildNumber": "369"
     },
     "android": {
       "adaptiveIcon": {
@@ -56,7 +56,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.amynovoa.portiontracker",
-      "versionCode": 69,
+      "versionCode": 70,
       "allowBackup": false,
       "permissions": [
         "android.permission.CAMERA",
