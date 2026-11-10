@@ -244,8 +244,8 @@ export function calculateRecommendedTargets(
     fats,
     water,
     exercise: calculateExerciseTarget(size, goal, activityLevel),
-    // Callers overwrite with the user's chosen servings; default mirrors prior baseline.
-    alcohol: 2,
+    // Alcohol_limit = chosen servings (0/1/2); does not change food targets.
+    alcohol: Math.max(0, alcoholServings),
   };
 
   portions = enforceFoodMinimums(portions);
