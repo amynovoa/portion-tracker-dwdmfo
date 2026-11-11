@@ -35,7 +35,8 @@ export default function AppetiteCheckIn({ answer, onSelect }: AppetiteCheckInPro
                   style={[styles.buttonText, selected && styles.buttonTextSelected]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  minimumFontScale={0.85}
+                  minimumFontScale={0.75}
+                  allowFontScaling={false}
                 >
                   {t(`glp1.appetite.${option}`)}
                 </Text>
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
   },
   question: {
     fontSize: 16,
@@ -73,13 +74,13 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
   },
   button: {
     flex: 1,
     minWidth: 0,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
@@ -92,7 +93,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   buttonText: {
-    fontSize: 14,
+    width: '100%',
+    fontSize: 13,
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
