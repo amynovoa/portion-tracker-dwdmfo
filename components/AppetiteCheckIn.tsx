@@ -31,7 +31,12 @@ export default function AppetiteCheckIn({ answer, onSelect }: AppetiteCheckInPro
                 accessibilityState={{ selected }}
                 accessibilityLabel={t(`glp1.appetite.${option}`)}
               >
-                <Text style={[styles.buttonText, selected && styles.buttonTextSelected]}>
+                <Text
+                  style={[styles.buttonText, selected && styles.buttonTextSelected]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.85}
+                >
                   {t(`glp1.appetite.${option}`)}
                 </Text>
               </TouchableOpacity>
@@ -68,12 +73,13 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
   },
   button: {
     flex: 1,
+    minWidth: 0,
     paddingVertical: 10,
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
@@ -89,6 +95,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
+    textAlign: 'center',
   },
   buttonTextSelected: {
     color: '#FFFFFF',
