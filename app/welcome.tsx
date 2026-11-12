@@ -103,13 +103,8 @@ export default function WelcomeScreen() {
         {/* Hero section */}
         <View style={[styles.hero, isSpanish && { gap: 12, paddingBottom: 32 }]}>
           <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
-            <View style={[
-              styles.logoRing,
-              isSpanish && { width: 96, height: 96, borderRadius: 28 },
-              { backgroundColor: C.primaryMuted, borderColor: C.border },
-            ]}>
-              <AppLogo size={isSpanish ? 56 : 72} />
-            </View>
+            {/* Trademark wordmark — no mint ring so it matches Amy’s brand mark */}
+            <AppLogo variant="wordmark" size={isSpanish ? 120 : 148} />
           </Animated.View>
 
           <Animated.Text

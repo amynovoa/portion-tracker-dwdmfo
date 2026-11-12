@@ -272,7 +272,7 @@ export default function PaywallScreen() {
               }
             }}
           >
-            <AppLogo size={logoSize} />
+            <AppLogo variant="wordmark" size={isTablet ? 96 : 84} />
           </TouchableOpacity>
           <Text style={[styles.title, { color: C.text }, isTablet && { fontSize: 28 }]}>Portion Track</Text>
         </View>
